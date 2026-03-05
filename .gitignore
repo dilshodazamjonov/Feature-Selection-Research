@@ -13,4 +13,4 @@ __init__.py
 # files 
 *.csv
 *.parquet
-
+data/
