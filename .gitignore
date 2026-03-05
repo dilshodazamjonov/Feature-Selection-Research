@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+__init__.py
 
 # Virtual environments
 .venv
@@ -12,3 +13,4 @@ wheels/
 # files 
 *.csv
 *.parquet
+
