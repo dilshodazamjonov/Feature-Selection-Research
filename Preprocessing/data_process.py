@@ -1,92 +1,116 @@
-# data_preprocess.py
-"""
-Data preprocessing module for credit scoring ML experiments.
-Handles missing values, encoding, scaling, and train/test split.
-"""
-
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+# ========== STEP FUNCTIONS ==========
+
+def detect_categorical_columns(df: pd.DataFrame):
+    """Return categorical column names."""
+    return df.select_dtypes(include=["object", "category"]).columns.tolist()
 
 
-def preprocess_data(
-    file_path,
-    target_col="target",
-    test_size=0.3,
-    random_state=42,
-    verbose=True,
-):
-    """Preprocess dataset for modeling."""
-
-    # 1. Load data
-    if file_path.endswith(".parquet"):
-        df = pd.read_parquet(file_path)
-    else:
-        df = pd.read_csv(file_path)
-
-    if verbose:
-        print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
-
-    # 2. Drop rows where target is missing
-    df = df.dropna(subset=[target_col])
-
-    # 3. Separate features and target
-    X = df.drop(columns=[target_col])
-    y = df[target_col]
-
-    # 4. Replace infinities with NaN
-    X.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    # 5. Fill missing values simply
-    num_cols = X.select_dtypes(include=np.number).columns.tolist()
-    cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
-
-    if num_cols:
-        X[num_cols] = X[num_cols].fillna(0)
-
-    if cat_cols:
-        X[cat_cols] = X[cat_cols].fillna("missing")
-
-    # 6. Encode categorical features
-    if cat_cols:
-        ohe = OneHotEncoder(sparse_output=False, drop="first", handle_unknown="ignore")
-        X_ohe = ohe.fit_transform(X[cat_cols])
-        ohe_feature_names = ohe.get_feature_names_out(cat_cols)
-        X_ohe_df = pd.DataFrame(X_ohe, columns=ohe_feature_names, index=X.index)
-        X = pd.concat([X.drop(columns=cat_cols), X_ohe_df], axis=1)
-
-    # 7. Scale features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # 8. Train/test split
-    stratify_y = y if y.nunique() > 1 else None
-
-    X_train_scaled, X_test_scaled, y_train, y_test = train_test_split(
-        X_scaled,
-        y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=stratify_y,
-    )
-
-    feature_names = X.columns.tolist()
-
-    if verbose:
-        print(
-            f"Preprocessing complete. Train shape: {X_train_scaled.shape}, "
-            f"Test shape: {X_test_scaled.shape}"
-        )
-
-    return X_train_scaled, X_test_scaled, y_train, y_test, feature_names
+def compute_numeric_medians(df: pd.DataFrame):
+    """Compute medians for numeric columns."""
+    numeric_cols = df.select_dtypes(exclude=["object", "category"]).columns
+    return df[numeric_cols].median()
 
 
-if __name__ == "__main__":
+def detect_zero_variance_columns(df: pd.DataFrame):
+    """Detect columns with no variance."""
+    return df.columns[df.nunique() <= 1].tolist()
 
-    X_train, X_test, y_train, y_test, feat_names = preprocess_data(
-        "data/inputs/Master_Data_with_filtering_updated.csv",
-        target_col="TARGET",
-    )
 
-    print("Features ready for modeling:", feat_names[:10], "...")
+def add_missing_indicators(df: pd.DataFrame):
+    """Add binary indicators for missing values."""
+    df = df.copy()
+
+    for col in df.columns:
+        if df[col].isnull().sum() > 0:
+            df[f"{col}_missing"] = df[col].isnull().astype(int)
+
+    return df
+
+
+def impute_numeric(df: pd.DataFrame, medians: pd.Series):
+    """Fill numeric missing values using stored medians."""
+    df = df.copy()
+
+    for col in medians.index:
+        if col in df.columns:
+            df[col] = df[col].fillna(medians[col])
+
+    return df
+
+
+def impute_categorical(df: pd.DataFrame, cat_columns):
+    """Fill categorical missing values."""
+    df = df.copy()
+
+    for col in cat_columns:
+        if col in df.columns:
+            df[col] = df[col].fillna("missing")
+
+    return df
+
+
+def remove_zero_variance(df: pd.DataFrame, zero_var_cols):
+    """Remove zero variance columns."""
+    return df.drop(columns=zero_var_cols, errors="ignore")
+
+
+def encode_categoricals(df: pd.DataFrame):
+    """One-hot encode categorical variables."""
+    return pd.get_dummies(df, drop_first=True)
+
+
+def align_columns(df: pd.DataFrame, expected_columns):
+    """Ensure same columns as training data."""
+    return df.reindex(columns=expected_columns, fill_value=0)
+
+
+# ========== PREPROCESSOR CLASS ==========
+
+class Preprocessor:
+
+    def __init__(self):
+        self.medians = None
+        self.cat_columns = None
+        self.zero_var_cols = None
+        self.dummy_columns = None
+
+    def fit(self, X: pd.DataFrame):
+        X = X.copy()
+        
+        self.cat_columns = detect_categorical_columns(X)
+        self.medians = compute_numeric_medians(X)
+        self.zero_var_cols = detect_zero_variance_columns(X)
+
+        X_tmp = add_missing_indicators(X)
+        X_tmp = impute_numeric(X_tmp, self.medians)
+        X_tmp = impute_categorical(X_tmp, self.cat_columns)
+        X_tmp = remove_zero_variance(X_tmp, self.zero_var_cols)
+        X_tmp = encode_categoricals(X_tmp)
+
+        self.dummy_columns = X_tmp.columns
+
+    def transform(self, X: pd.DataFrame):
+        X = X.copy()
+
+        X = add_missing_indicators(X)
+        X = impute_numeric(X, self.medians)
+        X = impute_categorical(X, self.cat_columns)
+        X = remove_zero_variance(X, self.zero_var_cols)
+        X = encode_categoricals(X)
+        X = align_columns(X, self.dummy_columns)
+
+        return X
+
+    def fit_transform(self, X: pd.DataFrame):
+        self.fit(X)
+        return self.transform(X)
+
+
+
+# ============= Usage ===============
+
+# pre = Preprocessor()
+# X_train = pre.fit_transform(X_train)
+# X_val = pre.transform(X_val)
