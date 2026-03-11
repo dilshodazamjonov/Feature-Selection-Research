@@ -75,8 +75,10 @@ print(f"PCA Selected Columns: {X_train_final.columns}")
 # ========= Model ===========
 
 ctb_model = CatBoostClassifier(
-    iterations=1000,
+    iterations=2000,
     early_stopping_rounds=50,
+    depth=6,
+    l2_leaf_reg=10,
     verbose=100
 )
 
