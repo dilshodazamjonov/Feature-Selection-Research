@@ -187,8 +187,6 @@ class IVFilter:
 
             ivs[col] = iv_val
             stats_store[col] = stats
-            if self.verbose:
-                print(f"[IV] {col}: {iv_val:.6f}")
 
         # -------------------------
         # Save IV table and selected/dropped lists

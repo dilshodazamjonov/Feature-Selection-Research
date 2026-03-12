@@ -89,6 +89,8 @@ class Preprocessor:
         X_tmp = remove_zero_variance(X_tmp, self.zero_var_cols)
         X_tmp = encode_categoricals(X_tmp)
 
+        X_tmp = X_tmp.drop(columns=['SK_ID_CURR'], errors='ignore')
+
         self.dummy_columns = X_tmp.columns
 
     def transform(self, X: pd.DataFrame):

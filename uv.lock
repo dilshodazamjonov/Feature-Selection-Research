@@ -11,6 +11,20 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "boruta"
+version = "0.4.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/ab/103f819f83e9e2833f95f3dfb5e6d162ad1616b136b96c683ad4d7de224c/Boruta-0.4.3.tar.gz", hash = "sha256:abd67119bb88c7d1675b0dfc78072e50b5ba1d32b7cc7664258a640ad3a495a4", size = 57656, upload-time = "2024-08-13T19:54:38.755Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/de/37bb80bba7fb7baa703b78fab37487b21b43fe4bb5d5a1ab09ecab9b76c6/Boruta-0.4.3-py3-none-any.whl", hash = "sha256:58cc1d7f180d0ee3aace5b171a25f00b7fd8e323a749954d899cc983b2924085", size = 57909, upload-time = "2024-08-13T19:54:37.359Z" },
+]
+
+[[package]]
 name = "catboost"
 version = "1.2.10"
 source = { registry = "https://pypi.org/simple" }
@@ -547,6 +561,7 @@ name = "research"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "boruta" },
     { name = "catboost" },
     { name = "pandas" },
     { name = "requests" },
@@ -555,6 +570,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "boruta", specifier = ">=0.4.3" },
     { name = "catboost", specifier = ">=1.2.10" },
     { name = "pandas", specifier = ">=3.0.1" },
     { name = "requests", specifier = ">=2.32.5" },
