@@ -85,7 +85,7 @@ def run_cv_experiment():
         # ===============================
         # Boruta Feature Selection
         # ===============================
-        selector = BorutaSelector(max_iter=20)
+        selector = BorutaSelector(max_iter=10)
         selector.fit(X_train_filtered, y_train)
 
         X_train_final = selector.transform(X_train_filtered)
@@ -103,11 +103,23 @@ def run_cv_experiment():
         # Model Training
         # ===============================
         model = CatBoostClassifier(
-            iterations=2000,
-            depth=6,
-            l2_leaf_reg=10,
-            early_stopping_rounds=50,
-            verbose=False
+            depth=10,
+            learning_rate=0.01,
+            l2_leaf_reg=95,
+            min_data_in_leaf=290,
+            colsample_bylevel=0.9,
+            random_strength=0.125,
+            grow_policy='Depthwise',
+            one_hot_max_size=21,
+            leaf_estimation_method='Newton',
+            bootstrap_type='Bernoulli',
+            subsample=0.55,
+            loss_function='Logloss',
+            eval_metric='AUC',
+            auto_class_weights='Balanced',
+            iterations=2200,        
+            early_stopping_rounds=150, 
+            verbose=100
         )
 
         model.fit(
