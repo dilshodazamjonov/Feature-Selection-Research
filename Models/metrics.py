@@ -8,3 +8,4 @@ def ks_statistic(y_true, y_prob):
     ks = np.max(tpr - fpr)
 
     return ks
+
