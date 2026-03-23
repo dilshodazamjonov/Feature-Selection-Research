@@ -14,3 +14,6 @@ __init__.py
 *.csv
 *.parquet
 data/
+*.pkl
+outputs/
+.model

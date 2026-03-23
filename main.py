@@ -1,20 +1,26 @@
 # main.py
 
-import os
 import pandas as pd
 
 from feature_methods.preselection.iv_calc import IVFilter
 from feature_methods.boruta.boruta_selection import BorutaSelector
 from Preprocessing.data_process import Preprocessor
-from Models.metrics import ks_statistic
+from evaluation.metrics import ks_statistic
 from training.kfold_trainer import run_kfold_training
 
 
-# Model selection - change this to switch between CatBoost, RF, LR
-MODEL_NAME = "lr"   # options: "catboost", "rf", "lr"
+# --- Experiment Configuration ---
+MODEL_NAME = "catboost"                       # options: "catboost", "rf", "lr"
+FEATURE_SELECTION_METHOD = "boruta"     # descriptive name for the feature selection
+N_SPLITS = 5
+
+# Dataset configuration
+DATA_PATH = "data/inputs/Master_Data_with_filtering_updated.csv"
+TARGET = "TARGET"
+DROP_COLS = ["SK_ID_CURR", "SK_ID_BUREAU", "SK_ID_PREV", TARGET]
 
 
-# Get model-specific functions
+# --- Model Dependency Injection ---
 def get_model_module(model_name):
     """
     Returns model functions for training, prediction, saving, and feature importance
@@ -50,41 +56,27 @@ def get_model_module(model_name):
     return get_model, train_model, predict_proba, save_model, get_feature_importance
 
 
-# Directories and dataset configuration
-DATA_DIR = "data/inputs/Master_Data_with_filtering_updated.csv"
-TARGET = "TARGET"
-BASE_OUTPUT = f"data/output/{MODEL_NAME}"
-RESULTS_DIR = os.path.join(BASE_OUTPUT, "results")
-FEATURES_DIR = os.path.join(BASE_OUTPUT, "features")
-MODELS_DIR = os.path.join(BASE_OUTPUT, "models")
-N_SPLITS = 5
-
-os.makedirs(RESULTS_DIR, exist_ok=True)
-os.makedirs(FEATURES_DIR, exist_ok=True)
-os.makedirs(MODELS_DIR, exist_ok=True)
-
-print(f"Using model: {MODEL_NAME}")
-print(f"Data loading started from: {DATA_DIR}")
-
-
-# Load dataset
-raw_df = pd.read_csv(DATA_DIR)
-X = raw_df.drop(columns=[TARGET])
+# --- Load dataset ---
+print(f"Loading dataset from {DATA_PATH}...")
+raw_df = pd.read_csv(DATA_PATH)
+X = raw_df.drop(columns=DROP_COLS)
 y = raw_df[TARGET]
-print("Data read complete")
+print(f"Dataset loaded: {X.shape[0]} rows, {X.shape[1]} features")
 
 
-# Load model functions
+# --- Load model functions ---
 get_model, train_model, predict_proba, save_model, get_feature_importance = get_model_module(MODEL_NAME)
 
 
-# Run the K-Fold CV experiment
+# --- Main experiment runner ---
 def main():
     """
-    Executes the full CV training pipeline using run_kfold_training.
-    Handles preprocessing, IV filtering, feature selection, model training,
-    metrics computation, and saving of results, features, and models.
+    Executes the full K-Fold CV pipeline:
+    preprocessing -> IV filtering -> feature selection -> model training -> metrics.
+    The output directories are auto-created inside run_kfold_training.
     """
+    print(f"\nStarting Experiment: {MODEL_NAME}_{FEATURE_SELECTION_METHOD}")
+
     results_df = run_kfold_training(
         X=X,
         y=y,
@@ -97,10 +89,8 @@ def main():
         iv_filter_cls=IVFilter,
         selector_cls=BorutaSelector,
         ks_statistic=ks_statistic,
-        model_name=MODEL_NAME,
-        results_dir=RESULTS_DIR,
-        features_dir=FEATURES_DIR,
-        models_dir=MODELS_DIR,
+        model_name=f"{MODEL_NAME}_{FEATURE_SELECTION_METHOD}",
+        base_output_dir="outputs",
         n_splits=N_SPLITS,
         random_state=42
     )
@@ -109,6 +99,6 @@ def main():
     return results_df
 
 
-# Run script
+# --- Run script ---
 if __name__ == "__main__":
     results = main()
