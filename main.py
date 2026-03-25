@@ -10,8 +10,8 @@ from training.kfold_trainer import run_kfold_training
 
 
 # --- Experiment Configuration ---
-MODEL_NAME = "catboost"                       # options: "catboost", "rf", "lr"
-FEATURE_SELECTION_METHOD = "boruta"     # descriptive name for the feature selection
+MODEL_NAME = "lr"                       # options: "catboost", "rf", "lr"
+FEATURE_SELECTION_METHOD = "pca"     # descriptive name for the feature selection
 N_SPLITS = 5
 
 # Dataset configuration
