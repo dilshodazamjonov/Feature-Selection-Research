@@ -9,7 +9,7 @@ def get_rf_model():
     Returns a RandomForestClassifier instance with default settings.
     """
     return RandomForestClassifier(
-        n_estimators=500,
+        n_estimators=300,
         max_depth=None,
         min_samples_leaf=5,
         max_features="sqrt",

@@ -3,21 +3,42 @@
 import pandas as pd
 
 from feature_methods.preselection.iv_calc import IVFilter
-from feature_methods.boruta.boruta_selection import BorutaSelector
 from Preprocessing.data_process import Preprocessor
 from evaluation.metrics import ks_statistic
 from training.kfold_trainer import run_kfold_training
 
 
 # --- Experiment Configuration ---
-MODEL_NAME = "lr"                       # options: "catboost", "rf", "lr"
-FEATURE_SELECTION_METHOD = "pca"     # descriptive name for the feature selection
+MODEL_NAME = "rf"                       # options: "catboost", "rf", "lr"
+FEATURE_SELECTION_METHOD = "boruta"     # descriptive name for the feature selection
 N_SPLITS = 5
 
 # Dataset configuration
 DATA_PATH = "data/inputs/Master_Data_with_filtering_updated.csv"
 TARGET = "TARGET"
 DROP_COLS = ["SK_ID_CURR", "SK_ID_BUREAU", "SK_ID_PREV", TARGET]
+
+def get_selector(selector_name):
+
+    selector_name = selector_name.lower()
+
+    if selector_name == "boruta":
+        from feature_methods.boruta.boruta_selection import BorutaSelector
+        return BorutaSelector
+
+    elif selector_name == "pca":
+        from feature_methods.pca_entry import PCASelector
+        return PCASelector
+
+    elif selector_name == "mrmr":
+        from feature_methods.mrmr.mrmr_selector import MRMRSelector
+        return MRMRSelector
+
+    elif selector_name == "none":
+        return None
+
+    else:
+        raise ValueError(f"Unsupported selector: {selector_name}")
 
 
 # --- Model Dependency Injection ---
@@ -77,6 +98,9 @@ def main():
     """
     print(f"\nStarting Experiment: {MODEL_NAME}_{FEATURE_SELECTION_METHOD}")
 
+    selector_cls=get_selector(FEATURE_SELECTION_METHOD)
+    
+
     results_df = run_kfold_training(
         X=X,
         y=y,
@@ -87,7 +111,7 @@ def main():
         get_feature_importance=get_feature_importance,
         preprocessor_cls=Preprocessor,
         iv_filter_cls=IVFilter,
-        selector_cls=BorutaSelector,
+        selector_cls=selector_cls,
         ks_statistic=ks_statistic,
         model_name=f"{MODEL_NAME}_{FEATURE_SELECTION_METHOD}",
         base_output_dir="outputs",

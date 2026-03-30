@@ -8,7 +8,7 @@ class BorutaSelector:
 
     def __init__(
         self,
-        max_iter: int = 5,
+        max_iter: int = 10,
         random_state: int = 42
     ):
         self.max_iter = max_iter
