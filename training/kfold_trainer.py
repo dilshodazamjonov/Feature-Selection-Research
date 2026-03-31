@@ -1,44 +1,72 @@
-# training/kfold_trainer.py
-
 import os
 import time
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_score
 from datetime import datetime
-from evaluation.shapley import calculate_shap_importance
 
-sample_size=500
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import TimeSeriesSplit
+
+from Preprocessing.preprocessing import Preprocessor
+from evaluation.metrics import evaluate_model_wrapper
+
+
+def _instantiate(cls_or_obj, kwargs):
+    return cls_or_obj(**kwargs) if isinstance(cls_or_obj, type) else cls_or_obj
+
+
+def _fit_selector(selector, X_train, y_train):
+    try:
+        return selector.fit_transform(X_train, y_train)
+    except TypeError:
+        try:
+            return selector.fit_transform(X_train)
+        except TypeError:
+            selector.fit(X_train, y_train)
+            return selector.transform(X_train)
+
+
+def _transform_selector(selector, X):
+    return selector.transform(X)
+
+
+def _to_df(X, index=None, columns=None):
+    if isinstance(X, pd.DataFrame):
+        return X
+    cols = columns if columns is not None else [f"feature_{i}" for i in range(X.shape[1])]
+    return pd.DataFrame(X, index=index, columns=cols)
 
 
 def run_kfold_training(
     X,
     y,
+    time_col,
     get_model,
     train_model,
     predict_proba,
     save_model,
-    get_feature_importance,
-    preprocessor_cls,
-    iv_filter_cls,
-    selector_cls,
-    ks_statistic,
-    model_name,
+    preprocessor_cls=Preprocessor,
+    preprocessor_kwargs=None,
+    selector_cls=None,
+    selector_kwargs=None,
+    model_name="model",
     base_output_dir="outputs",
     n_splits=5,
-    random_state=42
+    random_state=42,
 ):
     """
-    Executes a full K-Fold cross-validation training pipeline.
+    Time-ordered K-fold training on the train portion only.
+
+    Additionally:
+    - Saves per-fold metrics
+    - Appends MEAN and STD rows to final CSV
     """
+    if time_col not in X.columns:
+        raise ValueError(f"{time_col} not found in X")
 
-    # -------------------------
-    # Create experiment folder
-    # -------------------------
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    exp_dir = os.path.join(base_output_dir, f"{model_name}_{timestamp}")
+    preprocessor_kwargs = preprocessor_kwargs or {}
+    selector_kwargs = selector_kwargs or {}
 
+    exp_dir = os.path.join(base_output_dir, f"{model_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}")
     results_dir = os.path.join(exp_dir, "results")
     features_dir = os.path.join(exp_dir, "features")
     models_dir = os.path.join(exp_dir, "models")
@@ -47,176 +75,128 @@ def run_kfold_training(
     os.makedirs(features_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
 
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    df = X.copy()
+    df["_target_"] = y.values
+    df = df.sort_values(time_col).reset_index(drop=True)
 
-    results = []
+    y_sorted = df["_target_"].copy()
+    X_model = df.drop(columns=["_target_", time_col])
+
+    tss = TimeSeriesSplit(n_splits=n_splits)
+
+    fold_results = []
+    feature_sets = []
+    oof_pred = np.zeros(len(df), dtype=float)
+    oof_true = y_sorted.values.copy()
+
     start_total = time.time()
 
-    # -------------------------
-    # CV Loop
-    # -------------------------
-    for fold, (train_idx, val_idx) in enumerate(skf.split(X, y), 1):
-
+    for fold, (tr_idx, va_idx) in enumerate(tss.split(X_model), 1):
         print(f"\n========== FOLD {fold} ==========")
-        fold_start = time.time()
 
-        fold_feat_dir = os.path.join(features_dir, f"fold_{fold}")
-        fold_iv_dir = os.path.join(fold_feat_dir, "iv")
-        fold_sel_dir = os.path.join(fold_feat_dir, "selected")
-        os.makedirs(fold_iv_dir, exist_ok=True)
-        os.makedirs(fold_sel_dir, exist_ok=True)
+        fold_dir = os.path.join(features_dir, f"fold_{fold}")
+        os.makedirs(fold_dir, exist_ok=True)
 
-        # Split
-        X_train = X.iloc[train_idx]
-        X_val = X.iloc[val_idx]
-        y_train = y.iloc[train_idx]
-        y_val = y.iloc[val_idx]
+        X_train, X_val = X_model.iloc[tr_idx].copy(), X_model.iloc[va_idx].copy()
+        y_train, y_val = y_sorted.iloc[tr_idx].copy(), y_sorted.iloc[va_idx].copy()
 
         # -------------------------
         # Preprocessing
         # -------------------------
-        preprocess = preprocessor_cls()
-        preprocess.fit(X_train)
-        X_train_proc = preprocess.transform(X_train)
-        X_val_proc = preprocess.transform(X_val)
-
-        X_train_proc = X_train_proc.replace([np.inf, -np.inf], np.nan).fillna(X_train_proc.median())
-        X_val_proc = X_val_proc.replace([np.inf, -np.inf], np.nan).fillna(X_train_proc.median())
-        print("Preprocessing finished")
-
-        # -------------------------
-        # IV Filtering
-        # -------------------------
-        iv_filter = iv_filter_cls(output_dir=fold_iv_dir)
-        iv_filter.fit(X_train_proc, y_train)
-        X_train_filtered = iv_filter.transform(X_train_proc)
-        X_val_filtered = iv_filter.transform(X_val_proc)
-        n_iv_features = len(X_train_filtered.columns)
-        print(f"IV Filter finished | Features kept: {n_iv_features}")
+        preprocessor = _instantiate(preprocessor_cls, preprocessor_kwargs)
+        X_train_p = preprocessor.fit_transform(X_train)
+        X_val_p = preprocessor.transform(X_val)
 
         # -------------------------
         # Feature Selection
         # -------------------------
         if selector_cls is not None:
-            selector = selector_cls()
-            if hasattr(selector, "fit_transform"):
-                X_train_final = selector.fit_transform(X_train_filtered, y_train)
-                X_val_final = selector.transform(X_val_filtered)
-            else:
-                selector.fit(X_train_filtered, y_train)
-                X_train_final = selector.transform(X_train_filtered)
-                X_val_final = selector.transform(X_val_filtered)
+            selector = _instantiate(selector_cls, selector_kwargs)
 
-            # Convert numpy output to DataFrame if needed
-            if not isinstance(X_train_final, pd.DataFrame):
-                X_train_final = pd.DataFrame(X_train_final)
-                X_val_final = pd.DataFrame(X_val_final)
+            X_train_f = _fit_selector(selector, X_train_p, y_train)
+            X_val_f = _transform_selector(selector, X_val_p)
 
-            selected_features = (
-                X_train_final.columns.tolist()
-                if hasattr(X_train_final, "columns")
-                else [f"feature_{i}" for i in range(X_train_final.shape[1])]
-            )
+            X_train_f = _to_df(X_train_f, index=X_train_p.index)
+            X_val_f = _to_df(X_val_f, index=X_val_p.index, columns=X_train_f.columns)
         else:
-            X_train_final = X_train_filtered
-            X_val_final = X_val_filtered
-            selected_features = X_train_filtered.columns.tolist()
+            X_train_f, X_val_f = X_train_p, X_val_p
 
-        # Save selected features
+        selected_features = X_train_f.columns.tolist()
+        feature_sets.append(selected_features)
+
         pd.DataFrame({"feature": selected_features}).to_csv(
-            os.path.join(fold_sel_dir, "selected_features.csv"), index=False
+            os.path.join(fold_dir, "selected_features.csv"),
+            index=False
         )
-        print(f"Selected features ({len(selected_features)}) saved")
 
         # -------------------------
         # Model Training
         # -------------------------
         model = get_model()
-        model = train_model(model, X_train_final, y_train, X_val_final, y_val)
-        model_path = os.path.join(models_dir, f"{model_name}_fold_{fold}.model")
-        save_model(model, model_path)
-        print(f"Model saved: {model_path}")
+        model = train_model(model, X_train_f, y_train, X_val_f, y_val)
+
+        save_model(model, os.path.join(models_dir, f"{model_name}_fold_{fold}.model"))
 
         # -------------------------
-        # Predictions & Metrics
+        # Validation
         # -------------------------
-        best_iteration = getattr(model, "get_best_iteration", lambda: None)()
-        val_preds = predict_proba(model, X_val_final)
+        val_proba = predict_proba(model, X_val_f)
+        oof_pred[va_idx] = val_proba
 
-        auc = roc_auc_score(y_val, val_preds)
-        gini = 2 * auc - 1
-        ks, optimal_threshold = ks_statistic(y_val, val_preds)
-        y_pred = (val_preds >= optimal_threshold).astype(int)
+        fold_metrics = evaluate_model_wrapper(
+            y_true=y_val.values,
+            y_pred_proba=val_proba,
+            output_dir=results_dir,
+            method_name=f"{model_name}_fold_{fold}",
+        )
 
-        precision = precision_score(y_val, y_pred, zero_division=0)
-        recall = recall_score(y_val, y_pred, zero_division=0)
-        f1 = f1_score(y_val, y_pred, zero_division=0)
-        goods = int((y_val == 0).sum())
-        bads = int((y_val == 1).sum())
-        goods_bads_ratio = goods / bads if bads > 0 else np.nan
-        bad_rate = bads / (goods + bads) if (goods + bads) > 0 else np.nan
-        fold_time = time.time() - fold_start
-
-        print(f"AUC: {auc:.5f} | KS: {ks:.5f} | F1: {f1:.4f}")
-
-        # -------------------------
-        # SHAP Values
-        # -------------------------
-        if fold == 1:
-
-            shap_dir = os.path.join(results_dir, "shap")
-            os.makedirs(shap_dir, exist_ok=True)
-            
-            shap_importance_df = calculate_shap_importance(model=model, X=X_train_final.sample(sample_size))
-            shap_path = os.path.join(shap_dir, f"shap_fold_{fold}.csv")
-            shap_importance_df.to_csv(shap_path, index=False)
-            
-            print(f"SHAP saved: {shap_path}")
-
-        results.append({
+        fold_metrics.update({
             "fold": fold,
-            "auc": auc,
-            "gini": gini,
-            "ks": ks,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "threshold": optimal_threshold,
-            "iv_features": n_iv_features,
+            "train_size": len(tr_idx),
+            "val_size": len(va_idx),
             "selected_features": len(selected_features),
-            "goods": goods,
-            "bads": bads,
-            "goods_bads_ratio": goods_bads_ratio,
-            "bad_rate": bad_rate,
-            "best_iteration": best_iteration,
-            "fold_time_sec": fold_time
+            "fold_time_sec": time.time() - start_total,
         })
 
-    # -------------------------
-    # Results aggregation
-    # -------------------------
-    results_df = pd.DataFrame(results)
-    summary = results_df.mean(numeric_only=True).to_dict()
-    summary["fold"] = "MEAN"
-    std = results_df.std(numeric_only=True).to_dict()
-    std["fold"] = "STD"
-    results_df = pd.concat([results_df, pd.DataFrame([summary, std])], ignore_index=True)
+        fold_results.append(fold_metrics)
+        print(fold_metrics)
 
-    save_path = os.path.join(results_dir, "cv_results.csv")
-    results_df.to_csv(save_path, index=False)
+    # =====================================================
+    # FINAL RESULTS + MEAN / STD
+    # =====================================================
+    results_df = pd.DataFrame(fold_results)
+
+    numeric_cols = results_df.select_dtypes(include=[np.number]).columns
+
+    mean_row = results_df[numeric_cols].mean().to_frame().T
+    std_row = results_df[numeric_cols].std().to_frame().T
+
+    mean_row["fold"] = "mean"
+    std_row["fold"] = "std"
+
+    # Ensure same column order as results_df
+    summary_df = pd.concat([mean_row, std_row], ignore_index=True)
+    summary_df = summary_df.reindex(columns=results_df.columns)
+
+    final_results_df = pd.concat([results_df, summary_df], ignore_index=True)
+
+    final_results_df.to_csv(os.path.join(results_dir, "cv_results.csv"), index=False)
+
+    # -------------------------
+    # OOF Evaluation
+    # -------------------------
+    _ = evaluate_model_wrapper(
+        y_true=oof_true,
+        y_pred_proba=oof_pred,
+        output_dir=results_dir,
+        feature_sets=feature_sets,
+        metrics_list=fold_results,
+        method_name=model_name,
+    )
+
     print("\n========== FINAL RESULTS ==========")
-    print(results_df)
-    print(f"\nSaved to {save_path}")
-    print(f"Total Time: {(time.time() - start_total)/60:.2f} minutes")
+    print(final_results_df)
+    print(f"\nSaved to {os.path.join(results_dir, 'cv_results.csv')}")
+    print(f"Total Time: {(time.time() - start_total) / 60:.2f} minutes")
 
-    # -------------------------
-    # Feature Importance (last fold)
-    # -------------------------
-    fi = get_feature_importance(model, X_train_final.columns)
-    fi_df = pd.DataFrame(fi, columns=["feature", "importance"]).sort_values("importance", ascending=False).head(10)
-    fi_path = os.path.join(features_dir, "top10_features_last_fold.csv")
-    fi_df.to_csv(fi_path, index=False)
-    print("\nTop 10 Features:")
-    print(fi_df.to_string(index=False))
-
-    return results_df
+    return final_results_df

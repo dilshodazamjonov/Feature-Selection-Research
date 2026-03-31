@@ -51,6 +51,9 @@ class PCASelector:
     def transform(self, X: pd.DataFrame):
         """Transform dataset using fitted PCA."""
 
+        if self.feature_names is None:
+            raise ValueError("PCASelector not fitted yet")
+
         X_pca = self.pca.transform(X)
 
         columns = [f"PC{i+1}" for i in range(X_pca.shape[1])]
