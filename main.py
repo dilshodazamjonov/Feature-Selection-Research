@@ -1,13 +1,13 @@
 import pandas as pd
 import matplotlib
+
 from Preprocessing.data_process import DataLoader
 from Preprocessing.preprocessing import Preprocessor
 from Preprocessing.feature_engineering import build_all_features
 
-from feature_selection.boruta_rfe import BorutaSelector, RFESelector
+from feature_selection.boruta_rfe import BorutaRFESelector
 from feature_selection.mrmr import MRMR
 from feature_selection.pca import PCASelector
-
 
 from training.oot_trainer import oot_split
 from training.kfold_trainer import run_kfold_training
@@ -17,15 +17,15 @@ from Models.random_forest_model import RandomForestModel
 from Models.logistic_regression_model import LogisticRegressionModel
 
 
-matplotlib.use("Agg")  # non-GUI backend (safe)
+matplotlib.use("Agg")  
 
-MODEL_NAME = "catboost" # lr, rf, catboost
-FEATURE_SELECTION_METHOD = "mrmr" # boruta, rfe, mrmr, pca, none
+MODEL_NAME = "rf"  # lr, rf, catboost
+FEATURE_SELECTION_METHOD = "boruta_rfe"  # boruta -> boruta + rfe, mrmr, pca, none
 N_SPLITS = 5
 
 DATA_DIR = "data/inputs"
 TARGET = "TARGET"
-TIME_COL = "recent_decision"   # will also accept DAYS_DECISION if present
+TIME_COL = "recent_decision"  
 OOT_TEST_SIZE = 0.2
 
 DROP_ID_COLS = ["SK_ID_CURR", "SK_ID_BUREAU", "SK_ID_PREV"]
@@ -45,17 +45,25 @@ def resolve_time_col(df: pd.DataFrame, preferred: str) -> str:
 def get_selector(selector_name):
     """
     Returns the selector class and its default kwargs.
+
+    Updated logic:
+        - 'boruta' -> Boruta + RFE pipeline
+        - 'rfe' removed
     """
     name = selector_name.lower()
 
-    if name == "boruta":
-        return BorutaSelector, {"max_iter": 10, "random_state": 42}
-    if name == "rfe":
-        return RFESelector, {"n_features": 50, "step": 10, "random_state": 42}
+    if name == "boruta_rfe":
+        return BorutaRFESelector, {
+            "boruta_kwargs": {"max_iter": 20, "random_state": 42},
+            "rfe_kwargs": {"n_features": 40, "step": 10, "random_state": 42},
+        }
+
     if name == "mrmr":
         return MRMR, {"k": 50, "method": "mrmr", "random_state": 42}
+
     if name == "pca":
         return PCASelector, {"n_components": 0.95, "save_dir": None}
+
     if name == "none":
         return None, {}
 
