@@ -17,10 +17,11 @@ from Models.random_forest_model import RandomForestModel
 from Models.logistic_regression_model import LogisticRegressionModel
 
 
+
 matplotlib.use("Agg")  
 
-MODEL_NAME = "rf"  # lr, rf, catboost
-FEATURE_SELECTION_METHOD = "boruta_rfe"  # boruta -> boruta + rfe, mrmr, pca, none
+MODEL_NAME = "lr"  # lr, rf, catboost
+FEATURE_SELECTION_METHOD = "mrmr"  # boruta -> boruta + rfe, mrmr, pca, none
 N_SPLITS = 5
 
 DATA_DIR = "data/inputs"

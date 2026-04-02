@@ -3,7 +3,6 @@
 import pandas as pd
 from typing import Tuple, Optional
 
-
 def oot_split(
     df: pd.DataFrame,
     time_col: str,

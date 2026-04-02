@@ -17,6 +17,8 @@ from evaluation.feature_utils import (
     _save_stagewise_selection,
     _to_df
 )
+from evaluation.stability_scores import calculate_psi, feature_psi
+
 
 def _instantiate(cls_or_obj, kwargs):
     """
@@ -114,6 +116,9 @@ def run_kfold_training(
         fold_dir = os.path.join(features_dir, f"fold_{fold}")
         os.makedirs(fold_dir, exist_ok=True)
 
+        psi_dir = os.path.join(fold_dir, "psi")
+        os.makedirs(psi_dir, exist_ok=True)
+
         X_train, X_val = X_model.iloc[tr_idx].copy(), X_model.iloc[va_idx].copy()
         y_train, y_val = y_sorted.iloc[tr_idx].copy(), y_sorted.iloc[va_idx].copy()
 
@@ -145,6 +150,14 @@ def run_kfold_training(
             X_val_f = _to_df(X_val_f, index=X_val_p.index, columns=X_train_f.columns)
         else:
             X_train_f, X_val_f = X_train_p, X_val_p
+
+        psi_df = feature_psi(X_train_f, X_val_f)
+        psi_df.to_csv(os.path.join(psi_dir, "feature_psi.csv"), index=False)
+
+        psi_mean = psi_df["psi"].mean()
+        psi_max = psi_df["psi"].max()
+
+        print(f"Feature PSI | mean: {psi_mean:.4f}, max: {psi_max:.4f}")
 
         selected_features = X_train_f.columns.tolist()
         feature_sets.append(selected_features)
@@ -191,6 +204,17 @@ def run_kfold_training(
         # Validation
         # -------------------------
         val_proba = predict_proba(model, X_val_f)
+        train_proba = predict_proba(model, X_train_f)
+
+        psi_model = calculate_psi(train_proba, val_proba)
+
+        pd.DataFrame({
+            "fold": [fold],
+            "model_psi": [psi_model]
+        }).to_csv(os.path.join(psi_dir, "model_psi.csv"), index=False)
+
+        print(f"Model PSI: {psi_model:.4f}")
+
         oof_pred[va_idx] = val_proba
 
         fold_metrics = evaluate_model_wrapper(
@@ -206,6 +230,9 @@ def run_kfold_training(
             "val_size": len(va_idx),
             "selected_features": len(selected_features),
             "fold_time_sec": time.time() - fold_start,
+            "psi_feature_mean": psi_mean,
+            "psi_feature_max": psi_max,
+            "psi_model": psi_model,
         })
 
         # Add selector-stage counts if available

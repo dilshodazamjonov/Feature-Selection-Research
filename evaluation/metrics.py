@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (
@@ -152,26 +151,7 @@ def evaluate_model_wrapper(
     plt.legend()
     plt.savefig(plot_path)
     plt.close()
-
-    # Feature stability plot if provided
-    if feature_sets:
-        plot_path_fs = os.path.join(output_dir, f"feature_stability_{method_name}.png")
-        from collections import Counter
-        all_features = [f for fs in feature_sets for f in fs]
-        counts = Counter(all_features)
-        total_folds = len(feature_sets)
-        freq_df = pd.DataFrame({
-            "Feature": list(counts.keys()),
-            "Selection_Frequency": [v / total_folds for v in counts.values()]
-        }).sort_values("Selection_Frequency", ascending=False)
-        plt.figure(figsize=(10,6))
-        sns.barplot(x="Selection_Frequency", y="Feature", data=freq_df)
-        plt.title(f"Feature Stability Across Folds ({method_name})")
-        plt.xlabel("Selection Frequency")
-        plt.ylabel("Feature")
-        plt.savefig(plot_path_fs)
-        plt.close()
-
+    
     # Metric distribution plot if metrics_list provided
     if metrics_list:
         plot_path_md = os.path.join(output_dir, f"metric_distribution_{method_name}.png")
