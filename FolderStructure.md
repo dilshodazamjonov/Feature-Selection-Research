@@ -10,405 +10,91 @@
         ├── learn_error.tsv
         ├── test_error.tsv
         ├── time_left.tsv
-    └── 📁data
-        └── 📁inputs
-            ├── application_train.csv
-            ├── bureau_balance.csv
-            ├── bureau.csv
-            ├── credit_card_balance.csv
-            ├── installments_payments.csv
-            ├── POS_CASH_balance.csv
-            ├── previous_application.csv
-        └── 📁outputs
-        ├── application_test.csv
-        ├── HomeCredit_columns_description.csv
-        ├── sample_submission.csv
     └── 📁evaluation
-        └── 📁__pycache__
-            ├── metrics.cpython-313.pyc
-            ├── shapley.cpython-313.pyc
+        ├── feature_utils.py
         ├── metrics.py
         ├── shapley.py
+        ├── stability_scores.py
     └── 📁feature_selection
-        └── 📁__pycache__
-            ├── boruta_rfe.cpython-313.pyc
-            ├── mrmr.cpython-313.pyc
-            ├── pca.cpython-313.pyc
         ├── boruta_rfe.py
         ├── iv_calc.py
+        ├── llm_selector.py
         ├── mrmr.py
         ├── pca.py
         ├── README.md
     └── 📁Models
-        └── 📁__pycache__
-            ├── catboost_model.cpython-313.pyc
-            ├── catboost_pipeline.cpython-313.pyc
-            ├── catboost.cpython-313.pyc
-            ├── logistic_regression_model.cpython-313.pyc
-            ├── logistic_regression.cpython-313.pyc
-            ├── metrics.cpython-313.pyc
-            ├── random_forest_model.cpython-313.pyc
-            ├── random_forest.cpython-313.pyc
         ├── catboost_model.py
         ├── logistic_regression_model.py
         ├── random_forest_model.py
     └── 📁Notebooks
+        ├── analysis.ipynb
         ├── data_prep.ipynb
     └── 📁outputs
-        └── 📁catboost_boruta_2026-03-23_14-34-22
+        └── 📁catboost_boruta_rfe_2026-04-01_15-19-50
             └── 📁features
                 └── 📁fold_1
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_2
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_3
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_4
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_5
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                ├── top10_features_last_fold.csv
-            └── 📁models
-                ├── catboost_boruta_fold_1.model
-                ├── catboost_boruta_fold_2.model
-                ├── catboost_boruta_fold_3.model
-                ├── catboost_boruta_fold_4.model
-                ├── catboost_boruta_fold_5.model
-            └── 📁results
-                ├── cv_results.csv
-        └── 📁lr_mrmr_2026-03-31_16-54-12
-            └── 📁features
-                └── 📁fold_1
+                    ├── boruta_features.csv
+                    ├── feature_correlation.csv
+                    ├── feature_importance.csv
+                    ├── feature_statistics.csv
+                    ├── rfe_features.csv
                     ├── selected_features.csv
                 └── 📁fold_2
+                    ├── boruta_features.csv
+                    ├── feature_correlation.csv
+                    ├── feature_importance.csv
+                    ├── feature_statistics.csv
+                    ├── rfe_features.csv
                     ├── selected_features.csv
                 └── 📁fold_3
+                    ├── boruta_features.csv
+                    ├── feature_correlation.csv
+                    ├── feature_importance.csv
+                    ├── feature_statistics.csv
+                    ├── rfe_features.csv
                     ├── selected_features.csv
                 └── 📁fold_4
+                    ├── boruta_features.csv
+                    ├── feature_correlation.csv
+                    ├── feature_importance.csv
+                    ├── feature_statistics.csv
+                    ├── rfe_features.csv
                     ├── selected_features.csv
                 └── 📁fold_5
+                    ├── boruta_features.csv
+                    ├── feature_correlation.csv
+                    ├── feature_importance.csv
+                    ├── feature_statistics.csv
+                    ├── rfe_features.csv
                     ├── selected_features.csv
             └── 📁models
-                ├── lr_mrmr_fold_1.model
-                ├── lr_mrmr_fold_2.model
-                ├── lr_mrmr_fold_3.model
-                ├── lr_mrmr_fold_4.model
-                ├── lr_mrmr_fold_5.model
+                ├── catboost_boruta_rfe_fold_1.model
+                ├── catboost_boruta_rfe_fold_2.model
+                ├── catboost_boruta_rfe_fold_3.model
+                ├── catboost_boruta_rfe_fold_4.model
+                ├── catboost_boruta_rfe_fold_5.model
             └── 📁results
                 ├── cv_results.csv
-                ├── feature_stability_lr_mrmr.png
-                ├── metric_distribution_lr_mrmr.png
-                ├── threshold_analysis_lr_mrmr_fold_1.png
-                ├── threshold_analysis_lr_mrmr_fold_2.png
-                ├── threshold_analysis_lr_mrmr_fold_3.png
-                ├── threshold_analysis_lr_mrmr_fold_4.png
-                ├── threshold_analysis_lr_mrmr_fold_5.png
-                ├── threshold_analysis_lr_mrmr.png
-        └── 📁lr_pca_2026-03-23_22-30-50
-            └── 📁features
-                └── 📁fold_1
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_2
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_3
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_4
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_5
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                ├── top10_features_last_fold.csv
-            └── 📁models
-                ├── lr_pca_fold_1.model
-                ├── lr_pca_fold_2.model
-                ├── lr_pca_fold_3.model
-                ├── lr_pca_fold_4.model
-                ├── lr_pca_fold_5.model
-            └── 📁results
-                ├── cv_results.csv
-        └── 📁lr_pca_2026-03-24_17-34-48
-            └── 📁features
-                └── 📁fold_1
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_2
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_3
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_4
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_5
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                ├── top10_features_last_fold.csv
-            └── 📁models
-                ├── lr_pca_fold_1.model
-                ├── lr_pca_fold_2.model
-                ├── lr_pca_fold_3.model
-                ├── lr_pca_fold_4.model
-                ├── lr_pca_fold_5.model
-            └── 📁results
-                ├── cv_results.csv
-        └── 📁rf_boruta_2026-03-23_14-08-34
-            └── 📁features
-                └── 📁fold_1
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_2
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_3
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_4
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_5
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                ├── top10_features_last_fold.csv
-            └── 📁models
-                ├── rf_boruta_fold_1.model
-                ├── rf_boruta_fold_2.model
-                ├── rf_boruta_fold_3.model
-                ├── rf_boruta_fold_4.model
-                ├── rf_boruta_fold_5.model
-            └── 📁results
-                ├── cv_results.csv
-        └── 📁rf_boruta_2026-03-30_17-23-38
-            └── 📁features
-                └── 📁fold_1
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_2
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_3
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_4
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                └── 📁fold_5
-                    └── 📁iv
-                        ├── iv_bin_level_stats.csv
-                        ├── iv_dropped_features.csv
-                        ├── iv_feature_summaries.csv
-                        ├── iv_leakage_flags.csv
-                        ├── iv_selected_features.csv
-                        ├── iv_table.csv
-                    └── 📁selected
-                        ├── selected_features.csv
-                ├── top10_features_last_fold.csv
-            └── 📁models
-                ├── rf_boruta_fold_1.model
-                ├── rf_boruta_fold_2.model
-                ├── rf_boruta_fold_3.model
-                ├── rf_boruta_fold_4.model
-                ├── rf_boruta_fold_5.model
-            └── 📁results
-                └── 📁shap
-                    ├── shap_fold_1.csv
-                ├── cv_results.csv
+                ├── feature_stability_catboost_boruta_rfe.png
+                ├── metric_distribution_catboost_boruta_rfe.png
+                ├── threshold_analysis_catboost_boruta_rfe_fold_1.png
+                ├── threshold_analysis_catboost_boruta_rfe_fold_2.png
+                ├── threshold_analysis_catboost_boruta_rfe_fold_3.png
+                ├── threshold_analysis_catboost_boruta_rfe_fold_4.png
+                ├── threshold_analysis_catboost_boruta_rfe_fold_5.png
+                ├── threshold_analysis_catboost_boruta_rfe.png
+            ├── feature_stability.csv
     └── 📁Preprocessing
-        └── 📁__pycache__
-            ├── __init__.cpython-313.pyc
-            ├── data_process.cpython-313.pyc
-            ├── feature_engineering.cpython-313.pyc
-            ├── preprocessing.cpython-313.pyc
         ├── __init__.py
         ├── data_process.py
         ├── feature_engineering.py
         ├── preprocessing.py
     └── 📁training
-        └── 📁__pycache__
-            ├── kfold_trainer.cpython-311.pyc
-            ├── kfold_trainer.cpython-313.pyc
-            ├── oot_trainer.cpython-313.pyc
         ├── kfold_trainer.py
         ├── oot_trainer.py
     ├── .gitignore
     ├── .python-version
+    ├── FolderStructure.md
     ├── main.py
     ├── pyproject.toml
     ├── README.md

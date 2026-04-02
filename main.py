@@ -20,7 +20,7 @@ from Models.logistic_regression_model import LogisticRegressionModel
 
 matplotlib.use("Agg")  
 
-MODEL_NAME = "lr"  # lr, rf, catboost
+MODEL_NAME = "catboost"  # lr, rf, catboost
 FEATURE_SELECTION_METHOD = "mrmr"  # boruta -> boruta + rfe, mrmr, pca, none
 N_SPLITS = 5
 
