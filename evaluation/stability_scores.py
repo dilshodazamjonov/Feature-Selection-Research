@@ -161,3 +161,33 @@ def add_psi_flags(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df
+
+
+def jaccard_similarity(set1: set, set2: set) -> float:
+    """
+    Compute Jaccard similarity between two sets.
+
+    Jaccard similarity is defined as the size of the intersection divided
+    by the size of the union of the two sets.
+
+    Parameters
+    ----------
+    set1 : set
+        First set of items.
+    set2 : set
+        Second set of items.
+
+    Returns
+    -------
+    float
+        Jaccard similarity score in [0, 1]. Returns 0 if both sets are empty.
+    """
+
+    if not set1 and not set2:
+        return 1.0
+
+    intersection = len(set1 & set2)
+    union = len(set1 | set2)
+
+    return intersection / union if union > 0 else 0.0
+    

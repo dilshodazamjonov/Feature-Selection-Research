@@ -1,13 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.metrics import (
     roc_auc_score, 
     confusion_matrix, 
     roc_curve,
     accuracy_score
 )
-import os
+import pandas as pd
+from evaluation.stability_scores import jaccard_similarity
+
 
 def ks_score(y_true, y_prob):
     """
@@ -64,30 +64,24 @@ def f1_score(y_true, y_pred):
     return 2 * p * r / (p + r) if p + r > 0 else 0
 
 def evaluate_model(y_true, y_pred_proba, threshold=None):
-    """
-    Evaluates a binary classification model across ML and business metrics.
-
-    If threshold is None, uses KS-based threshold.
-
-    Returns a dictionary with:
-        gini, auc, ks, ks_threshold, tn, fp, tp, fn,
-        precision, recall, f1, accuracy,
-        approval_rate (% of approved cases),
-        bad_rate_approved (% of bads among approved)
-    """
     y_true = np.array(y_true)
     y_pred_proba = np.array(y_pred_proba)
+    
     ks, ks_thresh = ks_score(y_true, y_pred_proba)
+    
     if threshold is None:
         threshold = ks_thresh
+    
     y_pred = (y_pred_proba >= threshold).astype(int)
+    
     approval_rate = float(np.mean(y_pred == 0))
     approved_mask = (y_pred == 0)
     bad_rate_approved = float(np.mean(y_true[approved_mask])) if np.sum(approved_mask) > 0 else 0
+    
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel().tolist()
-
+    
     return {
-        "gini": gini_score(y_true, y_pred_proba),
+        "gini": gini_score(y_true, y_pred_proba),  
         "auc": roc_auc_score(y_true, y_pred_proba),
         "ks": ks,
         "ks_threshold": ks_thresh,
@@ -100,67 +94,68 @@ def evaluate_model(y_true, y_pred_proba, threshold=None):
         "bad_rate_approved": bad_rate_approved
     }
 
+# ----- Wrapper -----
 def evaluate_model_wrapper(
     y_true,
     y_pred_proba,
+    fold_number,
+    selected_features=None,
+    psi_feature_mean=None,
+    psi_feature_max=None,
+    psi_model=None,
     threshold=None,
-    output_dir="data/outputs",
-    feature_sets: list = None,
-    metrics_list: list = None,
-    method_name="Method"
 ):
     """
-    Wrapper to evaluate a model, save metrics and plots to disk.
-    
-    Parameters:
-        y_true: true labels
-        y_pred_proba: predicted probabilities
-        threshold: optional threshold for classification; defaults to KS-based threshold
-        output_dir: directory to save plots
-        feature_sets: optional list of feature lists per fold (for stability plot)
-        metrics_list: optional list of evaluate_model() dicts per fold (for metric distribution)
-        method_name: name of the method/model for labeling plots
-    
-    Returns:
-        metrics_dict: dictionary with evaluation metrics
+    Evaluates one fold and returns organized results.
     """
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Compute metrics
     metrics_dict = evaluate_model(y_true, y_pred_proba, threshold)
-
-    # Save threshold analysis plot
-    plot_path = os.path.join(output_dir, f"threshold_analysis_{method_name}.png")
-    plt.figure(figsize=(8,5))
-    y_true_np = np.array(y_true)
-    y_prob_np = np.array(y_pred_proba)
-    thresholds = np.linspace(0, 1, 100)
-    approval_rates, bad_rates = [], []
-    for thresh in thresholds:
-        y_pred = (y_prob_np >= thresh).astype(int)
-        approval_rates.append(float(np.mean(y_pred == 0)))
-        approved_mask = (y_pred == 0)
-        bad_rate = float(np.mean(y_true_np[approved_mask])) if np.sum(approved_mask) > 0 else 0
-        bad_rates.append(bad_rate)
-    plt.plot(thresholds, approval_rates, label="Approval Rate")
-    plt.plot(thresholds, bad_rates, label="Bad Rate among Approved")
-    plt.axvline(x=metrics_dict['ks_threshold'], color='red', linestyle='--', label='KS Threshold')
-    plt.xlabel("Probability Threshold")
-    plt.ylabel("Rate")
-    plt.title(f"Threshold Analysis ({method_name})")
-    plt.legend()
-    plt.savefig(plot_path)
-    plt.close()
     
-    # Metric distribution plot if metrics_list provided
-    if metrics_list:
-        plot_path_md = os.path.join(output_dir, f"metric_distribution_{method_name}.png")
-        plt.figure(figsize=(6,4))
-        values = [m['ks'] for m in metrics_list]  # example with KS; can be parameterized
-        sns.boxplot(values)
-        plt.title(f"KS Distribution Across Folds ({method_name})")
-        plt.ylabel("KS")
-        plt.savefig(plot_path_md)
-        plt.close()
+    # Fold info
+    fold_info = {
+        "fold": fold_number,
+        "train_size": len(y_true) - np.sum(y_pred_proba >= 0),  # optional approximation
+        "val_size": len(y_true),
+    }
+    
+    # Feature stability
+    stability_info = {
+        "selected_features": len(selected_features) if selected_features else 0,
+        "psi_feature_mean": psi_feature_mean,
+        "psi_feature_max": psi_feature_max,
+        "psi_model": psi_model,
+    }
+    
+    # Include Jaccard similarity if list of selected features per fold exists
+    if hasattr(evaluate_model_wrapper, "prev_selected"):
+        prev_set = evaluate_model_wrapper.prev_selected
+        curr_set = set(selected_features) if selected_features else set()
+        stability_info["jaccard_similarity"] = jaccard_similarity(prev_set, curr_set)
+        evaluate_model_wrapper.prev_selected = curr_set
+    else:
+        evaluate_model_wrapper.prev_selected = set(selected_features) if selected_features else set()
+        stability_info["jaccard_similarity"] = np.nan
+    
+    # Combine everything
+    result = {**fold_info, **metrics_dict, **stability_info}
+    
+    return result
 
-    return metrics_dict
+def save_fold_results(all_fold_results, output_csv):
+    """
+    all_fold_results: list of dicts returned by evaluate_model_wrapper
+    """
+    df = pd.DataFrame(all_fold_results)
+    
+    # Compute mean and std rows
+    metrics_cols = [c for c in df.columns if c not in ["fold", "selected_features"]]  # exclude fold-specific
+    mean_row = df[metrics_cols].mean()
+    mean_row["fold"] = "mean"
+    
+    std_row = df[metrics_cols].std()
+    std_row["fold"] = "std"
+    
+    # Optional: Insert a blank row between folds and summary
+    df = pd.concat([df, pd.DataFrame([{}]), pd.DataFrame([mean_row]), pd.DataFrame([std_row])], ignore_index=True)
+    
+    df.to_csv(output_csv, index=False)
+    print(f"Saved metrics to {output_csv}")
