@@ -1,10 +1,8 @@
 import logging
 import warnings
-from multiprocessing import cpu_count
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, TransformerMixin, MetaEstimatorMixin
 from sklearn.ensemble import RandomForestClassifier
 
@@ -53,29 +51,21 @@ class MRMR(TransformerMixin, BaseEstimator, MetaEstimatorMixin):
 
         self.logger.info("[RF] Top 10 features: %s", self.k_top_rf_[:10])
 
-    # ======== RFCQ SCORE (MRMR) ========
-    @staticmethod
-    def _rfcq_score(X, candidates, selected, relevance, corr_method):
-        X_sel = X[selected]
-
-        redundancy = {}
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            for c in candidates:
-                corr = np.abs(X_sel.corrwith(X[c], method=corr_method))
-                redundancy[c] = max(corr.mean(), 0.05)
-
-        redundancy = pd.Series(redundancy)
-        return relevance.loc[candidates] / redundancy
-
     # ======== MRMR FEATURE SELECTION ========
     def get_mrmr_features(self, X: pd.DataFrame):
         self.logger.info("[MRMR] Starting mRMR feature selection")
         self.logger.info("[MRMR] Target number of features: %d", self.k)
 
         selected = [self.rf_importances_.index[0]]
-        selected_scores = [self.rf_importances_.iloc[0]]  # first feature score is its RF relevance
         self.logger.info("[MRMR] Initial feature selected: %s", selected[0])
+
+        # Use sampling if dataset is large for efficiency
+        max_samples = 10000
+        if len(X) > max_samples:
+            sample_idx = np.random.RandomState(self.random_state).choice(len(X), max_samples, replace=False)
+            X_sample = X.iloc[sample_idx]
+        else:
+            X_sample = X
 
         for step in range(1, self.k):
             remaining = [c for c in self.rf_importances_.index if c not in selected]
@@ -91,37 +81,40 @@ class MRMR(TransformerMixin, BaseEstimator, MetaEstimatorMixin):
                 len(remaining),
             )
 
-            n_jobs = min(cpu_count(), len(remaining))
-            chunks = np.array_split(remaining, n_jobs)
+            # Compute redundancy efficiently
+            X_sel = X_sample[selected]
+            
+            redundancy = {}
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                
+                if len(selected) == 1:
+                    # Single selected feature - simple case
+                    for c in remaining:
+                        corr = np.abs(X_sel.iloc[:, 0].corr(X_sample[c], method=self.correlation))
+                        redundancy[c] = max(corr, 0.05)
+                else:
+                    # Multiple selected features - compute mean correlation
+                    for c in remaining:
+                        corrs = [X_sel.iloc[:, i].corr(X_sample[c], method=self.correlation) 
+                                 for i in range(len(selected))]
+                        redundancy[c] = max(np.mean(np.abs(corrs)), 0.05)
 
-            scores = Parallel(n_jobs=n_jobs)(
-                delayed(self._rfcq_score)(
-                    X,
-                    chunk.tolist(),
-                    selected,
-                    self.rf_importances_,
-                    self.correlation,
-                )
-                for chunk in chunks
-            )
-
-            scores = pd.concat(scores)
+            redundancy = pd.Series(redundancy)
+            scores = self.rf_importances_.loc[remaining] / redundancy
+            
             next_feature = scores.idxmax()
-            next_score = scores.loc[next_feature]
 
             selected.append(next_feature)
-            selected_scores.append(next_score)  # store the score
 
             self.logger.info(
-                "[MRMR] Selected feature %d: %s (score=%.6f)",
+                "[MRMR] Selected feature %d: %s",
                 step + 1,
                 next_feature,
-                next_score,
             )
 
-        # ===== Store selected features and their scores =====
+        # ===== Store selected features =====
         self.mrmr_features_ = selected
-        self.mrmr_scores_ = selected_scores
         self.logger.info("[MRMR] Completed mRMR selection")
 
     # ======== FIT ========

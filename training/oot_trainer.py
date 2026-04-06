@@ -8,7 +8,8 @@ def oot_split(
     time_col: str,
     test_size: float = 0.2,
     min_train_size: Optional[int] = None,
-    target_col: Optional[str] = None
+    target_col: Optional[str] = None,
+    random_state: Optional[int] = None
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """
     Out-of-Time split based on a temporal column.

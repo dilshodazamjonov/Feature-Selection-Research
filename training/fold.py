@@ -1,6 +1,8 @@
 # fold.py
 import os
 import time
+import logging
+
 import numpy as np
 import pandas as pd
 
@@ -15,6 +17,10 @@ from evaluation.feature_utils import (
 from evaluation.stability_scores import calculate_psi, feature_psi
 from evaluation.metrics import evaluate_model_wrapper
 from training.cv_utils import _to_1d_proba
+from utils.logging_config import setup_logging
+
+# Setup module logger
+logger = setup_logging("fold", level=logging.INFO)
 
 
 def process_fold(
@@ -31,6 +37,7 @@ def process_fold(
     save_model,
     preprocessor,
     selector=None,
+    prev_selected_features=None,
 ):  
     """
     Process a single fold of time-series cross-validation.
@@ -93,7 +100,7 @@ def process_fold(
         features_dir/fold_<fold>/ and models_dir/model_fold_<fold>.model
     """
 
-    print(f"\n========== FOLD {fold} ==========")
+    logger.info(f"=== FOLD {fold} ===")
 
     fold_dir = os.path.join(features_dir, f"fold_{fold}")
     os.makedirs(fold_dir, exist_ok=True)
@@ -135,7 +142,7 @@ def process_fold(
 
     psi_mean = float(psi_df["psi"].mean()) if "psi" in psi_df.columns and len(psi_df) > 0 else np.nan
     psi_max = float(psi_df["psi"].max()) if "psi" in psi_df.columns and len(psi_df) > 0 else np.nan
-    print(f"Feature PSI | mean: {psi_mean:.4f}, max: {psi_max:.4f}")
+    logger.info(f"Feature PSI | mean: {psi_mean:.4f}, max: {psi_max:.4f}")
 
     selected_features = X_train_f.columns.tolist()
     _save_selected_features(os.path.join(fold_dir, "selected_features.csv"), selected_features)
@@ -166,7 +173,7 @@ def process_fold(
         index=False,
     )
 
-    print(f"Model PSI: {psi_model:.4f}" if np.isfinite(psi_model) else "Model PSI: nan")
+    logger.info(f"Model PSI: {psi_model:.4f}" if np.isfinite(psi_model) else "Model PSI: nan")
 
     # Evaluate
     fold_metrics = evaluate_model_wrapper(
@@ -177,6 +184,7 @@ def process_fold(
         psi_feature_mean=psi_mean,
         psi_feature_max=psi_max,
         psi_model=psi_model,
+        prev_selected_features=prev_selected_features,
     )
 
     fold_metrics.update({
@@ -196,4 +204,4 @@ def process_fold(
         fold_metrics["boruta_selected_features"] = len(boruta_feats) if boruta_feats is not None else np.nan
         fold_metrics["rfe_selected_features"] = len(rfe_feats) if rfe_feats is not None else np.nan
 
-    return fold_metrics, val_proba
+    return fold_metrics, val_proba, selected_features

@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Optional
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, LabelEncoder
 
 
 class NumericalScaler:
@@ -71,29 +71,56 @@ class CategoricalEncoder:
         self.missing_value = missing_value
         self.cat_cols: List[str] = []
         self.low_card_cols: List[str] = []
+        self.high_card_cols: List[str] = []  # Preserve high cardinality as label encoded
         self.ohe: Optional[OneHotEncoder] = None
+        self.label_encoders: dict = {}  # For high cardinality features
 
     def fit(self, X: pd.DataFrame):
-        self.cat_cols = X.select_dtypes(include=["object", "category", str]).columns.tolist()
+        self.cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
+        
+        # Separate low and high cardinality columns
         self.low_card_cols = [c for c in self.cat_cols if X[c].nunique() <= self.max_cardinality]
+        self.high_card_cols = [c for c in self.cat_cols if X[c].nunique() > self.max_cardinality]
 
-        X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
-        self.ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
-        self.ohe.fit(X_low)
+        # One-hot encode low cardinality
+        if self.low_card_cols:
+            X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
+            self.ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+            self.ohe.fit(X_low)
+        for col in self.high_card_cols:
+            le = LabelEncoder()
+            # Fill NaN with a placeholder, then fit
+            X_col = X[col].fillna(self.missing_value).astype(str)
+            le.fit(X_col)
+            self.label_encoders[col] = le
 
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
-        X_encoded = self.ohe.transform(X_low)
-
-        X_encoded_df = pd.DataFrame(
-            X_encoded,
-            columns=self.ohe.get_feature_names_out(self.low_card_cols),
-            index=X.index
-        )
-
-        return X_encoded_df
+        result_dfs = []
+        
+        # One-hot encode low cardinality
+        if self.low_card_cols:
+            X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
+            X_encoded = self.ohe.transform(X_low)
+            X_encoded_df = pd.DataFrame(
+                X_encoded,
+                columns=self.ohe.get_feature_names_out(self.low_card_cols),
+                index=X.index
+            )
+            result_dfs.append(X_encoded_df)
+        
+        # Label encode high cardinality
+        for col in self.high_card_cols:
+            X_col = X[col].fillna(self.missing_value).astype(str)
+            # Handle unseen labels
+            le = self.label_encoders[col]
+            encoded = X_col.apply(lambda x: le.transform([x])[0] if x in le.classes_ else -1)
+            result_dfs.append(pd.DataFrame({col: encoded}, index=X.index))
+        
+        if result_dfs:
+            return pd.concat(result_dfs, axis=1)
+        return pd.DataFrame(index=X.index)
 
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self.fit(X)

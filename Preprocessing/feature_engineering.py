@@ -1,5 +1,6 @@
 # feature_engineering.py
 
+import gc
 import pandas as pd
 from typing import List
 from Preprocessing.data_process import build_aggregations
@@ -186,17 +187,25 @@ def build_all_features(dataframes: dict) -> List[pd.DataFrame]:
 
     if 'bureau' in dataframes:
         features.append(build_bureau_features(dataframes['bureau']))
+        # Explicit cleanup to help with memory
+        del dataframes['bureau']
 
     if 'previous_application' in dataframes:
         features.append(build_previous_app_features(dataframes['previous_application']))
+        del dataframes['previous_application']
 
     if 'credit_card_balance' in dataframes:
         features.append(build_credit_card_features(dataframes['credit_card_balance']))
+        del dataframes['credit_card_balance']
 
     if 'POS_CASH_balance' in dataframes:
         features.append(build_pos_cash_features(dataframes['POS_CASH_balance']))
+        del dataframes['POS_CASH_balance']
 
     if 'installments_payments' in dataframes:
         features.append(build_installments_features(dataframes['installments_payments']))
+        del dataframes['installments_payments']
+
+    gc.collect()
 
     return features

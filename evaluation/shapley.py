@@ -10,8 +10,7 @@ from catboost import CatBoostClassifier
 def calculate_shap_importance(
     model,
     X: pd.DataFrame,
-    batch_size: int = 500,
-    tree_limit: int = 100
+    batch_size: int = 500
 ) -> pd.DataFrame:
     """
     Fast + robust SHAP importance computation.

@@ -13,13 +13,15 @@ def get_selector(selector_name):
     """
     Returns the selector class and its default kwargs.
 
-    Updated logic:
-        - 'boruta' -> Boruta + RFE pipeline
-        - 'rfe' removed
+    Supported selectors:
+        - 'boruta' or 'boruta_rfe' -> Boruta + RFE pipeline
+        - 'mrmr' -> Minimum Redundancy Maximum Relevance
+        - 'pca' -> Principal Component Analysis
+        - 'none' -> No feature selection
     """
     name = selector_name.lower()
 
-    if name == "boruta_rfe":
+    if name in ("boruta", "boruta_rfe"):
         return BorutaRFESelector, {
             "boruta_kwargs": {"max_iter": 20, "random_state": 42},
             "rfe_kwargs": {"n_features": 40, "step": 10, "random_state": 42},
@@ -34,7 +36,7 @@ def get_selector(selector_name):
     if name == "none":
         return None, {}
 
-    raise ValueError(f"Unsupported selector: {selector_name}")
+    raise ValueError(f"Unsupported selector: {selector_name}. Available: boruta, boruta_rfe, mrmr, pca, none")
 
 
 def get_model_bundle(model_name):

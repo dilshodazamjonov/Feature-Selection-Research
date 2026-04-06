@@ -1,9 +1,14 @@
-import pandas as pd
+import logging
 
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFE
 from boruta import BorutaPy
 from catboost import CatBoostClassifier
+from utils.logging_config import setup_logging
+
+# Setup module logger
+logger = setup_logging("boruta_rfe", level=logging.INFO)
 
 
 class BorutaSelector:
@@ -45,18 +50,17 @@ class BorutaSelector:
             n_estimators="auto",
             max_iter=self.max_iter,
             random_state=self.random_state,
-            verbose=2
+            verbose=0
         )
 
-        print("\n========== BORUTA FEATURE SELECTION STARTED ==========\n")
+        logger.info("Starting Boruta feature selection")
 
         self.selector.fit(X.values, y.values)
 
         mask = self.selector.support_
         self.selected_features = X.columns[mask].tolist()
 
-        print("\n========== BORUTA FINISHED ==========")
-        print(f"Selected features: {len(self.selected_features)}")
+        logger.info(f"Boruta finished - Selected features: {len(self.selected_features)}")
 
         return self
 
@@ -133,15 +137,14 @@ class RFESelector:
             step=self.step
         )
 
-        print("\n---------- RFE STARTED ----------\n")
+        logger.info("Starting RFE feature selection")
 
         self.selector.fit(X, y)
 
         mask = self.selector.support_
         self.selected_features = X.columns[mask].tolist()
 
-        print("---------- RFE FINISHED ----------")
-        print(f"Selected features: {len(self.selected_features)}")
+        logger.info(f"RFE finished - Selected features: {len(self.selected_features)}")
 
         return self
 
@@ -204,15 +207,14 @@ class BorutaRFESelector:
         """
 
         X_boruta = self.boruta.fit_transform(X, y)
-        print(f"After Boruta: {X_boruta.shape}")
+        logger.info(f"After Boruta: {X_boruta.shape}")
 
         X_rfe = self.rfe.fit_transform(X_boruta, y)
-        print(f"After RFE: {X_rfe.shape}")
+        logger.info(f"After RFE: {X_rfe.shape}")
 
         self.selected_features = X_rfe.columns.tolist()
 
-        print("\n========== Feature Selection Finished ==========")
-        print(f"Final selected features: {len(self.selected_features)}")
+        logger.info(f"Feature selection finished - Final selected features: {len(self.selected_features)}")
 
         return self
 

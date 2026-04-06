@@ -69,9 +69,6 @@ def _extract_feature_importance(model, feature_names):
     Returns a DataFrame with feature importances if supported.
     Handles CatBoost, RandomForest, or LogisticRegression (coef).
     """
-    import numpy as np
-    import pandas as pd
-
     if hasattr(model, "feature_importances_"):
         importances = model.feature_importances_
     elif hasattr(model, "coef_"):
@@ -86,12 +83,10 @@ def _extract_feature_importance(model, feature_names):
             f"Length mismatch: {len(importances)} importances vs {len(feature_names)} features"
         )
 
-    imp_df = pd.DataFrame({
+    return pd.DataFrame({
         "feature": feature_names,
         "importance": importances
     }).sort_values("importance", ascending=False)
-
-    return imp_df
 
 
 def _save_correlation_matrix(path, X_train_f):

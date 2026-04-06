@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from sklearn.metrics import (
     roc_auc_score, 
@@ -7,6 +9,10 @@ from sklearn.metrics import (
 )
 import pandas as pd
 from evaluation.stability_scores import jaccard_similarity
+from utils.logging_config import setup_logging
+
+# Setup module logger
+logger = setup_logging("metrics", level=logging.INFO)
 
 
 def ks_score(y_true, y_prob):
@@ -104,16 +110,22 @@ def evaluate_model_wrapper(
     psi_feature_max=None,
     psi_model=None,
     threshold=None,
+    prev_selected_features=None,
 ):
     """
     Evaluates one fold and returns organized results.
+    
+    Parameters
+    ----------
+    prev_selected_features : set, optional
+        Set of selected features from previous fold for Jaccard similarity calculation.
+        If provided, Jaccard similarity will be computed between current and previous features.
     """
     metrics_dict = evaluate_model(y_true, y_pred_proba, threshold)
     
-    # Fold info
+    # Fold info - train_size not applicable in wrapper, it's set in kfold_trainer
     fold_info = {
         "fold": fold_number,
-        "train_size": len(y_true) - np.sum(y_pred_proba >= 0),  # optional approximation
         "val_size": len(y_true),
     }
     
@@ -125,14 +137,11 @@ def evaluate_model_wrapper(
         "psi_model": psi_model,
     }
     
-    # Include Jaccard similarity if list of selected features per fold exists
-    if hasattr(evaluate_model_wrapper, "prev_selected"):
-        prev_set = evaluate_model_wrapper.prev_selected
+    # Jaccard similarity - use passed prev_selected_features to avoid global state
+    if prev_selected_features is not None:
         curr_set = set(selected_features) if selected_features else set()
-        stability_info["jaccard_similarity"] = jaccard_similarity(prev_set, curr_set)
-        evaluate_model_wrapper.prev_selected = curr_set
+        stability_info["jaccard_similarity"] = jaccard_similarity(prev_selected_features, curr_set)
     else:
-        evaluate_model_wrapper.prev_selected = set(selected_features) if selected_features else set()
         stability_info["jaccard_similarity"] = np.nan
     
     # Combine everything
@@ -158,4 +167,4 @@ def save_fold_results(all_fold_results, output_csv):
     df = pd.concat([df, pd.DataFrame([{}]), pd.DataFrame([mean_row]), pd.DataFrame([std_row])], ignore_index=True)
     
     df.to_csv(output_csv, index=False)
-    print(f"Saved metrics to {output_csv}")
+    logger.info(f"Saved metrics to {output_csv}")

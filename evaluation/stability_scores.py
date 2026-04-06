@@ -40,41 +40,49 @@ def calculate_psi(
         * 0.1–0.25    → Moderate drift
         * > 0.25      → Significant drift
     """
+    try:
+        def _to_series(x):
+            return pd.Series(x).replace([np.inf, -np.inf], np.nan).dropna()
 
-    def _to_series(x):
-        return pd.Series(x).replace([np.inf, -np.inf], np.nan).dropna()
+        expected = _to_series(expected)
+        actual = _to_series(actual)
 
-    expected = _to_series(expected)
-    actual = _to_series(actual)
+        # Edge cases: empty series
+        if len(expected) == 0 or len(actual) == 0:
+            return np.nan
 
-    # Compute quantile-based breakpoints
-    breakpoints = np.percentile(expected, np.linspace(0, 100, bins + 1))
-    breakpoints = np.unique(breakpoints)
+        # Compute quantile-based breakpoints
+        breakpoints = np.percentile(expected, np.linspace(0, 100, bins + 1))
+        breakpoints = np.unique(breakpoints)
 
-    # Edge case: constant or low-variance feature
-    if len(breakpoints) < 2:
+        # Edge case: constant or low-variance feature
+        if len(breakpoints) < 2:
+            return np.nan
+
+        # Bin both distributions using expected bins
+        expected_bins = pd.cut(expected, bins=breakpoints, include_lowest=True)
+        actual_bins = pd.cut(actual, bins=breakpoints, include_lowest=True)
+
+        # Compute normalized distributions
+        expected_dist = expected_bins.value_counts(normalize=True).sort_index()
+        actual_dist = actual_bins.value_counts(normalize=True).sort_index()
+
+        # Align bins (critical for correctness)
+        all_bins = expected_dist.index.union(actual_dist.index)
+        expected_dist = expected_dist.reindex(all_bins, fill_value=0)
+        actual_dist = actual_dist.reindex(all_bins, fill_value=0)
+
+        # PSI formula
+        psi = np.sum(
+            (expected_dist - actual_dist) *
+            np.log((expected_dist + eps) / (actual_dist + eps))
+        )
+
+        return float(psi)
+    
+    except Exception:
+        # Return nan on any calculation error instead of crashing
         return np.nan
-
-    # Bin both distributions using expected bins
-    expected_bins = pd.cut(expected, bins=breakpoints, include_lowest=True)
-    actual_bins = pd.cut(actual, bins=breakpoints, include_lowest=True)
-
-    # Compute normalized distributions
-    expected_dist = expected_bins.value_counts(normalize=True).sort_index()
-    actual_dist = actual_bins.value_counts(normalize=True).sort_index()
-
-    # Align bins (critical for correctness)
-    all_bins = expected_dist.index.union(actual_dist.index)
-    expected_dist = expected_dist.reindex(all_bins, fill_value=0)
-    actual_dist = actual_dist.reindex(all_bins, fill_value=0)
-
-    # PSI formula
-    psi = np.sum(
-        (expected_dist - actual_dist) *
-        np.log((expected_dist + eps) / (actual_dist + eps))
-    )
-
-    return float(psi)
 
 
 def feature_psi(

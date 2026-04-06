@@ -1,9 +1,14 @@
 # iv_filter.py
 
 import os
+import logging
 from typing import Optional, Dict
 import numpy as np
 import pandas as pd
+from utils.logging_config import setup_logging
+
+# Setup module logger
+logger = setup_logging("iv_filter", level=logging.INFO)
 
 
 class IVFilter:
@@ -224,7 +229,7 @@ class IVFilter:
             .to_frame().to_csv(os.path.join(self.output_dir, "iv_leakage_flags.csv"))
 
         if self.verbose:
-            print(f"[IV] Saved outputs to {self.output_dir}")
+            logger.info(f"Saved IV outputs to {self.output_dir}")
 
         return self
 
