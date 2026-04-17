@@ -7,8 +7,9 @@ wheels/
 *.egg-info
 __init__.py
 
-# Virtual environments
+# Virtual environments and enviornment varibles
 .venv
+.env
 
 # files 
 *.csv

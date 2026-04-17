@@ -1,211 +1,157 @@
-# feature_engineering.py
-
 import gc
 import pandas as pd
+import numpy as np
 from typing import List
-from Preprocessing.data_process import build_aggregations
 
-
-def build_bureau_features(bureau_df: pd.DataFrame) -> pd.DataFrame:
+def aggregate_dataframe(df: pd.DataFrame, group_col: str, prefix: str) -> pd.DataFrame:
     """
-    Build aggregated bureau features per customer (SK_ID_CURR).
-
-    Features include:
-    - Credit exposure (total credit, total debt, overdue amounts)
-    - Debt ratio (debt / credit)
-    - Delinquency behavior (overdue flags, max overdue days)
-    - Credit activity (active credit ratio)
-    - Temporal signals (recency of credits)
-
-    Returns:
-        pd.DataFrame with one row per SK_ID_CURR
+    Automated mass-aggregator.
+    1. One-hot encodes categories.
+    2. Calculates min, max, mean, sum, var for all numeric columns.
     """
-    df = bureau_df.copy()
+    cat_cols = [
+        c for c in df.columns 
+        if df[c].dtype == "object" or df[c].dtype == "category"
+    ]
+    
+    if cat_cols:
+        df = pd.get_dummies(df, columns=cat_cols, dummy_na=True)
 
-    df["debt_ratio"] = df["AMT_CREDIT_SUM_DEBT"] / (df["AMT_CREDIT_SUM"] + 1e-6)
-    df["is_active"] = (df["CREDIT_ACTIVE"] == "Active").astype(int)
-    df["is_overdue"] = (df["CREDIT_DAY_OVERDUE"] > 0).astype(int)
+    numeric_df = df.select_dtypes(include=[np.number])
+    
+    agg_dict = {}
+    for col in numeric_df.columns:
+        if col == group_col or col.startswith("SK_ID"):
+            continue
+        
+        if df[col].nunique() <= 2:
+            agg_dict[col] = ["mean", "sum"]
+        else:
+            agg_dict[col] = ["min", "max", "mean", "sum", "var"]
 
-    bureau_config = {
-        "bureau_count": ("SK_ID_BUREAU", "count"),
-        "total_credit_sum": ("AMT_CREDIT_SUM", "sum"),
-        "total_debt": ("AMT_CREDIT_SUM_DEBT", "sum"),
-        "total_overdue": ("AMT_CREDIT_SUM_OVERDUE", "sum"),
-        "avg_debt_ratio": ("debt_ratio", "mean"),
-        "max_overdue_days": ("CREDIT_DAY_OVERDUE", "max"),
-        "overdue_rate": ("is_overdue", "mean"),
-        "active_rate": ("is_active", "mean"),
-        "avg_days_credit": ("DAYS_CREDIT", "mean"),
-        "recent_credit_days": ("DAYS_CREDIT", "max"),
-    }
+    if not agg_dict:
+        return pd.DataFrame({group_col: df[group_col].unique()})
 
-    return build_aggregations(df, "SK_ID_CURR", bureau_config)
+    agg_df = df.groupby(group_col).agg(agg_dict)
+    
+    agg_df.columns = [
+        f"{prefix}_{c[0]}_{c[1].upper()}" for c in agg_df.columns
+    ]
+    
+    return agg_df.reset_index()
 
+def build_bureau_features(all_data: dict) -> pd.DataFrame:
+    bureau = all_data.get("bureau")
+    bb = all_data.get("bureau_balance")
+    
+    if bureau is None:
+        return None
+
+    if bb is not None:
+        bb_agg = aggregate_dataframe(bb, "SK_ID_BUREAU", "BB")
+        bureau = bureau.merge(bb_agg, on="SK_ID_BUREAU", how="left")
+        del bb, bb_agg
+        gc.collect()
+
+    bureau["DEBT_CREDIT_DIFF"] = bureau["AMT_CREDIT_SUM"] - bureau["AMT_CREDIT_SUM_DEBT"]
+    bureau["DEBT_RATIO"] = bureau["AMT_CREDIT_SUM_DEBT"] / (bureau["AMT_CREDIT_SUM"] + 1e-6)
+    bureau["CREDIT_DURATION"] = bureau["DAYS_CREDIT_ENDDATE"] - bureau["DAYS_CREDIT"]
+    
+    return aggregate_dataframe(bureau, "SK_ID_CURR", "BURO")
 
 def build_previous_app_features(prev_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build aggregated previous application features per customer.
+    if prev_df is None:
+        return None
+    
+    prev_df["ASK_GRANT_RATIO"] = prev_df["AMT_APPLICATION"] / (prev_df["AMT_CREDIT"] + 1e-6)
+    prev_df["APPLICATION_DIFF"] = prev_df["AMT_APPLICATION"] - prev_df["AMT_CREDIT"]
+    prev_df["PAYMENT_TERM"] = prev_df["AMT_CREDIT"] / (prev_df["AMT_ANNUITY"] + 1e-6)
+    prev_df["recent_decision"] = prev_df["DAYS_DECISION"]
+    prev_df["INTEREST_ESTIMATE"] = (
+        (prev_df["CNT_PAYMENT"] * prev_df["AMT_ANNUITY"] - prev_df["AMT_CREDIT"]) 
+        / (prev_df["AMT_CREDIT"] + 1e-6)
+    )
 
-    Features include:
-    - Application volume
-    - Approval and rejection rates
-    - Credit requested vs granted ratios
-    - Financial characteristics (credit, annuity)
-    - Recency of applications
-
-    Returns:
-        pd.DataFrame with one row per SK_ID_CURR
-    """
-    df = prev_df.copy()
-
-    df["credit_diff"] = df["AMT_APPLICATION"] - df["AMT_CREDIT"]
-    df["credit_ratio"] = df["AMT_CREDIT"] / (df["AMT_APPLICATION"] + 1e-6)
-    df["is_approved"] = (df["NAME_CONTRACT_STATUS"] == "Approved").astype(int)
-    df["is_rejected"] = (df["NAME_CONTRACT_STATUS"] == "Refused").astype(int)
-
-    prev_config = {
-        "prev_app_count": ("SK_ID_PREV", "count"),
-        "approval_rate": ("is_approved", "mean"),
-        "rejection_rate": ("is_rejected", "mean"),
-        "avg_credit": ("AMT_CREDIT", "mean"),
-        "max_credit": ("AMT_CREDIT", "max"),
-        "avg_credit_ratio": ("credit_ratio", "mean"),
-        "avg_annuity": ("AMT_ANNUITY", "mean"),
-        "recent_decision": ("DAYS_DECISION", "max"),
-        "avg_decision": ("DAYS_DECISION", "mean"),
-    }
-
-    return build_aggregations(df, "SK_ID_CURR", prev_config)
-
-
-def build_credit_card_features(cc_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build aggregated credit card balance features per customer.
-
-    Features include:
-    - Balance statistics
-    - Credit utilization ratio
-    - Payment behavior (payment ratios)
-    - Delinquency metrics (DPD)
-
-    Returns:
-        pd.DataFrame with one row per SK_ID_CURR
-    """
-    df = cc_df.copy()
-
-    df["utilization"] = df["AMT_BALANCE"] / (df["AMT_CREDIT_LIMIT_ACTUAL"] + 1e-6)
-    df["payment_ratio"] = df["AMT_PAYMENT_TOTAL_CURRENT"] / (df["AMT_INST_MIN_REGULARITY"] + 1e-6)
-    df["is_delinquent"] = (df["SK_DPD"] > 0).astype(int)
-
-    cc_config = {
-        "cc_count": ("SK_ID_PREV", "count"),
-        "avg_balance": ("AMT_BALANCE", "mean"),
-        "max_balance": ("AMT_BALANCE", "max"),
-        "avg_utilization": ("utilization", "mean"),
-        "total_payment": ("AMT_PAYMENT_TOTAL_CURRENT", "sum"),
-        "avg_payment_ratio": ("payment_ratio", "mean"),
-        "delinq_rate": ("is_delinquent", "mean"),
-        "max_dpd": ("SK_DPD", "max"),
-    }
-
-    return build_aggregations(df, "SK_ID_CURR", cc_config)
-
+    agg_prev = aggregate_dataframe(prev_df, "SK_ID_CURR", "PREV")
+    
+    if "PREV_recent_decision_MAX" in agg_prev.columns:
+        agg_prev["recent_decision"] = agg_prev["PREV_recent_decision_MAX"]
+        
+    return agg_prev
 
 def build_pos_cash_features(pos_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build aggregated POS_CASH balance features per customer.
-
-    Features include:
-    - Installment structure (total and remaining)
-    - Delinquency behavior (DPD, DPD_DEF)
-    - Default frequency indicators
-
-    Returns:
-        pd.DataFrame with one row per SK_ID_CURR
-    """
-    df = pos_df.copy()
-
-    df["is_delinquent"] = (df["SK_DPD"] > 0).astype(int)
-
-    pos_config = {
-        "pos_count": ("SK_ID_PREV", "count"),
-        "avg_instalment": ("CNT_INSTALMENT", "mean"),
-        "remaining_instalments": ("CNT_INSTALMENT_FUTURE", "mean"),
-        "delinq_rate": ("is_delinquent", "mean"),
-        "max_dpd": ("SK_DPD", "max"),
-        "max_dpd_def": ("SK_DPD_DEF", "max"),
-    }
-
-    return build_aggregations(df, "SK_ID_CURR", pos_config)
-
+    if pos_df is None:
+        return None
+    
+    pos_df["LATE_PAYMENT"] = (pos_df["SK_DPD"] > 0).astype(int)
+    pos_df["TOTAL_INSTALMENT_PROG"] = pos_df["CNT_INSTALMENT_FUTURE"] / (pos_df["CNT_INSTALMENT"] + 1e-6)
+    
+    return aggregate_dataframe(pos_df, "SK_ID_CURR", "POS")
 
 def build_installments_features(inst_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build aggregated installment payment features per customer.
+    if inst_df is None:
+        return None
+    
+    inst_df["PAYMENT_DIFF"] = inst_df["AMT_INSTALMENT"] - inst_df["AMT_PAYMENT"]
+    inst_df["PAYMENT_RATIO"] = inst_df["AMT_PAYMENT"] / (inst_df["AMT_INSTALMENT"] + 1e-6)
+    inst_df["DAYS_DIFF"] = inst_df["DAYS_ENTRY_PAYMENT"] - inst_df["DAYS_INSTALMENT"]
+    inst_df["IS_LATE"] = (inst_df["DAYS_DIFF"] > 0).astype(int)
+    inst_df["IS_UNDERPAID"] = (inst_df["PAYMENT_DIFF"] > 0).astype(int)
 
-    Features include:
-    - Payment amounts and totals
-    - Late payment behavior (lateness days and frequency)
-    - Payment ratio (paid vs expected)
+    return aggregate_dataframe(inst_df, "SK_ID_CURR", "INSTAL")
 
-    Returns:
-        pd.DataFrame with one row per SK_ID_CURR
-    """
-    df = inst_df.copy()
-
-    df["late_days"] = df["DAYS_ENTRY_PAYMENT"] - df["DAYS_INSTALMENT"]
-    df["late_flag"] = (df["late_days"] > 0).astype(int)
-    df["payment_ratio"] = df["AMT_PAYMENT"] / (df["AMT_INSTALMENT"] + 1e-6)
-
-    inst_config = {
-        "inst_count": ("SK_ID_PREV", "count"),
-        "avg_instalment": ("AMT_INSTALMENT", "mean"),
-        "total_paid": ("AMT_PAYMENT", "sum"),
-        "late_rate": ("late_flag", "mean"),
-        "max_late_days": ("late_days", "max"),
-        "avg_payment_ratio": ("payment_ratio", "mean"),
-    }
-
-    return build_aggregations(df, "SK_ID_CURR", inst_config)
-
+def build_credit_card_features(cc_df: pd.DataFrame) -> pd.DataFrame:
+    if cc_df is None:
+        return None
+    
+    cc_df["LIMIT_USE"] = cc_df["AMT_BALANCE"] / (cc_df["AMT_CREDIT_LIMIT_ACTUAL"] + 1e-6)
+    cc_df["PAYMENT_DIV_MIN"] = cc_df["AMT_PAYMENT_CURRENT"] / (cc_df["AMT_INST_MIN_REGULARITY"] + 1e-6)
+    cc_df["DRAWING_RATIO"] = cc_df["AMT_DRAWINGS_CURRENT"] / (cc_df["AMT_CREDIT_LIMIT_ACTUAL"] + 1e-6)
+    
+    return aggregate_dataframe(cc_df, "SK_ID_CURR", "CC")
 
 def build_all_features(dataframes: dict) -> List[pd.DataFrame]:
     """
-    Build all feature tables from provided datasets.
-
-    Expected keys in `dataframes` dict:
-        - 'bureau'
-        - 'previous_application'
-        - 'credit_card_balance'
-        - 'POS_CASH_balance'
-        - 'installments_payments'
-
-    Returns:
-        List[pd.DataFrame]: list of aggregated feature tables
+    Orchestrator to build 500+ features.
     """
-    features = []
+    features_list = []
 
-    if 'bureau' in dataframes:
-        features.append(build_bureau_features(dataframes['bureau']))
-        # Explicit cleanup to help with memory
-        del dataframes['bureau']
-
-    if 'previous_application' in dataframes:
-        features.append(build_previous_app_features(dataframes['previous_application']))
-        del dataframes['previous_application']
-
-    if 'credit_card_balance' in dataframes:
-        features.append(build_credit_card_features(dataframes['credit_card_balance']))
-        del dataframes['credit_card_balance']
-
-    if 'POS_CASH_balance' in dataframes:
-        features.append(build_pos_cash_features(dataframes['POS_CASH_balance']))
-        del dataframes['POS_CASH_balance']
-
-    if 'installments_payments' in dataframes:
-        features.append(build_installments_features(dataframes['installments_payments']))
-        del dataframes['installments_payments']
-
+    print("Processing Bureau & Bureau Balance...")
+    buro_agg = build_bureau_features(dataframes)
+    if buro_agg is not None:
+        features_list.append(buro_agg)
+    
+    dataframes.pop("bureau", None)
+    dataframes.pop("bureau_balance", None)
     gc.collect()
 
-    return features
+    print("Processing Previous Applications...")
+    if "previous_application" in dataframes:
+        prev_agg = build_previous_app_features(dataframes["previous_application"])
+        features_list.append(prev_agg)
+        dataframes.pop("previous_application", None)
+        gc.collect()
+
+    print("Processing POS CASH...")
+    if "POS_CASH_balance" in dataframes:
+        pos_agg = build_pos_cash_features(dataframes["POS_CASH_balance"])
+        features_list.append(pos_agg)
+        dataframes.pop("POS_CASH_balance", None)
+        gc.collect()
+
+    print("Processing Installments...")
+    if "installments_payments" in dataframes:
+        inst_agg = build_installments_features(dataframes["installments_payments"])
+        features_list.append(inst_agg)
+        dataframes.pop("installments_payments", None)
+        gc.collect()
+
+    print("Processing Credit Card...")
+    if "credit_card_balance" in dataframes:
+        cc_agg = build_credit_card_features(dataframes["credit_card_balance"])
+        features_list.append(cc_agg)
+        dataframes.pop("credit_card_balance", None)
+        gc.collect()
+
+    print(f"Total feature tables generated: {len(features_list)}")
+    return features_list
