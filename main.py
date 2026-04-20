@@ -129,6 +129,7 @@ def main():
             description_csv_path=DESCRIPTION_PATH,
         )
 
+        print(feature_metadata[:1])
     selector_cls, selector_kwargs = get_selector(FEATURE_SELECTION_METHOD)
 
     if FEATURE_SELECTION_METHOD == "llm":
