@@ -69,10 +69,17 @@ def _extract_feature_importance(model, feature_names):
     Returns a DataFrame with feature importances if supported.
     Handles CatBoost, RandomForest, or LogisticRegression (coef).
     """
-    if hasattr(model, "feature_importances_"):
-        importances = model.feature_importances_
-    elif hasattr(model, "coef_"):
-        importances = np.abs(model.coef_).flatten()
+    if hasattr(model, "get_feature_importance"):
+        importance_df = model.get_feature_importance()
+        if isinstance(importance_df, pd.DataFrame) and {"feature", "importance"}.issubset(importance_df.columns):
+            return importance_df.sort_values("importance", ascending=False).reset_index(drop=True)
+
+    estimator = getattr(model, "model", model)
+
+    if hasattr(estimator, "feature_importances_"):
+        importances = estimator.feature_importances_
+    elif hasattr(estimator, "coef_"):
+        importances = np.abs(estimator.coef_).flatten()
     else:
         # fallback: uniform importance if not available
         importances = np.zeros(len(feature_names))

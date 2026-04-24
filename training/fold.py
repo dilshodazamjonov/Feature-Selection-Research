@@ -15,7 +15,7 @@ from evaluation.feature_utils import (
     _to_df,
 )
 from evaluation.stability_scores import calculate_psi, feature_psi
-from evaluation.metrics import evaluate_model_wrapper
+from evaluation.metrics import determine_threshold, evaluate_model_wrapper
 from training.cv_utils import _to_1d_proba
 from utils.logging_config import setup_logging
 
@@ -115,26 +115,64 @@ def process_fold(
 
     fold_start = time.time()
 
-    # Preprocessing
-    X_train_p = preprocessor.fit_transform(X_train)
-    X_val_p = preprocessor.transform(X_val)
+    selection_features = None
 
-    if not isinstance(X_train_p, pd.DataFrame):
-        X_train_p = _to_df(X_train_p, index=X_train.index)
-    if not isinstance(X_val_p, pd.DataFrame):
-        X_val_p = _to_df(X_val_p, index=X_val.index, columns=X_train_p.columns)
+    if selector is not None and hasattr(selector, "set_artifact_dir"):
+        selector.set_artifact_dir(os.path.join(fold_dir, "selector"))
 
-    # Feature selection
-    if selector is not None:
-        X_train_f = selector.fit_transform(X_train_p, y_train)
-        X_val_f = selector.transform(X_val_p)
+    if selector is not None and getattr(selector, "select_before_preprocessing", False):
+        X_train_selected_raw = selector.fit_transform(X_train, y_train)
+        X_val_selected_raw = selector.transform(X_val)
 
-        if not isinstance(X_train_f, pd.DataFrame):
-            X_train_f = _to_df(X_train_f, index=X_train_p.index)
-        if not isinstance(X_val_f, pd.DataFrame):
-            X_val_f = _to_df(X_val_f, index=X_val_p.index, columns=X_train_f.columns)
+        if not isinstance(X_train_selected_raw, pd.DataFrame):
+            X_train_selected_raw = _to_df(X_train_selected_raw, index=X_train.index)
+        if not isinstance(X_val_selected_raw, pd.DataFrame):
+            X_val_selected_raw = _to_df(
+                X_val_selected_raw,
+                index=X_val.index,
+                columns=X_train_selected_raw.columns,
+            )
+
+        selection_features = getattr(selector, "llm_selected_features_", None) or getattr(
+            selector,
+            "selected_features",
+            None,
+        )
+
+        X_train_p = preprocessor.fit_transform(X_train_selected_raw)
+        X_val_p = preprocessor.transform(X_val_selected_raw)
+
+        if not isinstance(X_train_p, pd.DataFrame):
+            X_train_p = _to_df(X_train_p, index=X_train_selected_raw.index)
+        if not isinstance(X_val_p, pd.DataFrame):
+            X_val_p = _to_df(X_val_p, index=X_val_selected_raw.index, columns=X_train_p.columns)
+
+        if getattr(selector, "apply_post_preprocessing", False):
+            X_train_f = selector.fit_postprocess(X_train_p, y_train)
+            X_val_f = selector.transform_postprocess(X_val_p)
+        else:
+            X_train_f, X_val_f = X_train_p, X_val_p
     else:
-        X_train_f, X_val_f = X_train_p, X_val_p
+        # Preprocessing
+        X_train_p = preprocessor.fit_transform(X_train)
+        X_val_p = preprocessor.transform(X_val)
+
+        if not isinstance(X_train_p, pd.DataFrame):
+            X_train_p = _to_df(X_train_p, index=X_train.index)
+        if not isinstance(X_val_p, pd.DataFrame):
+            X_val_p = _to_df(X_val_p, index=X_val.index, columns=X_train_p.columns)
+
+        # Feature selection
+        if selector is not None:
+            X_train_f = selector.fit_transform(X_train_p, y_train)
+            X_val_f = selector.transform(X_val_p)
+
+            if not isinstance(X_train_f, pd.DataFrame):
+                X_train_f = _to_df(X_train_f, index=X_train_p.index)
+            if not isinstance(X_val_f, pd.DataFrame):
+                X_val_f = _to_df(X_val_f, index=X_val_p.index, columns=X_train_f.columns)
+        else:
+            X_train_f, X_val_f = X_train_p, X_val_p
 
     # PSI
     psi_df = feature_psi(X_train_f, X_val_f)
@@ -144,7 +182,10 @@ def process_fold(
     psi_max = float(psi_df["psi"].max()) if "psi" in psi_df.columns and len(psi_df) > 0 else np.nan
     logger.info(f"Feature PSI | mean: {psi_mean:.4f}, max: {psi_max:.4f}")
 
-    selected_features = X_train_f.columns.tolist()
+    model_feature_names = X_train_f.columns.tolist()
+    selected_features = selection_features or model_feature_names
+    if isinstance(selected_features, pd.Index):
+        selected_features = selected_features.tolist()
     _save_selected_features(os.path.join(fold_dir, "selected_features.csv"), selected_features)
     if selector is not None:
         _save_stagewise_selection(selector, fold_dir)
@@ -156,12 +197,13 @@ def process_fold(
     model = train_model(model, X_train_f, y_train, X_val_f, y_val)
     save_model(model, os.path.join(models_dir, f"model_fold_{fold}.model"))
 
-    importance_df = _extract_feature_importance(model, selected_features)
+    importance_df = _extract_feature_importance(model, model_feature_names)
     if importance_df is not None:
         importance_df.to_csv(os.path.join(fold_dir, "feature_importance.csv"), index=False)
 
     val_proba = _to_1d_proba(predict_proba(model, X_val_f))
     train_proba = _to_1d_proba(predict_proba(model, X_train_f))
+    decision_threshold = determine_threshold(y_train.values, train_proba)
 
     try:
         psi_model = calculate_psi(train_proba, val_proba)
@@ -185,6 +227,7 @@ def process_fold(
         psi_feature_max=psi_max,
         psi_model=psi_model,
         prev_selected_features=prev_selected_features,
+        threshold=decision_threshold,
     )
 
     fold_metrics.update({
@@ -204,4 +247,4 @@ def process_fold(
         fold_metrics["boruta_selected_features"] = len(boruta_feats) if boruta_feats is not None else np.nan
         fold_metrics["rfe_selected_features"] = len(rfe_feats) if rfe_feats is not None else np.nan
 
-    return fold_metrics, val_proba, selected_features
+    return fold_metrics, val_proba, selected_features, decision_threshold

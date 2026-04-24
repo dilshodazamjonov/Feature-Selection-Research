@@ -1,5 +1,8 @@
 import os
+
 import dotenv
+
 dotenv.load_dotenv()
 
-print(os.getenv('OPENAI_API_KEY'))
+if __name__ == "__main__":
+    print("OPENAI_API_KEY configured:", bool(os.getenv("OPENAI_API_KEY")))

@@ -1,0 +1,69 @@
+model_selector: lr
+data_dir: data/inputs
+description_path: data/HomeCredit_columns_description.csv
+n_splits: 5
+dev_start_day: -600
+oot_start_day: -240
+oot_end_day: 0
+cv_gap_groups: 1
+
+llm:
+  model: gpt-4.1-mini
+  max_features: 50
+  cache_dir: outputs/llm_selector_cache
+
+model_params:
+  lr:
+    solver: liblinear
+    max_iter: 1000
+    class_weight: balanced
+    random_state: 42
+  rf:
+    n_estimators: 300
+    max_depth: null
+    min_samples_leaf: 5
+    max_features: sqrt
+    class_weight: balanced
+    random_state: 42
+    n_jobs: -1
+  catboost:
+    depth: 10
+    learning_rate: 0.01
+    l2_leaf_reg: 95
+    min_data_in_leaf: 290
+    colsample_bylevel: 0.9
+    random_strength: 0.125
+    grow_policy: Depthwise
+    one_hot_max_size: 21
+    leaf_estimation_method: Newton
+    bootstrap_type: Bernoulli
+    subsample: 0.55
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    iterations: 2200
+    early_stopping_rounds: 150
+    verbose: 100
+    random_state: 42
+
+statistical_comparison:
+  output_dir: outputs/statistical_comparison
+  selectors:
+    - mrmr
+    - boruta
+    - pca
+
+llm_vs_statistical:
+  output_dir: outputs/llm_vs_statistical
+  stat_selectors:
+    - mrmr
+    - boruta
+
+hybrid_comparison:
+  output_dir: outputs/hybrid_comparison
+  stat_selector: mrmr
+  improvement_tolerance: 0.0001
+
+single_experiment:
+  output_dir: outputs/single_experiment
+  selector: llm

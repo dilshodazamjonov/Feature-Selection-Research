@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from typing import List
 
+TIME_PROXY_COL = "application_time_proxy"
+
 def aggregate_dataframe(df: pd.DataFrame, group_col: str, prefix: str) -> pd.DataFrame:
     """
     Automated mass-aggregator.
@@ -39,6 +41,109 @@ def aggregate_dataframe(df: pd.DataFrame, group_col: str, prefix: str) -> pd.Dat
     ]
     
     return agg_df.reset_index()
+
+
+def _aggregate_recency(
+    df: pd.DataFrame | None,
+    group_col: str,
+    source_col: str,
+    output_col: str,
+) -> pd.DataFrame | None:
+    if df is None or group_col not in df.columns or source_col not in df.columns:
+        return None
+
+    return (
+        df[[group_col, source_col]]
+        .dropna(subset=[source_col])
+        .groupby(group_col, as_index=False)[source_col]
+        .max()
+        .rename(columns={source_col: output_col})
+    )
+
+
+def build_application_time_proxy(all_data: dict) -> pd.DataFrame | None:
+    """
+    Build a broader application-time proxy from all historical tables.
+
+    The original implementation relied only on ``previous_application`` and
+    dropped applicants without prior applications, which narrowed the study
+    population. This proxy keeps the full cohort by using the most recent
+    available event across historical sources.
+    """
+    time_parts: list[pd.DataFrame] = []
+
+    prev = all_data.get("previous_application")
+    prev_proxy = _aggregate_recency(
+        prev,
+        group_col="SK_ID_CURR",
+        source_col="DAYS_DECISION",
+        output_col="prev_recent_days",
+    )
+    if prev_proxy is not None:
+        time_parts.append(prev_proxy)
+
+    bureau = all_data.get("bureau")
+    bureau_proxy = _aggregate_recency(
+        bureau,
+        group_col="SK_ID_CURR",
+        source_col="DAYS_CREDIT",
+        output_col="bureau_recent_days",
+    )
+    if bureau_proxy is not None:
+        time_parts.append(bureau_proxy)
+
+    inst = all_data.get("installments_payments")
+    if inst is not None and "SK_ID_CURR" in inst.columns:
+        inst_day_cols = [col for col in ["DAYS_INSTALMENT", "DAYS_ENTRY_PAYMENT"] if col in inst.columns]
+        if inst_day_cols:
+            inst_proxy = inst[["SK_ID_CURR"]].copy()
+            inst_proxy["inst_recent_days"] = inst[inst_day_cols].max(axis=1, skipna=True)
+            inst_proxy = _aggregate_recency(
+                inst_proxy,
+                group_col="SK_ID_CURR",
+                source_col="inst_recent_days",
+                output_col="inst_recent_days",
+            )
+            if inst_proxy is not None:
+                time_parts.append(inst_proxy)
+
+    pos = all_data.get("POS_CASH_balance")
+    if pos is not None and "MONTHS_BALANCE" in pos.columns and "SK_ID_CURR" in pos.columns:
+        pos_proxy = pos[["SK_ID_CURR", "MONTHS_BALANCE"]].copy()
+        pos_proxy["pos_recent_days"] = pos_proxy["MONTHS_BALANCE"] * 30
+        pos_proxy = _aggregate_recency(
+            pos_proxy,
+            group_col="SK_ID_CURR",
+            source_col="pos_recent_days",
+            output_col="pos_recent_days",
+        )
+        if pos_proxy is not None:
+            time_parts.append(pos_proxy)
+
+    cc = all_data.get("credit_card_balance")
+    if cc is not None and "MONTHS_BALANCE" in cc.columns and "SK_ID_CURR" in cc.columns:
+        cc_proxy = cc[["SK_ID_CURR", "MONTHS_BALANCE"]].copy()
+        cc_proxy["cc_recent_days"] = cc_proxy["MONTHS_BALANCE"] * 30
+        cc_proxy = _aggregate_recency(
+            cc_proxy,
+            group_col="SK_ID_CURR",
+            source_col="cc_recent_days",
+            output_col="cc_recent_days",
+        )
+        if cc_proxy is not None:
+            time_parts.append(cc_proxy)
+
+    if not time_parts:
+        return None
+
+    proxy_df = time_parts[0]
+    for part in time_parts[1:]:
+        proxy_df = proxy_df.merge(part, on="SK_ID_CURR", how="outer")
+
+    recency_cols = [col for col in proxy_df.columns if col != "SK_ID_CURR"]
+    proxy_df[TIME_PROXY_COL] = proxy_df[recency_cols].max(axis=1, skipna=True)
+
+    return proxy_df[["SK_ID_CURR", TIME_PROXY_COL]]
 
 def build_bureau_features(all_data: dict) -> pd.DataFrame:
     bureau = all_data.get("bureau")

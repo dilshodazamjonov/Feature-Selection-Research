@@ -6,7 +6,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import TimeSeriesSplit
 
 from Preprocessing.preprocessing import Preprocessor
 from evaluation.metrics import (
@@ -14,11 +13,51 @@ from evaluation.metrics import (
     evaluate_model_wrapper
 )
 
+from training.cv_utils import GroupedTimeSeriesSplit
 from training.fold import process_fold
 from utils.logging_config import setup_logging
 
 # Setup module logger
 logger = setup_logging("kfold_trainer", level=logging.INFO)
+
+
+def _build_stability_confidence_summary(results_df: pd.DataFrame) -> pd.DataFrame:
+    tracked_metrics = [
+        "gini",
+        "ks",
+        "psi_feature_mean",
+        "psi_feature_max",
+        "psi_model",
+        "jaccard_similarity",
+    ]
+
+    rows: list[dict[str, float | int | str]] = []
+    z_value = 1.96
+
+    for metric in tracked_metrics:
+        if metric not in results_df.columns:
+            continue
+
+        numeric = pd.to_numeric(results_df[metric], errors="coerce").dropna()
+        n_valid = int(numeric.shape[0])
+        if n_valid == 0:
+            continue
+
+        mean_value = float(numeric.mean())
+        std_value = float(numeric.std(ddof=1)) if n_valid >= 2 else 0.0
+        stderr_value = std_value / np.sqrt(n_valid) if n_valid >= 2 else 0.0
+        margin = z_value * stderr_value
+
+        rows.append(
+            {
+                "metric": metric,
+                "value": mean_value,
+                "ci95_lower": float(mean_value - margin),
+                "ci95_upper": float(mean_value + margin),
+            }
+        )
+
+    return pd.DataFrame(rows)
 
 
 def run_kfold_training(
@@ -37,6 +76,7 @@ def run_kfold_training(
     base_output_dir="outputs",
     n_splits=5,
     random_state=42,
+    gap_groups=1,
 ):
     """
     Run a time-series aware K-Fold training pipeline with preprocessing, feature selection, 
@@ -131,13 +171,12 @@ def run_kfold_training(
     y_sorted = df["_target_"].copy()
     X_model = df.drop(columns=["_target_", time_col])
 
-    # Use TimeSeriesSplit for expanding window CV
-    # Each fold trains on all previous data and validates on next chunk
-    tss = TimeSeriesSplit(n_splits=n_splits)
+    splitter = GroupedTimeSeriesSplit(n_splits=n_splits, gap=gap_groups)
 
     fold_results = []
     feature_counter = Counter()
     oof_pred = np.zeros(len(df), dtype=float)
+    oof_pred_label = np.zeros(len(df), dtype=int)
     oof_mask = np.zeros(len(df), dtype=bool)
     oof_true = y_sorted.values.copy()
     prev_selected_features = None  # For Jaccard similarity tracking
@@ -147,7 +186,7 @@ def run_kfold_training(
 
     start_total = time.time()
 
-    for fold, (tr_idx, va_idx) in enumerate(tss.split(X_model), 1):
+    for fold, (tr_idx, va_idx) in enumerate(splitter.split(df[time_col].values), 1):
         # Track time periods for this fold
         time_values = df[time_col].values
         fold_time_info.append({
@@ -165,7 +204,7 @@ def run_kfold_training(
         preprocessor = preprocessor_cls(**preprocessor_kwargs)
         selector = selector_cls(**selector_kwargs) if selector_cls is not None else None
 
-        fold_metrics, val_proba, selected_features = process_fold(
+        fold_metrics, val_proba, selected_features, decision_threshold = process_fold(
             fold=fold,
             tr_idx=tr_idx,
             va_idx=va_idx,
@@ -183,6 +222,7 @@ def run_kfold_training(
         )
 
         oof_pred[va_idx] = val_proba
+        oof_pred_label[va_idx] = (val_proba >= decision_threshold).astype(int)
         oof_mask[va_idx] = True
         fold_results.append(fold_metrics)
         
@@ -205,6 +245,7 @@ def run_kfold_training(
         precision = fold_metrics.get("precision", np.nan)
         recall = fold_metrics.get("recall", np.nan)
         f1 = fold_metrics.get("f1", np.nan)
+        decision_threshold_metric = fold_metrics.get("decision_threshold", np.nan)
         psi_mean = fold_metrics.get("psi_feature_mean", np.nan)
         psi_max = fold_metrics.get("psi_feature_max", np.nan)
         jaccard = fold_metrics.get("jaccard_similarity", np.nan)
@@ -222,24 +263,28 @@ def run_kfold_training(
             f"prec={precision:.4f} | "
             f"rec={recall:.4f} | "
             f"f1={f1:.4f} | "
+            f"thr={decision_threshold_metric:.4f} | "
             f"time={fold_time:.1f}s"
         )
         logger.info(metrics_line)
         
-        # One line for stability: fold | features | psi_mean | psi_max | jaccard | time_range
         stability_line = (
             f"Fold {fold} | "
             f"features={int(n_features) if not np.isnan(n_features) else 'N/A'} | "
-            f"psi_mean={psi_mean:.4f} | " if not np.isnan(psi_mean) else f"features={int(n_features) if not np.isnan(n_features) else 'N/A'} | psi_mean=N/A | "
-            f"psi_max={psi_max:.4f} | " if not np.isnan(psi_max) else f"psi_max=N/A | "
-            f"jaccard={jaccard:.4f} | " if not np.isnan(jaccard) else f"jaccard=N/A | "
+            f"psi_mean={psi_mean:.4f} | "
+            f"psi_max={psi_max:.4f} | "
+            f"jaccard={jaccard:.4f} | "
             f"train_time=[{int(time_info['train_time_start'])},{int(time_info['train_time_end'])}] | "
             f"val_time=[{int(time_info['val_time_start'])},{int(time_info['val_time_end'])}]"
         )
         logger.info(stability_line)
 
     # OOF metrics
-    oof_metrics_safe = evaluate_model(oof_true[oof_mask], oof_pred[oof_mask])
+    oof_metrics_safe = evaluate_model(
+        oof_true[oof_mask],
+        oof_pred[oof_mask],
+        y_pred=oof_pred_label[oof_mask],
+    )
 
     oof_confusion = {
         "fold": "oof",
@@ -255,6 +300,7 @@ def run_kfold_training(
         "auc": oof_metrics_safe["auc"],
         "ks": oof_metrics_safe["ks"],
         "ks_threshold": oof_metrics_safe["ks_threshold"],
+        "decision_threshold": oof_metrics_safe["decision_threshold"],
         "precision": oof_metrics_safe["precision"],
         "recall": oof_metrics_safe["recall"],
         "f1": oof_metrics_safe["f1"],
@@ -297,6 +343,12 @@ def run_kfold_training(
     final_results_df = pd.concat([results_df, summary_df], ignore_index=True)
     final_results_df.to_csv(os.path.join(results_dir, "cv_results.csv"), index=False)
 
+    stability_confidence_df = _build_stability_confidence_summary(results_df)
+    stability_confidence_df.to_csv(
+        os.path.join(results_dir, "stability_confidence_summary.csv"),
+        index=False,
+    )
+
     # Feature stability
     feature_stability_df = pd.DataFrame({
         "feature": list(feature_counter.keys()),
@@ -330,6 +382,7 @@ def run_kfold_training(
             "gini": row.get("gini", np.nan),
             "ks": row.get("ks", np.nan),
             "ks_threshold": row.get("ks_threshold", np.nan),
+            "decision_threshold": row.get("decision_threshold", np.nan),
             "precision": row.get("precision", np.nan),
             "recall": row.get("recall", np.nan),
             "f1": row.get("f1", np.nan),
@@ -408,6 +461,7 @@ def run_kfold_training(
         psi_feature_mean=None,
         psi_feature_max=None,
         psi_model=None,
+        y_pred=oof_pred_label[oof_mask],
     )
 
     # ========== Log OOF (Out-of-Fold) results ==========
@@ -417,4 +471,5 @@ def run_kfold_training(
     logger.info("")
     logger.info(f"CV Complete | results={os.path.join(results_dir, 'cv_results.csv')} | stability={os.path.join(exp_dir, 'feature_stability.csv')} | total_time={(time.time() - start_total) / 60:.2f}min")
 
+    final_results_df.attrs["exp_dir"] = exp_dir
     return final_results_df

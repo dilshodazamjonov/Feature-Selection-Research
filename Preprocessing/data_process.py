@@ -2,12 +2,57 @@
 import os
 import logging
 from typing import List, Dict
+
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
 from utils.logging_config import setup_logging
 
 # Setup module logger
 logger = setup_logging("data_loader", level=logging.INFO)
+
+HOME_CREDIT_DAY_SENTINEL = 365243
+
+
+def normalize_home_credit_sentinel_dates(
+    df: pd.DataFrame,
+    dataset_name: str | None = None,
+) -> pd.DataFrame:
+    """
+    Replace Home Credit's day-based missing-value sentinel with NaN.
+
+    The raw competition tables use ``365243`` in multiple ``DAYS_*`` columns to
+    represent missing or not-applicable dates. Leaving that value untouched
+    distorts aggregates, IV calculations, and model coefficients.
+    """
+    day_cols = [
+        col
+        for col in df.columns
+        if "DAYS" in col.upper() and pd.api.types.is_numeric_dtype(df[col])
+    ]
+
+    if not day_cols:
+        return df
+
+    cleaned = df.copy()
+    replaced_total = 0
+
+    for col in day_cols:
+        sentinel_mask = cleaned[col] == HOME_CREDIT_DAY_SENTINEL
+        if sentinel_mask.any():
+            replaced_total += int(sentinel_mask.sum())
+            cleaned.loc[sentinel_mask, col] = np.nan
+
+    if replaced_total:
+        dataset_label = dataset_name or "dataframe"
+        logger.info(
+            "Replaced %s sentinel day values in %s",
+            f"{replaced_total:,}",
+            dataset_label,
+        )
+
+    return cleaned
 
 class DataLoader:
     """
@@ -57,7 +102,7 @@ class DataLoader:
                 logger.warning(f"Failed to load {f}: {e}")
                 continue
 
-            self.dataframes[name] = df
+            self.dataframes[name] = normalize_home_credit_sentinel_dates(df, name)
 
         if self.load_errors:
             logger.warning(f"{len(self.load_errors)} files failed to load")

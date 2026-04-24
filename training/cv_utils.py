@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 from typing import Iterator, Tuple
+from sklearn.model_selection import TimeSeriesSplit
 
 
 def _to_1d_proba(values):
@@ -11,6 +13,60 @@ def _to_1d_proba(values):
         else:
             values = values[:, 1]
     return values.reshape(-1)
+
+
+class GroupedTimeSeriesSplit:
+    """
+    Time-series CV that keeps identical time values in the same fold.
+
+    Standard ``TimeSeriesSplit`` works on row order, which can split a single
+    timestamp across train and validation when multiple rows share the same
+    period. This wrapper first splits unique time groups, then expands each
+    split back to row indices.
+    """
+
+    def __init__(self, n_splits: int = 5, gap: int = 0):
+        self.n_splits = n_splits
+        self.gap = gap
+
+    def split(self, time_values) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
+        time_values = np.asarray(time_values)
+
+        if time_values.ndim != 1:
+            raise ValueError("time_values must be one-dimensional")
+        if pd.isna(time_values).any():
+            raise ValueError("time_values contains missing values")
+
+        unique_times = np.unique(time_values)
+        if len(unique_times) <= self.n_splits:
+            raise ValueError(
+                f"Need more unique time groups than n_splits. "
+                f"Got {len(unique_times)} unique groups for n_splits={self.n_splits}."
+            )
+
+        splitter = TimeSeriesSplit(n_splits=self.n_splits)
+
+        for train_row_idx, val_row_idx in splitter.split(np.arange(len(time_values))):
+            val_start_time = time_values[val_row_idx[0]]
+            val_end_time = time_values[val_row_idx[-1]]
+
+            val_start_pos = np.searchsorted(unique_times, val_start_time)
+            val_end_pos = np.searchsorted(unique_times, val_end_time, side="right")
+            train_end_pos = max(val_start_pos - self.gap, 0)
+
+            train_times = unique_times[:train_end_pos]
+            val_times = unique_times[val_start_pos:val_end_pos]
+
+            train_idx = np.flatnonzero(np.isin(time_values, train_times))
+            val_idx = np.flatnonzero(np.isin(time_values, val_times))
+
+            if len(train_idx) == 0 or len(val_idx) == 0:
+                continue
+
+            yield train_idx, val_idx
+
+    def get_n_splits(self, X=None, y=None, groups=None) -> int:
+        return self.n_splits
 
 
 class SlidingWindowSplit:

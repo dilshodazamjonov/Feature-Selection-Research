@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Optional
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 
 
 class NumericalScaler:
@@ -20,18 +20,21 @@ class NumericalScaler:
     def fit(self, X: pd.DataFrame):
         self.num_cols = X.select_dtypes(include=["number"]).columns.tolist()
         X_num = X[self.num_cols].copy()
+        X_num = X_num.replace([np.inf, -np.inf], np.nan)
 
         # handle missing values
         if self.strategy == "mean":
-            self.fill_values_ = X_num.replace([np.inf, -np.inf], np.nan).mean()
+            self.fill_values_ = X_num.mean()
         elif self.strategy == "median":
-            self.fill_values_ = X_num.replace([np.inf, -np.inf], np.nan).median()
+            self.fill_values_ = X_num.median()
         elif self.strategy == "zero":
             self.fill_values_ = pd.Series(0, index=self.num_cols)
         else:
             raise ValueError(f"Unsupported strategy: {self.strategy}")
 
+        self.fill_values_ = self.fill_values_.fillna(0)
         X_num = X_num.fillna(self.fill_values_)
+        X_num = X_num.fillna(0)
 
         # fit scaler
         if self.scaler_type == "standard":
@@ -46,6 +49,7 @@ class NumericalScaler:
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         X_num = X[self.num_cols].copy()
         X_num = X_num.replace([np.inf, -np.inf], np.nan).fillna(self.fill_values_)
+        X_num = X_num.fillna(0)
 
         if self.scaler:
             X_num = pd.DataFrame(
@@ -63,63 +67,45 @@ class NumericalScaler:
 
 class CategoricalEncoder:
     """
-    Preprocess categorical features: missing value filling and one-hot encoding.
+    Preprocess categorical features with consistent one-hot encoding.
     """
 
-    def __init__(self, max_cardinality: int = 7, missing_value: str = "Missing"):
+    def __init__(
+        self,
+        max_cardinality: int = 7,
+        missing_value: str = "Missing",
+        min_frequency: int | float | None = 10,
+    ):
         self.max_cardinality = max_cardinality
         self.missing_value = missing_value
+        self.min_frequency = min_frequency
         self.cat_cols: List[str] = []
-        self.low_card_cols: List[str] = []
-        self.high_card_cols: List[str] = []  # Preserve high cardinality as label encoded
         self.ohe: Optional[OneHotEncoder] = None
-        self.label_encoders: dict = {}  # For high cardinality features
 
     def fit(self, X: pd.DataFrame):
-        self.cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
-        
-        # Separate low and high cardinality columns
-        self.low_card_cols = [c for c in self.cat_cols if X[c].nunique() <= self.max_cardinality]
-        self.high_card_cols = [c for c in self.cat_cols if X[c].nunique() > self.max_cardinality]
+        self.cat_cols = X.select_dtypes(include=["object", "category", "string"]).columns.tolist()
 
-        # One-hot encode low cardinality
-        if self.low_card_cols:
-            X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
-            self.ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
-            self.ohe.fit(X_low)
-        for col in self.high_card_cols:
-            le = LabelEncoder()
-            # Fill NaN with a placeholder, then fit
-            X_col = X[col].fillna(self.missing_value).astype(str)
-            le.fit(X_col)
-            self.label_encoders[col] = le
+        if self.cat_cols:
+            X_cat = X[self.cat_cols].fillna(self.missing_value).astype(str)
+            self.ohe = OneHotEncoder(
+                sparse_output=False,
+                handle_unknown="ignore",
+                min_frequency=self.min_frequency,
+            )
+            self.ohe.fit(X_cat)
 
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        result_dfs = []
-        
-        # One-hot encode low cardinality
-        if self.low_card_cols:
-            X_low = X[self.low_card_cols].fillna(self.missing_value).astype(str)
-            X_encoded = self.ohe.transform(X_low)
-            X_encoded_df = pd.DataFrame(
+        if self.cat_cols and self.ohe is not None:
+            X_cat = X[self.cat_cols].fillna(self.missing_value).astype(str)
+            X_encoded = self.ohe.transform(X_cat)
+            return pd.DataFrame(
                 X_encoded,
-                columns=self.ohe.get_feature_names_out(self.low_card_cols),
+                columns=self.ohe.get_feature_names_out(self.cat_cols),
                 index=X.index
             )
-            result_dfs.append(X_encoded_df)
-        
-        # Label encode high cardinality
-        for col in self.high_card_cols:
-            X_col = X[col].fillna(self.missing_value).astype(str)
-            # Handle unseen labels
-            le = self.label_encoders[col]
-            encoded = X_col.apply(lambda x: le.transform([x])[0] if x in le.classes_ else -1)
-            result_dfs.append(pd.DataFrame({col: encoded}, index=X.index))
-        
-        if result_dfs:
-            return pd.concat(result_dfs, axis=1)
+
         return pd.DataFrame(index=X.index)
 
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -132,9 +118,20 @@ class Preprocessor:
     Full preprocessing pipeline combining numerical scaling and categorical encoding.
     """
 
-    def __init__(self, num_strategy="mean", num_scaler="standard", cat_max_card=7, cat_missing="Missing"):
+    def __init__(
+        self,
+        num_strategy="mean",
+        num_scaler="standard",
+        cat_max_card=7,
+        cat_missing="Missing",
+        cat_min_frequency=10,
+    ):
         self.num_scaler = NumericalScaler(strategy=num_strategy, scaler=num_scaler)
-        self.cat_encoder = CategoricalEncoder(max_cardinality=cat_max_card, missing_value=cat_missing)
+        self.cat_encoder = CategoricalEncoder(
+            max_cardinality=cat_max_card,
+            missing_value=cat_missing,
+            min_frequency=cat_min_frequency,
+        )
 
     def fit(self, X: pd.DataFrame):
         self.num_scaler.fit(X)

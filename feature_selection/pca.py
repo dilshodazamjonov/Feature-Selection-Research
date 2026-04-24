@@ -24,7 +24,7 @@ class PCASelector:
         self.feature_names: List = None
         self.explained_variance: List = None
 
-    def fit(self, X: pd.DataFrame):
+    def fit(self, X: pd.DataFrame, y=None):
         """Fit PCA model."""
 
         self.feature_names = X.columns
@@ -60,8 +60,8 @@ class PCASelector:
 
         return pd.DataFrame(X_pca, columns=columns, index=X.index)
 
-    def fit_transform(self, X: pd.DataFrame):
+    def fit_transform(self, X: pd.DataFrame, y=None):
         """Fit and transform."""
 
-        self.fit(X)
+        self.fit(X, y=y)
         return self.transform(X)

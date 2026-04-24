@@ -5,7 +5,6 @@ build/
 dist/
 wheels/
 *.egg-info
-__init__.py
 
 # Virtual environments and enviornment varibles
 .venv
@@ -18,3 +17,7 @@ data/
 *.pkl
 outputs/
 .model
+.pytest_cache/
+.pytest_tmp/
+pytest_tmp/
+tests_runtime/

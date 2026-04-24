@@ -31,6 +31,19 @@ def ks_score(y_true, y_prob):
     ks_idx = np.argmax(diffs)
     return ks, thresholds[ks_idx]
 
+
+def determine_threshold(y_true, y_pred_proba, strategy: str = "ks") -> float:
+    """
+    Determine a decision threshold from a reference dataset.
+
+    This must be called on training data only when reporting held-out
+    threshold-based metrics.
+    """
+    if strategy != "ks":
+        raise ValueError(f"Unsupported threshold strategy: {strategy}")
+    _, threshold = ks_score(y_true, y_pred_proba)
+    return float(threshold)
+
 def gini_score(y_true, y_pred_proba):
     """
     Calculates the Gini coefficient based on ROC AUC.
@@ -69,28 +82,31 @@ def f1_score(y_true, y_pred):
     r = recall_score(y_true, y_pred)
     return 2 * p * r / (p + r) if p + r > 0 else 0
 
-def evaluate_model(y_true, y_pred_proba, threshold=None):
+def evaluate_model(y_true, y_pred_proba, threshold=None, y_pred=None):
     y_true = np.array(y_true)
     y_pred_proba = np.array(y_pred_proba)
     
     ks, ks_thresh = ks_score(y_true, y_pred_proba)
     
-    if threshold is None:
-        threshold = ks_thresh
-    
-    y_pred = (y_pred_proba >= threshold).astype(int)
+    if y_pred is None:
+        if threshold is None:
+            threshold = ks_thresh
+        y_pred = (y_pred_proba >= threshold).astype(int)
+    else:
+        y_pred = np.array(y_pred).astype(int)
     
     approval_rate = float(np.mean(y_pred == 0))
     approved_mask = (y_pred == 0)
     bad_rate_approved = float(np.mean(y_true[approved_mask])) if np.sum(approved_mask) > 0 else 0
     
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel().tolist()
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel().tolist()
     
     return {
         "gini": gini_score(y_true, y_pred_proba),  
         "auc": roc_auc_score(y_true, y_pred_proba),
         "ks": ks,
         "ks_threshold": ks_thresh,
+        "decision_threshold": float(threshold) if threshold is not None else np.nan,
         "tn": tn, "fp": fp, "fn": fn, "tp": tp,
         "precision": precision_score(y_true, y_pred),
         "recall": recall_score(y_true, y_pred),
@@ -111,6 +127,7 @@ def evaluate_model_wrapper(
     psi_model=None,
     threshold=None,
     prev_selected_features=None,
+    y_pred=None,
 ):
     """
     Evaluates one fold and returns organized results.
@@ -121,7 +138,7 @@ def evaluate_model_wrapper(
         Set of selected features from previous fold for Jaccard similarity calculation.
         If provided, Jaccard similarity will be computed between current and previous features.
     """
-    metrics_dict = evaluate_model(y_true, y_pred_proba, threshold)
+    metrics_dict = evaluate_model(y_true, y_pred_proba, threshold=threshold, y_pred=y_pred)
     
     # Fold info - train_size not applicable in wrapper, it's set in kfold_trainer
     fold_info = {

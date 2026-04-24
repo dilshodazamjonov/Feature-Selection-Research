@@ -51,13 +51,19 @@ def calculate_psi(
         if len(expected) == 0 or len(actual) == 0:
             return np.nan
 
-        # Compute quantile-based breakpoints
+        # Compute quantile-based breakpoints from the reference distribution.
+        # Make the outer edges open-ended so comparison values outside the
+        # training range are still assigned to a PSI bin instead of being
+        # silently dropped from the comparison distribution.
         breakpoints = np.percentile(expected, np.linspace(0, 100, bins + 1))
-        breakpoints = np.unique(breakpoints)
+        breakpoints = np.unique(breakpoints.astype(float))
 
         # Edge case: constant or low-variance feature
         if len(breakpoints) < 2:
             return np.nan
+
+        breakpoints[0] = -np.inf
+        breakpoints[-1] = np.inf
 
         # Bin both distributions using expected bins
         expected_bins = pd.cut(expected, bins=breakpoints, include_lowest=True)
