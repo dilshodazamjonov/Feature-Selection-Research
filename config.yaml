@@ -1,16 +1,30 @@
 model_selector: lr
 data_dir: data/inputs
 description_path: data/HomeCredit_columns_description.csv
+results_dir: results
+random_seed: 42
+feature_budgets:
+  lr: 20
+  catboost: 40
 n_splits: 5
 dev_start_day: -600
 oot_start_day: -240
 oot_end_day: 0
 cv_gap_groups: 1
+excluded_feature_columns:
+  - TARGET
+  - recent_decision
+  - PREV_recent_decision_MAX
+  - DAYS_DECISION
+  - application_time_proxy
 
 llm:
+  enabled: true
+  shared_ranking_enabled: true
+  ranking_budget: 40
   model: gpt-4.1-mini
-  max_features: 50
-  cache_dir: outputs/llm_selector_cache
+  max_features: 40
+  cache_dir: results/llm_selector_cache
 
 model_params:
   lr:
@@ -41,29 +55,30 @@ model_params:
     loss_function: Logloss
     eval_metric: AUC
     auto_class_weights: Balanced
-    iterations: 2200
+    iterations: 1500
     early_stopping_rounds: 150
     verbose: 100
     random_state: 42
+    allow_writing_files: false
 
 statistical_comparison:
-  output_dir: outputs/statistical_comparison
+  output_dir: results/statistical_comparison
   selectors:
     - mrmr
     - boruta
     - pca
 
 llm_vs_statistical:
-  output_dir: outputs/llm_vs_statistical
+  output_dir: results/llm_vs_statistical
   stat_selectors:
     - mrmr
     - boruta
 
 hybrid_comparison:
-  output_dir: outputs/hybrid_comparison
+  output_dir: results/hybrid_comparison
   stat_selector: mrmr
   improvement_tolerance: 0.0001
 
 single_experiment:
-  output_dir: outputs/single_experiment
+  output_dir: results/single_experiment
   selector: llm

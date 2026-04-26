@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable
+import json
 
 import numpy as np
 import pandas as pd
@@ -97,14 +98,56 @@ def build_experiment_summary_row(
                 "auc",
                 "gini",
                 "ks",
+                "log_loss",
+                "brier",
                 "precision",
                 "recall",
                 "f1",
                 "accuracy",
                 "decision_threshold",
+                "selected_feature_count",
+                "total_candidate_feature_count",
+                "feature_budget",
+                "feature_reduction_ratio",
+                "oot_gini_per_feature",
+                "oot_auc_per_feature",
+                "oot_ks_per_feature",
+                "selected_feature_psi_mean",
+                "selected_feature_psi_max",
+                "selected_feature_psi_median",
+                "selected_feature_psi_high_drift_ratio",
+                "selected_feature_psi_moderate_or_high_drift_ratio",
+                "model_score_psi",
+                "lift_at_10",
+                "bad_rate_capture_at_10",
+                "lift_at_20",
+                "bad_rate_capture_at_20",
             ]:
                 if metric in oot_df.columns:
                     summary[f"oot_{metric}"] = _safe_value(oot_df, metric)
+
+    stability_path = exp_path / "features" / "feature_stability_metrics.csv"
+    if stability_path.exists():
+        stability_df = pd.read_csv(stability_path)
+        if not stability_df.empty:
+            summary.update(stability_df.iloc[0].to_dict())
+    else:
+        legacy_stability_path = exp_path / "results" / "feature_stability_metrics.json"
+        if legacy_stability_path.exists():
+            stability = json.loads(legacy_stability_path.read_text(encoding="utf-8"))
+            summary.update(stability)
+
+    rank_path = exp_path / "results" / "rank_stability.csv"
+    if rank_path.exists():
+        rank_df = pd.read_csv(rank_path)
+        for metric_name, output_name in [
+            ("spearman", "spearman_rank_stability_mean"),
+            ("kendall_tau", "kendall_rank_stability_mean"),
+            ("rbo", "rbo_rank_stability_mean"),
+        ]:
+            metric_rows = rank_df[rank_df.get("metric") == metric_name] if "metric" in rank_df.columns else pd.DataFrame()
+            if not metric_rows.empty and "mean_value" in metric_rows.columns:
+                summary[output_name] = _safe_value(metric_rows, "mean_value")
 
     final_features_path = exp_path / "features" / "final_selected_features.csv"
     final_features = _read_feature_file(final_features_path)
@@ -135,6 +178,20 @@ def load_fold_feature_sets(exp_dir: str | Path) -> dict[int, set[str]]:
 
     if not features_dir.exists():
         return fold_sets
+
+    combined_path = features_dir / "fold_selected_features.csv"
+    if combined_path.exists():
+        combined = pd.read_csv(combined_path)
+        feature_col = "feature_name" if "feature_name" in combined.columns else "feature"
+        if "fold_id" in combined.columns and feature_col in combined.columns:
+            fold_ids = pd.to_numeric(combined["fold_id"], errors="coerce")
+            for fold in sorted(fold_ids.dropna().astype(int).unique()):
+                fold_sets[int(fold)] = {
+                    str(value)
+                    for value in combined.loc[fold_ids == fold, feature_col].dropna().tolist()
+                }
+            if fold_sets:
+                return fold_sets
 
     for fold_dir in sorted(features_dir.glob("fold_*")):
         try:
@@ -287,7 +344,10 @@ def compare_experiment_pair(
         summary[f"right_{metric}"] = right_value
 
         if pd.notna(left_value) and pd.notna(right_value):
-            summary[f"delta_{metric}_right_minus_left"] = float(right_value) - float(left_value)
+            summary[f"delta_{metric}_right_minus_left"] = round(
+                float(right_value) - float(left_value),
+                12,
+            )
         else:
             summary[f"delta_{metric}_right_minus_left"] = np.nan
 

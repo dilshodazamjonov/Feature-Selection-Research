@@ -15,20 +15,22 @@ class ExperimentPlotData:
     oot_metrics: dict[str, float]
 
 
-FOLD_METRIC_SOURCES: dict[str, tuple[str, str]] = {
-    "auc": ("evaluation_metrics_summary.csv", "auc"),
-    "gini": ("evaluation_metrics_summary.csv", "gini"),
-    "ks": ("evaluation_metrics_summary.csv", "ks"),
-    "precision": ("evaluation_metrics_summary.csv", "precision"),
-    "recall": ("evaluation_metrics_summary.csv", "recall"),
-    "f1": ("evaluation_metrics_summary.csv", "f1"),
-    "accuracy": ("evaluation_metrics_summary.csv", "accuracy"),
-    "selected_features": ("stability_metrics_summary.csv", "selected_features"),
-    "psi_feature_mean": ("stability_metrics_summary.csv", "psi_feature_mean"),
-    "psi_feature_max": ("stability_metrics_summary.csv", "psi_feature_max"),
-    "psi_model": ("stability_metrics_summary.csv", "psi_model"),
-    "jaccard_similarity": ("stability_metrics_summary.csv", "jaccard_similarity"),
-}
+FOLD_METRICS = [
+    "auc",
+    "gini",
+    "ks",
+    "precision",
+    "recall",
+    "f1",
+    "accuracy",
+    "selected_features",
+    "psi_feature_mean",
+    "psi_feature_max",
+    "psi_model",
+    "jaccard_similarity",
+    "lift_at_10",
+    "bad_rate_capture_at_10",
+]
 
 
 def _numeric_folds(df: pd.DataFrame) -> pd.DataFrame:
@@ -49,50 +51,65 @@ def _format_window_label(start_day: float, end_day: float) -> str:
 
 
 def _infer_label(exp_dir: Path) -> str:
-    name = exp_dir.name
-    tokens = name.split("_")
-    if len(tokens) >= 2:
-        return "_".join(tokens[:-2])
-    return name
+    manifest_path = exp_dir / "run_manifest.json"
+    if manifest_path.exists():
+        try:
+            import json
+
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            model = manifest.get("model")
+            selector = manifest.get("selector")
+            experiment_type = manifest.get("experiment_type")
+            if model and selector and experiment_type:
+                return f"{model}_{experiment_type}_{selector}"
+        except Exception:
+            pass
+    return exp_dir.name
 
 
 def load_plot_data(exp_dir: str | Path, label: str | None = None) -> ExperimentPlotData:
     exp_path = Path(exp_dir)
     results_dir = exp_path / "results"
+    cv_path = results_dir / "cv_results.csv"
+    if not cv_path.exists():
+        raise ValueError(f"Missing cv_results.csv for plotting: {exp_path}")
 
-    time_df = pd.read_csv(results_dir / "fold_time_info.csv")
-    time_df = time_df.sort_values("fold").reset_index(drop=True)
-    time_df["month_label"] = time_df.apply(
+    frame = _numeric_folds(pd.read_csv(cv_path))
+    if not {"val_time_start", "val_time_end"}.issubset(frame.columns):
+        legacy_time_path = results_dir / "fold_time_info.csv"
+        if not legacy_time_path.exists():
+            raise ValueError(f"Missing temporal fold columns for plotting: {exp_path}")
+        time_df = _numeric_folds(pd.read_csv(legacy_time_path))
+        frame = time_df.merge(frame, on="fold", how="left")
+
+    frame["month_label"] = frame.apply(
         lambda row: _format_window_label(row["val_time_start"], row["val_time_end"]),
         axis=1,
     )
-
-    merged = time_df.copy()
-    for metric_name, (filename, column) in FOLD_METRIC_SOURCES.items():
-        metric_path = results_dir / filename
-        if not metric_path.exists():
-            continue
-        metric_df = pd.read_csv(metric_path)
-        if "fold" not in metric_df.columns or column not in metric_df.columns:
-            continue
-        metric_df = _numeric_folds(metric_df[["fold", column]])
-        merged = merged.merge(metric_df, on="fold", how="left")
-        if column != metric_name:
-            merged = merged.rename(columns={column: metric_name})
 
     oot_metrics: dict[str, float] = {}
     oot_path = results_dir / "oot_test_results.csv"
     if oot_path.exists():
         oot_df = pd.read_csv(oot_path)
         if not oot_df.empty:
-            for metric in ["auc", "gini", "ks", "precision", "recall", "f1", "accuracy"]:
-                if metric in oot_df.columns:
+            for metric in [
+                "auc",
+                "gini",
+                "ks",
+                "precision",
+                "recall",
+                "f1",
+                "accuracy",
+                "lift_at_10",
+                "bad_rate_capture_at_10",
+            ]:
+                if metric in oot_df.columns and pd.notna(oot_df.iloc[0][metric]):
                     oot_metrics[metric] = float(oot_df.iloc[0][metric])
 
     return ExperimentPlotData(
         label=label or _infer_label(exp_path),
         exp_dir=exp_path,
-        frame=merged,
+        frame=frame,
         oot_metrics=oot_metrics,
     )
 
@@ -120,7 +137,11 @@ def _save_line_plot(
 ) -> bool:
     plt = _require_matplotlib()
     data = list(plot_data)
-    series_to_plot = [item for item in data if metric in item.frame.columns and item.frame[metric].notna().any()]
+    series_to_plot = [
+        item
+        for item in data
+        if metric in item.frame.columns and item.frame[metric].notna().any()
+    ]
     if not series_to_plot:
         return False
 
@@ -151,29 +172,62 @@ def _save_line_plot(
     return True
 
 
-def _save_bar_plot(
+def _save_grouped_bar(
     *,
-    labels: list[str],
-    values: list[float],
+    df: pd.DataFrame,
+    x: str,
+    y: str,
+    group: str,
     title: str,
     ylabel: str,
     output_path: str | Path,
 ) -> bool:
-    finite_pairs = [(label, value) for label, value in zip(labels, values) if pd.notna(value)]
-    if not finite_pairs:
+    if df.empty or not {x, y, group}.issubset(df.columns) or df[y].dropna().empty:
         return False
-
     plt = _require_matplotlib()
-    plot_labels = [label for label, _ in finite_pairs]
-    plot_values = [value for _, value in finite_pairs]
-
-    plt.figure(figsize=(10, 6))
-    plt.bar(plot_labels, plot_values)
+    pivot = df.pivot_table(index=x, columns=group, values=y, aggfunc="mean")
+    if pivot.empty:
+        return False
+    pivot.plot(kind="bar", figsize=(12, 6))
     plt.title(title)
     plt.ylabel(ylabel)
+    plt.xlabel(x)
     plt.grid(True, alpha=0.3, axis="y")
     plt.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output, bbox_inches="tight")
+    plt.close()
+    return True
 
+
+def _save_scatter(
+    *,
+    df: pd.DataFrame,
+    x: str,
+    y: str,
+    label: str,
+    group: str,
+    title: str,
+    output_path: str | Path,
+) -> bool:
+    if df.empty or not {x, y, label, group}.issubset(df.columns):
+        return False
+    plot_df = df[[x, y, label, group]].dropna()
+    if plot_df.empty:
+        return False
+    plt = _require_matplotlib()
+    plt.figure(figsize=(10, 7))
+    for group_value, group_df in plot_df.groupby(group):
+        plt.scatter(group_df[x], group_df[y], label=group_value, s=80)
+        for _, row in group_df.iterrows():
+            plt.annotate(str(row[label]), (row[x], row[y]), fontsize=8, alpha=0.8)
+    plt.title(title)
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output, bbox_inches="tight")
@@ -187,56 +241,39 @@ def generate_experiment_plots(
     output_dir: str | Path,
 ) -> dict[str, bool]:
     output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
     plot_data = list(experiments)
-
-    results: dict[str, bool] = {}
-    line_metrics = {
-        "gini": "Gini over Validation Windows",
-        "auc": "ROC-AUC over Validation Windows",
-        "ks": "KS over Validation Windows",
-        "precision": "Precision over Validation Windows",
-        "recall": "Recall over Validation Windows",
-        "f1": "F1 over Validation Windows",
-        "accuracy": "Accuracy over Validation Windows",
-        "selected_features": "Selected Feature Count over Validation Windows",
-        "psi_feature_mean": "Mean Feature PSI over Validation Windows",
-        "psi_feature_max": "Max Feature PSI over Validation Windows",
-        "psi_model": "Model PSI over Validation Windows",
-        "jaccard_similarity": "Jaccard Stability over Validation Windows",
+    unique_periods = {
+        str(label)
+        for item in plot_data
+        for label in item.frame.get("month_label", pd.Series(dtype=str)).dropna().tolist()
     }
+    use_monthly_names = len(unique_periods) >= 2
+    temporal_prefix = "monthly" if use_monthly_names else "temporal"
 
-    ylabels = {
-        "gini": "Gini",
-        "auc": "ROC-AUC",
-        "ks": "KS",
-        "precision": "Precision",
-        "recall": "Recall",
-        "f1": "F1",
-        "accuracy": "Accuracy",
-        "selected_features": "Selected Features",
-        "psi_feature_mean": "Mean Feature PSI",
-        "psi_feature_max": "Max Feature PSI",
-        "psi_model": "Model PSI",
-        "jaccard_similarity": "Jaccard Similarity",
-    }
-
-    for metric, title in line_metrics.items():
-        results[f"{metric}_over_time"] = _save_line_plot(
+    results: dict[str, bool] = {
+        f"{temporal_prefix}_gini_trend": _save_line_plot(
             plot_data=plot_data,
-            metric=metric,
-            title=title,
-            ylabel=ylabels[metric],
-            output_path=output_path / f"{metric}_over_time.png",
-        )
-
-    for metric, ylabel in [("gini", "Gini"), ("auc", "ROC-AUC"), ("ks", "KS")]:
-        results[f"oot_{metric}_comparison"] = _save_bar_plot(
-            labels=[item.label for item in plot_data],
-            values=[item.oot_metrics.get(metric, float("nan")) for item in plot_data],
-            title=f"OOT {ylabel} Comparison",
-            ylabel=ylabel,
-            output_path=output_path / f"oot_{metric}_comparison.png",
-        )
+            metric="gini",
+            title="Temporal Validation Gini Trend",
+            ylabel="Gini",
+            output_path=output_path / f"{temporal_prefix}_gini_trend.png",
+        ),
+        f"{temporal_prefix}_psi_trend": _save_line_plot(
+            plot_data=plot_data,
+            metric="psi_model",
+            title="Temporal Validation Model PSI Trend",
+            ylabel="Model PSI",
+            output_path=output_path / f"{temporal_prefix}_psi_trend.png",
+        ),
+        f"{temporal_prefix}_lift_trend": _save_line_plot(
+            plot_data=plot_data,
+            metric="lift_at_10",
+            title="Temporal Validation Lift@10 Trend",
+            ylabel="Lift@10",
+            output_path=output_path / f"{temporal_prefix}_lift_trend.png",
+        ),
+    }
 
     monthly_rows: list[dict[str, object]] = []
     for item in plot_data:
@@ -248,14 +285,13 @@ def generate_experiment_plots(
                     "month_label": row["month_label"],
                     "val_time_start": row["val_time_start"],
                     "val_time_end": row["val_time_end"],
-                    **{
-                        metric: row.get(metric, pd.NA)
-                        for metric in FOLD_METRIC_SOURCES
-                    },
+                    **{metric: row.get(metric, pd.NA) for metric in FOLD_METRICS},
                 }
             )
-    if monthly_rows:
-        pd.DataFrame(monthly_rows).to_csv(output_path / "monthly_metric_table.csv", index=False)
+    temporal_table_name = (
+        "monthly_metric_table.csv" if use_monthly_names else "temporal_metric_table.csv"
+    )
+    pd.DataFrame(monthly_rows).to_csv(output_path / temporal_table_name, index=False)
 
     pd.DataFrame(
         [
@@ -269,3 +305,97 @@ def generate_experiment_plots(
     ).to_csv(output_path / "oot_metric_table.csv", index=False)
 
     return results
+
+
+def generate_matrix_comparison_plots(
+    *,
+    comparison_df: pd.DataFrame,
+    experiments: Iterable[ExperimentPlotData],
+    output_dir: str | Path,
+) -> dict[str, bool]:
+    """Generate the clean research plot bundle from completed matrix runs."""
+    _ = list(experiments)
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    data = comparison_df.copy()
+
+    stability_columns = [
+        "model",
+        "selector",
+        "experiment_type",
+        "nogueira_stability",
+        "kuncheva_stability",
+        "mean_pairwise_jaccard",
+        "stable_feature_count_80",
+        "stable_feature_ratio_80",
+    ]
+    data.reindex(columns=stability_columns).to_csv(
+        output_path / "stability_metric_table.csv",
+        index=False,
+    )
+
+    return {
+        "oot_performance_comparison": _save_grouped_bar(
+            df=data,
+            x="selector",
+            y="oot_gini",
+            group="model",
+            title="OOT Gini by Selector and Model",
+            ylabel="OOT Gini",
+            output_path=output_path / "oot_performance_comparison.png",
+        ),
+        "stability_comparison": _save_grouped_bar(
+            df=data,
+            x="selector",
+            y="nogueira_stability",
+            group="model",
+            title="Nogueira Stability by Selector and Model",
+            ylabel="Nogueira Stability",
+            output_path=output_path / "stability_comparison.png",
+        ),
+        "performance_vs_stability": _save_scatter(
+            df=data,
+            x="nogueira_stability",
+            y="oot_gini",
+            label="selector",
+            group="model",
+            title="OOT Gini vs Nogueira Stability",
+            output_path=output_path / "performance_vs_stability.png",
+        ),
+        "feature_count_vs_gini": _save_scatter(
+            df=data,
+            x="selected_feature_count",
+            y="oot_gini",
+            label="selector",
+            group="model",
+            title="OOT Gini vs Selected Feature Count",
+            output_path=output_path / "feature_count_vs_gini.png",
+        ),
+        "selected_feature_psi_comparison": _save_grouped_bar(
+            df=data,
+            x="selector",
+            y="selected_feature_psi_mean",
+            group="model",
+            title="Selected Feature PSI by Selector and Model",
+            ylabel="Mean Selected Feature PSI",
+            output_path=output_path / "selected_feature_psi_comparison.png",
+        ),
+        "model_score_psi_comparison": _save_grouped_bar(
+            df=data,
+            x="selector",
+            y="model_score_psi",
+            group="model",
+            title="Model Score PSI by Selector and Model",
+            ylabel="Model Score PSI",
+            output_path=output_path / "model_score_psi_comparison.png",
+        ),
+        "lift_at_10_comparison": _save_grouped_bar(
+            df=data,
+            x="selector",
+            y="lift_at_10",
+            group="model",
+            title="Lift@10 by Selector and Model",
+            ylabel="Lift@10",
+            output_path=output_path / "lift_at_10_comparison.png",
+        ),
+    }

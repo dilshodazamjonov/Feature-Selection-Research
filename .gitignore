@@ -16,6 +16,7 @@ wheels/
 data/
 *.pkl
 outputs/
+results/
 .model
 .pytest_cache/
 .pytest_tmp/

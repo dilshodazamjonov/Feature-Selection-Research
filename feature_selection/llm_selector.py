@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
@@ -35,6 +36,12 @@ class LLMSelector:
         model: str = "gpt-4.1-mini",
         temperature: float = 0.0,
         max_features: int = 50,
+        ranking_budget: int | None = None,
+        feature_budget: int | None = None,
+        shared_ranking_enabled: bool = True,
+        config_hash: str | None = None,
+        lr_feature_budget: int = 20,
+        catboost_feature_budget: int = 40,
         max_missing_rate: float = 0.95,
         iv_filter_kwargs: Dict | None = None,
         feature_metadata: List[Dict] | None = None,
@@ -44,15 +51,28 @@ class LLMSelector:
         self.model = model
         self.temperature = temperature
         self.max_features = max_features
+        self.ranking_budget = int(ranking_budget or max_features)
+        self.feature_budget = int(feature_budget or max_features)
+        self.shared_ranking_enabled = shared_ranking_enabled
+        self.config_hash = config_hash or "default"
+        self.lr_feature_budget = int(lr_feature_budget)
+        self.catboost_feature_budget = int(catboost_feature_budget)
         self.max_missing_rate = max_missing_rate
         self.iv_filter_kwargs = dict(iv_filter_kwargs or {})
         self.feature_metadata = feature_metadata
 
+        self.ranked_features_: list[str] | None = None
         self.selected_features: list[str] | None = None
         self.selected_features_: list[str] | None = None
         self.artifact_dir: Path | None = None
+        self.ranking_artifact_dir: Path | None = None
+        self.scope: str = "global"
+        self.fold_id: int | None = None
         self.training_signature_: str | None = None
         self.cache_file_: Path | None = None
+        self.cache_hit_: bool = False
+        self.llm_calls_made_: int = 0
+        self.llm_cache_hits_: int = 0
         self.selection_payload_: dict | None = None
         self._client: OpenAI | None = None
         self.missing_filter_: MissingRateFilter | None = None
@@ -60,6 +80,19 @@ class LLMSelector:
 
     def set_artifact_dir(self, artifact_dir: str | os.PathLike) -> None:
         self.artifact_dir = Path(artifact_dir)
+
+    def set_ranking_context(
+        self,
+        *,
+        scope: str,
+        fold_id: int | None = None,
+        ranking_artifact_dir: str | os.PathLike | None = None,
+        **_: object,
+    ) -> None:
+        self.scope = scope
+        self.fold_id = fold_id
+        if ranking_artifact_dir is not None:
+            self.ranking_artifact_dir = Path(ranking_artifact_dir)
 
     def _get_client(self) -> OpenAI:
         if self._client is not None:
@@ -108,7 +141,7 @@ class LLMSelector:
 You are a senior credit risk modeling reviewer.
 
 Task:
-Select up to {self.max_features} features for a binary loan-default model.
+Select and rank up to {self.ranking_budget} features for a binary loan-default model.
 
 Rules:
 1. Use only the feature names provided below.
@@ -133,7 +166,9 @@ Return ONLY valid JSON:
         payload = {
             "model": self.model,
             "temperature": self.temperature,
-            "max_features": self.max_features,
+            "ranking_budget": self.ranking_budget,
+            "shared_ranking_enabled": self.shared_ranking_enabled,
+            "config_hash": self.config_hash,
             "iv_filter_kwargs": self.iv_filter_kwargs,
             "feature_metadata": metadata,
             "n_features": len(metadata),
@@ -143,7 +178,11 @@ Return ONLY valid JSON:
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def _cache_path(self, signature: str) -> Path:
-        return self.cache_dir / f"{signature}.json"
+        if not self.shared_ranking_enabled:
+            return self.cache_dir / f"{signature}.json"
+        fold_key = "final_dev" if self.scope == "final_dev" else f"fold_{self.fold_id}"
+        safe_scope = self.scope.replace("/", "_").replace("\\", "_")
+        return self.cache_dir / f"{self.config_hash}_{safe_scope}_{fold_key}_{signature}.json"
 
     def _call_llm(self, prompt: str) -> dict:
         logger.info(
@@ -175,12 +214,17 @@ Return ONLY valid JSON:
 
         ordered_unique = list(dict.fromkeys(str(feature) for feature in raw_selected))
 
+        usage = getattr(response, "usage", None)
         return {
-            "selected_features": ordered_unique[: self.max_features],
+            "selected_features": ordered_unique[: self.ranking_budget],
             "reasoning_summary": data.get("reasoning_summary", ""),
+            "feature_reasons": data.get("feature_reasons", {}),
             "request_model": self.model,
             "response_model": getattr(response, "model", self.model),
             "response_id": getattr(response, "id", None),
+            "prompt_tokens": getattr(usage, "prompt_tokens", None) if usage is not None else None,
+            "completion_tokens": getattr(usage, "completion_tokens", None) if usage is not None else None,
+            "total_tokens": getattr(usage, "total_tokens", None) if usage is not None else None,
             "raw_response": content,
         }
 
@@ -204,6 +248,53 @@ Return ONLY valid JSON:
         (self.artifact_dir / "selection_payload.json").write_text(
             json.dumps(payload, indent=2, ensure_ascii=False),
             encoding="utf-8",
+        )
+
+    def _write_ranking_artifact(self, payload: dict) -> None:
+        if self.ranking_artifact_dir is None or self.ranked_features_ is None:
+            return
+
+        self.ranking_artifact_dir.mkdir(parents=True, exist_ok=True)
+        output_path = self.ranking_artifact_dir / "llm_rankings_summary.csv"
+        reasons = payload.get("feature_reasons", {})
+        if not isinstance(reasons, dict):
+            reasons = {}
+
+        rows = []
+        for rank, feature in enumerate(self.ranked_features_, start=1):
+            rows.append(
+                {
+                    "scope": self.scope,
+                    "fold_id": self.fold_id if self.scope != "final_dev" else pd.NA,
+                    "rank": rank,
+                    "feature_name": feature,
+                    "llm_reason": reasons.get(feature, payload.get("reasoning_summary", "")),
+                    "metadata_signature": self.training_signature_,
+                    "config_hash": self.config_hash,
+                    "selected_for_lr": rank <= self.lr_feature_budget,
+                    "selected_for_catboost": rank <= self.catboost_feature_budget,
+                    "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+                    "cache_hit": self.cache_hit_,
+                    "request_model": payload.get("request_model", self.model),
+                    "response_model": payload.get("response_model", self.model),
+                    "prompt_tokens": payload.get("prompt_tokens"),
+                    "completion_tokens": payload.get("completion_tokens"),
+                    "total_tokens": payload.get("total_tokens"),
+                }
+            )
+        new_df = pd.DataFrame(rows)
+        if output_path.exists():
+            existing_df = pd.read_csv(output_path)
+            combined = pd.concat([existing_df, new_df], ignore_index=True)
+            combined = combined.drop_duplicates(
+                subset=["scope", "fold_id", "feature_name", "metadata_signature"],
+                keep="last",
+            )
+        else:
+            combined = new_df
+        combined.sort_values(["scope", "fold_id", "rank"], na_position="last").to_csv(
+            output_path,
+            index=False,
         )
 
     def fit(self, X: pd.DataFrame, y: pd.Series = None):
@@ -252,11 +343,19 @@ Return ONLY valid JSON:
         if cache_file.exists():
             logger.info("Loading cached LLM selection from %s", cache_file)
             payload = json.loads(cache_file.read_text(encoding="utf-8"))
+            self.cache_hit_ = True
+            self.llm_cache_hits_ = 1
         else:
             payload = self._call_llm(prompt)
+            self.cache_hit_ = False
+            self.llm_calls_made_ = 1
             payload.update(
                 {
                     "training_signature": signature,
+                    "scope": self.scope,
+                    "fold_id": self.fold_id,
+                    "config_hash": self.config_hash,
+                    "ranking_budget": self.ranking_budget,
                     "candidate_features": candidate_X.columns.tolist(),
                     "n_candidates": int(candidate_X.shape[1]),
                     "max_missing_rate": self.max_missing_rate,
@@ -271,28 +370,34 @@ Return ONLY valid JSON:
                 encoding="utf-8",
             )
 
-        valid_selected = [
+        valid_ranking = [
             feature
             for feature in payload.get("selected_features", [])
             if feature in candidate_X.columns
-        ]
+        ][: self.ranking_budget]
 
-        if not valid_selected:
+        if not valid_ranking:
             if iv_filter is not None:
-                fallback_features = iv_filter.iv_table_.head(self.max_features).index.tolist()
+                fallback_features = iv_filter.iv_table_.head(self.ranking_budget).index.tolist()
             else:
-                fallback_features = candidate_X.columns.tolist()[: self.max_features]
+                fallback_features = candidate_X.columns.tolist()[: self.ranking_budget]
             payload["selected_features"] = fallback_features
             payload["fallback_reason"] = "llm_response_did_not_match_candidate_features"
-            valid_selected = fallback_features
+            valid_ranking = fallback_features
 
-        self.selected_features = valid_selected
-        self.selected_features_ = valid_selected
+        self.ranked_features_ = valid_ranking
+        self.selected_features = valid_ranking[: self.feature_budget]
+        self.selected_features_ = self.selected_features
         self.selection_payload_ = payload
 
         self._write_artifacts(payload=payload, metadata=metadata, prompt=prompt)
+        self._write_ranking_artifact(payload=payload)
 
-        logger.info("Successfully selected %s features.", len(self.selected_features))
+        logger.info(
+            "Successfully ranked %s features and selected top %s.",
+            len(self.ranked_features_),
+            len(self.selected_features),
+        )
         return self
 
     def transform(self, X: pd.DataFrame):

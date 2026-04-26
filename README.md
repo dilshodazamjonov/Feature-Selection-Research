@@ -29,6 +29,19 @@ They parse arguments and hand off to `experiments/`, while the shared
 training logic stays in `pipelines/` and `training/`.
 
 The full directory guide is in [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
+For exact reproducibility commands, see [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+
+## Reproducibility Quickstart
+
+```bash
+uv sync
+uv run python scripts/check_research_setup.py
+uv run python main.py
+uv run python scripts/aggregate_results.py results/
+uv run python plots.py --all results/
+```
+
+If you prefer an activated environment, use the same commands without `uv run`.
 
 ## Config
 
@@ -161,7 +174,7 @@ python scripts/run_llm_vs_statistical.py ^
   --stat-selectors mrmr boruta ^
   --model-selector lr ^
   --llm-model gpt-4.1-mini ^
-  --llm-max-features 50 ^
+  --llm-max-features 40 ^
   --n-splits 5
 ```
 
@@ -187,7 +200,7 @@ python scripts/run_hybrid_comparison.py ^
   --stat-selector mrmr ^
   --model-selector lr ^
   --llm-model gpt-4.1-mini ^
-  --llm-max-features 50 ^
+  --llm-max-features 40 ^
   --n-splits 5
 ```
 
@@ -222,9 +235,15 @@ LLM-based scripts also support:
 
 ```bash
 --llm-model gpt-4.1-mini
---llm-max-features 50
+--llm-max-features 40
+--llm-ranking-budget 40
 --llm-cache-dir outputs/llm_selector_cache
 ```
+
+The full matrix uses a shared fold-local LLM top-40 ranking cache. LR consumes
+the top 20 ranked features, while CatBoost consumes the top 40. CV fold rankings
+are created from each fold's training subset only; the final DEV ranking is used
+only for final OOT evaluation.
 
 You can inspect any CLI surface with:
 
@@ -237,41 +256,47 @@ python scripts/run_single_experiment.py --help
 
 ## Output Layout
 
-Each run creates its own timestamped folder:
+`main.py` uses stable, resumable folders under `results/`:
 
-- `outputs/statistical_comparison/run_statistical_comparison_.../`
-- `outputs/llm_vs_statistical/run_llm_vs_statistical_.../`
-- `outputs/hybrid_comparison/run_hybrid_comparison_.../`
-- `outputs/single_experiment/run_single_experiment_.../`
+- `results/lr/statistical/<run_id>/`
+- `results/lr/llm/<run_id>/`
+- `results/lr/hybrid_mrmr/<run_id>/`
+- `results/lr/hybrid_boruta/<run_id>/`
+- `results/catboost/statistical/<run_id>/`
+- `results/catboost/llm/<run_id>/`
+- `results/catboost/hybrid_mrmr/<run_id>/`
+- `results/catboost/hybrid_boruta/<run_id>/`
 
 Typical contents:
 
 - `run_manifest.json`
-- `experiments/`
-- `feature_overlap/` for comparison runs
-- summary `.csv` files at the run root
+- `run.log`
+- `leakage_report.json`
+- `data_split_manifest.json`
+- `features/`
+- `models/`
+- `results/`
 
-Each experiment directory contains the underlying fold artifacts, selected
-features, models, and result files produced by the shared training pipeline.
+Each experiment directory now keeps only the final research artifacts by
+default:
 
-Each experiment now also writes a dedicated fold-stability summary:
-
-- `results/stability_confidence_summary.csv`
-
-That file contains fold-based stability statistics only for:
-
-- `gini`
-- `ks`
-- `psi_feature_mean`
-- `psi_feature_max`
-- `psi_model`
-- `jaccard_similarity`
-
-For each metric it includes just:
-
-- `value`
-- `ci95_lower`
-- `ci95_upper`
+- `features/final_selected_features.csv`
+- `features/fold_selected_features.csv`
+- `features/selection_frequency.csv`
+- `features/feature_stability_metrics.csv`
+- `features/llm_rankings_summary.csv` for LLM/hybrid runs
+- `features/llm_hybrid_trace.csv` for hybrid runs
+- `models/final_model.model`
+- `models/final_preprocessor.pkl`
+- `models/final_model_metadata.json`
+- `results/experiment_summary.csv`
+- `results/cv_results.csv`
+- `results/oot_test_results.csv`
+- `results/oot_predictions.csv`
+- `results/selected_feature_psi.csv`
+- `results/model_score_psi.csv`
+- `results/credit_risk_utility.csv`
+- `results/runtime_summary.csv`
 
 ## Separate Comparison Plot Tool
 
@@ -281,17 +306,16 @@ training pipeline and is meant for reporting and stability analysis.
 
 It can generate plots such as:
 
-- `gini_over_time.png`
-- `auc_over_time.png`
-- `ks_over_time.png`
-- `psi_feature_mean_over_time.png`
-- `psi_feature_max_over_time.png`
-- `psi_model_over_time.png`
-- `jaccard_similarity_over_time.png`
-- `selected_features_over_time.png`
-- `oot_gini_comparison.png`
-- `oot_auc_comparison.png`
-- `oot_ks_comparison.png`
+- `oot_performance_comparison.png`
+- `stability_comparison.png`
+- `performance_vs_stability.png`
+- `feature_count_vs_gini.png`
+- `selected_feature_psi_comparison.png`
+- `model_score_psi_comparison.png`
+- `lift_at_10_comparison.png`
+- `monthly_gini_trend.png`
+- `monthly_psi_trend.png`
+- `monthly_lift_trend.png`
 
 You can compare specific experiment folders directly:
 
@@ -314,25 +338,31 @@ The script also writes:
 
 - `monthly_metric_table.csv`
 - `oot_metric_table.csv`
+- `stability_metric_table.csv`
 
-## Overnight Run
+## Full Matrix Run
 
-Use [main.py](</d:/python projects/Research/main.py>) when you want the whole research sequence to run overnight.
+Use [main.py](</d:/python projects/Research/main.py>) when you want the whole research matrix to run overnight.
 
 ```bash
 python main.py
 ```
 
-That runs:
+That automatically runs:
 
-1. Statistical baselines
-2. LLM vs statistical
-3. Hybrid comparison
+- LR + `mrmr`, `boruta`, `pca`
+- LR + LLM
+- LR + `LLM -> mRMR`
+- LR + `LLM -> Boruta`
+- CatBoost + `mrmr`, `boruta`, `pca`
+- CatBoost + LLM
+- CatBoost + `LLM -> mRMR`
+- CatBoost + `LLM -> Boruta`
 
-You can override the model for the whole overnight run:
+Completed entries are reused automatically. To rerun completed entries:
 
 ```bash
-python main.py --model-selector catboost
+python main.py --force
 ```
 
 ## Environment
@@ -364,7 +394,7 @@ OPENAI_API_KEY=your_key_here
 - Temporal CV uses grouped time splits so the same time group cannot land in both train and validation.
 - Threshold-based metrics use thresholds learned on training probabilities before being applied to validation or OOT data.
 - LLM metadata is built from fold-local training data only.
-- LLM cache entries are isolated per run folder.
+- LLM ranking cache entries are shared through `results/_llm_rankings_cache/`, while each run writes its own `features/llm_rankings_summary.csv` audit copy.
 - Numeric preprocessing now forces finite outputs so downstream selectors such as Boruta receive model-ready data.
 
 ## Notes

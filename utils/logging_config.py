@@ -3,6 +3,7 @@ Logging configuration for the project.
 """
 import logging
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -64,3 +65,37 @@ def get_logger(name: str = "research") -> logging.Logger:
     if not logger.handlers:
         return setup_logging(name)
     return logger
+
+
+@contextmanager
+def run_log_context(log_file: str | Path, level: int = logging.INFO):
+    """
+    Temporarily mirror all project logs into one run-level file.
+
+    Existing modules create named loggers at import time, while selectors may
+    import later during a run. Attaching to the root logger captures both cases
+    through normal propagation without permanently leaking handlers across
+    matrix entries.
+    """
+    log_path = Path(log_file)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    handler = logging.FileHandler(log_path, mode="a")
+    handler.setFormatter(formatter)
+    handler.setLevel(level)
+
+    root_logger = logging.getLogger()
+    previous_level = root_logger.level
+    root_logger.setLevel(min(previous_level, level) if previous_level else level)
+    root_logger.addHandler(handler)
+
+    try:
+        yield log_path
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_level)
+        handler.close()

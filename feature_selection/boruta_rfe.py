@@ -180,26 +180,55 @@ class RFESelector:
 
 class BorutaRFESelector:
     """
-    Combined feature selection pipeline:
-        1. Boruta (coarse filtering)
-        2. RFE (fine selection)
+    Boruta feature selector with optional RFE refinement.
 
-    This is the main selector to be used when 'boruta' is specified.
+    RFE is disabled by default for the research matrix because it repeatedly
+    trains CatBoost and dominates runtime. When disabled, Boruta-selected
+    features are capped to ``n_features`` using Boruta ranking/support.
     """
 
-    def __init__(self, boruta_kwargs=None, rfe_kwargs=None):
+    def __init__(self, boruta_kwargs=None, rfe_kwargs=None, use_rfe: bool = False, n_features: int = 40):
         """
         Args:
             boruta_kwargs: Parameters for BorutaSelector
             rfe_kwargs: Parameters for RFESelector
+            use_rfe: Whether to run the expensive RFE refinement stage.
+            n_features: Final feature cap when RFE is disabled.
         """
         self.boruta = BorutaSelector(**(boruta_kwargs or {}))
-        self.rfe = RFESelector(**(rfe_kwargs or {}))
+        self.rfe_kwargs = dict(rfe_kwargs or {})
+        self.use_rfe = use_rfe
+        self.n_features = n_features
+        self.rfe = RFESelector(**self.rfe_kwargs) if use_rfe else None
         self.selected_features = None
+
+    def _boruta_capped_features(self, X: pd.DataFrame) -> list[str]:
+        selector = self.boruta.selector
+        if selector is None:
+            return self.boruta.selected_features or X.columns.tolist()[: self.n_features]
+
+        ranking = pd.Series(selector.ranking_, index=X.columns)
+        support = pd.Series(selector.support_, index=X.columns)
+        weak_support = pd.Series(selector.support_weak_, index=X.columns)
+
+        ordered = (
+            pd.DataFrame(
+                {
+                    "feature": X.columns,
+                    "rank": ranking.values,
+                    "support": support.values.astype(int),
+                    "weak_support": weak_support.values.astype(int),
+                }
+            )
+            .sort_values(["support", "weak_support", "rank", "feature"], ascending=[False, False, True, True])
+            ["feature"]
+            .tolist()
+        )
+        return ordered[: min(self.n_features, len(ordered))]
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
         """
-        Runs Boruta followed by RFE.
+        Runs Boruta, optionally followed by RFE.
 
         Args:
             X: Feature DataFrame
@@ -209,10 +238,16 @@ class BorutaRFESelector:
         X_boruta = self.boruta.fit_transform(X, y)
         logger.info(f"After Boruta: {X_boruta.shape}")
 
-        X_rfe = self.rfe.fit_transform(X_boruta, y)
-        logger.info(f"After RFE: {X_rfe.shape}")
-
-        self.selected_features = X_rfe.columns.tolist()
+        if self.use_rfe and self.rfe is not None:
+            X_rfe = self.rfe.fit_transform(X_boruta, y)
+            logger.info(f"After RFE: {X_rfe.shape}")
+            self.selected_features = X_rfe.columns.tolist()
+        else:
+            self.selected_features = self._boruta_capped_features(X)
+            logger.info(
+                "RFE disabled - using top %s Boruta-ranked features",
+                len(self.selected_features),
+            )
 
         logger.info(f"Feature selection finished - Final selected features: {len(self.selected_features)}")
 
@@ -228,9 +263,12 @@ class BorutaRFESelector:
         Returns:
             Filtered DataFrame
         """
-        X_boruta = self.boruta.transform(X)
-        X_rfe = self.rfe.transform(X_boruta)
-        return X_rfe
+        if self.selected_features is None:
+            raise ValueError("BorutaRFESelector not fitted")
+        if self.use_rfe and self.rfe is not None:
+            X_boruta = self.boruta.transform(X)
+            return self.rfe.transform(X_boruta)
+        return X[self.selected_features]
 
     def fit_transform(self, X: pd.DataFrame, y: pd.Series):
         """

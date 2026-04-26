@@ -28,7 +28,8 @@ class CatBoostModel:
         iterations=2200,
         early_stopping_rounds=150,
         verbose=100,
-        random_state=42
+        random_state=42,
+        allow_writing_files=False,
     ):
         """
         Initialize CatBoost model with hyperparameters.
@@ -51,7 +52,8 @@ class CatBoostModel:
             iterations=iterations,
             early_stopping_rounds=early_stopping_rounds,
             verbose=verbose,
-            random_state=random_state
+            random_state=random_state,
+            allow_writing_files=allow_writing_files,
         )
         self.feature_names = None
         self.fitted = False

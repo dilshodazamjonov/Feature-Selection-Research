@@ -1,9 +1,14 @@
+CatBoostModel = None
+RandomForestModel = None
+LogisticRegressionModel = None
+
+
 def get_selector(selector_name: str):
     """
     Returns the selector class and its default kwargs.
 
     Supported selectors:
-        - 'boruta' / 'boruta_rfe' -> Boruta + RFE
+        - 'boruta' / 'boruta_rfe' -> Boruta, with optional RFE refinement
         - 'mrmr' -> Minimum Redundancy Maximum Relevance
         - 'pca' -> Principal Component Analysis
         - 'llm' -> LLM-based feature selection
@@ -17,8 +22,10 @@ def get_selector(selector_name: str):
         from feature_selection.boruta_rfe import BorutaRFESelector
 
         return BorutaRFESelector, {
-            "boruta_kwargs": {"max_iter": 20, "random_state": 42},
+            "boruta_kwargs": {"max_iter": 15, "random_state": 42},
             "rfe_kwargs": {"n_features": 40, "step": 10, "random_state": 42},
+            "use_rfe": False,
+            "n_features": 40,
         }
 
     elif name == "mrmr":
@@ -36,6 +43,7 @@ def get_selector(selector_name: str):
         return PCASelector, {
             "n_components": 0.95,
             "save_dir": None,
+            "random_state": 42,
         }
 
     elif name == "llm":
@@ -83,15 +91,27 @@ def get_model_bundle(model_name, model_kwargs=None):
     model_kwargs = dict(model_kwargs or {})
 
     if name == "catboost":
-        from Models.catboost_model import CatBoostModel
+        global CatBoostModel
+        if CatBoostModel is None:
+            from Models.catboost_model import CatBoostModel as _CatBoostModel
+
+            CatBoostModel = _CatBoostModel
 
         model_cls = CatBoostModel
     elif name == "rf":
-        from Models.random_forest_model import RandomForestModel
+        global RandomForestModel
+        if RandomForestModel is None:
+            from Models.random_forest_model import RandomForestModel as _RandomForestModel
+
+            RandomForestModel = _RandomForestModel
 
         model_cls = RandomForestModel
     elif name == "lr":
-        from Models.logistic_regression_model import LogisticRegressionModel
+        global LogisticRegressionModel
+        if LogisticRegressionModel is None:
+            from Models.logistic_regression_model import LogisticRegressionModel as _LogisticRegressionModel
+
+            LogisticRegressionModel = _LogisticRegressionModel
 
         model_cls = LogisticRegressionModel
     else:

@@ -7,6 +7,7 @@ from sklearn.metrics import (
     roc_curve,
     accuracy_score
 )
+from sklearn.metrics import brier_score_loss, log_loss
 import pandas as pd
 from evaluation.stability_scores import jaccard_similarity
 from utils.logging_config import setup_logging
@@ -112,6 +113,8 @@ def evaluate_model(y_true, y_pred_proba, threshold=None, y_pred=None):
         "recall": recall_score(y_true, y_pred),
         "f1": f1_score(y_true, y_pred),
         "accuracy": accuracy_score(y_true, y_pred),
+        "log_loss": log_loss(y_true, y_pred_proba, labels=[0, 1]),
+        "brier": brier_score_loss(y_true, y_pred_proba),
         "approval_rate": approval_rate,
         "bad_rate_approved": bad_rate_approved
     }

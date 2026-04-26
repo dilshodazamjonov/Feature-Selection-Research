@@ -14,7 +14,13 @@ from experiments.common import (
     prepare_shared_data,
     resolve_llm_cache_dir,
 )
-from experiments.config import build_parser_defaults, extract_config_path, load_project_config
+from experiments.config import (
+    apply_feature_budget_to_selector_kwargs,
+    build_parser_defaults,
+    extract_config_path,
+    load_project_config,
+    resolve_feature_budget,
+)
 from feature_selection.hybrid import LLMThenStatSelector
 from pipelines.common import run_experiment
 from pipelines.comparison import compare_experiment_pair
@@ -47,8 +53,11 @@ def build_parser(defaults: dict[str, object]) -> argparse.ArgumentParser:
         oot_start_day=defaults["oot_start_day"],
         oot_end_day=defaults["oot_end_day"],
         cv_gap_groups=defaults["cv_gap_groups"],
+        random_seed=defaults["random_seed"],
         llm_model=defaults["llm_model"],
         llm_max_features=defaults["llm_max_features"],
+        llm_ranking_budget=defaults["llm_ranking_budget"],
+        llm_shared_ranking_enabled=defaults["llm_shared_ranking_enabled"],
         llm_cache_dir=defaults["llm_cache_dir"],
     )
     return parser
@@ -71,6 +80,12 @@ def run(args: argparse.Namespace) -> None:
     stat_selector_cls, stat_selector_kwargs = get_selector(stat_selector_name)
     if stat_selector_cls is None:
         raise ValueError(f"Unsupported hybrid downstream selector: {args.stat_selector}")
+    feature_budget = resolve_feature_budget(args.project_config, args.model)
+    stat_selector_kwargs = apply_feature_budget_to_selector_kwargs(
+        stat_selector_name,
+        stat_selector_kwargs,
+        feature_budget,
+    )
 
     layout = create_run_layout(
         output_dir=args.output_dir,
@@ -135,7 +150,9 @@ def run(args: argparse.Namespace) -> None:
                 "stat_selector_kwargs": stat_selector_kwargs,
                 "cache_dir": llm_cache_dir,
                 "llm_model": args.llm_model,
-                "llm_max_features": args.llm_max_features,
+                "llm_max_features": args.llm_ranking_budget,
+                "llm_feature_budget": args.project_config.get("feature_budgets", {}).get(args.model, args.llm_max_features),
+                "llm_shared_ranking_enabled": args.llm_shared_ranking_enabled,
                 "llm_selector_kwargs": {
                     "max_missing_rate": 0.95,
                 },

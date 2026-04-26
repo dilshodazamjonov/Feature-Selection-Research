@@ -23,6 +23,9 @@ class LLMThenStatSelector:
         llm_model: str = "gpt-4.1-mini",
         llm_temperature: float = 0.0,
         llm_max_features: int = 50,
+        llm_feature_budget: int | None = None,
+        llm_shared_ranking_enabled: bool = True,
+        llm_config_hash: str | None = None,
         iv_filter_kwargs: dict[str, Any] | None = None,
         llm_selector_kwargs: dict[str, Any] | None = None,
         llm_selector_cls: type | None = None,
@@ -37,11 +40,15 @@ class LLMThenStatSelector:
         self.llm_model = llm_model
         self.llm_temperature = llm_temperature
         self.llm_max_features = llm_max_features
+        self.llm_feature_budget = llm_feature_budget or llm_max_features
+        self.llm_shared_ranking_enabled = llm_shared_ranking_enabled
+        self.llm_config_hash = llm_config_hash
         self.iv_filter_kwargs = dict(iv_filter_kwargs or {})
         self.llm_selector_kwargs = dict(llm_selector_kwargs or {})
         self.llm_selector_cls = llm_selector_cls
 
         self.artifact_dir: Path | None = None
+        self.ranking_context: dict[str, Any] = {}
         self.llm_selector: Any | None = None
         self.stat_selector: Any | None = None
         self.llm_selected_features_: list[str] | None = None
@@ -52,6 +59,9 @@ class LLMThenStatSelector:
 
     def set_artifact_dir(self, artifact_dir: str | Path) -> None:
         self.artifact_dir = Path(artifact_dir)
+
+    def set_ranking_context(self, **kwargs: Any) -> None:
+        self.ranking_context = dict(kwargs)
 
     def _build_llm_selector(self):
         llm_selector_cls = self.llm_selector_cls
@@ -66,28 +76,14 @@ class LLMThenStatSelector:
             "model": self.llm_model,
             "temperature": self.llm_temperature,
             "max_features": self.llm_max_features,
+            "ranking_budget": self.llm_max_features,
+            "feature_budget": self.llm_feature_budget,
+            "shared_ranking_enabled": self.llm_shared_ranking_enabled,
+            "config_hash": self.llm_config_hash,
             "iv_filter_kwargs": dict(self.iv_filter_kwargs),
         }
         kwargs.update(self.llm_selector_kwargs)
         return llm_selector_cls(**kwargs)
-
-    def _write_stage_artifacts(self) -> None:
-        if self.artifact_dir is None:
-            return
-
-        self.artifact_dir.mkdir(parents=True, exist_ok=True)
-
-        if self.llm_selected_features_ is not None:
-            pd.DataFrame({"feature": self.llm_selected_features_}).to_csv(
-                self.artifact_dir / "llm_preselected_features.csv",
-                index=False,
-            )
-
-        if self.selected_features_ is not None:
-            pd.DataFrame({"feature": self.selected_features_}).to_csv(
-                self.artifact_dir / "hybrid_selected_features.csv",
-                index=False,
-            )
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None):
         if y is None:
@@ -96,6 +92,8 @@ class LLMThenStatSelector:
         self.llm_selector = self._build_llm_selector()
         if self.artifact_dir is not None and hasattr(self.llm_selector, "set_artifact_dir"):
             self.llm_selector.set_artifact_dir(self.artifact_dir / "llm")
+        if hasattr(self.llm_selector, "set_ranking_context"):
+            self.llm_selector.set_ranking_context(**self.ranking_context)
 
         X_llm = self.llm_selector.fit_transform(X, y)
         self.llm_selected_features_ = X_llm.columns.tolist()
@@ -122,7 +120,6 @@ class LLMThenStatSelector:
 
         self.selected_features = X_final.columns.tolist()
         self.selected_features_ = X_final.columns.tolist()
-        self._write_stage_artifacts()
         return X_final
 
     def transform_postprocess(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -137,4 +134,5 @@ class LLMThenStatSelector:
         return X_final
 
     def fit_transform(self, X: pd.DataFrame, y: pd.Series | None = None) -> pd.DataFrame:
-        return self.fit(X, y).transform(X)
+        X_llm = self.fit(X, y).transform(X)
+        return self.fit_postprocess(X_llm, y)

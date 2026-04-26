@@ -3,24 +3,43 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
+import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
 
 DEFAULT_CONFIG_PATH = "config.yaml"
+DEFAULT_RANDOM_SEED = 42
+DEFAULT_RESULTS_DIR = "results"
+DEFAULT_FEATURE_BUDGETS = {"lr": 20, "catboost": 40}
+DEFAULT_EXCLUDED_FEATURE_COLUMNS = [
+    "TARGET",
+    "recent_decision",
+    "PREV_recent_decision_MAX",
+    "DAYS_DECISION",
+    "application_time_proxy",
+]
 DEFAULT_CONFIG: dict[str, Any] = {
     "model_selector": "lr",
     "data_dir": "data/inputs",
     "description_path": "data/HomeCredit_columns_description.csv",
+    "results_dir": DEFAULT_RESULTS_DIR,
+    "random_seed": DEFAULT_RANDOM_SEED,
+    "feature_budgets": DEFAULT_FEATURE_BUDGETS,
     "n_splits": 5,
     "dev_start_day": -600,
     "oot_start_day": -240,
     "oot_end_day": 0,
     "cv_gap_groups": 1,
+    "excluded_feature_columns": DEFAULT_EXCLUDED_FEATURE_COLUMNS,
     "llm": {
+        "enabled": True,
+        "shared_ranking_enabled": True,
+        "ranking_budget": 40,
         "model": "gpt-4.1-mini",
-        "max_features": 50,
-        "cache_dir": "outputs/llm_selector_cache",
+        "max_features": 40,
+        "cache_dir": "results/llm_selector_cache",
     },
     "model_params": {
         "lr": {},
@@ -28,20 +47,20 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "catboost": {},
     },
     "statistical_comparison": {
-        "output_dir": "outputs/statistical_comparison",
+        "output_dir": "results/statistical_comparison",
         "selectors": ["mrmr", "boruta", "pca"],
     },
     "llm_vs_statistical": {
-        "output_dir": "outputs/llm_vs_statistical",
+        "output_dir": "results/llm_vs_statistical",
         "stat_selectors": ["mrmr", "boruta"],
     },
     "hybrid_comparison": {
-        "output_dir": "outputs/hybrid_comparison",
+        "output_dir": "results/hybrid_comparison",
         "stat_selector": "mrmr",
         "improvement_tolerance": 1e-4,
     },
     "single_experiment": {
-        "output_dir": "outputs/single_experiment",
+        "output_dir": "results/single_experiment",
         "selector": "llm",
     },
 }
@@ -172,6 +191,69 @@ def load_project_config(path: str | Path) -> dict[str, Any]:
     return _merge_dicts(DEFAULT_CONFIG, parsed)
 
 
+def canonical_config_json(config: dict[str, Any]) -> str:
+    """Serialize a config deterministically for audit hashes."""
+    return json.dumps(config, sort_keys=True, ensure_ascii=True, default=str)
+
+
+def compute_config_hash(config: dict[str, Any]) -> str:
+    """Return a SHA-256 hash of the exact effective config payload."""
+    return hashlib.sha256(canonical_config_json(config).encode("utf-8")).hexdigest()
+
+
+def apply_random_seed_to_kwargs(value: Any, random_seed: int) -> Any:
+    """
+    Recursively apply a run seed to selector/model kwargs that expose a
+    ``random_state`` field.
+
+    Existing ``random_state`` values are overwritten intentionally so one run
+    seed controls the whole experiment and reruns are defensible.
+    """
+    if isinstance(value, dict):
+        seeded = {
+            key: apply_random_seed_to_kwargs(item, random_seed)
+            for key, item in value.items()
+        }
+        if "random_state" in seeded:
+            seeded["random_state"] = random_seed
+        return seeded
+    if isinstance(value, list):
+        return [apply_random_seed_to_kwargs(item, random_seed) for item in value]
+    return value
+
+
+def resolve_feature_budget(config: dict[str, Any], model_name: str) -> int:
+    """Return the configured selected-feature budget for a model family."""
+    budgets = config.get("feature_budgets", DEFAULT_FEATURE_BUDGETS)
+    if not isinstance(budgets, dict):
+        return int(DEFAULT_FEATURE_BUDGETS.get(model_name.lower(), 40))
+    return int(budgets.get(model_name.lower(), DEFAULT_FEATURE_BUDGETS.get(model_name.lower(), 40)))
+
+
+def apply_feature_budget_to_selector_kwargs(
+    selector_name: str,
+    selector_kwargs: dict[str, Any],
+    feature_budget: int,
+) -> dict[str, Any]:
+    """Apply model-specific feature budgets to supported selectors."""
+    name = selector_name.lower()
+    updated = copy.deepcopy(selector_kwargs)
+
+    if name == "mrmr":
+        updated["k"] = feature_budget
+    elif name in {"boruta", "boruta_rfe"}:
+        rfe_kwargs = dict(updated.get("rfe_kwargs", {}))
+        rfe_kwargs["n_features"] = feature_budget
+        updated["rfe_kwargs"] = rfe_kwargs
+        updated["n_features"] = feature_budget
+    elif name == "pca":
+        updated["n_components"] = feature_budget
+    elif name == "llm":
+        updated["feature_budget"] = feature_budget
+
+    return updated
+
+
 def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str, Any]:
     section = config.get(section_name, {})
     llm = config.get("llm", {})
@@ -180,6 +262,9 @@ def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str
         "model": config.get("model_selector", "lr"),
         "data_dir": config.get("data_dir", DEFAULT_CONFIG["data_dir"]),
         "description_path": config.get("description_path", DEFAULT_CONFIG["description_path"]),
+        "results_dir": config.get("results_dir", DEFAULT_CONFIG["results_dir"]),
+        "random_seed": config.get("random_seed", DEFAULT_CONFIG["random_seed"]),
+        "feature_budgets": config.get("feature_budgets", DEFAULT_CONFIG["feature_budgets"]),
         "n_splits": config.get("n_splits", DEFAULT_CONFIG["n_splits"]),
         "dev_start_day": config.get("dev_start_day", DEFAULT_CONFIG["dev_start_day"]),
         "oot_start_day": config.get("oot_start_day", DEFAULT_CONFIG["oot_start_day"]),
@@ -187,6 +272,11 @@ def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str
         "cv_gap_groups": config.get("cv_gap_groups", DEFAULT_CONFIG["cv_gap_groups"]),
         "llm_model": llm.get("model", DEFAULT_CONFIG["llm"]["model"]),
         "llm_max_features": llm.get("max_features", DEFAULT_CONFIG["llm"]["max_features"]),
+        "llm_shared_ranking_enabled": llm.get(
+            "shared_ranking_enabled",
+            DEFAULT_CONFIG["llm"]["shared_ranking_enabled"],
+        ),
+        "llm_ranking_budget": llm.get("ranking_budget", DEFAULT_CONFIG["llm"]["ranking_budget"]),
         "llm_cache_dir": llm.get("cache_dir", DEFAULT_CONFIG["llm"]["cache_dir"]),
         "output_dir": section.get("output_dir"),
         "selectors": section.get("selectors"),
@@ -200,4 +290,10 @@ def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str
 def resolve_model_kwargs(config: dict[str, Any], model_name: str) -> dict[str, Any]:
     model_params = config.get("model_params", {})
     selected = model_params.get(model_name.lower(), {})
-    return copy.deepcopy(selected) if isinstance(selected, dict) else {}
+    model_kwargs = copy.deepcopy(selected) if isinstance(selected, dict) else {}
+    random_seed = int(config.get("random_seed", DEFAULT_RANDOM_SEED))
+
+    if model_name.lower() in {"lr", "rf", "catboost"}:
+        model_kwargs["random_state"] = random_seed
+
+    return apply_random_seed_to_kwargs(model_kwargs, random_seed)

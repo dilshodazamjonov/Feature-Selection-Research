@@ -39,14 +39,71 @@ def _safe_get_selected_features(selector):
     return None
 
 
-def _save_selected_features(path, selected_features):
+def _feature_score_lookup(selector, selected_features):
     """
-    Saves selected feature names to CSV.
+    Best-effort score extraction for selectors that expose rankings/importances.
+    Missing scores are acceptable; the CSV schema still records rank/order.
+    """
+    if selector is None or selected_features is None:
+        return {}
+
+    score_sources = []
+    for candidate in [
+        selector,
+        getattr(selector, "stat_selector", None),
+        getattr(selector, "rfe", None),
+        getattr(selector, "boruta", None),
+    ]:
+        if candidate is None:
+            continue
+        if hasattr(candidate, "rf_importances_"):
+            score_sources.append(getattr(candidate, "rf_importances_"))
+        if hasattr(candidate, "explained_variance"):
+            values = getattr(candidate, "explained_variance")
+            if values is not None:
+                score_sources.append(pd.Series(values, index=list(selected_features)))
+
+    for source in score_sources:
+        if isinstance(source, pd.Series):
+            return {
+                str(feature): float(source.loc[feature])
+                for feature in selected_features
+                if feature in source.index and pd.notna(source.loc[feature])
+            }
+
+    return {}
+
+
+def _save_selected_features(
+    path,
+    selected_features,
+    *,
+    fold_id=None,
+    selector_name=None,
+    score_lookup=None,
+):
+    """
+    Saves selected feature names to CSV with research-audit columns.
     """
     if selected_features is None:
         return
 
-    pd.DataFrame({"feature": list(selected_features)}).to_csv(path, index=False)
+    score_lookup = score_lookup or {}
+    rows = []
+    for rank, feature in enumerate(list(selected_features), start=1):
+        feature_name = str(feature)
+        rows.append(
+            {
+                "fold_id": fold_id,
+                "selector": selector_name,
+                "feature_name": feature_name,
+                "feature": feature_name,
+                "rank": rank,
+                "score": score_lookup.get(feature_name, pd.NA),
+            }
+        )
+
+    pd.DataFrame(rows).to_csv(path, index=False)
 
 
 def _save_feature_statistics(path, X_train_f):
@@ -131,7 +188,15 @@ def _save_stagewise_selection(selector, fold_dir):
         rfe_feats = selector.rfe.selected_features
 
     if boruta_feats is not None:
-        _save_selected_features(os.path.join(fold_dir, "boruta_features.csv"), boruta_feats)
+        _save_selected_features(
+            os.path.join(fold_dir, "boruta_features.csv"),
+            boruta_feats,
+            selector_name="boruta",
+        )
 
     if rfe_feats is not None:
-        _save_selected_features(os.path.join(fold_dir, "rfe_features.csv"), rfe_feats)
+        _save_selected_features(
+            os.path.join(fold_dir, "rfe_features.csv"),
+            rfe_feats,
+            selector_name="rfe",
+        )

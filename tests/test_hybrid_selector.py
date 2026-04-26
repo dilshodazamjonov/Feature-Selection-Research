@@ -63,8 +63,8 @@ def test_llm_then_stat_selector_applies_both_stages(tmp_path):
     assert selector.llm_selected_features_ == ["f1", "f3"]
     assert selector.selected_features_ == ["f1"]
     assert list(transformed.columns) == ["f1"]
-    assert (tmp_path / "artifacts" / "llm_preselected_features.csv").exists()
-    assert (tmp_path / "artifacts" / "hybrid_selected_features.csv").exists()
+    assert not (tmp_path / "artifacts" / "llm_preselected_features.csv").exists()
+    assert not (tmp_path / "artifacts" / "hybrid_selected_features.csv").exists()
 
 
 def test_llm_then_stat_selector_requires_target():

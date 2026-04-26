@@ -40,8 +40,11 @@ def build_parser(defaults: dict[str, object]) -> argparse.ArgumentParser:
         oot_start_day=defaults["oot_start_day"],
         oot_end_day=defaults["oot_end_day"],
         cv_gap_groups=defaults["cv_gap_groups"],
+        random_seed=defaults["random_seed"],
         llm_model=defaults["llm_model"],
         llm_max_features=defaults["llm_max_features"],
+        llm_ranking_budget=defaults["llm_ranking_budget"],
+        llm_shared_ranking_enabled=defaults["llm_shared_ranking_enabled"],
         llm_cache_dir=defaults["llm_cache_dir"],
     )
     return parser
@@ -81,6 +84,9 @@ def run(args: argparse.Namespace) -> None:
             selector_kwargs={
                 "model": args.llm_model,
                 "max_features": args.llm_max_features,
+                "ranking_budget": args.llm_ranking_budget,
+                "shared_ranking_enabled": args.llm_shared_ranking_enabled,
+                "feature_budget": args.project_config.get("feature_budgets", {}).get(args.model, args.llm_max_features),
                 "cache_dir": llm_cache_dir,
             },
         ),

@@ -1,6 +1,6 @@
 import os
+import random
 import time
-from collections import Counter
 from datetime import datetime
 import logging
 
@@ -11,6 +11,9 @@ from Preprocessing.preprocessing import Preprocessor
 from evaluation.metrics import (
     evaluate_model,
     evaluate_model_wrapper
+)
+from evaluation.feature_stability import (
+    write_feature_stability_artifacts,
 )
 
 from training.cv_utils import GroupedTimeSeriesSplit
@@ -77,6 +80,10 @@ def run_kfold_training(
     n_splits=5,
     random_state=42,
     gap_groups=1,
+    experiment_output_dir=None,
+    selector_name=None,
+    excluded_feature_columns=None,
+    feature_budget=None,
 ):
     """
     Run a time-series aware K-Fold training pipeline with preprocessing, feature selection, 
@@ -151,11 +158,18 @@ def run_kfold_training(
 
     preprocessor_kwargs = preprocessor_kwargs or {}
     selector_kwargs = selector_kwargs or {}
+    excluded_feature_columns = set(excluded_feature_columns or ())
 
-    exp_dir = os.path.join(
-        base_output_dir,
-        f"{model_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    )
+    random.seed(random_state)
+    np.random.seed(random_state)
+
+    if experiment_output_dir is not None:
+        exp_dir = str(experiment_output_dir)
+    else:
+        exp_dir = os.path.join(
+            base_output_dir,
+            f"{model_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        )
     results_dir = os.path.join(exp_dir, "results")
     features_dir = os.path.join(exp_dir, "features")
     models_dir = os.path.join(exp_dir, "models")
@@ -169,12 +183,17 @@ def run_kfold_training(
     df = df.sort_values(time_col).reset_index(drop=True)
 
     y_sorted = df["_target_"].copy()
-    X_model = df.drop(columns=["_target_", time_col])
+    X_model = df.drop(
+        columns=[
+            col
+            for col in {"_target_", time_col, *excluded_feature_columns}
+            if col in df.columns
+        ]
+    )
 
     splitter = GroupedTimeSeriesSplit(n_splits=n_splits, gap=gap_groups)
 
     fold_results = []
-    feature_counter = Counter()
     oof_pred = np.zeros(len(df), dtype=float)
     oof_pred_label = np.zeros(len(df), dtype=int)
     oof_mask = np.zeros(len(df), dtype=bool)
@@ -183,6 +202,8 @@ def run_kfold_training(
 
     # Track time periods for each fold (for later analysis)
     fold_time_info = []
+    fold_selected_rows = []
+    hybrid_trace_rows = []
 
     start_total = time.time()
 
@@ -204,7 +225,14 @@ def run_kfold_training(
         preprocessor = preprocessor_cls(**preprocessor_kwargs)
         selector = selector_cls(**selector_kwargs) if selector_cls is not None else None
 
-        fold_metrics, val_proba, selected_features, decision_threshold = process_fold(
+        (
+            fold_metrics,
+            val_proba,
+            selected_features,
+            decision_threshold,
+            selected_rows,
+            hybrid_rows,
+        ) = process_fold(
             fold=fold,
             tr_idx=tr_idx,
             va_idx=va_idx,
@@ -218,18 +246,20 @@ def run_kfold_training(
             save_model=save_model,
             preprocessor=preprocessor,
             selector=selector,
+            selector_name=selector_name,
             prev_selected_features=prev_selected_features,
         )
+        fold_metrics.update(fold_time_info[-1])
 
         oof_pred[va_idx] = val_proba
         oof_pred_label[va_idx] = (val_proba >= decision_threshold).astype(int)
         oof_mask[va_idx] = True
         fold_results.append(fold_metrics)
+        fold_selected_rows.extend(selected_rows)
+        hybrid_trace_rows.extend(hybrid_rows)
         
         # Track feature selection frequency for stability analysis
         if selected_features:
-            for feat in selected_features:
-                feature_counter[feat] += 1
             # Update for next iteration's Jaccard calculation
             prev_selected_features = set(selected_features)
         
@@ -286,49 +316,6 @@ def run_kfold_training(
         y_pred=oof_pred_label[oof_mask],
     )
 
-    oof_confusion = {
-        "fold": "oof",
-        "tn": oof_metrics_safe["tn"],
-        "fp": oof_metrics_safe["fp"],
-        "fn": oof_metrics_safe["fn"],
-        "tp": oof_metrics_safe["tp"],
-    }
-
-    oof_eval = {
-        "fold": "oof",
-        "gini": oof_metrics_safe["gini"],
-        "auc": oof_metrics_safe["auc"],
-        "ks": oof_metrics_safe["ks"],
-        "ks_threshold": oof_metrics_safe["ks_threshold"],
-        "decision_threshold": oof_metrics_safe["decision_threshold"],
-        "precision": oof_metrics_safe["precision"],
-        "recall": oof_metrics_safe["recall"],
-        "f1": oof_metrics_safe["f1"],
-        "accuracy": oof_metrics_safe["accuracy"],
-        "approval_rate": oof_metrics_safe["approval_rate"],
-        "bad_rate_approved": oof_metrics_safe["bad_rate_approved"],
-        "train_size": int(oof_mask.sum()),
-        "val_size": int(oof_mask.sum()),
-    }
-
-    oof_stability = {
-        "fold": "oof",
-        "selected_features": np.nan,
-        "psi_feature_mean": np.nan,
-        "psi_feature_max": np.nan,
-        "psi_model": np.nan,
-        "jaccard_similarity": np.nan,
-    }
-
-    oof_other = {
-        "fold": "oof",
-        "train_size": int(oof_mask.sum()),
-        "val_size": int(oof_mask.sum()),
-        "fold_time_sec": time.time() - start_total,
-        "boruta_selected_features": np.nan,
-        "rfe_selected_features": np.nan,
-    }
-
     results_df = pd.DataFrame(fold_results)
     numeric_cols = results_df.select_dtypes(include=[np.number]).columns
 
@@ -343,114 +330,25 @@ def run_kfold_training(
     final_results_df = pd.concat([results_df, summary_df], ignore_index=True)
     final_results_df.to_csv(os.path.join(results_dir, "cv_results.csv"), index=False)
 
-    stability_confidence_df = _build_stability_confidence_summary(results_df)
-    stability_confidence_df.to_csv(
-        os.path.join(results_dir, "stability_confidence_summary.csv"),
-        index=False,
-    )
-
     # Feature stability
-    feature_stability_df = pd.DataFrame({
-        "feature": list(feature_counter.keys()),
-        "selected_in_folds": list(feature_counter.values()),
-    }).sort_values(["selected_in_folds", "feature"], ascending=[False, True]).reset_index(drop=True)
-    feature_stability_df.to_csv(os.path.join(exp_dir, "feature_stability.csv"), index=False)
+    if fold_selected_rows:
+        pd.DataFrame(fold_selected_rows).to_csv(
+            os.path.join(features_dir, "fold_selected_features.csv"),
+            index=False,
+        )
+    if hybrid_trace_rows:
+        pd.DataFrame(hybrid_trace_rows).to_csv(
+            os.path.join(features_dir, "llm_hybrid_trace.csv"),
+            index=False,
+        )
 
-    # Save fold time information (for ROC-AUC over time analysis)
-    fold_time_df = pd.DataFrame(fold_time_info)
-    fold_time_df.to_csv(os.path.join(results_dir, "fold_time_info.csv"), index=False)
-
-    # Summary files - each file contains ONLY its unique columns (no duplicates)
-    
-    # 1. Confusion Matrix: only confusion metrics
-    confusion_summary_df = pd.DataFrame([
-        {
-            "fold": row["fold"],
-            "tn": row.get("tn", np.nan),
-            "fp": row.get("fp", np.nan),
-            "fn": row.get("fn", np.nan),
-            "tp": row.get("tp", np.nan),
-        }
-        for row in fold_results
-    ] + [oof_confusion])
-    
-    # 2. Evaluation Metrics: performance metrics + sample sizes
-    eval_summary_df = pd.DataFrame([
-        {
-            "fold": row["fold"],
-            "auc": row.get("auc", np.nan),
-            "gini": row.get("gini", np.nan),
-            "ks": row.get("ks", np.nan),
-            "ks_threshold": row.get("ks_threshold", np.nan),
-            "decision_threshold": row.get("decision_threshold", np.nan),
-            "precision": row.get("precision", np.nan),
-            "recall": row.get("recall", np.nan),
-            "f1": row.get("f1", np.nan),
-            "accuracy": row.get("accuracy", np.nan),
-            "approval_rate": row.get("approval_rate", np.nan),
-            "bad_rate_approved": row.get("bad_rate_approved", np.nan),
-            "train_size": row.get("train_size", np.nan),
-            "val_size": row.get("val_size", np.nan),
-        }
-        for row in fold_results
-    ] + [oof_eval])
-    
-    # 3. Stability Metrics: only stability-related metrics
-    stability_summary_df = pd.DataFrame([
-        {
-            "fold": row["fold"],
-            "selected_features": row.get("selected_features", np.nan),
-            "psi_feature_mean": row.get("psi_feature_mean", np.nan),
-            "psi_feature_max": row.get("psi_feature_max", np.nan),
-            "psi_model": row.get("psi_model", np.nan),
-            "jaccard_similarity": row.get("jaccard_similarity", np.nan),
-        }
-        for row in fold_results
-    ] + [oof_stability])
-    
-    # 4. Other Metrics: only size/timing/selection info
-    other_summary_df = pd.DataFrame([
-        {
-            "fold": row["fold"],
-            "train_size": row.get("train_size", np.nan),
-            "val_size": row.get("val_size", np.nan),
-            "fold_time_sec": row.get("fold_time_sec", np.nan),
-            "boruta_selected_features": row.get("boruta_selected_features", np.nan),
-            "rfe_selected_features": row.get("rfe_selected_features", np.nan),
-        }
-        for row in fold_results
-    ] + [oof_other])
-
-    # Add mean/std rows to each summary file
-    def add_mean_std(df):
-        """Add mean and std rows to a summary DataFrame."""
-        numeric_cols = df.select_dtypes(include=[np.number]).columns
-        if len(numeric_cols) == 0:
-            return df
-        
-        mean_row = df[numeric_cols].mean().to_frame().T
-        mean_row["fold"] = "mean"
-        std_row = df[numeric_cols].std().to_frame().T
-        std_row["fold"] = "std"
-        
-        # Ensure all columns are present
-        for col in df.columns:
-            if col not in mean_row.columns:
-                mean_row[col] = np.nan
-            if col not in std_row.columns:
-                std_row[col] = np.nan
-        
-        return pd.concat([df, mean_row, std_row], ignore_index=True)
-    
-    confusion_summary_df = add_mean_std(confusion_summary_df)
-    eval_summary_df = add_mean_std(eval_summary_df)
-    stability_summary_df = add_mean_std(stability_summary_df)
-    other_summary_df = add_mean_std(other_summary_df)
-
-    confusion_summary_df.to_csv(os.path.join(results_dir, "confusion_matrix_summary.csv"), index=False)
-    eval_summary_df.to_csv(os.path.join(results_dir, "evaluation_metrics_summary.csv"), index=False)
-    stability_summary_df.to_csv(os.path.join(results_dir, "stability_metrics_summary.csv"), index=False)
-    other_summary_df.to_csv(os.path.join(results_dir, "other_metrics_summary.csv"), index=False)
+    total_candidate_features = int(X_model.shape[1])
+    write_feature_stability_artifacts(
+        exp_dir=exp_dir,
+        model=model_name.split("_", 1)[0],
+        selector=selector_name or model_name,
+        total_candidate_features=total_candidate_features,
+    )
 
     # OOF evaluation - compute metrics but don't save (already computed above)
     evaluate_model_wrapper(
@@ -469,7 +367,18 @@ def run_kfold_training(
     logger.info(f"OOF | samples={int(oof_mask.sum()):,} | auc={oof_metrics_safe['auc']:.4f} | gini={oof_metrics_safe['gini']:.4f} | ks={oof_metrics_safe['ks']:.4f} | prec={oof_metrics_safe['precision']:.4f} | rec={oof_metrics_safe['recall']:.4f} | f1={oof_metrics_safe['f1']:.4f} | acc={oof_metrics_safe['accuracy']:.4f}")
 
     logger.info("")
-    logger.info(f"CV Complete | results={os.path.join(results_dir, 'cv_results.csv')} | stability={os.path.join(exp_dir, 'feature_stability.csv')} | total_time={(time.time() - start_total) / 60:.2f}min")
+    logger.info(f"CV Complete | results={os.path.join(results_dir, 'cv_results.csv')} | stability={os.path.join(features_dir, 'feature_stability_metrics.csv')} | total_time={(time.time() - start_total) / 60:.2f}min")
 
     final_results_df.attrs["exp_dir"] = exp_dir
+    final_results_df.attrs["cv_runtime_seconds"] = time.time() - start_total
+    for metric in [
+        "preprocessing_time_sec",
+        "feature_selection_time_sec",
+        "training_time_sec",
+        "evaluation_time_sec",
+    ]:
+        if metric in results_df.columns:
+            final_results_df.attrs[f"cv_{metric}"] = float(
+                pd.to_numeric(results_df[metric], errors="coerce").sum()
+            )
     return final_results_df

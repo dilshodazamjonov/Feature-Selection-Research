@@ -36,6 +36,7 @@ def build_parser(defaults: dict[str, object]) -> argparse.ArgumentParser:
         oot_start_day=defaults["oot_start_day"],
         oot_end_day=defaults["oot_end_day"],
         cv_gap_groups=defaults["cv_gap_groups"],
+        random_seed=defaults["random_seed"],
     )
     return parser
 
