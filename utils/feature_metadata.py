@@ -25,6 +25,125 @@ AGGREGATION_TOKENS = {
     "SUM": "sum",
     "VAR": "variance",
 }
+NUMERIC_PERCENTILES = (
+    ("p05", 0.05),
+    ("p25", 0.25),
+    ("p50", 0.50),
+    ("p75", 0.75),
+    ("p95", 0.95),
+)
+
+
+def infer_semantic_group(
+    feature_name: str,
+    description: str = "",
+    table: str = "",
+) -> str:
+    """Infer a coarse business-semantic group from feature naming/metadata."""
+    name = str(feature_name).upper()
+    desc = str(description).upper()
+    table_name = str(table).upper()
+    text = " ".join([name, desc, table_name])
+
+    if "EXT_SOURCE" in name or "EXTERNAL SCORE" in text:
+        return "external_score"
+
+    if any(token in text for token in ["MISSING", "UNKNOWN", "UNAVAILABLE", "NOT KNOWN"]):
+        return "missingness_or_unknown"
+
+    if name.startswith("BURO_") or "BUREAU" in table_name:
+        if any(
+            token in text
+            for token in [
+                "AMT_CREDIT_SUM",
+                "AMT_CREDIT_SUM_DEBT",
+                "AMT_CREDIT_MAX_OVERDUE",
+                "AMT_ANNUITY",
+                "CREDIT_LIMIT",
+                "OVERDUE",
+                "DEBT",
+                "UTILIZATION",
+                "EXPOSURE",
+                "LEVERAGE",
+            ]
+        ):
+            return "bureau_debt"
+        return "bureau_credit_history"
+
+    if name.startswith("INSTAL_") or "INSTALLMENTS_PAYMENTS" in table_name:
+        return "installment_repayment_behavior"
+
+    if name.startswith("CC_") or "CREDIT_CARD_BALANCE" in table_name:
+        return "credit_card_utilization"
+
+    if name.startswith("PREV_") or "PREVIOUS_APPLICATION" in table_name:
+        return "previous_application_behavior"
+
+    if any(
+        token in text
+        for token in [
+            "AMT_INCOME_TOTAL",
+            "INCOME",
+            "SALARY",
+            "ANNUITY",
+            "PAYMENT_RATE",
+            "EMPLOY",
+            "OCCUPATION",
+            "CAPACITY",
+            "FAMILY_MEMBERS",
+        ]
+    ):
+        return "income_capacity"
+
+    if any(
+        token in text
+        for token in [
+            "AMT_CREDIT",
+            "AMT_GOODS_PRICE",
+            "AMT_ANNUITY",
+            "AMT_APPLICATION",
+            "DOWN_PAYMENT",
+            "CREDIT_TO_ANNUITY",
+            "APPLICATION",
+        ]
+    ):
+        return "application_amounts"
+
+    if any(
+        token in text
+        for token in [
+            "OVERDUE",
+            "DPD",
+            "DBD",
+            "DELINQ",
+            "PAST DUE",
+            "LATE",
+            "DEFAULT",
+            "BAD DEBT",
+        ]
+    ):
+        return "delinquency_behavior"
+
+    if any(
+        token in text
+        for token in [
+            "DAYS_BIRTH",
+            "AGE",
+            "DAYS_REGISTRATION",
+            "DAYS_ID_PUBLISH",
+            "DAYS_LAST_PHONE_CHANGE",
+            "REGION",
+            "CITY",
+            "ORGANIZATION_TYPE",
+            "OWN_CAR_AGE",
+            "HOUR_APPR_PROCESS_START",
+            "WEEKDAY_APPR_PROCESS_START",
+            "TIME",
+        ]
+    ):
+        return "demographic_time_variables"
+
+    return "other"
 
 
 def _find_column(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
@@ -74,6 +193,13 @@ def _safe_round(value: float | int | None) -> float | None:
     return round(float(value), 4)
 
 
+def _clean_numeric_summary_series(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors="coerce").replace(
+        [float("inf"), float("-inf")],
+        float("nan"),
+    )
+
+
 def build_feature_metadata(
     X: pd.DataFrame,
     description_csv_path: str | Path,
@@ -120,21 +246,27 @@ def build_feature_metadata(
             "name": feature,
             "description": desc,
             "table": table,
+            "semantic_group": infer_semantic_group(feature, description=desc, table=table),
             "missing_rate": round(float(series.isna().mean()), 4),
             "non_null_count": int(series.notna().sum()),
             "dtype": str(series.dtype),
         }
 
         if pd.api.types.is_numeric_dtype(series):
+            numeric_series = _clean_numeric_summary_series(series)
             entry.update(
                 {
-                    "mean": _safe_round(series.mean(skipna=True)),
-                    "min": _safe_round(series.min(skipna=True)),
-                    "max": _safe_round(series.max(skipna=True)),
-                    "std": _safe_round(series.std(skipna=True)),
-                    "var": _safe_round(series.var(skipna=True)),
+                    "mean": _safe_round(numeric_series.mean(skipna=True)),
+                    "min": _safe_round(numeric_series.min(skipna=True)),
+                    "max": _safe_round(numeric_series.max(skipna=True)),
+                    "std": _safe_round(numeric_series.std(skipna=True)),
+                    "var": _safe_round(numeric_series.var(skipna=True)),
                 }
             )
+            for percentile_name, percentile_value in NUMERIC_PERCENTILES:
+                entry[percentile_name] = _safe_round(
+                    numeric_series.quantile(percentile_value)
+                )
         else:
             entry["unique_count"] = int(series.nunique(dropna=True))
 

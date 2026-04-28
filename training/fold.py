@@ -11,6 +11,7 @@ from evaluation.feature_utils import (
 from evaluation.stability_scores import calculate_psi, feature_psi
 from evaluation.metrics import determine_threshold, evaluate_model_wrapper
 from training.cv_utils import _to_1d_proba
+from utils.feature_metadata import infer_semantic_group
 from utils.logging_config import setup_logging
 
 # Setup module logger
@@ -25,6 +26,7 @@ def _selected_feature_rows(fold, selector_name, selector, selected_features):
             "selector": selector_name,
             "feature_name": str(feature),
             "feature": str(feature),
+            "semantic_group": infer_semantic_group(str(feature)),
             "rank": rank,
             "score": score_lookup.get(str(feature), pd.NA),
         }

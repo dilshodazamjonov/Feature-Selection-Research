@@ -247,3 +247,50 @@ These outputs allow experiments to be reproduced and included in **appendix sect
 # License
 
 Internal research utility.
+
+---
+
+# LLM Selector Note
+
+This repository also contains metadata-driven selectors under:
+
+- `feature_selection/llm_selector.py`
+- `feature_selection/hybrid.py`
+
+The LLM selector is designed to mimic expert-style feature review in retail
+credit risk. It does not receive raw training rows. Instead, it reviews
+feature-level metadata and ranks variables the way a domain expert might review
+a variable pack before model development.
+
+Current metadata exposed to the LLM includes:
+
+- `description`
+- `table`
+- `dtype`
+- `missing_rate`
+- `non_null_count`
+- `mean`
+- `min`
+- `max`
+- `std`
+- `var`
+- `p05`, `p25`, `p50`, `p75`, `p95`
+- `unique_count` for non-numeric features
+
+The lightweight structured LLM response can also include:
+
+- `reasoning_summary`
+- `selection_principles`
+
+The prompt is intentionally domain-aware and stability-aware. It biases the LLM
+toward:
+
+- interpretable business signals
+- broad coverage and low missingness
+- stable operational collection processes
+- simpler representatives among redundant aggregates
+- features that are more likely to remain useful out of time
+
+This keeps the LLM method aligned with the research framing of using the model
+as a substitute for expert-driven feature selection rather than as a row-level
+predictive model.

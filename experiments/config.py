@@ -36,10 +36,15 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "llm": {
         "enabled": True,
         "shared_ranking_enabled": True,
-        "ranking_budget": 40,
+        "ranking_budget": {
+            "lr_candidate_pool": 60,
+            "catboost_candidate_pool": 100,
+            "max_shared_pool": 100,
+        },
+        "prompt_version": "stability_expert_v3",
         "model": "gpt-4.1-mini",
-        "max_features": 40,
-        "cache_dir": "results/llm_selector_cache",
+        "max_features": 100,
+        "cache_dir": "results/_llm_rankings_cache",
     },
     "model_params": {
         "lr": {},
@@ -230,6 +235,45 @@ def resolve_feature_budget(config: dict[str, Any], model_name: str) -> int:
     return int(budgets.get(model_name.lower(), DEFAULT_FEATURE_BUDGETS.get(model_name.lower(), 40)))
 
 
+def normalize_llm_ranking_budget(ranking_budget: Any) -> dict[str, int]:
+    """Normalize legacy/int or structured LLM ranking-budget config."""
+    default_budget = DEFAULT_CONFIG["llm"]["ranking_budget"]
+    if isinstance(ranking_budget, dict):
+        return {
+            "lr_candidate_pool": int(
+                ranking_budget.get("lr_candidate_pool", default_budget["lr_candidate_pool"])
+            ),
+            "catboost_candidate_pool": int(
+                ranking_budget.get("catboost_candidate_pool", default_budget["catboost_candidate_pool"])
+            ),
+            "max_shared_pool": int(
+                ranking_budget.get("max_shared_pool", default_budget["max_shared_pool"])
+            ),
+        }
+
+    if ranking_budget is None:
+        ranking_budget = default_budget["max_shared_pool"]
+
+    shared_pool = int(ranking_budget)
+    return {
+        "lr_candidate_pool": min(shared_pool, int(DEFAULT_CONFIG["llm"]["ranking_budget"]["lr_candidate_pool"])),
+        "catboost_candidate_pool": shared_pool,
+        "max_shared_pool": shared_pool,
+    }
+
+
+def resolve_llm_shared_pool_size(llm_config: dict[str, Any]) -> int:
+    budget = normalize_llm_ranking_budget(llm_config.get("ranking_budget"))
+    return int(budget["max_shared_pool"])
+
+
+def resolve_llm_candidate_pool_budget(llm_config: dict[str, Any], model_name: str) -> int:
+    budget = normalize_llm_ranking_budget(llm_config.get("ranking_budget"))
+    key = f"{model_name.lower()}_candidate_pool"
+    fallback = budget["max_shared_pool"]
+    return int(budget.get(key, fallback))
+
+
 def apply_feature_budget_to_selector_kwargs(
     selector_name: str,
     selector_kwargs: dict[str, Any],
@@ -250,6 +294,8 @@ def apply_feature_budget_to_selector_kwargs(
         updated["n_components"] = feature_budget
     elif name == "llm":
         updated["feature_budget"] = feature_budget
+    elif name == "domain_rule_baseline":
+        updated["feature_budget"] = feature_budget
 
     return updated
 
@@ -257,6 +303,7 @@ def apply_feature_budget_to_selector_kwargs(
 def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str, Any]:
     section = config.get(section_name, {})
     llm = config.get("llm", {})
+    llm_ranking_budget = normalize_llm_ranking_budget(llm.get("ranking_budget"))
     return {
         "config_path": DEFAULT_CONFIG_PATH,
         "model": config.get("model_selector", "lr"),
@@ -271,12 +318,14 @@ def build_parser_defaults(config: dict[str, Any], section_name: str) -> dict[str
         "oot_end_day": config.get("oot_end_day", DEFAULT_CONFIG["oot_end_day"]),
         "cv_gap_groups": config.get("cv_gap_groups", DEFAULT_CONFIG["cv_gap_groups"]),
         "llm_model": llm.get("model", DEFAULT_CONFIG["llm"]["model"]),
-        "llm_max_features": llm.get("max_features", DEFAULT_CONFIG["llm"]["max_features"]),
+        "llm_max_features": resolve_llm_shared_pool_size(llm),
         "llm_shared_ranking_enabled": llm.get(
             "shared_ranking_enabled",
             DEFAULT_CONFIG["llm"]["shared_ranking_enabled"],
         ),
-        "llm_ranking_budget": llm.get("ranking_budget", DEFAULT_CONFIG["llm"]["ranking_budget"]),
+        "llm_ranking_budget": llm_ranking_budget["max_shared_pool"],
+        "llm_ranking_budget_config": llm_ranking_budget,
+        "llm_prompt_version": llm.get("prompt_version", DEFAULT_CONFIG["llm"]["prompt_version"]),
         "llm_cache_dir": llm.get("cache_dir", DEFAULT_CONFIG["llm"]["cache_dir"]),
         "output_dir": section.get("output_dir"),
         "selectors": section.get("selectors"),

@@ -12,7 +12,7 @@ def get_selector(selector_name: str):
         - 'mrmr' -> Minimum Redundancy Maximum Relevance
         - 'pca' -> Principal Component Analysis
         - 'llm' -> LLM-based feature selection
-        - 'llm_mrmr' -> Hybrid (LLM → mRMR)
+        - 'domain_rule_baseline' -> lightweight domain-rule screener
         - 'none' -> No feature selection
     """
 
@@ -28,7 +28,7 @@ def get_selector(selector_name: str):
             "n_features": 40,
         }
 
-    elif name == "mrmr":
+    if name == "mrmr":
         from feature_selection.mrmr import MRMR
 
         return MRMR, {
@@ -37,7 +37,7 @@ def get_selector(selector_name: str):
             "random_state": 42,
         }
 
-    elif name == "pca":
+    if name == "pca":
         from feature_selection.pca import PCASelector
 
         return PCASelector, {
@@ -46,15 +46,15 @@ def get_selector(selector_name: str):
             "random_state": 42,
         }
 
-    elif name == "llm":
+    if name == "llm":
         from feature_selection.llm_selector import LLMSelector
 
         return LLMSelector, {
             "description_csv_path": None,
-            "cache_dir": "outputs/llm_selector_cache",
+            "cache_dir": "results/_llm_rankings_cache",
             "model": "gpt-4.1-mini",
             "temperature": 0.0,
-            "max_features": 50,
+            "max_features": 100,
             "max_missing_rate": 0.95,
             "iv_filter_kwargs": {
                 "min_iv": 0.01,
@@ -65,22 +65,21 @@ def get_selector(selector_name: str):
             },
         }
 
-    # TODO  
+    if name == "domain_rule_baseline":
+        from feature_selection.hybrid import DomainRuleBaselineSelector
 
-    # elif name == "llm_mrmr":
-    #     return LLM_MRMR_Selector, {
-    #         "llm_selector": None,   # will be injected
-    #         "mrmr_selector": None, # will be injected
-    #     }
+        return DomainRuleBaselineSelector, {
+            "description_csv_path": None,
+            "feature_budget": 40,
+        }
 
-    elif name == "none":
+    if name == "none":
         return None, {}
 
-    else:
-        raise ValueError(
-            f"Unsupported selector: {selector_name}. "
-            f"Available: boruta, boruta_rfe, mrmr, pca, llm, llm_mrmr, none"
-        )
+    raise ValueError(
+        f"Unsupported selector: {selector_name}. "
+        f"Available: boruta, boruta_rfe, mrmr, pca, llm, domain_rule_baseline, none"
+    )
 
 
 def get_model_bundle(model_name, model_kwargs=None):
@@ -121,8 +120,6 @@ def get_model_bundle(model_name, model_kwargs=None):
         return model_cls(**model_kwargs)
 
     def train_model(model, X_train, y_train, X_val=None, y_val=None):
-        # Keep held-out fold data strictly for evaluation unless a model
-        # explicitly opts in to consuming an external eval set.
         use_external_eval_set = bool(getattr(model, "supports_external_eval_set", False))
         eval_set = (
             (X_val, y_val)

@@ -30,6 +30,7 @@ from experiments.config import canonical_config_json
 from experiments.tracking import build_data_version
 from pipelines.comparison import build_experiment_summary_row
 from training.kfold_trainer import run_kfold_training
+from utils.feature_metadata import infer_semantic_group
 from utils.logging_config import setup_logging
 
 DEFAULT_DATA_DIR = "data/inputs"
@@ -259,11 +260,11 @@ def _resolve_selector(config: ExperimentConfig) -> tuple[type | None, dict[str, 
     )
     selector_kwargs = apply_random_seed_to_kwargs(selector_kwargs, config.random_state)
 
-    if config.selector_name.lower() == "llm":
+    if config.selector_name.lower() in {"llm", "domain_rule_baseline"}:
         if not selector_kwargs.get("description_csv_path"):
             selector_kwargs["description_csv_path"] = config.description_path
-        if not selector_kwargs.get("cache_dir"):
-            selector_kwargs["cache_dir"] = str(Path(config.base_output_dir) / "llm_selector_cache")
+        if config.selector_name.lower() == "llm" and not selector_kwargs.get("cache_dir"):
+            selector_kwargs["cache_dir"] = str(Path(config.base_output_dir) / "_llm_rankings_cache")
 
     return selector_cls, selector_kwargs
 
@@ -550,6 +551,7 @@ def run_experiment(
                 "selector": config.selector_name,
                 "feature_name": str(feature),
                 "feature": str(feature),
+                "semantic_group": infer_semantic_group(str(feature)),
                 "rank": rank,
                 "score": score_lookup.get(str(feature), pd.NA),
             }

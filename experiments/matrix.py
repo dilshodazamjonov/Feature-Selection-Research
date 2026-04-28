@@ -5,8 +5,17 @@ from typing import Iterator
 
 
 MODELS = ["lr", "catboost"]
-STAT_SELECTORS = ["mrmr", "boruta", "pca"]
-HYBRID_SELECTORS = ["mrmr", "boruta"]
+STAT_SELECTORS = ["mrmr", "boruta", "pca", "domain_rule_baseline"]
+HYBRID_VARIANTS = [
+    ("mrmr", "llm_then_mrmr", "llm_then_mrmr", "hybrid_mrmr"),
+    ("boruta", "llm_then_boruta", "llm_then_boruta", "hybrid_boruta"),
+    (
+        "stable_core_llm_fill",
+        "stable_core_llm_fill",
+        "stable_core_llm_fill",
+        "hybrid_stable_core_llm_fill",
+    ),
+]
 
 LLM_SELECTOR = "llm"
 EXPERIMENT_TYPES = {"statistical", "llm", "hybrid"}
@@ -50,14 +59,14 @@ def iter_matrix() -> Iterator[MatrixRunSpec]:
             output_bucket="llm",
         )
 
-        for selector in HYBRID_SELECTORS:
+        for selector, experiment_name, selector_name, output_bucket in HYBRID_VARIANTS:
             yield MatrixRunSpec(
                 model=model,
                 selector=selector,
                 experiment_type="hybrid",
-                experiment_name=f"llm_then_{selector}",
-                selector_name=f"llm_then_{selector}",
-                output_bucket=f"hybrid_{selector}",
+                experiment_name=experiment_name,
+                selector_name=selector_name,
+                output_bucket=output_bucket,
             )
 
 
@@ -67,8 +76,10 @@ def validate_matrix() -> None:
         raise ValueError("MODELS contains duplicates.")
     if sorted(set(STAT_SELECTORS)) != sorted(STAT_SELECTORS):
         raise ValueError("STAT_SELECTORS contains duplicates.")
-    if sorted(set(HYBRID_SELECTORS)) != sorted(HYBRID_SELECTORS):
-        raise ValueError("HYBRID_SELECTORS contains duplicates.")
-    if not set(HYBRID_SELECTORS).issubset(set(STAT_SELECTORS)):
-        raise ValueError("Every hybrid downstream selector must also be statistical.")
 
+    hybrid_selector_names = [selector for selector, *_ in HYBRID_VARIANTS]
+    if sorted(set(hybrid_selector_names)) != sorted(hybrid_selector_names):
+        raise ValueError("HYBRID_VARIANTS contains duplicate selector ids.")
+
+    if not {"mrmr", "boruta"}.issubset(set(STAT_SELECTORS)):
+        raise ValueError("Statistical baselines must include mrmr and boruta.")

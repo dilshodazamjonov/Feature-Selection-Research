@@ -102,6 +102,8 @@ available match from:
 ## LLM Selector Rules
 
 The LLM selector is treated as a domain-level selector, not a row-level model.
+It is meant to act like a credit-risk expert reviewing a variable pack rather
+than a model consuming raw rows directly.
 
 Inside each fold, on the training slice only, the LLM pipeline does:
 
@@ -112,6 +114,17 @@ Inside each fold, on the training slice only, the LLM pipeline does:
 5. model fit
 
 The LLM only receives summarized metadata, not raw training rows.
+The prompt is intentionally domain-aware and stability-aware: it asks the model
+to prefer interpretable, broad-coverage, operationally stable credit-risk
+signals over brittle short-term proxies.
+
+Practically, the selector is framed as an expert-style metadata review:
+
+- no row-level training records are shown
+- the model reviews feature definitions and summary profiles
+- the ranking should favor stable out-of-time usefulness, not just apparent
+  short-term predictive strength
+
 Metadata includes values such as:
 
 - `dtype`
@@ -122,7 +135,17 @@ Metadata includes values such as:
 - `max`
 - `std`
 - `var`
+- `p05`
+- `p25`
+- `p50`
+- `p75`
+- `p95`
 - `unique_count` for non-numeric fields
+
+The lightweight LLM audit response can also include:
+
+- `reasoning_summary`
+- `selection_principles`
 
 ## Experiment Entry Points
 

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from evaluation.stability_scores import calculate_psi, jaccard_similarity
+from utils.feature_metadata import infer_semantic_group
 
 
 def read_fold_feature_tables(features_dir: str | Path) -> list[pd.DataFrame]:
@@ -52,6 +53,19 @@ def selected_sets_from_tables(tables: Iterable[pd.DataFrame]) -> list[set[str]]:
         if "feature_name" not in table.columns:
             continue
         sets.append({str(value) for value in table["feature_name"].dropna().tolist()})
+    return sets
+
+
+def semantic_group_sets_from_tables(tables: Iterable[pd.DataFrame]) -> list[set[str]]:
+    """Convert fold selected-feature tables into semantic-group sets."""
+    sets = []
+    for table in tables:
+        working = table.copy()
+        if "semantic_group" not in working.columns and "feature_name" in working.columns:
+            working["semantic_group"] = working["feature_name"].map(infer_semantic_group)
+        if "semantic_group" not in working.columns:
+            continue
+        sets.append({str(value) for value in working["semantic_group"].dropna().tolist()})
     return sets
 
 
@@ -156,6 +170,45 @@ def selection_frequency_frame(tables: list[pd.DataFrame]) -> pd.DataFrame:
     )
 
 
+def semantic_group_frequency_frame(tables: list[pd.DataFrame]) -> pd.DataFrame:
+    """Compute per-group selection frequency across folds."""
+    if not tables:
+        return pd.DataFrame(
+            columns=["semantic_group", "selection_count", "total_folds", "selection_frequency"]
+        )
+
+    total_folds = len(tables)
+    rows = []
+    normalized = []
+    for table in tables:
+        working = table.copy()
+        if "semantic_group" not in working.columns and "feature_name" in working.columns:
+            working["semantic_group"] = working["feature_name"].map(infer_semantic_group)
+        normalized.append(working)
+
+    combined = pd.concat(normalized, ignore_index=True)
+    if "semantic_group" not in combined.columns:
+        return pd.DataFrame(
+            columns=["semantic_group", "selection_count", "total_folds", "selection_frequency"]
+        )
+
+    combined["semantic_group"] = combined["semantic_group"].astype(str)
+    for semantic_group, group in combined.groupby("semantic_group"):
+        rows.append(
+            {
+                "semantic_group": semantic_group,
+                "selection_count": int(group["fold_id"].nunique()),
+                "total_folds": total_folds,
+                "selection_frequency": float(group["fold_id"].nunique() / total_folds),
+            }
+        )
+
+    return pd.DataFrame(rows).sort_values(
+        ["selection_frequency", "selection_count", "semantic_group"],
+        ascending=[False, False, True],
+    )
+
+
 def _rank_map(table: pd.DataFrame) -> dict[str, float]:
     if "feature_name" not in table.columns:
         return {}
@@ -250,8 +303,11 @@ def write_feature_stability_artifacts(
 
     tables = read_fold_feature_tables(features_dir)
     selected_sets = selected_sets_from_tables(tables)
+    semantic_group_sets = semantic_group_sets_from_tables(tables)
     frequency_df = selection_frequency_frame(tables)
     frequency_df.to_csv(features_dir / "selection_frequency.csv", index=False)
+    semantic_group_frequency_df = semantic_group_frequency_frame(tables)
+    semantic_group_frequency_df.to_csv(features_dir / "semantic_group_stability.csv", index=False)
 
     stable_count_80 = int((frequency_df["selection_frequency"] >= 0.8).sum()) if not frequency_df.empty else 0
     selected_feature_count = int(np.mean([len(item) for item in selected_sets])) if selected_sets else 0
@@ -260,13 +316,31 @@ def write_feature_stability_artifacts(
         if selected_feature_count
         else np.nan
     )
+    stable_semantic_group_count_80 = (
+        int((semantic_group_frequency_df["selection_frequency"] >= 0.8).sum())
+        if not semantic_group_frequency_df.empty
+        else 0
+    )
+    selected_semantic_group_count = (
+        int(np.mean([len(item) for item in semantic_group_sets]))
+        if semantic_group_sets
+        else 0
+    )
+    semantic_group_stable_ratio_80 = (
+        float(stable_semantic_group_count_80 / selected_semantic_group_count)
+        if selected_semantic_group_count
+        else np.nan
+    )
 
     metrics = {
         "nogueira_stability": nogueira_stability(selected_sets, total_candidate_features),
         "kuncheva_stability": kuncheva_stability(selected_sets, total_candidate_features),
         "mean_pairwise_jaccard": mean_pairwise_jaccard(selected_sets),
+        "semantic_group_jaccard": mean_pairwise_jaccard(semantic_group_sets),
         "stable_feature_count_80": stable_count_80,
         "stable_feature_ratio_80": stable_ratio_80,
+        "stable_semantic_group_count_80": stable_semantic_group_count_80,
+        "semantic_group_stable_ratio_80": semantic_group_stable_ratio_80,
         "total_candidate_feature_count": int(total_candidate_features),
     }
 

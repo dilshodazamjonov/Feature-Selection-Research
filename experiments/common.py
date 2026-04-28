@@ -52,10 +52,10 @@ def add_common_experiment_args(parser: argparse.ArgumentParser) -> None:
 
 def add_llm_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--llm-model", default="gpt-4.1-mini")
-    parser.add_argument("--llm-max-features", type=int, default=50)
-    parser.add_argument("--llm-ranking-budget", type=int, default=40)
+    parser.add_argument("--llm-max-features", type=int, default=100)
+    parser.add_argument("--llm-ranking-budget", type=int, default=100)
     parser.add_argument("--llm-shared-ranking-enabled", action="store_true", default=True)
-    parser.add_argument("--llm-cache-dir", default="outputs/llm_selector_cache")
+    parser.add_argument("--llm-cache-dir", default="results/_llm_rankings_cache")
 
 
 def create_run_layout(
@@ -138,5 +138,5 @@ def prepare_shared_data(args: argparse.Namespace, experiments_dir: str | Path):
 
 
 def resolve_llm_cache_dir(run_dir: str | Path, configured_cache_dir: str) -> str:
-    cache_name = Path(configured_cache_dir).name or "llm_selector_cache"
+    cache_name = Path(configured_cache_dir).name or "_llm_rankings_cache"
     return str(Path(run_dir) / cache_name)

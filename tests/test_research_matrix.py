@@ -4,7 +4,7 @@ import pandas as pd
 
 from experiments.config import compute_config_hash, load_project_config
 from experiments.config import apply_feature_budget_to_selector_kwargs
-from experiments.matrix import HYBRID_SELECTORS, MODELS, STAT_SELECTORS, iter_matrix
+from experiments.matrix import HYBRID_VARIANTS, MODELS, STAT_SELECTORS, iter_matrix
 from experiments.tracking import is_completed_run, mark_completed
 from pipelines.common import (
     ExperimentConfig,
@@ -15,17 +15,44 @@ from pipelines.common import (
 from training.cv_utils import GroupedTimeSeriesSplit
 
 
+class SpySelector:
+    seen: list[tuple[str, int]] = []
+
+    def __init__(self, **kwargs):
+        self.scope = "unknown"
+        self.selected_features_ = None
+
+    def set_ranking_context(self, **kwargs):
+        self.scope = str(kwargs.get("scope", "unknown"))
+
+    def fit(self, X, y=None):
+        self.__class__.seen.append((self.scope, len(X)))
+        self.selected_features_ = ["f_num"]
+        return self
+
+    def transform(self, X):
+        return X[["f_num"]]
+
+    def fit_transform(self, X, y=None):
+        return self.fit(X, y).transform(X)
+
+
 def test_matrix_explicitly_contains_required_runs():
     specs = list(iter_matrix())
 
     assert MODELS == ["lr", "catboost"]
-    assert STAT_SELECTORS == ["mrmr", "boruta", "pca"]
-    assert HYBRID_SELECTORS == ["mrmr", "boruta"]
-    assert len(specs) == 12
+    assert STAT_SELECTORS == ["mrmr", "boruta", "pca", "domain_rule_baseline"]
+    assert [selector for selector, *_ in HYBRID_VARIANTS] == [
+        "mrmr",
+        "boruta",
+        "stable_core_llm_fill",
+    ]
+    assert len(specs) == 16
     assert {spec.model for spec in specs} == {"lr", "catboost"}
     assert {spec.output_bucket for spec in specs if spec.experiment_type == "hybrid"} == {
         "hybrid_mrmr",
         "hybrid_boruta",
+        "hybrid_stable_core_llm_fill",
     }
 
 
@@ -83,6 +110,9 @@ def test_model_specific_selector_budgets_are_applied():
         "n_components"
     ] == 40
     assert apply_feature_budget_to_selector_kwargs("llm", {}, 20)["feature_budget"] == 20
+    assert apply_feature_budget_to_selector_kwargs("domain_rule_baseline", {}, 20)[
+        "feature_budget"
+    ] == 20
 
 
 def test_boruta_budget_sets_final_cap_without_enabling_rfe():
@@ -205,3 +235,53 @@ def test_completed_run_requires_lean_artifacts(tmp_path):
     assert is_completed_run(run_dir)
     (run_dir / "models" / "final_model.model").unlink()
     assert not is_completed_run(run_dir)
+
+
+def test_feature_selection_fit_never_uses_oot_rows(tmp_path):
+    SpySelector.seen = []
+
+    X_train = pd.DataFrame(
+        {
+            "time": [1, 2, 3, 4, 5, 6, 7, 8],
+            "f_num": [0.1, 1.1, 0.2, 1.2, 0.3, 1.3, 0.4, 1.4],
+            "recent_decision": [10] * 8,
+        }
+    )
+    y_train = pd.Series([0, 1, 0, 1, 0, 1, 0, 1])
+    X_oot = pd.DataFrame(
+        {
+            "time": [9, 10],
+            "f_num": [0.5, 1.5],
+            "recent_decision": [10, 10],
+        }
+    )
+    y_oot = pd.Series([0, 1])
+
+    prepared = PreparedExperimentData(
+        X_train=X_train,
+        y_train=y_train,
+        X_oot=X_oot,
+        y_oot=y_oot,
+        time_col="time",
+    )
+    config = ExperimentConfig(
+        experiment_name="spy",
+        selector_name="llm",
+        selector_cls=SpySelector,
+        selector_kwargs={},
+        model_name="lr",
+        model_kwargs={"solver": "liblinear", "max_iter": 100, "class_weight": None, "random_state": 42},
+        base_output_dir=str(tmp_path),
+        experiment_output_dir=str(tmp_path / "spy_run"),
+        n_splits=2,
+        cv_gap_groups=0,
+        excluded_feature_columns=("recent_decision",),
+        random_state=42,
+    )
+
+    run_experiment(config, prepared_data=prepared)
+
+    seen_rows = [rows for _, rows in SpySelector.seen]
+    assert SpySelector.seen[-1] == ("final_dev", 8)
+    assert max(seen_rows) == 8
+    assert 10 not in seen_rows

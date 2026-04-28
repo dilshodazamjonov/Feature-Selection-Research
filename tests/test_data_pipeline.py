@@ -4,6 +4,7 @@ import pandas as pd
 from Preprocessing.data_process import normalize_home_credit_sentinel_dates
 from Preprocessing.feature_engineering import TIME_PROXY_COL, build_application_time_proxy
 from Preprocessing.preprocessing import Preprocessor
+from utils.feature_metadata import build_feature_metadata
 from feature_selection.pca import PCASelector
 from training.cv_utils import GroupedTimeSeriesSplit
 
@@ -86,3 +87,23 @@ def test_grouped_time_series_split_keeps_same_time_values_together():
         train_times = set(time_values[train_idx])
         val_times = set(time_values[val_idx])
         assert train_times.isdisjoint(val_times)
+
+
+def test_build_feature_metadata_includes_numeric_percentiles(tmp_path):
+    description_path = tmp_path / "descriptions.csv"
+    description_path.write_text(
+        "row,description,table\nAMT_CREDIT,Credit amount,application_train\n",
+        encoding="utf-8",
+    )
+    X = pd.DataFrame({"AMT_CREDIT": [0.0, 10.0, 20.0, 30.0, 40.0]})
+
+    metadata = build_feature_metadata(X, description_path)
+
+    assert len(metadata) == 1
+    entry = metadata[0]
+    assert entry["name"] == "AMT_CREDIT"
+    assert np.isclose(entry["p05"], 2.0)
+    assert np.isclose(entry["p25"], 10.0)
+    assert np.isclose(entry["p50"], 20.0)
+    assert np.isclose(entry["p75"], 30.0)
+    assert np.isclose(entry["p95"], 38.0)

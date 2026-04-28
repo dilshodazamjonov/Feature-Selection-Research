@@ -14,8 +14,13 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from Models.utils import get_model_bundle, get_selector
-from experiments.config import DEFAULT_CONFIG_PATH, load_project_config
-from experiments.matrix import HYBRID_SELECTORS, MODELS, STAT_SELECTORS, validate_matrix
+from experiments.config import (
+    DEFAULT_CONFIG_PATH,
+    load_project_config,
+    normalize_llm_ranking_budget,
+    resolve_llm_shared_pool_size,
+)
+from experiments.matrix import HYBRID_VARIANTS, MODELS, STAT_SELECTORS, validate_matrix
 
 
 REQUIRED_APPLICATION_COLUMNS = {"SK_ID_CURR", "TARGET"}
@@ -92,7 +97,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         validate_matrix()
         matrix_ok = True
-        matrix_message = f"models={MODELS}, stat={STAT_SELECTORS}, hybrid={HYBRID_SELECTORS}"
+        matrix_message = (
+            f"models={MODELS}, stat={STAT_SELECTORS}, "
+            f"hybrid={[selector for selector, *_ in HYBRID_VARIANTS]}"
+        )
     except Exception as exc:
         matrix_ok = False
         matrix_message = repr(exc)
@@ -110,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
             break
     checks.append(("model selector is valid", model_ok, model_message or ",".join(sorted(model_names))))
 
-    selector_names = set(STAT_SELECTORS) | set(HYBRID_SELECTORS) | {"llm"}
+    selector_names = set(STAT_SELECTORS) | {selector for selector, *_ in HYBRID_VARIANTS} | {"llm"}
     selector_ok = True
     selector_message = ""
     for selector_name in sorted(selector_names):
@@ -128,11 +136,14 @@ def main(argv: list[str] | None = None) -> int:
 
     budgets = config.get("feature_budgets", {})
     llm_config = config.get("llm", {})
+    llm_budget = normalize_llm_ranking_budget(llm_config.get("ranking_budget"))
     budgets_ok = (
         isinstance(budgets, dict)
         and int(budgets.get("lr", 0)) > 0
         and int(budgets.get("catboost", 0)) > 0
-        and int(llm_config.get("ranking_budget", 0)) >= int(budgets.get("catboost", 0))
+        and int(resolve_llm_shared_pool_size(llm_config)) >= int(budgets.get("catboost", 0))
+        and int(llm_budget.get("lr_candidate_pool", 0)) >= int(budgets.get("lr", 0))
+        and int(llm_budget.get("catboost_candidate_pool", 0)) >= int(budgets.get("catboost", 0))
         and bool(llm_config.get("shared_ranking_enabled", False))
     )
     checks.append(
@@ -140,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
             "feature budgets are valid",
             budgets_ok,
             f"lr={budgets.get('lr')}, catboost={budgets.get('catboost')}, "
-            f"llm_ranking_budget={llm_config.get('ranking_budget')}, "
+            f"llm_ranking_budget={llm_budget}, "
             f"shared={llm_config.get('shared_ranking_enabled')}",
         )
     )

@@ -21,10 +21,14 @@ excluded_feature_columns:
 llm:
   enabled: true
   shared_ranking_enabled: true
-  ranking_budget: 40
+  ranking_budget:
+    lr_candidate_pool: 60
+    catboost_candidate_pool: 100
+    max_shared_pool: 100
+  prompt_version: stability_expert_v3
   model: gpt-4.1-mini
-  max_features: 40
-  cache_dir: results/llm_selector_cache
+  max_features: 100
+  cache_dir: results/_llm_rankings_cache
 
 model_params:
   lr:

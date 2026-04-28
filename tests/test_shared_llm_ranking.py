@@ -31,6 +31,7 @@ def _selector(tmp_path, feature_budget=2):
         "selected_features": ["f1", "f2", "f3"],
         "feature_reasons": {"f1": "best"},
         "reasoning_summary": "ranked",
+        "selection_principles": ["stability", "coverage"],
         "raw_response": json.dumps({"selected_features": ["f1", "f2", "f3"]}),
     }
     selector.set_ranking_context(
@@ -53,7 +54,19 @@ def test_shared_llm_ranking_cache_reuses_same_fold_and_signature(tmp_path):
     assert first.ranked_features_ == ["f1", "f2", "f3"]
     assert first.selected_features_ == ["f1", "f2"]
     assert second.selected_features_ == ["f1", "f2", "f3"]
+    assert first.selection_payload_["selection_principles"] == ["stability", "coverage"]
     assert len(list((tmp_path / "cache").glob("*.json"))) == 1
+    summary = pd.read_csv(tmp_path / "rankings" / "llm_rankings_summary.csv")
+    assert {
+        "metadata_signature",
+        "prompt_version",
+        "prompt_hash",
+        "selected_for_lr_top20",
+        "selected_for_catboost_top40",
+        "candidate_for_lr_hybrid",
+        "candidate_for_catboost_hybrid",
+        "cache_hit",
+    }.issubset(summary.columns)
 
 
 def test_shared_llm_ranking_cache_keeps_fold_and_final_dev_separate(tmp_path):
@@ -103,3 +116,56 @@ def test_shared_llm_ranking_expected_six_calls_for_five_folds_plus_final_dev(tmp
     assert first_pass_calls == 6
     assert second_pass_cache_hits == 6
     assert len(list((tmp_path / "cache").glob("*.json"))) == 6
+
+
+def test_shared_llm_ranking_cache_invalidates_when_prompt_hash_changes(tmp_path):
+    description_a = _description(tmp_path / "descriptions_a.csv")
+    description_b = tmp_path / "descriptions_b.csv"
+    description_b.write_text(
+        "row,description,table\n"
+        "f1,Feature one revised,application_train\n"
+        "f2,Feature two,application_train\n"
+        "f3,Feature three,application_train\n",
+        encoding="utf-8",
+    )
+    X = pd.DataFrame({"f1": [1.0, 2.0], "f2": [2.0, 3.0], "f3": [3.0, 4.0]})
+    y = pd.Series([0, 1])
+
+    first = LLMSelector(
+        description_csv_path=str(description_a),
+        cache_dir=str(tmp_path / "cache"),
+        max_features=3,
+        ranking_budget=3,
+        feature_budget=2,
+        config_hash="cfg",
+        iv_filter_kwargs={},
+    )
+    first._call_llm = lambda prompt: {
+        "selected_features": ["f1", "f2", "f3"],
+        "reasoning_summary": "ranked",
+        "selection_principles": ["stability"],
+        "raw_response": json.dumps({"selected_features": ["f1", "f2", "f3"]}),
+    }
+    first.set_ranking_context(scope="fold", fold_id=1)
+    first.fit(X, y)
+
+    second = LLMSelector(
+        description_csv_path=str(description_b),
+        cache_dir=str(tmp_path / "cache"),
+        max_features=3,
+        ranking_budget=3,
+        feature_budget=2,
+        config_hash="cfg",
+        iv_filter_kwargs={},
+    )
+    second._call_llm = lambda prompt: {
+        "selected_features": ["f1", "f2", "f3"],
+        "reasoning_summary": "ranked",
+        "selection_principles": ["stability"],
+        "raw_response": json.dumps({"selected_features": ["f1", "f2", "f3"]}),
+    }
+    second.set_ranking_context(scope="fold", fold_id=1)
+    second.fit(X, y)
+
+    assert first.prompt_hash_ != second.prompt_hash_
+    assert len(list((tmp_path / "cache").glob("*.json"))) == 2

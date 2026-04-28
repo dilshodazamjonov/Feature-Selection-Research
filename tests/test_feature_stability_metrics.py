@@ -5,7 +5,9 @@ from evaluation.feature_stability import (
     kuncheva_stability,
     mean_pairwise_jaccard,
     nogueira_stability,
+    semantic_group_frequency_frame,
     selection_frequency_frame,
+    write_feature_stability_artifacts,
 )
 from evaluation.stability_scores import calculate_psi, jaccard_similarity
 from pipelines.common import credit_risk_utility
@@ -61,3 +63,30 @@ def test_credit_risk_lift_and_capture_at_10():
 
     assert metrics["lift_at_10"] == 5.0
     assert metrics["bad_rate_capture_at_10"] == 0.5
+
+
+def test_semantic_group_stability_computes_correctly(tmp_path):
+    features_dir = tmp_path / "exp" / "features"
+    features_dir.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {"fold_id": 1, "feature_name": "EXT_SOURCE_1", "semantic_group": "external_score"},
+            {"fold_id": 1, "feature_name": "BURO_AMT_CREDIT_SUM_DEBT_MEAN", "semantic_group": "bureau_debt"},
+            {"fold_id": 2, "feature_name": "EXT_SOURCE_2", "semantic_group": "external_score"},
+            {"fold_id": 2, "feature_name": "BURO_DAYS_CREDIT_MAX", "semantic_group": "bureau_credit_history"},
+        ]
+    ).to_csv(features_dir / "fold_selected_features.csv", index=False)
+
+    metrics = write_feature_stability_artifacts(
+        exp_dir=tmp_path / "exp",
+        model="lr",
+        selector="llm",
+        total_candidate_features=10,
+    )
+    semantic_df = pd.read_csv(features_dir / "semantic_group_stability.csv")
+
+    external_row = semantic_df[semantic_df["semantic_group"] == "external_score"].iloc[0]
+    assert external_row["selection_frequency"] == 1.0
+    assert metrics["semantic_group_jaccard"] == 1 / 3
+    assert metrics["stable_semantic_group_count_80"] == 1
+    assert metrics["semantic_group_stable_ratio_80"] == 0.5

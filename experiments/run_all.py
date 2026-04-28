@@ -17,7 +17,10 @@ from experiments.config import (
     apply_feature_budget_to_selector_kwargs,
     compute_config_hash,
     load_project_config,
+    normalize_llm_ranking_budget,
     resolve_feature_budget,
+    resolve_llm_candidate_pool_budget,
+    resolve_llm_shared_pool_size,
 )
 from experiments.matrix import MODELS, MatrixRunSpec, iter_matrix, validate_matrix
 from experiments.tracking import (
@@ -29,6 +32,7 @@ from experiments.tracking import (
     write_run_manifest,
 )
 from feature_selection.hybrid import LLMThenStatSelector
+from feature_selection.hybrid import StableCoreLLMFillSelector
 from pipelines.common import ExperimentConfig, prepare_modeling_data, run_experiment
 from utils.logging_config import run_log_context, setup_logging
 
@@ -92,6 +96,7 @@ def _matrix_config_for_spec(project_config: dict[str, Any], spec: MatrixRunSpec)
 
 def _args_for_config(config: dict[str, Any], model: str) -> SimpleNamespace:
     llm_config = config.get("llm", {})
+    llm_ranking_budget = normalize_llm_ranking_budget(llm_config.get("ranking_budget"))
     return SimpleNamespace(
         project_config=config,
         model=model,
@@ -104,10 +109,13 @@ def _args_for_config(config: dict[str, Any], model: str) -> SimpleNamespace:
         cv_gap_groups=int(config["cv_gap_groups"]),
         random_seed=int(config["random_seed"]),
         llm_model=llm_config.get("model", "gpt-4.1-mini"),
-        llm_max_features=int(llm_config.get("max_features", 50)),
-        llm_ranking_budget=int(llm_config.get("ranking_budget", llm_config.get("max_features", 40))),
+        llm_max_features=resolve_llm_shared_pool_size(llm_config),
+        llm_shared_pool_size=resolve_llm_shared_pool_size(llm_config),
+        llm_ranking_budget=resolve_llm_shared_pool_size(llm_config),
+        llm_ranking_budget_config=llm_ranking_budget,
+        llm_prompt_version=llm_config.get("prompt_version", "stability_expert_v3"),
         llm_shared_ranking_enabled=bool(llm_config.get("shared_ranking_enabled", True)),
-        llm_cache_dir=llm_config.get("cache_dir", "results/llm_selector_cache"),
+        llm_cache_dir=llm_config.get("cache_dir", "results/_llm_rankings_cache"),
     )
 
 
@@ -130,8 +138,8 @@ def _hybrid_selector_kwargs(
     *,
     spec: MatrixRunSpec,
     args: SimpleNamespace,
-    run_dir: Path,
 ) -> dict[str, Any]:
+    llm_config = args.project_config.get("llm", {})
     stat_selector_cls, stat_selector_kwargs = get_selector(spec.selector)
     if stat_selector_cls is None:
         raise ValueError(f"Unsupported hybrid downstream selector: {spec.selector}")
@@ -149,12 +157,24 @@ def _hybrid_selector_kwargs(
         "stat_selector_kwargs": stat_selector_kwargs,
         "cache_dir": str(llm_cache_dir),
         "llm_model": args.llm_model,
-        "llm_max_features": args.llm_ranking_budget,
-        "llm_feature_budget": feature_budget,
+        "llm_max_features": args.llm_shared_pool_size,
+        "llm_candidate_pool_budget": resolve_llm_candidate_pool_budget(llm_config, spec.model),
         "llm_shared_ranking_enabled": args.llm_shared_ranking_enabled,
         "llm_config_hash": args.project_config.get("llm_ranking_config_hash"),
+        "llm_prompt_version": args.llm_prompt_version,
+        "llm_ranking_budget_config": args.llm_ranking_budget_config,
+        "llm_shared_pool_size": args.llm_shared_pool_size,
+        "final_feature_budget": feature_budget,
         "llm_selector_kwargs": {
             "max_missing_rate": 0.95,
+            "lr_feature_budget": int(args.project_config.get("feature_budgets", {}).get("lr", 20)),
+            "catboost_feature_budget": int(args.project_config.get("feature_budgets", {}).get("catboost", 40)),
+            "lr_candidate_pool_budget": int(llm_config.get("ranking_budget", {}).get("lr_candidate_pool", 60))
+            if isinstance(llm_config.get("ranking_budget"), dict)
+            else 60,
+            "catboost_candidate_pool_budget": int(llm_config.get("ranking_budget", {}).get("catboost_candidate_pool", 100))
+            if isinstance(llm_config.get("ranking_budget"), dict)
+            else int(args.llm_shared_pool_size),
         },
         "iv_filter_kwargs": {
             "min_iv": 0.01,
@@ -181,16 +201,61 @@ def _experiment_config_for_spec(
         feature_budget = resolve_feature_budget(run_config, spec.model)
         selector_kwargs = {
             "model": args.llm_model,
-            "max_features": args.llm_ranking_budget,
-            "ranking_budget": args.llm_ranking_budget,
+            "max_features": args.llm_shared_pool_size,
+            "ranking_budget": args.llm_shared_pool_size,
             "feature_budget": feature_budget,
             "shared_ranking_enabled": args.llm_shared_ranking_enabled,
             "config_hash": run_config.get("llm_ranking_config_hash"),
+            "prompt_version": args.llm_prompt_version,
+            "ranking_budget_config": args.llm_ranking_budget_config,
+            "shared_pool_size": args.llm_shared_pool_size,
+            "lr_feature_budget": int(run_config.get("feature_budgets", {}).get("lr", 20)),
+            "catboost_feature_budget": int(run_config.get("feature_budgets", {}).get("catboost", 40)),
+            "lr_candidate_pool_budget": int(
+                resolve_llm_candidate_pool_budget(run_config.get("llm", {}), "lr")
+            ),
+            "catboost_candidate_pool_budget": int(
+                resolve_llm_candidate_pool_budget(run_config.get("llm", {}), "catboost")
+            ),
             "cache_dir": str(llm_cache_dir),
         }
     elif spec.experiment_type == "hybrid":
-        selector_cls = LLMThenStatSelector
-        selector_kwargs = _hybrid_selector_kwargs(spec=spec, args=args, run_dir=run_dir)
+        if spec.selector == "stable_core_llm_fill":
+            selector_cls = StableCoreLLMFillSelector
+            selector_kwargs = {
+                "description_csv_path": args.description_path,
+                "cache_dir": str(Path(args.llm_cache_dir)),
+                "llm_model": args.llm_model,
+                "llm_max_features": args.llm_shared_pool_size,
+                "llm_shared_ranking_enabled": args.llm_shared_ranking_enabled,
+                "llm_config_hash": args.project_config.get("llm_ranking_config_hash"),
+                "llm_prompt_version": args.llm_prompt_version,
+                "llm_ranking_budget_config": args.llm_ranking_budget_config,
+                "llm_shared_pool_size": args.llm_shared_pool_size,
+                "final_feature_budget": resolve_feature_budget(run_config, spec.model),
+                "random_state": int(run_config.get("random_seed", 42)),
+                "llm_selector_kwargs": {
+                    "max_missing_rate": 0.95,
+                    "lr_feature_budget": int(run_config.get("feature_budgets", {}).get("lr", 20)),
+                    "catboost_feature_budget": int(run_config.get("feature_budgets", {}).get("catboost", 40)),
+                    "lr_candidate_pool_budget": int(
+                        resolve_llm_candidate_pool_budget(run_config.get("llm", {}), "lr")
+                    ),
+                    "catboost_candidate_pool_budget": int(
+                        resolve_llm_candidate_pool_budget(run_config.get("llm", {}), "catboost")
+                    ),
+                },
+                "iv_filter_kwargs": {
+                    "min_iv": 0.01,
+                    "max_iv_for_leakage": 0.5,
+                    "encode": True,
+                    "n_jobs": 1,
+                    "verbose": False,
+                },
+            }
+        else:
+            selector_cls = LLMThenStatSelector
+            selector_kwargs = _hybrid_selector_kwargs(spec=spec, args=args)
 
     return build_experiment_config(
         args=args,
@@ -399,10 +464,13 @@ def main(argv: list[str] | None = None) -> None:
     shared_llm_config.pop("matrix_run", None)
     shared_llm_config["llm_ranking_scope"] = {
         "shared_ranking_enabled": True,
-        "ranking_budget": shared_llm_config.get("llm", {}).get("ranking_budget", 40),
+        "ranking_budget": normalize_llm_ranking_budget(
+            shared_llm_config.get("llm", {}).get("ranking_budget")
+        ),
+        "prompt_version": shared_llm_config.get("llm", {}).get("prompt_version", "stability_expert_v3"),
     }
     project_config["llm_ranking_config_hash"] = compute_config_hash(shared_llm_config)
-    llm_cache_dir = output_root / "_llm_rankings_cache" / project_config["llm_ranking_config_hash"][:12]
+    llm_cache_dir = output_root / "_llm_rankings_cache"
     project_config.setdefault("llm", {})["cache_dir"] = str(llm_cache_dir)
 
     selected_models = set(cli_args.models)
@@ -482,7 +550,13 @@ def main(argv: list[str] | None = None) -> None:
         manifest.update(
             {
                 "llm_shared_ranking_enabled": bool(llm_config.get("shared_ranking_enabled", True)),
-                "llm_ranking_budget": int(llm_config.get("ranking_budget", 40)),
+                "llm_ranking_budget": int(resolve_llm_shared_pool_size(llm_config)),
+                "llm_ranking_budget_config": normalize_llm_ranking_budget(llm_config.get("ranking_budget")),
+                "llm_shared_pool_size": int(resolve_llm_shared_pool_size(llm_config)),
+                "llm_candidate_pool_budget": int(
+                    resolve_llm_candidate_pool_budget(llm_config, spec.model)
+                ),
+                "llm_prompt_version": llm_config.get("prompt_version", "stability_expert_v3"),
                 "lr_feature_budget": int(run_config.get("feature_budgets", {}).get("lr", 20)),
                 "catboost_feature_budget": int(run_config.get("feature_budgets", {}).get("catboost", 40)),
                 "feature_budget": int(run_config.get("feature_budgets", {}).get(spec.model, 40)),
