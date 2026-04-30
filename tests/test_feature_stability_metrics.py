@@ -19,6 +19,27 @@ def test_nogueira_stability_identical_sets_is_one():
     assert nogueira_stability(sets, total_features=5) == 1.0
 
 
+def test_nogueira_stability_uses_full_feature_universe():
+    sets = [{"a", "b"}, {"a", "c"}]
+
+    assert nogueira_stability(sets, total_features=4) == 0.0
+
+
+def test_nogueira_stability_matches_kuncheva_for_fixed_size_sets():
+    sets = [{"a", "b"}, {"a", "c"}, {"a", "d"}]
+
+    assert nogueira_stability(sets, total_features=4) == kuncheva_stability(
+        sets,
+        total_features=4,
+    )
+
+
+def test_nogueira_stability_lower_bound_for_disjoint_sets():
+    sets = [{"a", "b"}, {"c", "d"}, {"e", "f"}]
+
+    assert np.isclose(nogueira_stability(sets, total_features=6), -0.5)
+
+
 def test_kuncheva_stability_fixed_size_sets():
     sets = [{"a", "b"}, {"a", "c"}]
     expected = (1 * 4 - 2**2) / (2 * (4 - 2))

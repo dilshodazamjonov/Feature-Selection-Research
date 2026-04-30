@@ -80,12 +80,12 @@ def mean_pairwise_jaccard(selected_sets: list[set[str]]) -> float:
 
 def nogueira_stability(selected_sets: list[set[str]], total_features: int) -> float:
     """
-    Approximate Nogueira stability over binary feature-selection indicators.
+    Nogueira stability over binary feature-selection indicators.
 
     Returns 1 for identical selected sets and approaches 0 for random-like
     selection under the observed average selected-set size.
     """
-    if not selected_sets or total_features <= 1:
+    if len(selected_sets) < 2 or total_features <= 1:
         return np.nan
 
     all_features = sorted(set().union(*selected_sets))
@@ -101,7 +101,12 @@ def nogueira_stability(selected_sets: list[set[str]], total_features: int) -> fl
         [sum(feature in selected for selected in selected_sets) / len(selected_sets) for feature in all_features],
         dtype=float,
     )
-    observed_variance = float(np.mean(frequencies * (1.0 - frequencies)))
+    n_runs = len(selected_sets)
+    observed_variance = float(
+        (n_runs / (n_runs - 1))
+        * np.sum(frequencies * (1.0 - frequencies))
+        / total_features
+    )
     expected_variance = (k_bar / total_features) * (1.0 - k_bar / total_features)
     if expected_variance <= 0:
         return np.nan
