@@ -490,3 +490,8 @@ Return ONLY valid JSON:
 
     def fit_transform(self, X: pd.DataFrame, y: pd.Series = None):
         return self.fit(X, y).transform(X)
+
+
+
+# Semantically meaningful and statistically stable 
+# apply clip for the feature selection 
