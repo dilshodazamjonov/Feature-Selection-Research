@@ -145,6 +145,7 @@ def is_completed_run(run_dir: str | Path) -> bool:
         path / "features" / "selection_frequency.csv",
         path / "features" / "feature_stability_metrics.csv",
         path / "models" / "final_model.model",
+        path / "models" / "final_model_bundle.joblib",
         path / "models" / "final_preprocessor.pkl",
         path / "models" / "final_model_metadata.json",
         path / "results" / "experiment_summary.csv",

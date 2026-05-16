@@ -17,6 +17,7 @@ data/
 *.pkl
 outputs/
 results/
+results_full_run/
 .model
 .pytest_cache/
 .pytest_tmp/

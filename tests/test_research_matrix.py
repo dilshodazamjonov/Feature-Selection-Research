@@ -1,5 +1,6 @@
 import json
 
+import joblib
 import pandas as pd
 
 from experiments.config import compute_config_hash, load_project_config
@@ -181,6 +182,7 @@ def test_pipeline_runs_on_tiny_dummy_dataset(tmp_path):
     assert (run.exp_dir / "features" / "feature_stability_metrics.csv").exists()
     assert (run.exp_dir / "results" / "runtime_summary.csv").exists()
     assert (run.exp_dir / "models" / "final_model.model").exists()
+    assert (run.exp_dir / "models" / "final_model_bundle.joblib").exists()
     assert (run.exp_dir / "models" / "final_preprocessor.pkl").exists()
     assert (run.exp_dir / "models" / "final_model_metadata.json").exists()
     assert (run.exp_dir / "data_split_manifest.json").exists()
@@ -198,6 +200,9 @@ def test_pipeline_runs_on_tiny_dummy_dataset(tmp_path):
     assert metadata["training_scope"] == "full_DEV"
     assert metadata["target_column"] == "TARGET"
     assert "preprocessing_hash" in metadata
+    bundle = joblib.load(run.exp_dir / "models" / "final_model_bundle.joblib")
+    assert {"model", "preprocessor", "selected_features", "metadata"} == set(bundle)
+    assert bundle["metadata"]["preprocessing_hash"] == metadata["preprocessing_hash"]
 
 
 def test_completed_run_requires_lean_artifacts(tmp_path):
@@ -211,6 +216,7 @@ def test_completed_run_requires_lean_artifacts(tmp_path):
         "features/selection_frequency.csv",
         "features/feature_stability_metrics.csv",
         "models/final_model.model",
+        "models/final_model_bundle.joblib",
         "models/final_preprocessor.pkl",
         "models/final_model_metadata.json",
         "results/experiment_summary.csv",

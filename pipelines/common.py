@@ -623,6 +623,23 @@ def run_experiment(
         ),
         encoding="utf-8",
     )
+    joblib.dump(
+        {
+            "model": final_model,
+            "preprocessor": final_preprocessor,
+            "selected_features": [str(feature) for feature in final_features],
+            "metadata": {
+                "model": config.model_name,
+                "selector": config.selector_name,
+                "experiment_type": config.experiment_type,
+                "feature_budget": int(config.feature_budget),
+                "config_hash": config.config_hash,
+                "data_fingerprint": data_fingerprint,
+                "preprocessing_hash": preprocessing_hash,
+            },
+        },
+        models_dir / "final_model_bundle.joblib",
+    )
 
     final_evaluation_start = time.time()
     train_proba = predict_proba(final_model, X_train_final)
