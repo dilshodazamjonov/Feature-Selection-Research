@@ -1,6 +1,6 @@
 import pandas as pd
 
-import Models.utils as model_utils
+from credit_risk_fs.models import registry as model_utils
 
 
 def test_train_model_does_not_forward_external_eval_set_by_default(monkeypatch):

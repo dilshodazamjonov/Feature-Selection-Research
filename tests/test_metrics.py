@@ -1,6 +1,6 @@
 import pytest
 
-from evaluation.metrics import determine_threshold, evaluate_model
+from credit_risk_fs.evaluation.metrics import determine_threshold, evaluate_model
 
 
 def test_evaluate_model_uses_training_threshold_for_thresholded_metrics():

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from evaluation.plotting import (
+from credit_risk_fs.evaluation.plotting import (
     generate_experiment_plots,
     generate_matrix_comparison_plots,
     load_plot_data,

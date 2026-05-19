@@ -1,0 +1,2 @@
+pca:
+  n_components: 0.95

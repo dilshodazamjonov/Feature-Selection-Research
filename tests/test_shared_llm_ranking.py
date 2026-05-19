@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from feature_selection.llm_selector import LLMSelector
+from credit_risk_fs.selectors.llm_screening import LLMSelector
 
 
 def _description(path: Path) -> Path:

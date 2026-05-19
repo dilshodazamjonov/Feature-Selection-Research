@@ -1,6 +1,6 @@
 import pandas as pd
 
-from evaluation.stability_scores import calculate_psi
+from credit_risk_fs.evaluation.drift import calculate_psi
 
 
 def test_calculate_psi_detects_shift_outside_training_range():

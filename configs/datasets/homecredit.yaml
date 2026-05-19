@@ -1,0 +1,11 @@
+dataset_name: homecredit
+data_dir: data/homecredit/raw
+description_path: data/homecredit/metadata/columns_description.csv
+results_dir: results/homecredit
+excluded_feature_columns:
+  - TARGET
+  - recent_decision
+  - PREV_recent_decision_MAX
+  - DAYS_DECISION
+  - application_time_proxy
+time_col: recent_decision

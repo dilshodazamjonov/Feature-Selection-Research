@@ -1,448 +1,482 @@
-# Research Pipeline
+# Credit Feature Selection Research
 
-This repository runs temporal credit-risk experiments on the Home Credit dataset.
-The codebase is organized around a shared training core plus canonical CLI
-entrypoints under `scripts/`.
+This repository is a research framework for testing whether LLM-based metadata screening is useful as a first-stage feature-selection helper for credit scoring.
 
-The current experiment design follows this research structure:
+Main hypothesis:
+- LLMs can use column metadata and semantic descriptions to produce a useful first-stage screening of candidate features.
+- Statistical selectors and hybrid selectors can then refine that screened set.
+- The value claim is research-oriented feature selection support, not end-to-end automated credit decisioning.
 
-1. Statistical baselines
-2. LLM vs statistical selectors
-3. Hybrid `LLM -> statistical`
+Datasets:
+- `Home Credit` is the primary dataset.
+- `LendingClub` is the external validation dataset.
 
-## Architecture
+Selectors compared:
+- `mrmr`
+- `boruta`
+- `pca`
+- `domain_rule_baseline`
+- `llm`
+- `llm_then_mrmr`
+- `llm_then_boruta`
+- `stable_core_llm_fill`
 
-The repo is now split by responsibility:
+Evaluation models:
+- `Logistic Regression`
+- `CatBoost`
 
-- `scripts/`: canonical CLI wrappers
-- `experiments/`: experiment orchestration and CLI-facing runners
-- `pipelines/`: shared data preparation and comparison utilities
-- `Preprocessing/`: raw data loading, feature engineering, preprocessing
-- `feature_selection/`: selectors and selector-specific helpers
-- `training/`: fold execution and temporal CV training
-- `evaluation/`: metrics and summary calculations
-- `Models/`: model factory and model-specific training helpers
-- `utils/`: logging and feature metadata helpers
+Out of scope:
+- no stacking
+- no calibration modules
+- no production scoring or deployment logic
+- no claim that the predictive models are production PD engines
 
-The important design rule is that experiment scripts should stay thin.
-They parse arguments and hand off to `experiments/`, while the shared
-training logic stays in `pipelines/` and `training/`.
+## Research Framing
 
-The full directory guide is in [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
-For exact reproducibility commands, see [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+The LLM in this project is a metadata screener, not the final model and not a production underwriter.
 
-## Reproducibility Quickstart
+That means:
+- the LLM sees feature metadata and descriptions
+- the LLM produces a ranked or screened candidate set
+- downstream selectors and models evaluate whether that screening is useful
+- the same fold-specific LLM ranking can be reused across downstream selectors and models for fairness and reproducibility
 
-```bash
+## Canonical Structure
+
+The canonical codebase now lives under `src/credit_risk_fs/`. The structure below is the intended working layout for the refactored repository.
+
+```text
+credit_feature_selection_research/
+|-- src/
+|   `-- credit_risk_fs/
+|       |-- __init__.py
+|       |-- data/
+|       |   |-- __init__.py
+|       |   |-- loaders.py
+|       |   |-- schemas.py
+|       |   |-- dataset_registry.py
+|       |   |-- homecredit.py
+|       |   `-- lendingclub.py
+|       |-- preprocessing/
+|       |   |-- __init__.py
+|       |   |-- cleaning.py
+|       |   |-- missingness.py
+|       |   |-- encoding.py
+|       |   |-- temporal_split.py
+|       |   |-- leakage.py
+|       |   |-- labeling.py
+|       |   |-- homecredit.py
+|       |   `-- lendingclub.py
+|       |-- feature_engineering/
+|       |   |-- __init__.py
+|       |   |-- base.py
+|       |   |-- homecredit/
+|       |   |   |-- __init__.py
+|       |   |   |-- bureau.py
+|       |   |   |-- previous_application.py
+|       |   |   |-- installments.py
+|       |   |   |-- pos_cash.py
+|       |   |   |-- credit_card.py
+|       |   |   `-- assemble.py
+|       |   `-- lendingclub/
+|       |       |-- __init__.py
+|       |       |-- application.py
+|       |       `-- assemble.py
+|       |-- feature_metadata/
+|       |   |-- __init__.py
+|       |   |-- builder.py
+|       |   |-- semantic_groups.py
+|       |   |-- descriptions.py
+|       |   |-- metadata_schema.py
+|       |   |-- homecredit.py
+|       |   `-- lendingclub.py
+|       |-- selectors/
+|       |   |-- __init__.py
+|       |   |-- base.py
+|       |   |-- registry.py
+|       |   |-- mrmr.py
+|       |   |-- boruta.py
+|       |   |-- pca.py
+|       |   |-- domain_rule_baseline.py
+|       |   |-- llm_screening.py
+|       |   |-- llm_then_stat.py
+|       |   `-- stable_core_llm_fill.py
+|       |-- models/
+|       |   |-- __init__.py
+|       |   |-- registry.py
+|       |   |-- logistic_regression.py
+|       |   |-- catboost_model.py
+|       |   `-- training.py
+|       |-- evaluation/
+|       |   |-- __init__.py
+|       |   |-- metrics.py
+|       |   |-- stability.py
+|       |   |-- drift.py
+|       |   |-- semantic_coverage.py
+|       |   |-- redundancy.py
+|       |   |-- aggregation.py
+|       |   `-- plotting.py
+|       |-- experiments/
+|       |   |-- __init__.py
+|       |   |-- config.py
+|       |   |-- matrix.py
+|       |   |-- runner.py
+|       |   |-- tracking.py
+|       |   |-- single_run.py
+|       |   `-- compare.py
+|       |-- pipelines/
+|       |   |-- __init__.py
+|       |   |-- common.py
+|       |   |-- dataset_adapter.py
+|       |   |-- homecredit_pipeline.py
+|       |   |-- lendingclub_pipeline.py
+|       |   `-- run_pipeline.py
+|       `-- utils/
+|           |-- __init__.py
+|           |-- io.py
+|           |-- logging.py
+|           |-- hashing.py
+|           |-- paths.py
+|           `-- serialization.py
+|-- configs/
+|   |-- base.yaml
+|   |-- datasets/
+|   |   |-- homecredit.yaml
+|   |   `-- lendingclub.yaml
+|   |-- selectors/
+|   |   |-- llm.yaml
+|   |   |-- mrmr.yaml
+|   |   |-- boruta.yaml
+|   |   |-- pca.yaml
+|   |   `-- hybrids.yaml
+|   |-- models/
+|   |   |-- lr.yaml
+|   |   `-- catboost.yaml
+|   `-- experiments/
+|       |-- homecredit_matrix.yaml
+|       `-- lendingclub_matrix.yaml
+|-- data/
+|   |-- homecredit/
+|   |   |-- raw/
+|   |   |-- interim/
+|   |   |-- processed/
+|   |   `-- metadata/
+|   |       |-- columns_description.csv
+|   |       |-- raw_schema_snapshot.json
+|   |       `-- leakage_columns.yaml
+|   `-- lendingclub/
+|       |-- raw/
+|       |-- interim/
+|       |-- processed/
+|       `-- metadata/
+|           |-- columns_description.csv
+|           |-- raw_schema_snapshot.json
+|           `-- leakage_columns.yaml
+|-- Notebooks/
+|   |-- homecredit/
+|   `-- lendingclub/
+|-- scripts/
+|   |-- prepare_homecredit.py
+|   |-- prepare_lendingclub.py
+|   |-- run_matrix.py
+|   |-- run_single.py
+|   |-- aggregate_results.py
+|   |-- make_plots.py
+|   `-- check_setup.py
+|-- results/
+|   |-- homecredit/
+|   |   |-- matrix_runs.csv
+|   |   |-- final_comparison_table.csv
+|   |   |-- paired_fold_comparisons.csv
+|   |   |-- llm_call_summary.csv
+|   |   |-- feature_stability_table.csv
+|   |   |-- feature_drift_table.csv
+|   |   |-- semantic_coverage_table.csv
+|   |   |-- plot_reports/
+|   |   `-- runs/
+|   |-- lendingclub/
+|   |   |-- matrix_runs.csv
+|   |   |-- final_comparison_table.csv
+|   |   |-- paired_fold_comparisons.csv
+|   |   |-- llm_call_summary.csv
+|   |   |-- feature_stability_table.csv
+|   |   |-- feature_drift_table.csv
+|   |   |-- semantic_coverage_table.csv
+|   |   |-- plot_reports/
+|   |   `-- runs/
+|   `-- cross_dataset/
+|       |-- final_comparison_table.csv
+|       |-- paired_fold_comparisons.csv
+|       |-- semantic_coverage_table.csv
+|       |-- method_rank_summary.csv
+|       `-- plot_reports/
+|-- artifacts/
+|   |-- llm_cache/
+|   `-- prompts/
+|       `-- llm_screening/
+|           |-- stability_expert_v1.txt
+|           |-- stability_expert_v2.txt
+|           `-- stability_expert_v3.txt
+|-- reports/
+|   |-- homecredit_report.md
+|   |-- lendingclub_report.md
+|   `-- cross_dataset_summary.md
+|-- tests/
+|   |-- fixtures/
+|   |   |-- homecredit/
+|   |   `-- lendingclub/
+|   |-- data/
+|   |-- preprocessing/
+|   |-- feature_engineering/
+|   |-- feature_metadata/
+|   |-- selectors/
+|   |-- evaluation/
+|   |-- experiments/
+|   `-- regression/
+|-- docs/
+|   |-- project_structure.md
+|   |-- reproducibility.md
+|   |-- leakage_policy.md
+|   |-- experiment_protocol.md
+|   |-- llm_prompt_protocol.md
+|   `-- dataset_notes/
+|       |-- homecredit.md
+|       `-- lendingclub.md
+|-- .env.example
+|-- .gitignore
+|-- pyproject.toml
+|-- README.md
+`-- run_experiment.py
+```
+
+## Compatibility And Historical Directories
+
+The repo still contains some legacy top-level directories because the refactor was done conservatively and backward compatibility was preserved.
+
+Examples:
+- `Preprocessing/`
+- `feature_selection/`
+- `Models/`
+- `evaluation/`
+- `experiments/`
+- `pipelines/`
+- `training/`
+- `utils/`
+- `data/inputs/`
+- `results_full_run/`
+
+These are not the canonical implementation paths anymore. The real code should be treated as living under `src/credit_risk_fs/`. Legacy module trees are compatibility shims unless a specific historical artifact is being inspected.
+
+## Dataset Layout
+
+Home Credit:
+- raw multi-table data belongs in `data/homecredit/raw/`
+- metadata files belong in `data/homecredit/metadata/`
+- processed or intermediate outputs belong in `data/homecredit/interim/` and `data/homecredit/processed/`
+
+LendingClub:
+- raw Kaggle files belong in `data/lendingclub/raw/`
+- the preparation step produces `data/lendingclub/processed/application_train.csv`
+- metadata files belong in `data/lendingclub/metadata/`
+
+LendingClub preparation is single-table and includes:
+- target construction into `TARGET`
+- temporal proxy construction into `recent_decision`
+- removal of major post-outcome leakage columns
+- removal of major policy/leakage fields used after origination
+
+## Setup
+
+Use the project environment:
+
+```powershell
 uv sync
-uv run python scripts/check_research_setup.py
-uv run python main.py
-uv run python scripts/aggregate_results.py results/
-uv run python plots.py --all results/
 ```
 
-If you prefer an activated environment, use the same commands without `uv run`.
+If you already have the checked-in virtual environment, activate it first:
 
-## Config
-
-The project now supports a root-level [config.yaml](</d:/python projects/Research/config.yaml>) so you can
-change the default model and experiment settings in one place.
-
-The main field for model switching is:
-
-```yaml
-model_selector: lr
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
-Change it to:
+Then validate the repository:
 
-```yaml
-model_selector: catboost
+```powershell
+python scripts/check_setup.py --dataset homecredit
+python scripts/check_setup.py --dataset lendingclub
 ```
 
-or:
+## Data Preparation
 
-```yaml
-model_selector: rf
+Prepare Home Credit:
+
+```powershell
+python scripts/prepare_homecredit.py
 ```
 
-You can also edit model-specific parameters under:
+Prepare LendingClub:
 
-```yaml
-model_params:
-  lr: ...
-  rf: ...
-  catboost: ...
+```powershell
+python scripts/prepare_lendingclub.py
 ```
 
-All scripts read `config.yaml` by default. You can also pass a custom file:
+Expected raw LendingClub file:
+- `data/lendingclub/raw/accepted_2007_to_2018Q4.csv`
 
-```bash
-python scripts/run_statistical_comparison.py --config my_config.yaml
+Expected processed LendingClub file after preparation:
+- `data/lendingclub/processed/application_train.csv`
+
+LendingClub preparation also writes audit artifacts under `data/lendingclub/metadata/`:
+- `target_definition.md`
+- `leakage_columns.yaml`
+- `label_distribution.csv`
+- `issue_date_target_distribution.csv`
+
+## Main Commands
+
+Single experiment:
+
+```powershell
+python scripts/run_single.py --dataset homecredit --model lr --selector mrmr
+python scripts/run_single.py --dataset homecredit --model catboost --selector llm_then_mrmr
+python scripts/run_single.py --dataset lendingclub --model lr --selector mrmr
+python scripts/run_single.py --dataset lendingclub --model lr --selector llm_then_mrmr
 ```
 
-## Data Split
+Matrix dry-run:
 
-Experiments use the engineered descendant of
-`previous_application.DAYS_DECISION` as the temporal split column.
-
-Default windows:
-
-- `DEV`: `-600 <= recent_decision < -240`
-- `OOT`: `-240 <= recent_decision <= 0`
-- rows older than `-600` are dropped
-
-The split column is resolved from the engineered feature set using the first
-available match from:
-
-- `recent_decision`
-- `PREV_recent_decision_MAX`
-- `DAYS_DECISION`
-
-## LLM Selector Rules
-
-The LLM selector is treated as a domain-level selector, not a row-level model.
-It is meant to act like a credit-risk expert reviewing a variable pack rather
-than a model consuming raw rows directly.
-
-Inside each fold, on the training slice only, the LLM pipeline does:
-
-1. `95%` missing-rate filter
-2. IV filter
-3. metadata build
-4. LLM feature selection
-5. model fit
-
-The LLM only receives summarized metadata, not raw training rows.
-The prompt is intentionally domain-aware and stability-aware: it asks the model
-to prefer interpretable, broad-coverage, operationally stable credit-risk
-signals over brittle short-term proxies.
-
-Practically, the selector is framed as an expert-style metadata review:
-
-- no row-level training records are shown
-- the model reviews feature definitions and summary profiles
-- the ranking should favor stable out-of-time usefulness, not just apparent
-  short-term predictive strength
-
-Metadata includes values such as:
-
-- `dtype`
-- `non_null_count`
-- `missing_rate`
-- `mean`
-- `min`
-- `max`
-- `std`
-- `var`
-- `p05`
-- `p25`
-- `p50`
-- `p75`
-- `p95`
-- `unique_count` for non-numeric fields
-
-The lightweight LLM audit response can also include:
-
-- `reasoning_summary`
-- `selection_principles`
-
-## Experiment Entry Points
-
-### Part 1: Statistical Baselines
-
-Compares statistical selectors such as `mrmr`, `boruta`, and `pca`.
-
-```bash
-python scripts/run_statistical_comparison.py
+```powershell
+python scripts/run_matrix.py --dataset homecredit --dry-run
+python scripts/run_matrix.py --dataset lendingclub --dry-run
 ```
 
-To switch model just for one run:
+Full matrix:
 
-```bash
-python scripts/run_statistical_comparison.py --model-selector catboost
+```powershell
+python scripts/run_matrix.py --dataset homecredit
+python scripts/run_matrix.py --dataset lendingclub
 ```
 
-Useful options:
+Convenience wrapper:
 
-```bash
-python scripts/run_statistical_comparison.py ^
-  --selectors mrmr boruta pca ^
-  --model-selector lr ^
-  --n-splits 5 ^
-  --dev-start-day -600 ^
-  --oot-start-day -240 ^
-  --oot-end-day 0
+```powershell
+python run_experiment.py --dataset homecredit
+python run_experiment.py --dataset lendingclub
+python run_experiment.py --dataset all
 ```
 
-### Part 2: LLM vs Statistical
+Aggregation:
 
-Runs the LLM selector and compares it against one or more statistical baselines.
-Outputs include performance summaries and feature-overlap tables.
-
-```bash
-python scripts/run_llm_vs_statistical.py
+```powershell
+python scripts/aggregate_results.py --dataset homecredit
+python scripts/aggregate_results.py --dataset lendingclub
 ```
 
-To switch model just for one run:
+Plots:
 
-```bash
-python scripts/run_llm_vs_statistical.py --model-selector catboost
+```powershell
+python scripts/make_plots.py --dataset homecredit
+python scripts/make_plots.py --dataset lendingclub
 ```
 
-Useful options:
+Run both datasets in sequence:
 
-```bash
-python scripts/run_llm_vs_statistical.py ^
-  --stat-selectors mrmr boruta ^
-  --model-selector lr ^
-  --llm-model gpt-4.1-mini ^
-  --llm-max-features 40 ^
-  --n-splits 5
+```powershell
+foreach ($ds in @('homecredit','lendingclub')) {
+  python scripts/run_matrix.py --dataset $ds
+  python scripts/aggregate_results.py --dataset $ds
+  python scripts/make_plots.py --dataset $ds
+}
 ```
 
-### Part 3: Hybrid
+## Expected Results Layout
 
-Runs a hybrid selector where the LLM narrows the raw engineered features and a
-statistical selector performs the downstream refinement.
+Each dataset result root is expected to keep:
+- `matrix_runs.csv`
+- `final_comparison_table.csv`
+- `paired_fold_comparisons.csv`
+- `llm_call_summary.csv`
+- `feature_stability_table.csv`
+- `feature_drift_table.csv`
+- `semantic_coverage_table.csv`
+- `plot_reports/`
+- `runs/`
 
-```bash
-python scripts/run_hybrid_comparison.py
-```
-
-To switch model just for one run:
-
-```bash
-python scripts/run_hybrid_comparison.py --model-selector catboost
-```
-
-Useful options:
-
-```bash
-python scripts/run_hybrid_comparison.py ^
-  --stat-selector mrmr ^
-  --model-selector lr ^
-  --llm-model gpt-4.1-mini ^
-  --llm-max-features 40 ^
-  --n-splits 5
-```
-
-## Single Experiment Entry Point
-
-Use the single-experiment wrapper when you want to run one selector/model
-configuration directly.
-
-Example:
-
-```bash
-python scripts/run_single_experiment.py --selector llm --model-selector lr
-```
-
-## Common CLI Options
-
-All experiment scripts support the shared temporal and data arguments:
-
-```bash
---config config.yaml
---data-dir data/inputs
---description-path data/HomeCredit_columns_description.csv
---model-selector lr
---n-splits 5
---dev-start-day -600
---oot-start-day -240
---oot-end-day 0
---cv-gap-groups 1
-```
-
-LLM-based scripts also support:
-
-```bash
---llm-model gpt-4.1-mini
---llm-max-features 40
---llm-ranking-budget 40
---llm-cache-dir outputs/llm_selector_cache
-```
-
-The full matrix uses a shared fold-local LLM top-40 ranking cache. LR consumes
-the top 20 ranked features, while CatBoost consumes the top 40. CV fold rankings
-are created from each fold's training subset only; the final DEV ranking is used
-only for final OOT evaluation.
-
-You can inspect any CLI surface with:
-
-```bash
-python scripts/run_statistical_comparison.py --help
-python scripts/run_llm_vs_statistical.py --help
-python scripts/run_hybrid_comparison.py --help
-python scripts/run_single_experiment.py --help
-```
-
-## Output Layout
-
-`main.py` uses stable, resumable folders under `results/`:
-
-- `results/lr/statistical/<run_id>/`
-- `results/lr/llm/<run_id>/`
-- `results/lr/hybrid_mrmr/<run_id>/`
-- `results/lr/hybrid_boruta/<run_id>/`
-- `results/catboost/statistical/<run_id>/`
-- `results/catboost/llm/<run_id>/`
-- `results/catboost/hybrid_mrmr/<run_id>/`
-- `results/catboost/hybrid_boruta/<run_id>/`
-
-Typical contents:
-
-- `run_manifest.json`
-- `run.log`
-- `leakage_report.json`
-- `data_split_manifest.json`
+Each run folder under `results/<dataset>/runs/<run_id>/` is expected to keep:
 - `features/`
 - `models/`
 - `results/`
+- `llm_responses/`
+- `feature_rankings/`
+- `selected_feature_sets/`
 
-Each experiment directory now keeps only the final research artifacts by
-default:
+Cross-dataset outputs belong under `results/cross_dataset/`.
 
-- `features/final_selected_features.csv`
-- `features/fold_selected_features.csv`
-- `features/selection_frequency.csv`
-- `features/feature_stability_metrics.csv`
-- `features/llm_rankings_summary.csv` for LLM/hybrid runs
-- `features/llm_hybrid_trace.csv` for hybrid runs
-- `models/final_model.model`
-- `models/final_preprocessor.pkl`
-- `models/final_model_metadata.json`
-- `results/experiment_summary.csv`
-- `results/cv_results.csv`
-- `results/oot_test_results.csv`
-- `results/oot_predictions.csv`
-- `results/selected_feature_psi.csv`
-- `results/model_score_psi.csv`
-- `results/credit_risk_utility.csv`
-- `results/runtime_summary.csv`
+## Research Metrics Preserved
 
-## Separate Comparison Plot Tool
+The framework preserves or supports:
+- OOT AUC
+- OOT Gini
+- OOT KS
+- Lift@10
+- selected-feature PSI
+- model-score PSI
+- Nogueira stability
+- pairwise Jaccard stability
+- semantic coverage by group
+- redundancy analysis
+- runtime summaries
+- LLM call, token, and cache summaries
 
-Use [plots.py](</d:/python projects/Research/plots.py>) to
-build comparison plots from finished experiment folders. This is separate from the
-training pipeline and is meant for reporting and stability analysis.
+## LLM Reproducibility
 
-It can generate plots such as:
+Reusable LLM artifacts:
+- `artifacts/llm_cache/`
+- `artifacts/prompts/llm_screening/`
 
-- `oot_performance_comparison.png`
-- `stability_comparison.png`
-- `performance_vs_stability.png`
-- `feature_count_vs_gini.png`
-- `selected_feature_psi_comparison.png`
-- `model_score_psi_comparison.png`
-- `lift_at_10_comparison.png`
-- `monthly_gini_trend.png`
-- `monthly_psi_trend.png`
-- `monthly_lift_trend.png`
+Per-run LLM-related artifacts include:
+- prompt text or prompt-linked output
+- prompt hash
+- metadata signature or metadata hash
+- raw LLM response payload when available
+- parsed ranked or selected features
+- final selected feature sets
 
-You can compare specific experiment folders directly:
+This is designed so the LLM stage is inspectable and repeatable across folds, methods, and datasets.
 
-```bash
-python plots.py ^
-  --experiment "lr_mrmr=outputs/statistical_comparison/run_a/experiments/lr_mrmr_..." ^
-  --experiment "catboost_mrmr=outputs/statistical_comparison/run_b/experiments/catboost_mrmr_..." ^
-  --output-dir outputs/plot_reports/lr_vs_catboost_mrmr
-```
+## Methodological Notes
 
-Or point it at whole run folders:
+Important interpretation rules:
+- the LLM is a first-stage screening helper
+- LR and CatBoost are evaluation vehicles only
+- Home Credit and LendingClub should follow the same core experiment protocol
+- leakage policy is mandatory, especially for LendingClub
+- behavior should not be changed silently across refactors
 
-```bash
-python plots.py ^
-  --run-dir outputs/statistical_comparison/run_statistical_comparison_2026-04-24_14-52-16 ^
-  --output-dir outputs/plot_reports/statistical_run_plots
-```
+For the paper, the safest framing is:
+- LLM metadata screening is compared with statistical selectors and hybrid selectors
+- Home Credit is the main benchmark
+- LendingClub is external validation
+- the claim is about feature-selection utility, not deployment readiness
 
-The script also writes:
+## Documentation
 
-- `monthly_metric_table.csv`
-- `oot_metric_table.csv`
-- `stability_metric_table.csv`
+Project documentation is organized under `docs/`:
+- `docs/project_structure.md`
+- `docs/reproducibility.md`
+- `docs/leakage_policy.md`
+- `docs/experiment_protocol.md`
+- `docs/llm_prompt_protocol.md`
+- `docs/dataset_notes/homecredit.md`
+- `docs/dataset_notes/lendingclub.md`
 
-## Full Matrix Run
+Generated research summaries belong under `reports/`.
 
-Use [main.py](</d:/python projects/Research/main.py>) when you want the whole research matrix to run overnight.
+## Current Defaults
 
-```bash
-python main.py
-```
+Home Credit remains the default dataset in compatibility entrypoints.
 
-That automatically runs:
-
-- LR + `mrmr`, `boruta`, `pca`
-- LR + LLM
-- LR + `LLM -> mRMR`
-- LR + `LLM -> Boruta`
-- CatBoost + `mrmr`, `boruta`, `pca`
-- CatBoost + LLM
-- CatBoost + `LLM -> mRMR`
-- CatBoost + `LLM -> Boruta`
-
-Completed entries are reused automatically. To rerun completed entries:
-
-```bash
-python main.py --force
-```
-
-## Environment
-
-Recommended setup:
-
-```bash
-uv sync
-```
-
-If you added the latest changes to an existing environment, run `uv sync` again so
-plot dependencies such as `matplotlib` are installed.
-
-or, if you are using the existing virtual environment:
-
-```bash
-.venv\\Scripts\\activate
-```
-
-The LLM experiments require an OpenAI API key in `.env`:
-
-```bash
-OPENAI_API_KEY=your_key_here
-```
-
-## Reliability Guardrails
-
-- Day-based sentinel values such as `365243` are converted to missing values at load time.
-- Temporal CV uses grouped time splits so the same time group cannot land in both train and validation.
-- Threshold-based metrics use thresholds learned on training probabilities before being applied to validation or OOT data.
-- LLM metadata is built from fold-local training data only.
-- LLM ranking cache entries are shared through `results/_llm_rankings_cache/`, while each run writes its own `features/llm_rankings_summary.csv` audit copy.
-- Numeric preprocessing now forces finite outputs so downstream selectors such as Boruta receive model-ready data.
-
-## Notes
-
-- `boruta` can be slow on the full engineered dataset.
-- `pca` is useful for performance comparison, but it is not directly comparable to subset selectors for raw-feature overlap.
-- Full end-to-end experiment runs can take a while on the full Home Credit feature set.
-
-## Tests And Checks
-
-Helpful checks:
-
-```bash
-python -m py_compile main.py plots.py scripts/run_all_experiments.py scripts/run_statistical_comparison.py scripts/run_llm_vs_statistical.py scripts/run_hybrid_comparison.py scripts/run_single_experiment.py
-python main.py --help
-python plots.py --help
-python scripts/run_all_experiments.py --help
-python scripts/run_statistical_comparison.py --help
-python scripts/run_llm_vs_statistical.py --help
-python scripts/run_hybrid_comparison.py --help
-python scripts/run_single_experiment.py --help
-```
-
-If `pytest` is available cleanly in your environment:
-
-```bash
-pytest
-```
+The refactor was intentionally conservative:
+- core experiment behavior was preserved where possible
+- legacy import paths were kept as shims
+- the canonical implementation is the `credit_risk_fs` package under `src/`

@@ -7,14 +7,18 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from sklearn.metrics import roc_auc_score, roc_curve
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+SRC_ROOT = PROJECT_ROOT / "src"
+for candidate in [PROJECT_ROOT, SRC_ROOT]:
+    if str(candidate) not in sys.path:
+        sys.path.insert(0, str(candidate))
+
+from credit_risk_fs.evaluation.semantic_coverage import semantic_coverage_frame  # noqa: E402
 
 
 FINAL_COLUMNS = [
+    "dataset_name",
     "model",
     "selector",
     "experiment_type",
@@ -66,6 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Aggregate completed matrix runs into final comparison tables.",
     )
     parser.add_argument("results_dir", nargs="?", default="results")
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], default=None)
     parser.add_argument(
         "--output",
         default=None,
@@ -85,12 +90,19 @@ def _allowed_run_dirs(results_root: Path) -> set[Path] | None:
     matrix_df = pd.read_csv(matrix_path)
     if "output_folder" not in matrix_df.columns:
         return None
-    return {
-        (results_root.parent / str(path)).resolve()
-        if not Path(str(path)).is_absolute()
-        else Path(str(path)).resolve()
-        for path in matrix_df["output_folder"].dropna().tolist()
-    }
+    allowed_dirs: set[Path] = set()
+    for value in matrix_df["output_folder"].dropna().tolist():
+        raw_path = Path(str(value))
+        if raw_path.is_absolute():
+            allowed_dirs.add(raw_path.resolve())
+            continue
+
+        # Matrix rows may be written relative to either the project root
+        # (`results/homecredit/...`) or the active results root (`lr/...`).
+        bases = [PROJECT_ROOT, Path.cwd(), results_root, *results_root.parents]
+        for base in bases:
+            allowed_dirs.add((base / raw_path).resolve())
+    return allowed_dirs
 
 
 def _numeric_folds(path: Path) -> pd.DataFrame:
@@ -124,50 +136,6 @@ def _runtime_seconds(run_dir: Path, summary: dict) -> float:
     return float(value) if value is not None and pd.notna(value) else math.nan
 
 
-def _ks_score(y_true, y_prob) -> float:
-    fpr, tpr, _ = roc_curve(y_true, y_prob)
-    return float((tpr - fpr).max())
-
-
-def _bootstrap_oot_ci(run_dir: Path, n_bootstrap: int = 500, random_seed: int = 42) -> dict:
-    predictions_path = run_dir / "results" / "oot_predictions.csv"
-    if not predictions_path.exists():
-        return {}
-
-    predictions = pd.read_csv(predictions_path)
-    if not {"y_true", "y_pred_proba"}.issubset(predictions.columns):
-        return {}
-
-    y_true = predictions["y_true"].to_numpy()
-    y_prob = predictions["y_pred_proba"].to_numpy()
-    if len(y_true) < 2:
-        return {}
-
-    import numpy as np
-
-    rng = np.random.default_rng(random_seed)
-    gini_values = []
-    ks_values = []
-    for _ in range(n_bootstrap):
-        idx = rng.integers(0, len(y_true), len(y_true))
-        y_sample = y_true[idx]
-        if len(set(y_sample.tolist())) < 2:
-            continue
-        prob_sample = y_prob[idx]
-        gini_values.append(2 * roc_auc_score(y_sample, prob_sample) - 1)
-        ks_values.append(_ks_score(y_sample, prob_sample))
-
-    if not gini_values or not ks_values:
-        return {}
-
-    return {
-        "OOT Gini CI lower": float(np.percentile(gini_values, 2.5)),
-        "OOT Gini CI upper": float(np.percentile(gini_values, 97.5)),
-        "OOT KS CI lower": float(np.percentile(ks_values, 2.5)),
-        "OOT KS CI upper": float(np.percentile(ks_values, 97.5)),
-    }
-
-
 def _summary_for_run(run_dir: Path, manifest: dict) -> dict | None:
     summary_path = run_dir / "results" / "experiment_summary.csv"
     if summary_path.exists():
@@ -197,6 +165,7 @@ def _completed_run_rows(results_root: Path) -> list[dict]:
 
         selected_count = summary.get("oot_selected_feature_count", summary.get("final_selected_feature_count"))
         row = {
+            "dataset_name": manifest.get("config", {}).get("dataset_name", results_root.name),
             "run_id": manifest.get("run_id"),
             "model": manifest.get("model") or summary.get("model_name"),
             "selector": manifest.get("selector") or summary.get("selector_name"),
@@ -248,9 +217,80 @@ def _completed_run_rows(results_root: Path) -> list[dict]:
             "lift_at_20": summary.get("oot_lift_at_20"),
             "bad_rate_capture_at_20": summary.get("oot_bad_rate_capture_at_20"),
         }
-        row.update(_bootstrap_oot_ci(run_dir))
         rows.append(row)
     return rows
+
+
+def _semantic_coverage_rows(rows: list[dict]) -> pd.DataFrame:
+    coverage_rows: list[dict[str, object]] = []
+    for row in rows:
+        run_dir = Path(str(row["output_folder"]))
+        selected_path = run_dir / "features" / "final_selected_features.csv"
+        if not selected_path.exists():
+            continue
+        selected_df = pd.read_csv(selected_path)
+        feature_col = "feature_name" if "feature_name" in selected_df.columns else "feature"
+        if feature_col not in selected_df.columns:
+            continue
+        coverage = semantic_coverage_frame(selected_df[feature_col].dropna().astype(str).tolist())
+        for _, coverage_row in coverage.iterrows():
+            coverage_rows.append(
+                {
+                    "dataset_name": row.get("dataset_name"),
+                    "run_id": row.get("run_id"),
+                    "model": row.get("model"),
+                    "selector": row.get("selector"),
+                    "experiment_type": row.get("experiment_type"),
+                    "semantic_group": coverage_row["semantic_group"],
+                    "feature_count": coverage_row["feature_count"],
+                    "feature_ratio": coverage_row["feature_ratio"],
+                }
+            )
+    return pd.DataFrame(coverage_rows)
+
+
+def _write_dataset_metric_tables(comparison_df: pd.DataFrame, rows: list[dict], results_root: Path) -> None:
+    stability_columns = [
+        "dataset_name",
+        "model",
+        "selector",
+        "experiment_type",
+        "nogueira_stability",
+        "kuncheva_stability",
+        "mean_pairwise_jaccard",
+        "semantic_group_jaccard",
+        "stable_feature_count_80",
+        "stable_feature_ratio_80",
+        "stable_semantic_group_count_80",
+        "semantic_group_stable_ratio_80",
+        "spearman_rank_stability_mean",
+        "kendall_rank_stability_mean",
+        "rbo_rank_stability_mean",
+    ]
+    drift_columns = [
+        "dataset_name",
+        "model",
+        "selector",
+        "experiment_type",
+        "selected_feature_psi_mean",
+        "selected_feature_psi_max",
+        "selected_feature_psi_median",
+        "selected_feature_psi_high_drift_ratio",
+        "selected_feature_psi_moderate_or_high_drift_ratio",
+        "model_score_psi",
+    ]
+    comparison_df.reindex(columns=stability_columns).to_csv(
+        results_root / "feature_stability_table.csv",
+        index=False,
+    )
+    comparison_df.reindex(columns=drift_columns).to_csv(
+        results_root / "feature_drift_table.csv",
+        index=False,
+    )
+    _semantic_coverage_rows(rows).to_csv(
+        results_root / "semantic_coverage_table.csv",
+        index=False,
+    )
 
 
 def _manifest_records(results_root: Path) -> list[tuple[Path, dict]]:
@@ -422,7 +462,11 @@ def _paired_fold_comparisons(rows: list[dict], results_root: Path) -> pd.DataFra
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    results_root = Path(args.results_dir)
+    results_root = (
+        PROJECT_ROOT / "results" / args.dataset
+        if args.dataset
+        else Path(args.results_dir)
+    )
     output_path = Path(args.output) if args.output else results_root / "final_comparison_table.csv"
 
     rows = _completed_run_rows(results_root)
@@ -443,6 +487,7 @@ def main(argv: list[str] | None = None) -> int:
     paired_df.to_csv(paired_path, index=False)
     llm_summary_path = _write_llm_call_summary(results_root)
     failed_runs_path = _write_failed_runs(results_root)
+    _write_dataset_metric_tables(comparison_df, rows, results_root)
 
     print(f"Final comparison table: {output_path.resolve()}")
     print(f"Paired fold comparisons: {paired_path.resolve()}")

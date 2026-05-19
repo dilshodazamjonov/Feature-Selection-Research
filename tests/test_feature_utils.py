@@ -1,7 +1,7 @@
 import pandas as pd
 
-from Models.logistic_regression_model import LogisticRegressionModel
-from evaluation.feature_utils import _extract_feature_importance
+from credit_risk_fs.evaluation._feature_utils import _extract_feature_importance
+from credit_risk_fs.models.logistic_regression import LogisticRegressionModel
 
 
 def test_extract_feature_importance_unwraps_model_wrapper():

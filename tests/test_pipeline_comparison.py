@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from pipelines.comparison import (
+from credit_risk_fs.experiments.compare import (
     build_experiment_summary_row,
     build_feature_overlap_frame,
     compare_experiment_pair,

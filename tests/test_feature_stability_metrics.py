@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from evaluation.feature_stability import (
+from credit_risk_fs.evaluation.stability import (
     kuncheva_stability,
     mean_pairwise_jaccard,
     nogueira_stability,
@@ -9,8 +9,8 @@ from evaluation.feature_stability import (
     selection_frequency_frame,
     write_feature_stability_artifacts,
 )
-from evaluation.stability_scores import calculate_psi, jaccard_similarity
-from pipelines.common import credit_risk_utility
+from credit_risk_fs.evaluation.drift import calculate_psi, jaccard_similarity
+from credit_risk_fs.pipelines.common import credit_risk_utility
 
 
 def test_nogueira_stability_identical_sets_is_one():

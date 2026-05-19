@@ -1,0 +1,15 @@
+dataset_name: lendingclub
+data_dir: data/lendingclub/processed
+description_path: data/lendingclub/metadata/columns_description.csv
+results_dir: results/lendingclub
+dev_start_day: -1795
+oot_start_day: -1065
+oot_end_day: -730
+excluded_feature_columns:
+  - TARGET
+  - recent_decision
+  - issue_d
+  - loan_status
+time_col: recent_decision
+preprocessor_kwargs:
+  cat_min_frequency: 50

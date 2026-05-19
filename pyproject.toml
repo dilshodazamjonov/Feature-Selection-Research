@@ -1,7 +1,7 @@
 [project]
-name = "research"
+name = "credit-feature-selection-research"
 version = "0.1.0"
-description = "Add your description here"
+description = "Research framework for credit-risk feature selection with LLM screening and hybrid selectors."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -17,4 +17,5 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "seaborn>=0.13.2",
     "shap>=0.51.0",
+    "tqdm>=4.67.1",
 ]

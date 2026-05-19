@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
 
-from feature_selection.hybrid import LLMThenStatSelector, StableCoreLLMFillSelector
+from credit_risk_fs.selectors.llm_then_stat import LLMThenStatSelector
+from credit_risk_fs.selectors.stable_core_llm_fill import StableCoreLLMFillSelector
 
 
 class FakeLLMSelector:

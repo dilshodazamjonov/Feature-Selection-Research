@@ -3,17 +3,16 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import sys
+
 import pandas as pd
-from evaluation.plotting import (
+
+import _legacy_shim  # noqa: F401
+
+from credit_risk_fs.evaluation.plotting import (
     generate_experiment_plots,
     generate_matrix_comparison_plots,
     load_plot_data,
 )
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def _experiment_arg(value: str) -> tuple[str, str | None]:

@@ -4,7 +4,8 @@ from uuid import uuid4
 
 import pandas as pd
 
-from feature_selection.llm_selector import LLMSelector
+import credit_risk_fs.selectors.llm_screening as llm_screening_module
+from credit_risk_fs.selectors.llm_screening import LLMSelector
 
 
 def test_llm_selector_cache_is_keyed_by_training_signature():
@@ -258,3 +259,53 @@ def test_catboost_llm_only_truncates_broad_ranking_to_top40(tmp_path):
 
     assert len(selector.ranked_features_) == 100
     assert selector.selected_features_ == [f"f{i}" for i in range(40)]
+
+
+def test_llm_selector_sanitizes_categorical_columns_before_iv_filter(tmp_path, monkeypatch):
+    description_path = tmp_path / "descriptions.csv"
+    description_path.write_text(
+        "row,description,table\npurpose,Purpose,application_train\nterm,Term,application_train\namount,Amount,application_train\n",
+        encoding="utf-8",
+    )
+
+    seen = {"fit_called": False}
+
+    class _DummyIVFilter:
+        def __init__(self, *args, **kwargs):
+            self.selected_features_ = None
+
+        def fit_transform(self, X, y):
+            seen["fit_called"] = True
+            assert "category" not in {str(dtype) for dtype in X.dtypes}
+            self.selected_features_ = X.columns.tolist()
+            return X
+
+    monkeypatch.setattr(llm_screening_module, "IVWOEFilter", _DummyIVFilter)
+
+    X = pd.DataFrame(
+        {
+            "purpose": pd.Series(pd.Categorical(["card", None, "home"])),
+            "term": pd.Series(pd.Categorical(["36m", "60m", None])),
+            "amount": [1000.0, 2000.0, 1500.0],
+        }
+    )
+    y = pd.Series([0, 1, 0])
+
+    selector = LLMSelector(
+        description_csv_path=str(description_path),
+        cache_dir=str(tmp_path / "cache"),
+        ranking_budget=2,
+        feature_budget=2,
+        iv_filter_kwargs={"min_iv": 0.01},
+    )
+    selector._call_llm = lambda prompt: {
+        "selected_features": ["amount", "purpose"],
+        "reasoning_summary": "ranked",
+        "selection_principles": ["stability"],
+        "raw_response": json.dumps({"selected_features": ["amount", "purpose"]}),
+    }
+
+    selector.fit(X, y)
+
+    assert seen["fit_called"] is True
+    assert selector.selected_features_ == ["amount", "purpose"]

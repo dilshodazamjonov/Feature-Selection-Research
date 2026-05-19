@@ -3,17 +3,17 @@ import json
 import joblib
 import pandas as pd
 
-from experiments.config import compute_config_hash, load_project_config
-from experiments.config import apply_feature_budget_to_selector_kwargs
-from experiments.matrix import HYBRID_VARIANTS, MODELS, STAT_SELECTORS, iter_matrix
-from experiments.tracking import is_completed_run, mark_completed
-from pipelines.common import (
+from credit_risk_fs.experiments.config import apply_feature_budget_to_selector_kwargs
+from credit_risk_fs.experiments.config import compute_config_hash, load_project_config
+from credit_risk_fs.experiments.matrix import HYBRID_VARIANTS, MODELS, STAT_SELECTORS, iter_matrix
+from credit_risk_fs.experiments.tracking import is_completed_run, mark_completed
+from credit_risk_fs.models._cv_utils import GroupedTimeSeriesSplit
+from credit_risk_fs.pipelines.common import (
     ExperimentConfig,
     PreparedExperimentData,
     drop_excluded_feature_columns,
     run_experiment,
 )
-from training.cv_utils import GroupedTimeSeriesSplit
 
 
 class SpySelector:

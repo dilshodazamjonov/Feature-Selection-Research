@@ -1,0 +1,6 @@
+llm:
+  enabled: true
+  shared_ranking_enabled: true
+  prompt_version: stability_expert_v3
+  model: gpt-4.1-mini
+  max_features: 100
