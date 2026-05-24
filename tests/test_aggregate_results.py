@@ -10,6 +10,7 @@ def test_aggregate_results_includes_new_metric_columns(tmp_path):
     run_dir = tmp_path / "results" / "lr" / "llm" / "run_a"
     (run_dir / "results").mkdir(parents=True)
     (run_dir / "features").mkdir(parents=True)
+    (run_dir / "llm_responses" / "final_dev" / "llm").mkdir(parents=True)
 
     manifest = {
         "status": "completed",
@@ -43,6 +44,66 @@ def test_aggregate_results_includes_new_metric_columns(tmp_path):
         run_dir / "results" / "cv_results.csv",
         index=False,
     )
+    pd.DataFrame(
+        [
+            {
+                "scope": "final_dev",
+                "fold_id": "",
+                "rank": 1,
+                "feature_name": "feature_a",
+                "llm_reason": "Stable metadata signal.",
+                "metadata_signature": "sig_a",
+                "prompt_version": "stability_expert_v3",
+                "prompt_hash": "prompt_a",
+                "config_hash": "abc",
+                "shared_pool_size": 40,
+                "feature_budget": 20,
+                "cache_hit": False,
+                "cache_key_hash": "cache_hash_a",
+                "cache_file_name": "final_dev_cache.json",
+                "request_model": "gpt-4.1-mini",
+                "response_model": "gpt-4.1-mini-2025-04-14",
+                "response_id": "resp_a",
+                "prompt_tokens": 100,
+                "completion_tokens": 20,
+                "total_tokens": 120,
+            }
+        ]
+    ).to_csv(run_dir / "features" / "llm_rankings_summary.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "feature_name": "feature_a",
+                "selector": "llm",
+                "semantic_group": "capacity",
+                "rank": 1,
+            }
+        ]
+    ).to_csv(run_dir / "features" / "final_selected_features.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "feature_name": "feature_a",
+                "selection_count": 5,
+                "total_folds": 5,
+                "selection_frequency": 1.0,
+                "mean_rank_if_available": 1.0,
+            }
+        ]
+    ).to_csv(run_dir / "features" / "selection_frequency.csv", index=False)
+    pd.DataFrame(
+        [
+            {
+                "name": "feature_a",
+                "description": "Application capacity feature",
+                "table": "application_train",
+                "semantic_group": "capacity",
+                "missing_rate": 0.1,
+                "non_null_count": 90,
+                "dtype": "float64",
+            }
+        ]
+    ).to_csv(run_dir / "llm_responses" / "final_dev" / "llm" / "feature_metadata.csv", index=False)
 
     exit_code = main([str(tmp_path / "results")])
 
@@ -51,7 +112,14 @@ def test_aggregate_results_includes_new_metric_columns(tmp_path):
     assert list(output.columns) == FINAL_COLUMNS
     assert output.loc[0, "nogueira_stability"] == 0.8
     assert output.loc[0, "llm_shared_ranking_enabled"]
-    assert (tmp_path / "results" / "llm_call_summary.csv").exists()
+    llm_summary = pd.read_csv(tmp_path / "results" / "llm_call_summary.csv")
+    assert "llm_cache_key_hashes" in llm_summary.columns
+    assert "llm_prompt_versions" in llm_summary.columns
+    assert llm_summary.loc[0, "llm_cache_key_hashes"] == "cache_hash_a"
+    evidence = pd.read_csv(tmp_path / "results" / "feature_level_evidence.csv")
+    assert "selected_in_llm_run_count" in evidence.columns
+    assert evidence.loc[0, "feature_name"] == "feature_a"
+    assert evidence.loc[0, "selected_in_llm_run_count"] == 1
     assert (tmp_path / "results" / "failed_runs.csv").exists()
 
 

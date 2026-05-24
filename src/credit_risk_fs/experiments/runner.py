@@ -40,6 +40,34 @@ from credit_risk_fs.utils.logging import run_log_context, setup_logging
 logger = setup_logging("experiment_matrix", level=logging.INFO)
 
 
+LLM_SUMMARY_COLUMNS = [
+    "run_id",
+    "model",
+    "selector",
+    "experiment_type",
+    "status",
+    "llm_shared_ranking_enabled",
+    "llm_ranking_budget",
+    "llm_calls_actually_made",
+    "llm_cache_hits",
+    "llm_cache_key",
+    "llm_metadata_signatures",
+    "llm_cache_key_hashes",
+    "llm_prompt_versions",
+    "llm_prompt_hashes",
+    "llm_request_models",
+    "llm_response_models",
+    "llm_response_ids",
+    "llm_cache_file_names",
+    "llm_prompt_tokens",
+    "llm_completion_tokens",
+    "llm_total_tokens",
+    "runs_sharing_metadata_signatures",
+    "runs_sharing_cache_key_hashes",
+    "output_folder",
+]
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -283,29 +311,78 @@ def _write_matrix_status(output_root: Path, rows: list[dict[str, Any]]) -> None:
         pd.DataFrame(rows).to_csv(output_root / "matrix_runs.csv", index=False)
 
 
-def _llm_ranking_stats(run_dir: Path) -> dict[str, Any]:
+def _unique_sorted_strings(values: object) -> list[str]:
+    if values is None:
+        return []
+    if isinstance(values, str):
+        parts = values.split(";")
+    elif isinstance(values, (list, tuple, set)):
+        parts = list(values)
+    else:
+        parts = [values]
+    normalized = {
+        str(value).strip()
+        for value in parts
+        if value is not None and not pd.isna(value) and str(value).strip()
+    }
+    return sorted(normalized)
+
+
+def _join_unique_strings(values: object) -> str:
+    return ";".join(_unique_sorted_strings(values))
+
+
+def _llm_ranking_stats(run_dir: Path, manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     summary_path = run_dir / "features" / "llm_rankings_summary.csv"
-    cache_hits = 0
-    calls_made = 0
-    signatures: list[str] = []
-    prompt_tokens = 0
-    completion_tokens = 0
-    total_tokens = 0
+    defaults = {
+        "llm_cache_key": None,
+        "llm_metadata_signatures": [],
+        "llm_cache_key_hashes": [],
+        "llm_prompt_versions": [],
+        "llm_prompt_hashes": [],
+        "llm_request_models": [],
+        "llm_response_models": [],
+        "llm_response_ids": [],
+        "llm_cache_file_names": [],
+        "llm_calls_actually_made": 0,
+        "llm_cache_hits": 0,
+        "llm_prompt_tokens": 0,
+        "llm_completion_tokens": 0,
+        "llm_total_tokens": 0,
+    }
     if summary_path.exists():
         df = pd.read_csv(summary_path)
         if not df.empty:
-            if "metadata_signature" in df.columns:
-                signatures = [
-                    str(value)
-                    for value in df["metadata_signature"].dropna().drop_duplicates().tolist()
-                ]
+            stats = defaults.copy()
+            list_mappings = {
+                "llm_metadata_signatures": "metadata_signature",
+                "llm_cache_key_hashes": "cache_key_hash",
+                "llm_prompt_versions": "prompt_version",
+                "llm_prompt_hashes": "prompt_hash",
+                "llm_request_models": "request_model",
+                "llm_response_models": "response_model",
+                "llm_response_ids": "response_id",
+                "llm_cache_file_names": "cache_file_name",
+            }
+            for target_key, column in list_mappings.items():
+                if column in df.columns:
+                    stats[target_key] = _unique_sorted_strings(df[column].dropna().tolist())
+            metadata_signatures = stats["llm_metadata_signatures"]
+            stats["llm_cache_key"] = metadata_signatures[0] if metadata_signatures else None
             if "cache_hit" in df.columns:
-                scope_keys = ["scope", "fold_id", "metadata_signature"]
+                scope_keys = [
+                    "scope",
+                    "fold_id",
+                    "metadata_signature",
+                    "cache_key_hash",
+                    "cache_file_name",
+                    "response_id",
+                ]
                 available_keys = [key for key in scope_keys if key in df.columns]
                 call_df = df.drop_duplicates(subset=available_keys) if available_keys else df
                 cache_flags = call_df["cache_hit"].astype(str).str.lower().isin(["true", "1"])
-                cache_hits = int(cache_flags.sum())
-                calls_made = int((~cache_flags).sum())
+                stats["llm_cache_hits"] = int(cache_flags.sum())
+                stats["llm_calls_actually_made"] = int((~cache_flags).sum())
                 actual_call_df = call_df.loc[~cache_flags]
             else:
                 actual_call_df = df
@@ -318,19 +395,29 @@ def _llm_ranking_stats(run_dir: Path) -> dict[str, Any]:
                     continue
                 value = pd.to_numeric(actual_call_df[column], errors="coerce").fillna(0).sum()
                 if target == "prompt":
-                    prompt_tokens = int(value)
+                    stats["llm_prompt_tokens"] = int(value)
                 elif target == "completion":
-                    completion_tokens = int(value)
+                    stats["llm_completion_tokens"] = int(value)
                 else:
-                    total_tokens = int(value)
+                    stats["llm_total_tokens"] = int(value)
+            return stats
+    manifest = manifest or {}
     return {
-        "llm_cache_key": signatures[0] if signatures else None,
-        "llm_metadata_signatures": signatures,
-        "llm_calls_actually_made": calls_made,
-        "llm_cache_hits": cache_hits,
-        "llm_prompt_tokens": prompt_tokens,
-        "llm_completion_tokens": completion_tokens,
-        "llm_total_tokens": total_tokens,
+        **defaults,
+        "llm_cache_key": manifest.get("llm_cache_key"),
+        "llm_metadata_signatures": _unique_sorted_strings(manifest.get("llm_metadata_signatures")),
+        "llm_cache_key_hashes": _unique_sorted_strings(manifest.get("llm_cache_key_hashes")),
+        "llm_prompt_versions": _unique_sorted_strings(manifest.get("llm_prompt_versions")),
+        "llm_prompt_hashes": _unique_sorted_strings(manifest.get("llm_prompt_hashes")),
+        "llm_request_models": _unique_sorted_strings(manifest.get("llm_request_models")),
+        "llm_response_models": _unique_sorted_strings(manifest.get("llm_response_models")),
+        "llm_response_ids": _unique_sorted_strings(manifest.get("llm_response_ids")),
+        "llm_cache_file_names": _unique_sorted_strings(manifest.get("llm_cache_file_names")),
+        "llm_calls_actually_made": int(manifest.get("llm_calls_actually_made", 0) or 0),
+        "llm_cache_hits": int(manifest.get("llm_cache_hits", 0) or 0),
+        "llm_prompt_tokens": int(manifest.get("llm_prompt_tokens", 0) or 0),
+        "llm_completion_tokens": int(manifest.get("llm_completion_tokens", 0) or 0),
+        "llm_total_tokens": int(manifest.get("llm_total_tokens", 0) or 0),
     }
 
 
@@ -347,24 +434,6 @@ def _allowed_run_dirs_from_rows(output_root: Path, matrix_rows: list[dict[str, A
 
 
 def _write_llm_call_summary(output_root: Path, matrix_rows: list[dict[str, Any]] | None = None) -> None:
-    columns = [
-        "run_id",
-        "model",
-        "selector",
-        "experiment_type",
-        "status",
-        "llm_shared_ranking_enabled",
-        "llm_ranking_budget",
-        "llm_calls_actually_made",
-        "llm_cache_hits",
-        "llm_cache_key",
-        "llm_metadata_signatures",
-        "llm_prompt_tokens",
-        "llm_completion_tokens",
-        "llm_total_tokens",
-        "runs_sharing_metadata_signatures",
-        "output_folder",
-    ]
     records = []
     allowed_dirs = _allowed_run_dirs_from_rows(output_root, matrix_rows)
     for manifest_path in sorted(output_root.rglob("run_manifest.json")):
@@ -376,6 +445,7 @@ def _write_llm_call_summary(output_root: Path, matrix_rows: list[dict[str, Any]]
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        stats = _llm_ranking_stats(manifest_path.parent, manifest)
         records.append(
             {
                 "run_id": manifest.get("run_id"),
@@ -385,27 +455,42 @@ def _write_llm_call_summary(output_root: Path, matrix_rows: list[dict[str, Any]]
                 "status": manifest.get("status"),
                 "llm_shared_ranking_enabled": manifest.get("llm_shared_ranking_enabled"),
                 "llm_ranking_budget": manifest.get("llm_ranking_budget"),
-                "llm_calls_actually_made": manifest.get("llm_calls_actually_made", 0),
-                "llm_cache_hits": manifest.get("llm_cache_hits", 0),
-                "llm_cache_key": manifest.get("llm_cache_key"),
-                "llm_metadata_signatures": ";".join(manifest.get("llm_metadata_signatures", []) or []),
-                "llm_prompt_tokens": manifest.get("llm_prompt_tokens", 0),
-                "llm_completion_tokens": manifest.get("llm_completion_tokens", 0),
-                "llm_total_tokens": manifest.get("llm_total_tokens", 0),
+                "llm_calls_actually_made": stats["llm_calls_actually_made"],
+                "llm_cache_hits": stats["llm_cache_hits"],
+                "llm_cache_key": stats["llm_cache_key"],
+                "llm_metadata_signatures": _join_unique_strings(stats["llm_metadata_signatures"]),
+                "llm_cache_key_hashes": _join_unique_strings(stats["llm_cache_key_hashes"]),
+                "llm_prompt_versions": _join_unique_strings(stats["llm_prompt_versions"]),
+                "llm_prompt_hashes": _join_unique_strings(stats["llm_prompt_hashes"]),
+                "llm_request_models": _join_unique_strings(stats["llm_request_models"]),
+                "llm_response_models": _join_unique_strings(stats["llm_response_models"]),
+                "llm_response_ids": _join_unique_strings(stats["llm_response_ids"]),
+                "llm_cache_file_names": _join_unique_strings(stats["llm_cache_file_names"]),
+                "llm_prompt_tokens": stats["llm_prompt_tokens"],
+                "llm_completion_tokens": stats["llm_completion_tokens"],
+                "llm_total_tokens": stats["llm_total_tokens"],
                 "output_folder": str(manifest_path.parent),
             }
         )
     signature_to_runs: dict[str, list[str]] = {}
+    cache_key_hash_to_runs: dict[str, list[str]] = {}
     for row in records:
         for signature in str(row.get("llm_metadata_signatures") or "").split(";"):
             if signature:
                 signature_to_runs.setdefault(signature, []).append(str(row["run_id"]))
+        for cache_key_hash in str(row.get("llm_cache_key_hashes") or "").split(";"):
+            if cache_key_hash:
+                cache_key_hash_to_runs.setdefault(cache_key_hash, []).append(str(row["run_id"]))
     for row in records:
         sharing = set()
+        sharing_by_hash = set()
         for signature in str(row.get("llm_metadata_signatures") or "").split(";"):
             sharing.update(signature_to_runs.get(signature, []))
+        for cache_key_hash in str(row.get("llm_cache_key_hashes") or "").split(";"):
+            sharing_by_hash.update(cache_key_hash_to_runs.get(cache_key_hash, []))
         row["runs_sharing_metadata_signatures"] = ";".join(sorted(sharing))
-    pd.DataFrame(records, columns=columns).to_csv(output_root / "llm_call_summary.csv", index=False)
+        row["runs_sharing_cache_key_hashes"] = ";".join(sorted(sharing_by_hash))
+    pd.DataFrame(records, columns=LLM_SUMMARY_COLUMNS).to_csv(output_root / "llm_call_summary.csv", index=False)
 
 
 def _write_failed_runs(output_root: Path, matrix_rows: list[dict[str, Any]] | None = None) -> None:

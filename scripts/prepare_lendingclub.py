@@ -22,9 +22,11 @@ from credit_risk_fs.preprocessing.labeling import (  # noqa: E402
 )
 from credit_risk_fs.preprocessing.lendingclub import (  # noqa: E402
     LENDINGCLUB_DIRECT_LEAKAGE_COLUMNS,
+    LENDINGCLUB_IDENTIFIER_OR_TEXT_COLUMNS,
     LENDINGCLUB_POLICY_OR_POST_APPROVAL_COLUMNS,
     LENDINGCLUB_POST_OUTCOME_LEAKAGE_COLUMNS,
     LENDINGCLUB_TEXT_OR_LOW_SIGNAL_COLUMNS,
+    LENDINGCLUB_UNDERWRITING_POLICY_COLUMNS,
     prepare_lendingclub_application_frame,
 )
 
@@ -45,15 +47,8 @@ POST_OUTCOME_COLUMNS = [
     "last_fico_range_low",
     "last_fico_range_high",
 ]
-POLICY_LEAKAGE_COLUMNS = [
-    "grade",
-    "sub_grade",
-    "int_rate",
-    "installment",
-    "funded_amnt",
-    "funded_amnt_inv",
-]
-IDENTIFIER_OR_TEXT_COLUMNS = ["id", "member_id", "url", "desc", "emp_title", "zip_code"]
+POLICY_LEAKAGE_COLUMNS = list(LENDINGCLUB_UNDERWRITING_POLICY_COLUMNS)
+IDENTIFIER_OR_TEXT_COLUMNS = list(LENDINGCLUB_IDENTIFIER_OR_TEXT_COLUMNS)
 OUTCOME_DATE_COLUMNS = [
     "last_pymnt_d",
     "next_pymnt_d",

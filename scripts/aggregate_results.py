@@ -64,6 +64,84 @@ FINAL_COLUMNS = [
     "runtime_seconds",
 ]
 
+EXPECTED_SELECTORS = [
+    "mrmr",
+    "boruta",
+    "pca",
+    "domain_rule_baseline",
+    "llm",
+    "llm_then_mrmr",
+    "llm_then_boruta",
+    "stable_core_llm_fill",
+]
+
+BASELINE_SELECTORS = {"mrmr", "boruta", "pca", "domain_rule_baseline"}
+LLM_FAMILY_SELECTORS = {"llm", "llm_then_mrmr", "llm_then_boruta", "stable_core_llm_fill"}
+
+LLM_SUMMARY_COLUMNS = [
+    "run_id",
+    "model",
+    "selector",
+    "experiment_type",
+    "status",
+    "llm_shared_ranking_enabled",
+    "llm_ranking_budget",
+    "llm_calls_actually_made",
+    "llm_cache_hits",
+    "llm_cache_key",
+    "llm_metadata_signatures",
+    "llm_cache_key_hashes",
+    "llm_prompt_versions",
+    "llm_prompt_hashes",
+    "llm_request_models",
+    "llm_response_models",
+    "llm_response_ids",
+    "llm_cache_file_names",
+    "llm_prompt_tokens",
+    "llm_completion_tokens",
+    "llm_total_tokens",
+    "runs_sharing_metadata_signatures",
+    "runs_sharing_cache_key_hashes",
+    "output_folder",
+]
+
+FEATURE_LEVEL_EVIDENCE_COLUMNS = [
+    "dataset_name",
+    "feature_name",
+    "source_table",
+    "semantic_group",
+    "description",
+    "dtype",
+    "missing_rate_mean",
+    "missing_rate_max",
+    "non_null_count_mean",
+    "selected_in_final_run_count",
+    "selected_in_mrmr_run_count",
+    "selected_in_boruta_run_count",
+    "selected_in_pca_run_count",
+    "selected_in_domain_rule_baseline_run_count",
+    "selected_in_llm_run_count",
+    "selected_in_llm_then_mrmr_run_count",
+    "selected_in_llm_then_boruta_run_count",
+    "selected_in_stable_core_llm_fill_run_count",
+    "selected_in_baseline_run_count",
+    "selected_in_llm_family_run_count",
+    "selected_in_lr_run_count",
+    "selected_in_catboost_run_count",
+    "max_within_run_selection_frequency",
+    "mean_within_run_selection_frequency",
+    "best_selected_rank",
+    "mean_selected_rank",
+    "best_llm_final_dev_rank",
+    "mean_llm_final_dev_rank",
+    "best_oot_auc_when_selected",
+    "best_oot_gini_when_selected",
+    "selectors_selected_by",
+    "models_selected_by",
+    "run_ids_selected_by",
+    "llm_reason_example",
+]
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -81,6 +159,152 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _read_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame()
+
+
+def _unique_sorted_strings(values: object) -> list[str]:
+    if values is None:
+        return []
+    if isinstance(values, str):
+        parts = values.split(";")
+    elif isinstance(values, (list, tuple, set)):
+        parts = list(values)
+    else:
+        parts = [values]
+    normalized = {
+        str(value).strip()
+        for value in parts
+        if value is not None and not pd.isna(value) and str(value).strip()
+    }
+    return sorted(normalized)
+
+
+def _join_unique_strings(values: object) -> str:
+    return ";".join(_unique_sorted_strings(values))
+
+
+def _feature_name_column(df: pd.DataFrame) -> str | None:
+    for candidate in ["feature_name", "feature", "name"]:
+        if candidate in df.columns:
+            return candidate
+    return None
+
+
+def _normalize_feature_frame(df: pd.DataFrame) -> pd.DataFrame:
+    feature_col = _feature_name_column(df)
+    if feature_col is None or df.empty:
+        return pd.DataFrame()
+    normalized = df.copy()
+    normalized["feature_name"] = normalized[feature_col].astype(str)
+    return normalized
+
+
+def _first_non_empty(series: pd.Series) -> object:
+    for value in series:
+        if value is None or pd.isna(value):
+            continue
+        if isinstance(value, str) and not value.strip():
+            continue
+        return value
+    return pd.NA
+
+
+def _llm_ranking_stats(run_dir: Path, manifest: dict | None = None) -> dict[str, object]:
+    summary_path = run_dir / "features" / "llm_rankings_summary.csv"
+    defaults = {
+        "llm_cache_key": None,
+        "llm_metadata_signatures": [],
+        "llm_cache_key_hashes": [],
+        "llm_prompt_versions": [],
+        "llm_prompt_hashes": [],
+        "llm_request_models": [],
+        "llm_response_models": [],
+        "llm_response_ids": [],
+        "llm_cache_file_names": [],
+        "llm_calls_actually_made": 0,
+        "llm_cache_hits": 0,
+        "llm_prompt_tokens": 0,
+        "llm_completion_tokens": 0,
+        "llm_total_tokens": 0,
+    }
+    if summary_path.exists():
+        try:
+            df = pd.read_csv(summary_path)
+        except pd.errors.EmptyDataError:
+            df = pd.DataFrame()
+        if not df.empty:
+            stats = defaults.copy()
+            list_mappings = {
+                "llm_metadata_signatures": "metadata_signature",
+                "llm_cache_key_hashes": "cache_key_hash",
+                "llm_prompt_versions": "prompt_version",
+                "llm_prompt_hashes": "prompt_hash",
+                "llm_request_models": "request_model",
+                "llm_response_models": "response_model",
+                "llm_response_ids": "response_id",
+                "llm_cache_file_names": "cache_file_name",
+            }
+            for target_key, column in list_mappings.items():
+                if column in df.columns:
+                    stats[target_key] = _unique_sorted_strings(df[column].dropna().tolist())
+
+            metadata_signatures = stats["llm_metadata_signatures"]
+            stats["llm_cache_key"] = metadata_signatures[0] if metadata_signatures else None
+
+            if "cache_hit" in df.columns:
+                scope_keys = [
+                    "scope",
+                    "fold_id",
+                    "metadata_signature",
+                    "cache_key_hash",
+                    "cache_file_name",
+                    "response_id",
+                ]
+                available_keys = [key for key in scope_keys if key in df.columns]
+                call_df = df.drop_duplicates(subset=available_keys) if available_keys else df
+                cache_flags = call_df["cache_hit"].astype(str).str.lower().isin(["true", "1"])
+                stats["llm_cache_hits"] = int(cache_flags.sum())
+                stats["llm_calls_actually_made"] = int((~cache_flags).sum())
+                actual_call_df = call_df.loc[~cache_flags]
+            else:
+                actual_call_df = df
+
+            for column, target_key in [
+                ("prompt_tokens", "llm_prompt_tokens"),
+                ("completion_tokens", "llm_completion_tokens"),
+                ("total_tokens", "llm_total_tokens"),
+            ]:
+                if column in actual_call_df.columns:
+                    value = pd.to_numeric(actual_call_df[column], errors="coerce").fillna(0).sum()
+                    stats[target_key] = int(value)
+            return stats
+
+    manifest = manifest or {}
+    return {
+        **defaults,
+        "llm_cache_key": manifest.get("llm_cache_key"),
+        "llm_metadata_signatures": _unique_sorted_strings(manifest.get("llm_metadata_signatures")),
+        "llm_cache_key_hashes": _unique_sorted_strings(manifest.get("llm_cache_key_hashes")),
+        "llm_prompt_versions": _unique_sorted_strings(manifest.get("llm_prompt_versions")),
+        "llm_prompt_hashes": _unique_sorted_strings(manifest.get("llm_prompt_hashes")),
+        "llm_request_models": _unique_sorted_strings(manifest.get("llm_request_models")),
+        "llm_response_models": _unique_sorted_strings(manifest.get("llm_response_models")),
+        "llm_response_ids": _unique_sorted_strings(manifest.get("llm_response_ids")),
+        "llm_cache_file_names": _unique_sorted_strings(manifest.get("llm_cache_file_names")),
+        "llm_calls_actually_made": int(manifest.get("llm_calls_actually_made", 0) or 0),
+        "llm_cache_hits": int(manifest.get("llm_cache_hits", 0) or 0),
+        "llm_prompt_tokens": int(manifest.get("llm_prompt_tokens", 0) or 0),
+        "llm_completion_tokens": int(manifest.get("llm_completion_tokens", 0) or 0),
+        "llm_total_tokens": int(manifest.get("llm_total_tokens", 0) or 0),
+    }
 
 
 def _allowed_run_dirs(results_root: Path) -> set[Path] | None:
@@ -310,26 +534,9 @@ def _manifest_records(results_root: Path) -> list[tuple[Path, dict]]:
 
 
 def _write_llm_call_summary(results_root: Path) -> Path:
-    columns = [
-        "run_id",
-        "model",
-        "selector",
-        "experiment_type",
-        "status",
-        "llm_shared_ranking_enabled",
-        "llm_ranking_budget",
-        "llm_calls_actually_made",
-        "llm_cache_hits",
-        "llm_cache_key",
-        "llm_metadata_signatures",
-        "llm_prompt_tokens",
-        "llm_completion_tokens",
-        "llm_total_tokens",
-        "runs_sharing_metadata_signatures",
-        "output_folder",
-    ]
     rows = []
     for run_dir, manifest in _manifest_records(results_root):
+        stats = _llm_ranking_stats(run_dir, manifest)
         rows.append(
             {
                 "run_id": manifest.get("run_id"),
@@ -339,28 +546,43 @@ def _write_llm_call_summary(results_root: Path) -> Path:
                 "status": manifest.get("status"),
                 "llm_shared_ranking_enabled": manifest.get("llm_shared_ranking_enabled"),
                 "llm_ranking_budget": manifest.get("llm_ranking_budget"),
-                "llm_calls_actually_made": manifest.get("llm_calls_actually_made", 0),
-                "llm_cache_hits": manifest.get("llm_cache_hits", 0),
-                "llm_cache_key": manifest.get("llm_cache_key"),
-                "llm_metadata_signatures": ";".join(manifest.get("llm_metadata_signatures", []) or []),
-                "llm_prompt_tokens": manifest.get("llm_prompt_tokens", 0),
-                "llm_completion_tokens": manifest.get("llm_completion_tokens", 0),
-                "llm_total_tokens": manifest.get("llm_total_tokens", 0),
+                "llm_calls_actually_made": stats["llm_calls_actually_made"],
+                "llm_cache_hits": stats["llm_cache_hits"],
+                "llm_cache_key": stats["llm_cache_key"],
+                "llm_metadata_signatures": _join_unique_strings(stats["llm_metadata_signatures"]),
+                "llm_cache_key_hashes": _join_unique_strings(stats["llm_cache_key_hashes"]),
+                "llm_prompt_versions": _join_unique_strings(stats["llm_prompt_versions"]),
+                "llm_prompt_hashes": _join_unique_strings(stats["llm_prompt_hashes"]),
+                "llm_request_models": _join_unique_strings(stats["llm_request_models"]),
+                "llm_response_models": _join_unique_strings(stats["llm_response_models"]),
+                "llm_response_ids": _join_unique_strings(stats["llm_response_ids"]),
+                "llm_cache_file_names": _join_unique_strings(stats["llm_cache_file_names"]),
+                "llm_prompt_tokens": stats["llm_prompt_tokens"],
+                "llm_completion_tokens": stats["llm_completion_tokens"],
+                "llm_total_tokens": stats["llm_total_tokens"],
                 "output_folder": str(run_dir),
             }
         )
     signature_to_runs: dict[str, list[str]] = {}
+    cache_key_hash_to_runs: dict[str, list[str]] = {}
     for row in rows:
         for signature in str(row.get("llm_metadata_signatures") or "").split(";"):
             if signature:
                 signature_to_runs.setdefault(signature, []).append(str(row["run_id"]))
+        for cache_key_hash in str(row.get("llm_cache_key_hashes") or "").split(";"):
+            if cache_key_hash:
+                cache_key_hash_to_runs.setdefault(cache_key_hash, []).append(str(row["run_id"]))
     for row in rows:
         sharing = set()
+        sharing_by_hash = set()
         for signature in str(row.get("llm_metadata_signatures") or "").split(";"):
             sharing.update(signature_to_runs.get(signature, []))
+        for cache_key_hash in str(row.get("llm_cache_key_hashes") or "").split(";"):
+            sharing_by_hash.update(cache_key_hash_to_runs.get(cache_key_hash, []))
         row["runs_sharing_metadata_signatures"] = ";".join(sorted(sharing))
+        row["runs_sharing_cache_key_hashes"] = ";".join(sorted(sharing_by_hash))
     output = results_root / "llm_call_summary.csv"
-    pd.DataFrame(rows, columns=columns).to_csv(output, index=False)
+    pd.DataFrame(rows, columns=LLM_SUMMARY_COLUMNS).to_csv(output, index=False)
     return output
 
 
@@ -460,6 +682,244 @@ def _paired_fold_comparisons(rows: list[dict], results_root: Path) -> pd.DataFra
     return pd.DataFrame(comparisons)
 
 
+def _load_feature_metadata_for_run(run_dir: Path) -> pd.DataFrame:
+    candidates = [
+        run_dir / "llm_responses" / "final_dev" / "llm" / "feature_metadata.csv",
+        run_dir / "feature_metadata.csv",
+    ]
+    candidates.extend(sorted(run_dir.glob("llm_responses/*/llm/feature_metadata.csv")))
+    for candidate in candidates:
+        df = _normalize_feature_frame(_read_csv(candidate))
+        if df.empty:
+            continue
+        metadata = df.copy()
+        if "table" in metadata.columns and "source_table" not in metadata.columns:
+            metadata["source_table"] = metadata["table"]
+        keep_columns = [
+            "feature_name",
+            "source_table",
+            "semantic_group",
+            "description",
+            "dtype",
+            "missing_rate",
+            "non_null_count",
+        ]
+        available = [column for column in keep_columns if column in metadata.columns]
+        return metadata[available].drop_duplicates(subset=["feature_name"])
+    return pd.DataFrame(columns=["feature_name"])
+
+
+def _write_feature_level_evidence(rows: list[dict], results_root: Path) -> Path:
+    metadata_frames: list[pd.DataFrame] = []
+    selection_frames: list[pd.DataFrame] = []
+    frequency_frames: list[pd.DataFrame] = []
+    llm_rank_frames: list[pd.DataFrame] = []
+
+    for row in rows:
+        run_dir = Path(str(row["output_folder"]))
+        run_id = str(row.get("run_id"))
+        selector = str(row.get("selector"))
+        model = str(row.get("model"))
+
+        metadata_df = _load_feature_metadata_for_run(run_dir)
+        if not metadata_df.empty:
+            metadata_df = metadata_df.copy()
+            metadata_df["run_id"] = run_id
+            metadata_frames.append(metadata_df)
+
+        selected_df = _normalize_feature_frame(_read_csv(run_dir / "features" / "final_selected_features.csv"))
+        if not selected_df.empty:
+            selected_df = selected_df.copy()
+            selected_df["run_id"] = run_id
+            selected_df["selector"] = selector
+            selected_df["model"] = model
+            selected_df["oot_auc"] = row.get("oot_auc")
+            selected_df["oot_gini"] = row.get("oot_gini")
+            selection_frames.append(selected_df)
+
+        frequency_df = _normalize_feature_frame(_read_csv(run_dir / "features" / "selection_frequency.csv"))
+        if not frequency_df.empty:
+            frequency_df = frequency_df.copy()
+            frequency_df["run_id"] = run_id
+            frequency_df["selector"] = selector
+            frequency_df["model"] = model
+            frequency_frames.append(frequency_df)
+
+        llm_df = _normalize_feature_frame(_read_csv(run_dir / "features" / "llm_rankings_summary.csv"))
+        if not llm_df.empty:
+            llm_df = llm_df.copy()
+            llm_df["run_id"] = run_id
+            llm_df["selector"] = selector
+            llm_df["model"] = model
+            llm_rank_frames.append(llm_df)
+
+    feature_names: set[str] = set()
+    for frame in [*metadata_frames, *selection_frames, *frequency_frames, *llm_rank_frames]:
+        if "feature_name" in frame.columns:
+            feature_names.update(frame["feature_name"].dropna().astype(str).tolist())
+
+    evidence_rows: list[dict[str, object]] = []
+    metadata_all = pd.concat(metadata_frames, ignore_index=True) if metadata_frames else pd.DataFrame()
+    selection_all = pd.concat(selection_frames, ignore_index=True) if selection_frames else pd.DataFrame()
+    frequency_all = pd.concat(frequency_frames, ignore_index=True) if frequency_frames else pd.DataFrame()
+    llm_rank_all = pd.concat(llm_rank_frames, ignore_index=True) if llm_rank_frames else pd.DataFrame()
+
+    for feature_name in sorted(feature_names):
+        feature_row: dict[str, object] = {
+            "dataset_name": results_root.name,
+            "feature_name": feature_name,
+        }
+
+        metadata_slice = (
+            metadata_all.loc[metadata_all["feature_name"].astype(str) == feature_name].copy()
+            if not metadata_all.empty
+            else pd.DataFrame()
+        )
+        selection_slice = (
+            selection_all.loc[selection_all["feature_name"].astype(str) == feature_name].copy()
+            if not selection_all.empty
+            else pd.DataFrame()
+        )
+        frequency_slice = (
+            frequency_all.loc[frequency_all["feature_name"].astype(str) == feature_name].copy()
+            if not frequency_all.empty
+            else pd.DataFrame()
+        )
+        llm_slice = (
+            llm_rank_all.loc[llm_rank_all["feature_name"].astype(str) == feature_name].copy()
+            if not llm_rank_all.empty
+            else pd.DataFrame()
+        )
+
+        if not metadata_slice.empty:
+            for column in ["missing_rate", "non_null_count"]:
+                if column in metadata_slice.columns:
+                    metadata_slice[column] = pd.to_numeric(metadata_slice[column], errors="coerce")
+            feature_row["source_table"] = _join_unique_strings(
+                metadata_slice["source_table"].dropna().tolist() if "source_table" in metadata_slice.columns else []
+            )
+            feature_row["semantic_group"] = _first_non_empty(metadata_slice.get("semantic_group", pd.Series(dtype=object)))
+            feature_row["description"] = _first_non_empty(metadata_slice.get("description", pd.Series(dtype=object)))
+            feature_row["dtype"] = _first_non_empty(metadata_slice.get("dtype", pd.Series(dtype=object)))
+            feature_row["missing_rate_mean"] = metadata_slice["missing_rate"].mean() if "missing_rate" in metadata_slice.columns else pd.NA
+            feature_row["missing_rate_max"] = metadata_slice["missing_rate"].max() if "missing_rate" in metadata_slice.columns else pd.NA
+            feature_row["non_null_count_mean"] = metadata_slice["non_null_count"].mean() if "non_null_count" in metadata_slice.columns else pd.NA
+        else:
+            fallback_semantic = (
+                selection_slice["semantic_group"]
+                if not selection_slice.empty and "semantic_group" in selection_slice.columns
+                else pd.Series(dtype=object)
+            )
+            feature_row["source_table"] = pd.NA
+            feature_row["semantic_group"] = _first_non_empty(fallback_semantic)
+            feature_row["description"] = pd.NA
+            feature_row["dtype"] = pd.NA
+            feature_row["missing_rate_mean"] = pd.NA
+            feature_row["missing_rate_max"] = pd.NA
+            feature_row["non_null_count_mean"] = pd.NA
+
+        if not selection_slice.empty:
+            if "rank" in selection_slice.columns:
+                selection_slice["rank"] = pd.to_numeric(selection_slice["rank"], errors="coerce")
+            feature_row["selected_in_final_run_count"] = int(selection_slice["run_id"].nunique())
+            for selector_name in EXPECTED_SELECTORS:
+                feature_row[f"selected_in_{selector_name}_run_count"] = int(
+                    selection_slice.loc[selection_slice["selector"] == selector_name, "run_id"].nunique()
+                )
+            feature_row["selected_in_baseline_run_count"] = int(
+                selection_slice.loc[selection_slice["selector"].isin(BASELINE_SELECTORS), "run_id"].nunique()
+            )
+            feature_row["selected_in_llm_family_run_count"] = int(
+                selection_slice.loc[selection_slice["selector"].isin(LLM_FAMILY_SELECTORS), "run_id"].nunique()
+            )
+            feature_row["selected_in_lr_run_count"] = int(
+                selection_slice.loc[selection_slice["model"] == "lr", "run_id"].nunique()
+            )
+            feature_row["selected_in_catboost_run_count"] = int(
+                selection_slice.loc[selection_slice["model"] == "catboost", "run_id"].nunique()
+            )
+            feature_row["best_selected_rank"] = (
+                selection_slice["rank"].min() if "rank" in selection_slice.columns else pd.NA
+            )
+            feature_row["mean_selected_rank"] = (
+                selection_slice["rank"].mean() if "rank" in selection_slice.columns else pd.NA
+            )
+            feature_row["best_oot_auc_when_selected"] = pd.to_numeric(
+                selection_slice.get("oot_auc"),
+                errors="coerce",
+            ).max()
+            feature_row["best_oot_gini_when_selected"] = pd.to_numeric(
+                selection_slice.get("oot_gini"),
+                errors="coerce",
+            ).max()
+            feature_row["selectors_selected_by"] = _join_unique_strings(selection_slice["selector"].tolist())
+            feature_row["models_selected_by"] = _join_unique_strings(selection_slice["model"].tolist())
+            feature_row["run_ids_selected_by"] = _join_unique_strings(selection_slice["run_id"].tolist())
+        else:
+            feature_row["selected_in_final_run_count"] = 0
+            for selector_name in EXPECTED_SELECTORS:
+                feature_row[f"selected_in_{selector_name}_run_count"] = 0
+            feature_row["selected_in_baseline_run_count"] = 0
+            feature_row["selected_in_llm_family_run_count"] = 0
+            feature_row["selected_in_lr_run_count"] = 0
+            feature_row["selected_in_catboost_run_count"] = 0
+            feature_row["best_selected_rank"] = pd.NA
+            feature_row["mean_selected_rank"] = pd.NA
+            feature_row["best_oot_auc_when_selected"] = pd.NA
+            feature_row["best_oot_gini_when_selected"] = pd.NA
+            feature_row["selectors_selected_by"] = ""
+            feature_row["models_selected_by"] = ""
+            feature_row["run_ids_selected_by"] = ""
+
+        if not frequency_slice.empty and "selection_frequency" in frequency_slice.columns:
+            freq_values = pd.to_numeric(frequency_slice["selection_frequency"], errors="coerce")
+            feature_row["max_within_run_selection_frequency"] = freq_values.max()
+            feature_row["mean_within_run_selection_frequency"] = freq_values.mean()
+        else:
+            feature_row["max_within_run_selection_frequency"] = pd.NA
+            feature_row["mean_within_run_selection_frequency"] = pd.NA
+
+        if not llm_slice.empty:
+            final_dev_slice = (
+                llm_slice.loc[llm_slice["scope"].astype(str) == "final_dev"].copy()
+                if "scope" in llm_slice.columns
+                else llm_slice.copy()
+            )
+            if "rank" in final_dev_slice.columns:
+                final_dev_slice["rank"] = pd.to_numeric(final_dev_slice["rank"], errors="coerce")
+                feature_row["best_llm_final_dev_rank"] = final_dev_slice["rank"].min()
+                feature_row["mean_llm_final_dev_rank"] = final_dev_slice["rank"].mean()
+            else:
+                feature_row["best_llm_final_dev_rank"] = pd.NA
+                feature_row["mean_llm_final_dev_rank"] = pd.NA
+            if "llm_reason" in final_dev_slice.columns and not final_dev_slice.empty:
+                ranked = (
+                    final_dev_slice.sort_values("rank", na_position="last")
+                    if "rank" in final_dev_slice.columns
+                    else final_dev_slice
+                )
+                feature_row["llm_reason_example"] = _first_non_empty(ranked["llm_reason"])
+            else:
+                feature_row["llm_reason_example"] = pd.NA
+        else:
+            feature_row["best_llm_final_dev_rank"] = pd.NA
+            feature_row["mean_llm_final_dev_rank"] = pd.NA
+            feature_row["llm_reason_example"] = pd.NA
+
+        evidence_rows.append(feature_row)
+
+    evidence_df = pd.DataFrame(evidence_rows).reindex(columns=FEATURE_LEVEL_EVIDENCE_COLUMNS)
+    if not evidence_df.empty:
+        evidence_df = evidence_df.sort_values(
+            ["selected_in_final_run_count", "best_oot_auc_when_selected", "feature_name"],
+            ascending=[False, False, True],
+            na_position="last",
+        )
+    output = results_root / "feature_level_evidence.csv"
+    evidence_df.to_csv(output, index=False)
+    return output
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     results_root = (
@@ -488,11 +948,13 @@ def main(argv: list[str] | None = None) -> int:
     llm_summary_path = _write_llm_call_summary(results_root)
     failed_runs_path = _write_failed_runs(results_root)
     _write_dataset_metric_tables(comparison_df, rows, results_root)
+    feature_evidence_path = _write_feature_level_evidence(rows, results_root)
 
     print(f"Final comparison table: {output_path.resolve()}")
     print(f"Paired fold comparisons: {paired_path.resolve()}")
     print(f"LLM call summary: {llm_summary_path.resolve()}")
     print(f"Failed runs: {failed_runs_path.resolve()}")
+    print(f"Feature-level evidence: {feature_evidence_path.resolve()}")
     print(f"Completed runs aggregated: {len(rows)}")
     return 0
 

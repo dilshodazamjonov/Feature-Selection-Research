@@ -226,7 +226,15 @@ Return ONLY valid JSON:
             "ranking_budget": self.ranking_budget_config or {"max_shared_pool": self.ranking_budget},
             "shared_pool_size": self.shared_pool_size,
             "config_hash": self.config_hash,
+            "feature_budget": self.feature_budget,
+            "model": self.model,
+            "temperature": self.temperature,
+            "description_csv_path": str(self.description_csv_path),
         }
+
+    def _cache_key_hash(self) -> str:
+        raw = json.dumps(self._cache_key_payload(), sort_keys=True, ensure_ascii=True, default=str)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def _cache_path(self) -> Path:
         if not self.shared_ranking_enabled:
@@ -348,14 +356,19 @@ Return ONLY valid JSON:
                     "prompt_hash": self.prompt_hash_,
                     "config_hash": self.config_hash,
                     "shared_pool_size": self.shared_pool_size,
+                    "feature_budget": self.feature_budget,
                     "selected_for_lr_top20": rank <= self.lr_feature_budget,
                     "selected_for_catboost_top40": rank <= self.catboost_feature_budget,
                     "candidate_for_lr_hybrid": rank <= self.lr_candidate_pool_budget,
                     "candidate_for_catboost_hybrid": rank <= self.catboost_candidate_pool_budget,
                     "cache_hit": self.cache_hit_,
+                    "cache_key_hash": payload.get("cache_key_hash"),
+                    "cache_file_name": payload.get("cache_file_name"),
                     "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
                     "request_model": payload.get("request_model", self.model),
                     "response_model": payload.get("response_model", self.model),
+                    "response_id": payload.get("response_id"),
+                    "temperature": payload.get("temperature", self.temperature),
                     "prompt_tokens": payload.get("prompt_tokens"),
                     "completion_tokens": payload.get("completion_tokens"),
                     "total_tokens": payload.get("total_tokens"),
@@ -420,12 +433,29 @@ Return ONLY valid JSON:
 
         self.cache_file_ = cache_file
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_key_hash = self._cache_key_hash()
 
         if cache_file.exists():
             logger.info("Loading cached LLM ranking from %s", cache_file)
             payload = json.loads(cache_file.read_text(encoding="utf-8"))
             self.cache_hit_ = True
             self.llm_cache_hits_ = 1
+            payload.setdefault("metadata_signature", self.metadata_signature_)
+            payload.setdefault("scope", self.scope)
+            payload.setdefault("fold_id", self.fold_id)
+            payload.setdefault("config_hash", self.config_hash)
+            payload.setdefault("prompt_version", self.prompt_version)
+            payload.setdefault("prompt_hash", self.prompt_hash_)
+            payload.setdefault(
+                "ranking_budget",
+                self.ranking_budget_config or {"max_shared_pool": self.ranking_budget},
+            )
+            payload.setdefault("shared_pool_size", self.shared_pool_size)
+            payload.setdefault("feature_budget", self.feature_budget)
+            payload.setdefault("temperature", self.temperature)
+            payload.setdefault("cache_key", self._cache_key_payload())
+            payload.setdefault("cache_key_hash", cache_key_hash)
+            payload.setdefault("cache_file_name", cache_file.name)
         else:
             payload = self._call_llm(prompt)
             self.cache_hit_ = False
@@ -440,6 +470,8 @@ Return ONLY valid JSON:
                     "prompt_hash": self.prompt_hash_,
                     "ranking_budget": self.ranking_budget_config or {"max_shared_pool": self.ranking_budget},
                     "shared_pool_size": self.shared_pool_size,
+                    "feature_budget": self.feature_budget,
+                    "temperature": self.temperature,
                     "candidate_features": candidate_X.columns.tolist(),
                     "n_candidates": int(candidate_X.shape[1]),
                     "max_missing_rate": self.max_missing_rate,
@@ -448,6 +480,8 @@ Return ONLY valid JSON:
                         iv_filter.selected_features_ if iv_filter is not None else candidate_X.columns.tolist()
                     ),
                     "cache_key": self._cache_key_payload(),
+                    "cache_key_hash": cache_key_hash,
+                    "cache_file_name": cache_file.name,
                 }
             )
             cache_file.write_text(

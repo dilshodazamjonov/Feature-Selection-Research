@@ -141,11 +141,23 @@ def test_build_feature_metadata_includes_numeric_percentiles(tmp_path):
 def test_prepare_lendingclub_application_frame_drops_leakage_columns():
     raw = pd.DataFrame(
         {
+            "id": [1, 2, 3],
+            "member_id": [11, 12, 13],
             "loan_amnt": [10000.0, 15000.0, 9000.0],
+            "funded_amnt": [10000.0, 15000.0, 9000.0],
+            "funded_amnt_inv": [10000.0, 15000.0, 9000.0],
             "annual_inc": [60000.0, 80000.0, 50000.0],
             "issue_d": ["Jan-2016", "Feb-2016", "Mar-2016"],
             "loan_status": ["Fully Paid", "Charged Off", "Late (31-120 days)"],
+            "grade": ["A", "B", "C"],
+            "sub_grade": ["A1", "B2", "C3"],
+            "int_rate": [7.9, 12.5, 18.0],
+            "installment": [312.0, 488.0, 355.0],
             "title": ["Debt consolidation", "Credit card refinance", "Other"],
+            "desc": ["note one", "note two", "note three"],
+            "emp_title": ["Analyst", "Teacher", "Driver"],
+            "url": ["u1", "u2", "u3"],
+            "zip_code": ["123xx", "456xx", "789xx"],
             "policy_code": [1.0, 1.0, 1.0],
             "pymnt_plan": ["n", "n", "n"],
             "debt_settlement_flag": ["N", "Y", "N"],
@@ -162,6 +174,18 @@ def test_prepare_lendingclub_application_frame_drops_leakage_columns():
     assert "policy_code" not in prepared.columns
     assert "pymnt_plan" not in prepared.columns
     assert "debt_settlement_flag" not in prepared.columns
+    assert "grade" not in prepared.columns
+    assert "sub_grade" not in prepared.columns
+    assert "int_rate" not in prepared.columns
+    assert "installment" not in prepared.columns
+    assert "funded_amnt" not in prepared.columns
+    assert "funded_amnt_inv" not in prepared.columns
+    assert "id" not in prepared.columns
+    assert "member_id" not in prepared.columns
+    assert "url" not in prepared.columns
+    assert "desc" not in prepared.columns
+    assert "emp_title" not in prepared.columns
+    assert "zip_code" not in prepared.columns
 
 
 def test_build_lendingclub_application_features_adds_engineered_columns():
