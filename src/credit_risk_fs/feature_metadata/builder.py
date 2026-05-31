@@ -40,10 +40,108 @@ def infer_semantic_group(
     table: str = "",
 ) -> str:
     """Infer a coarse business-semantic group from feature naming/metadata."""
+    raw_name = str(feature_name)
+    lower_name = raw_name.lower()
     name = str(feature_name).upper()
     desc = str(description).upper()
     table_name = str(table).upper()
     text = " ".join([name, desc, table_name])
+    lower_text = " ".join([lower_name, str(description).lower(), str(table).lower()])
+
+    if any(token in lower_name for token in ["fico_mean", "fico_range_low", "fico_range_high", "fico_band"]):
+        return "fico_credit_score"
+
+    if lower_name in {"annual_inc", "log_annual_inc", "loan_to_income", "dti"} or any(
+        token in lower_name
+        for token in [
+            "_to_income",
+            "income_band",
+            "dti_band",
+            "total_bal_ex_mort_to_income",
+            "tot_hi_cred_lim_to_income",
+            "total_il_high_credit_limit_to_income",
+            "tot_cur_bal_to_income",
+        ]
+    ):
+        return "income_capacity"
+
+    if any(
+        token in lower_name
+        for token in [
+            "revol_util",
+            "revol_bal",
+            "total_rev_hi_lim",
+            "active_revolving_share",
+            "balance_to_high_credit_limit",
+            "revolving_capacity_gap",
+            "open_revolving_share",
+            "num_op_rev_tl",
+            "num_actv_rev_tl",
+            "num_rev_tl_bal_gt_0",
+            "revol_bal_per_open_acc",
+            "utilization_pressure",
+        ]
+    ):
+        return "revolving_utilization"
+
+    if any(
+        token in lower_name
+        for token in [
+            "bc_open_to_buy",
+            "total_bc_limit",
+            "bankcard_capacity_gap",
+            "bc_util",
+            "percent_bc_gt_75",
+            "mths_since_recent_bc",
+        ]
+    ):
+        return "bankcard_capacity"
+
+    if any(token in lower_name for token in ["inq_last_6mths", "inq_6m_per_open_acc", "mths_since_recent_inq"]):
+        return "recent_inquiries"
+
+    if lower_name == "earliest_cr_line" or lower_name == "credit_history_years" or lower_name.startswith("mths_since_") or any(
+        token in lower_name for token in ["mo_sin_old", "mo_sin_rcnt", "credit_history"]
+    ):
+        return "credit_history_length"
+
+    if any(
+        token in lower_name
+        for token in [
+            "acc_open_past_24mths",
+            "num_tl_op_past_12m",
+            "num_sats_share",
+            "loan_per_open_acc",
+            "loan_per_total_acc",
+        ]
+    ):
+        return "account_opening_activity"
+
+    if "mort_acc" in lower_name or "mort_balance_pressure" in lower_name:
+        return "mortgage_history"
+
+    if any(
+        token in lower_name
+        for token in [
+            "delinq_2yrs",
+            "pub_rec",
+            "collections_12_mths_ex_med",
+            "chargeoff_within_12_mths",
+            "tax_liens",
+        ]
+    ):
+        return "delinquency_derogatory"
+
+    if lower_name in {"term", "purpose", "home_ownership", "verification_status", "addr_state", "application_type"} or any(
+        token in lower_name for token in ["term_", "purpose_", "verification_status", "home_ownership"]
+    ):
+        return "loan_terms"
+
+    if lower_name in {"loan_amnt", "funded_amnt", "funded_amnt_inv", "log_loan_amnt"} or "loan_amnt_band" in lower_name:
+        return "exposure_amount"
+
+    if "lendingclub" in lower_text and "loan" in lower_text and "amount" in lower_text:
+        return "exposure_amount"
 
     if "EXT_SOURCE" in name or "EXTERNAL SCORE" in text:
         return "external_score"

@@ -8,9 +8,11 @@ import json
 import math
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from credit_risk_fs.experiments.config import load_named_project_config
 from credit_risk_fs.feature_engineering.homecredit.assemble import build_application_time_proxy
+from credit_risk_fs.feature_metadata.builder import infer_semantic_group
 from credit_risk_fs.preprocessing.lendingclub import ensure_lendingclub_target_and_time
 from credit_risk_fs.utils.paths import project_root, results_root
 
@@ -18,6 +20,15 @@ from credit_risk_fs.utils.paths import project_root, results_root
 SUPPORTED_DATASETS = {"homecredit", "lendingclub"}
 BASELINE_SELECTORS = {"mrmr", "boruta", "pca", "domain_rule_baseline"}
 LLM_FAMILY_SELECTORS = {"llm", "llm_then_mrmr", "llm_then_boruta", "stable_core_llm_fill"}
+FINAL_REPORT_PLOT_COLUMNS = [
+    "plot_file",
+    "source_table",
+    "rows_used",
+    "columns_used",
+    "purpose",
+    "status",
+    "skip_reason",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +71,14 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _repo_relative_path(path_text: str | Path) -> str:
+    path = Path(path_text)
+    try:
+        return path.resolve().relative_to(project_root().resolve()).as_posix()
+    except (OSError, ValueError):
+        return str(path_text).replace("\\", "/")
 
 
 def _dataset_paths(dataset_name: str) -> DatasetPaths:
@@ -234,7 +253,16 @@ def _semantic_fallback(dataset_name: str) -> pd.DataFrame:
 @lru_cache(maxsize=None)
 def _semantic_coverage(dataset_name: str) -> pd.DataFrame:
     paths = _dataset_paths(dataset_name)
-    semantic_df = _read_csv(paths.results_dir / "semantic_coverage_table.csv")
+    semantic_df = pd.DataFrame()
+    if _normalize_dataset_name(dataset_name) == "lendingclub":
+        semantic_df = _read_csv(
+            paths.results_dir
+            / "analysis"
+            / "semantic_redundancy"
+            / "semantic_coverage_by_pipeline_relabelled.csv"
+        )
+    if semantic_df.empty:
+        semantic_df = _read_csv(paths.results_dir / "semantic_coverage_table.csv")
     if semantic_df.empty:
         semantic_df = _semantic_fallback(dataset_name)
     return semantic_df
@@ -299,6 +327,69 @@ def _llm_calls(dataset_name: str) -> pd.DataFrame:
     return _read_csv(_dataset_paths(dataset_name).results_dir / "llm_call_summary.csv")
 
 
+def _analysis_csv(dataset_name: str, relative_path: str) -> pd.DataFrame:
+    return _read_csv(_dataset_paths(dataset_name).results_dir / "analysis" / Path(relative_path))
+
+
+@lru_cache(maxsize=None)
+def _feature_level_psi(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "feature_level_drift/feature_level_psi_by_run.csv")
+
+
+@lru_cache(maxsize=None)
+def _psi_distribution(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "feature_level_drift/psi_distribution_by_pipeline.csv")
+
+
+@lru_cache(maxsize=None)
+def _high_psi_features(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "feature_level_drift/high_psi_features_by_pipeline.csv")
+
+
+@lru_cache(maxsize=None)
+def _llm_then_mrmr_drift_source(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "feature_level_drift/llm_then_mrmr_drift_source_breakdown.csv")
+
+
+@lru_cache(maxsize=None)
+def _llm_top100_candidate_psi(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "feature_level_drift/llm_top100_candidate_psi.csv")
+
+
+@lru_cache(maxsize=None)
+def _semantic_redundancy(dataset_name: str) -> pd.DataFrame:
+    return _analysis_csv(dataset_name, "semantic_redundancy/semantic_coverage_redundancy_by_pipeline.csv")
+
+
+@lru_cache(maxsize=None)
+def _cross_dataset_stability_significance() -> pd.DataFrame:
+    return _read_csv(
+        project_root()
+        / "results"
+        / "cross_dataset"
+        / "analysis"
+        / "stability_significance"
+        / "llm_stability_diagnosis.csv"
+    )
+
+
+@lru_cache(maxsize=None)
+def _paired_fold_significance() -> pd.DataFrame:
+    return _read_csv(
+        project_root()
+        / "results"
+        / "cross_dataset"
+        / "analysis"
+        / "stability_significance"
+        / "paired_fold_significance_tests.csv"
+    )
+
+
+def _report_text(relative_path: str) -> str:
+    path = project_root() / relative_path
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
 def _warnings(dataset_name: str) -> list[str]:
     paths = _dataset_paths(dataset_name)
     warnings: list[str] = []
@@ -325,6 +416,18 @@ def _warnings(dataset_name: str) -> list[str]:
         warnings.append(
             "No separate encoded-feature-count artifact exists; the snapshot reports engineered candidate features from experiment summaries and source-table width from the processed application table."
         )
+    analysis_files = [
+        "feature_level_drift/feature_level_psi_by_run.csv",
+        "feature_level_drift/psi_distribution_by_pipeline.csv",
+        "feature_level_drift/high_psi_features_by_pipeline.csv",
+        "feature_level_drift/llm_then_mrmr_drift_source_breakdown.csv",
+        "feature_level_drift/llm_top100_candidate_psi.csv",
+        "semantic_redundancy/semantic_coverage_redundancy_by_pipeline.csv",
+    ]
+    for relative_path in analysis_files:
+        path = paths.results_dir / "analysis" / Path(relative_path)
+        if not path.exists():
+            warnings.append(f"Missing analysis artifact: {path.relative_to(paths.root)}")
     return warnings
 
 
@@ -550,11 +653,20 @@ def load_dataset_report_inputs(dataset_name: str) -> dict[str, Any]:
         "stability_table": load_stability_table(dataset_name),
         "drift_table": load_drift_table(dataset_name),
         "semantic_coverage_table": load_semantic_coverage_table(dataset_name),
+        "feature_level_psi_by_run": load_feature_level_psi_by_run(dataset_name),
+        "psi_distribution_by_pipeline": load_psi_distribution_by_pipeline(dataset_name),
+        "high_psi_features_by_pipeline": load_high_psi_features_by_pipeline(dataset_name),
+        "llm_then_mrmr_drift_source_breakdown": load_llm_then_mrmr_drift_source_breakdown(dataset_name),
+        "llm_top100_candidate_psi": load_llm_top100_candidate_psi(dataset_name),
+        "semantic_redundancy_table": load_semantic_redundancy_table(dataset_name),
+        "llm_stability_diagnosis": load_llm_stability_diagnosis(dataset_name),
+        "paired_fold_significance_tests": load_paired_fold_significance_tests(dataset_name),
+        "governance_note": load_governance_note(dataset_name),
         "semantic_summary": _round_numeric_frame(_selector_semantic_summary(dataset_name)),
         "best_runs": load_best_runs(dataset_name),
         "matrix_overview": _matrix_overview(dataset_name),
         "paired_fold_comparisons": _round_numeric_frame(_paired_fold(dataset_name)),
-        "llm_call_summary": _round_numeric_frame(_llm_calls(dataset_name)),
+        "llm_call_summary": load_compact_llm_cache_summary(dataset_name),
         "failed_runs": _failed_runs(dataset_name).copy(),
     }
 
@@ -686,6 +798,131 @@ def load_semantic_coverage_table(dataset_name: str) -> pd.DataFrame:
         return semantic_df
     semantic_df = semantic_df.sort_values(["model", "selector", "feature_ratio"], ascending=[True, True, False])
     return _round_numeric_frame(semantic_df.reset_index(drop=True))
+
+
+def load_feature_level_psi_by_run(dataset_name: str) -> pd.DataFrame:
+    df = _feature_level_psi(dataset_name).copy()
+    if df.empty:
+        return df
+    return _round_numeric_frame(df.sort_values(["model", "selector", "psi_dev_oot"], ascending=[True, True, False]))
+
+
+def load_psi_distribution_by_pipeline(dataset_name: str) -> pd.DataFrame:
+    df = _psi_distribution(dataset_name).copy()
+    if df.empty:
+        return df
+    return _round_numeric_frame(df.sort_values(["model", "psi_mean", "selector"]))
+
+
+def load_high_psi_features_by_pipeline(dataset_name: str) -> pd.DataFrame:
+    df = _high_psi_features(dataset_name).copy()
+    if df.empty:
+        return df
+    return _round_numeric_frame(df.sort_values(["model", "selector", "psi_dev_oot"], ascending=[True, True, False]))
+
+
+def load_llm_then_mrmr_drift_source_breakdown(dataset_name: str) -> pd.DataFrame:
+    df = _llm_then_mrmr_drift_source(dataset_name).copy()
+    if df.empty:
+        return df
+    return _round_numeric_frame(df.sort_values(["model", "in_final_selected_set", "psi_dev_oot"], ascending=[True, False, False]))
+
+
+def load_llm_top100_candidate_psi(dataset_name: str) -> pd.DataFrame:
+    df = _llm_top100_candidate_psi(dataset_name).copy()
+    if df.empty:
+        return df
+    sort_cols = [col for col in ["model", "selector", "llm_rank", "feature"] if col in df.columns]
+    return _round_numeric_frame(df.sort_values(sort_cols).reset_index(drop=True))
+
+
+def load_semantic_redundancy_table(dataset_name: str) -> pd.DataFrame:
+    df = _semantic_redundancy(dataset_name).copy()
+    if df.empty:
+        return df
+    return _round_numeric_frame(df.sort_values(["model", "selector"]))
+
+
+def load_llm_stability_diagnosis(dataset_name: str | None = None) -> pd.DataFrame:
+    df = _cross_dataset_stability_significance().copy()
+    if dataset_name is not None and not df.empty:
+        df = df[df["dataset"].eq(_normalize_dataset_name(dataset_name))].copy()
+    return _round_numeric_frame(df)
+
+
+def load_paired_fold_significance_tests(dataset_name: str | None = None) -> pd.DataFrame:
+    df = _paired_fold_significance().copy()
+    if dataset_name is not None and not df.empty:
+        df = df[df["dataset"].eq(_normalize_dataset_name(dataset_name))].copy()
+    return _round_numeric_frame(df)
+
+
+def load_governance_note(dataset_name: str) -> str:
+    dataset_name = _normalize_dataset_name(dataset_name)
+    if dataset_name == "homecredit":
+        return _report_text("reports/homecredit_temporal_semantics_note.md")
+    return _report_text("reports/lendingclub_leakage_and_label_definition.md")
+
+
+def load_compact_llm_cache_summary(dataset_name: str) -> pd.DataFrame:
+    dataset_name = _normalize_dataset_name(dataset_name)
+    df = _llm_calls(dataset_name).copy()
+    columns = [
+        "dataset",
+        "LLM calls made",
+        "cache hits",
+        "total tokens",
+        "prompt version",
+        "shared ranking enabled",
+        "number of runs sharing ranking",
+    ]
+    if df.empty:
+        return pd.DataFrame(columns=columns)
+
+    def _first_nonempty(series: pd.Series) -> str:
+        values = [str(value) for value in series.dropna().tolist() if str(value).strip()]
+        return values[0] if values else ""
+
+    def _max_shared_runs(series: pd.Series) -> int:
+        counts = []
+        for value in series.dropna().astype(str):
+            parts = [part for part in value.split(";") if part.strip()]
+            if parts:
+                counts.append(len(set(parts)))
+        return max(counts) if counts else 0
+
+    summary = pd.DataFrame(
+        [
+            {
+                "dataset": dataset_name,
+                "LLM calls made": pd.to_numeric(df.get("llm_calls_actually_made", pd.Series(dtype=float)), errors="coerce").sum(),
+                "cache hits": pd.to_numeric(df.get("llm_cache_hits", pd.Series(dtype=float)), errors="coerce").sum(),
+                "total tokens": pd.to_numeric(df.get("llm_total_tokens", pd.Series(dtype=float)), errors="coerce").sum(),
+                "prompt version": _first_nonempty(df.get("llm_prompt_versions", pd.Series(dtype=object))),
+                "shared ranking enabled": bool(df.get("llm_shared_ranking_enabled", pd.Series(dtype=bool)).fillna(False).astype(bool).any()),
+                "number of runs sharing ranking": _max_shared_runs(
+                    df.get("runs_sharing_metadata_signatures", pd.Series(dtype=object))
+                ),
+            }
+        ]
+    )
+    numeric_cols = ["LLM calls made", "cache hits", "total tokens", "number of runs sharing ranking"]
+    summary[numeric_cols] = summary[numeric_cols].fillna(0).astype(int)
+    return summary[columns]
+
+
+def save_full_llm_cache_appendix(dataset_name: str) -> Path | None:
+    dataset_name = _normalize_dataset_name(dataset_name)
+    df = _llm_calls(dataset_name).copy()
+    if df.empty:
+        return None
+    appendix_dir = _dataset_paths(dataset_name).results_dir / "final_report" / "appendix"
+    appendix_dir.mkdir(parents=True, exist_ok=True)
+    if "output_folder" in df.columns:
+        df["output_folder"] = df["output_folder"].map(_repo_relative_path)
+    path = appendix_dir / "full_llm_cache_summary.csv"
+    df.to_csv(path, index=False)
+    return path
 
 
 def _top_items_as_text(series: pd.Series, *, limit: int = 5) -> str:
@@ -822,6 +1059,11 @@ def load_run_artifacts(dataset_name: str, run_id: str) -> dict[str, Any]:
     cv_results = _read_csv(run_dir / "results" / "cv_results.csv")
     oot_results = _read_csv(run_dir / "results" / "oot_test_results.csv")
     selected_features = _read_csv(run_dir / "features" / "final_selected_features.csv")
+    if dataset_name == "lendingclub" and not selected_features.empty:
+        feature_col = "feature_name" if "feature_name" in selected_features.columns else "feature"
+        if feature_col in selected_features.columns:
+            selected_features = selected_features.copy()
+            selected_features["semantic_group"] = selected_features[feature_col].map(lambda feature: infer_semantic_group(str(feature)))
     semantic_group_summary = pd.DataFrame()
     if not selected_features.empty and "semantic_group" in selected_features.columns:
         semantic_group_summary = (
@@ -1110,6 +1352,279 @@ def plot_runtime_tradeoff(
     return fig
 
 
+def lendingclub_monthly_bad_rate_observation_count_table() -> pd.DataFrame:
+    frame = _time_frame("lendingclub").copy()
+    if frame.empty or "issue_d" not in frame.columns:
+        return pd.DataFrame(columns=["issue_month", "split_segment", "observation_count", "bad_rate"])
+    frame["issue_month"] = pd.to_datetime(frame["issue_d"], errors="coerce").dt.to_period("M").dt.to_timestamp()
+    grouped = (
+        frame.dropna(subset=["issue_month"])
+        .groupby(["issue_month", "split_segment"], as_index=False)
+        .agg(observation_count=("TARGET", "size"), bad_rate=("TARGET", "mean"))
+        .sort_values("issue_month")
+    )
+    grouped["issue_month"] = grouped["issue_month"].dt.strftime("%Y-%m")
+    return _round_numeric_frame(grouped[["issue_month", "split_segment", "observation_count", "bad_rate"]])
+
+
+def plot_lendingclub_monthly_bad_rate_observation_count(monthly_df: pd.DataFrame | None = None) -> plt.Figure:
+    import matplotlib.pyplot as plt
+
+    _base_theme()
+    monthly_df = lendingclub_monthly_bad_rate_observation_count_table() if monthly_df is None else monthly_df.copy()
+    fig, ax_count = plt.subplots(figsize=(12, 5))
+    if monthly_df.empty:
+        ax_count.text(0.5, 0.5, "LendingClub monthly split diagnostics unavailable.", ha="center", va="center")
+        ax_count.axis("off")
+        return fig
+
+    plot_df = monthly_df.sort_values("issue_month").reset_index(drop=True)
+    x_values = list(range(len(plot_df)))
+    colors = plot_df["split_segment"].map({"DEV": "#88b7d5", "OOT": "#f2c078"}).fillna("#d0d0d0")
+    ax_count.bar(x_values, plot_df["observation_count"], color=colors, alpha=0.75, label="Observation count")
+    ax_count.set_ylabel("Observation count")
+    ax_count.set_xlabel("Issue month")
+
+    ax_rate = ax_count.twinx()
+    ax_rate.plot(x_values, plot_df["bad_rate"], color="#2f2f2f", marker="o", linewidth=1.8, label="Bad rate")
+    ax_rate.set_ylabel("Bad rate")
+
+    for segment, color in [("DEV", "#88b7d5"), ("OOT", "#f2c078")]:
+        indexes = [idx for idx, value in enumerate(plot_df["split_segment"].tolist()) if value == segment]
+        if indexes:
+            ax_count.axvspan(min(indexes) - 0.5, max(indexes) + 0.5, color=color, alpha=0.12, label=f"{segment} region")
+
+    tick_step = max(1, len(plot_df) // 12)
+    tick_positions = list(range(0, len(plot_df), tick_step))
+    ax_count.set_xticks(tick_positions)
+    ax_count.set_xticklabels(plot_df.loc[tick_positions, "issue_month"], rotation=45, ha="right")
+    ax_count.set_title("LendingClub Monthly Bad Rate and Observation Count by Split")
+    handles_count, labels_count = ax_count.get_legend_handles_labels()
+    handles_rate, labels_rate = ax_rate.get_legend_handles_labels()
+    ax_count.legend(handles_count + handles_rate, labels_count + labels_rate, loc="upper left")
+    fig.tight_layout()
+    return fig
+
+
+def _final_report_plots_dir(dataset_name: str) -> Path:
+    path = _dataset_paths(dataset_name).results_dir / "final_report" / "plots"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _plot_manifest_row(
+    *,
+    plot_file: str,
+    source_table: str,
+    rows_used: int,
+    columns_used: list[str],
+    purpose: str,
+    status: str,
+    skip_reason: str = "",
+) -> dict[str, Any]:
+    return {
+        "plot_file": plot_file,
+        "source_table": source_table,
+        "rows_used": rows_used,
+        "columns_used": ";".join(columns_used),
+        "purpose": purpose,
+        "status": status,
+        "skip_reason": skip_reason,
+    }
+
+
+def _save_if_informative(
+    *,
+    dataset_name: str,
+    plot_file: str,
+    source_table: str,
+    source_df: pd.DataFrame,
+    columns_used: list[str],
+    purpose: str,
+    figure_factory: Any,
+    category_columns: list[str] | None = None,
+    value_columns: list[str] | None = None,
+) -> dict[str, Any]:
+    missing_columns = [column for column in columns_used if column not in source_df.columns]
+    if source_df.empty:
+        return _plot_manifest_row(
+            plot_file=plot_file,
+            source_table=source_table,
+            rows_used=0,
+            columns_used=columns_used,
+            purpose=purpose,
+            status="skipped",
+            skip_reason="empty source data",
+        )
+    if missing_columns:
+        return _plot_manifest_row(
+            plot_file=plot_file,
+            source_table=source_table,
+            rows_used=len(source_df),
+            columns_used=columns_used,
+            purpose=purpose,
+            status="skipped",
+            skip_reason=f"missing columns: {', '.join(missing_columns)}",
+        )
+    for column in category_columns or []:
+        if source_df[column].nunique(dropna=True) <= 1:
+            return _plot_manifest_row(
+                plot_file=plot_file,
+                source_table=source_table,
+                rows_used=len(source_df),
+                columns_used=columns_used,
+                purpose=purpose,
+                status="skipped",
+                skip_reason=f"only one category in {column}",
+            )
+    for column in value_columns or []:
+        if source_df[column].nunique(dropna=True) <= 1:
+            return _plot_manifest_row(
+                plot_file=plot_file,
+                source_table=source_table,
+                rows_used=len(source_df),
+                columns_used=columns_used,
+                purpose=purpose,
+                status="skipped",
+                skip_reason=f"constant or unavailable values in {column}",
+            )
+
+    fig = figure_factory()
+    fig.savefig(_final_report_plots_dir(dataset_name) / plot_file, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    return _plot_manifest_row(
+        plot_file=plot_file,
+        source_table=source_table,
+        rows_used=len(source_df),
+        columns_used=columns_used,
+        purpose=purpose,
+        status="created",
+    )
+
+
+def save_final_report_plots(dataset_name: str) -> pd.DataFrame:
+    """Save final-report plots and a plot manifest under results/<dataset>/final_report/plots."""
+    dataset_name = _normalize_dataset_name(dataset_name)
+    final_df = load_final_comparison(dataset_name)
+    stability_df = load_stability_table(dataset_name)
+    drift_df = load_drift_table(dataset_name)
+    semantic_df = load_semantic_coverage_table(dataset_name)
+    time_df = load_time_bucket_summary(dataset_name)
+
+    rows = [
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="dev_oot_split_diagnostics.png",
+            source_table="derived time-bucket summary",
+            source_df=time_df,
+            columns_used=["time_bucket", "split_segment", "observation_count", "bad_rate"],
+            purpose="Show DEV/OOT observation counts and bad-rate behavior by time bucket.",
+            figure_factory=lambda: plot_dev_oot_split_diagnostics(dataset_name),
+            category_columns=["split_segment"],
+            value_columns=["observation_count", "bad_rate"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="observation_count_by_time.png",
+            source_table="derived time-bucket summary",
+            source_df=time_df,
+            columns_used=["time_bucket", "observation_count", "split_segment"],
+            purpose="Show observations available by time bucket.",
+            figure_factory=lambda: plot_observation_count_by_time(dataset_name),
+            value_columns=["observation_count"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="bad_rate_by_time.png",
+            source_table="derived time-bucket summary",
+            source_df=time_df,
+            columns_used=["time_bucket", "bad_rate", "split_segment"],
+            purpose="Show target-rate behavior by time bucket.",
+            figure_factory=lambda: plot_bad_rate_by_time(dataset_name),
+            value_columns=["bad_rate"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="metric_leaderboard_oot_auc.png",
+            source_table="final_comparison_table.csv",
+            source_df=final_df,
+            columns_used=["model", "selector", "experiment_type", "oot_auc", "oot_gini"],
+            purpose="Compare OOT AUC leaderboard by model and selector.",
+            figure_factory=lambda: plot_metric_leaderboard(final_df),
+            category_columns=["selector"],
+            value_columns=["oot_auc"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="stability_vs_performance.png",
+            source_table="final_comparison_table.csv + feature_stability_table.csv",
+            source_df=final_df,
+            columns_used=["model", "selector", "experiment_type", "oot_auc", "nogueira_stability"],
+            purpose="Compare exact feature stability against OOT AUC.",
+            figure_factory=lambda: plot_stability_vs_performance(stability_df, final_df),
+            category_columns=["selector"],
+            value_columns=["oot_auc", "nogueira_stability"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="drift_vs_performance.png",
+            source_table="final_comparison_table.csv + feature_drift_table.csv",
+            source_df=final_df,
+            columns_used=["model", "selector", "experiment_type", "oot_auc", "selected_feature_psi_mean"],
+            purpose="Compare selected-feature PSI against OOT AUC.",
+            figure_factory=lambda: plot_drift_vs_performance(drift_df, final_df),
+            category_columns=["selector"],
+            value_columns=["oot_auc", "selected_feature_psi_mean"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="semantic_coverage.png",
+            source_table="analysis/semantic_redundancy/semantic_coverage_by_pipeline_relabelled.csv"
+            if dataset_name == "lendingclub"
+            else "semantic_coverage_table.csv",
+            source_df=semantic_df,
+            columns_used=["model", "selector", "semantic_group", "feature_ratio"],
+            purpose="Show semantic group mix by selector.",
+            figure_factory=lambda: plot_semantic_coverage(semantic_df),
+            category_columns=["selector", "semantic_group"],
+            value_columns=["feature_ratio"],
+        ),
+        _save_if_informative(
+            dataset_name=dataset_name,
+            plot_file="runtime_tradeoff.png",
+            source_table="final_comparison_table.csv",
+            source_df=final_df,
+            columns_used=["runtime_seconds", "oot_auc", "model", "selector", "selected_feature_count"],
+            purpose="Compare runtime, feature count, and OOT AUC.",
+            figure_factory=lambda: plot_runtime_tradeoff(final_df),
+            category_columns=["selector"],
+            value_columns=["runtime_seconds", "oot_auc"],
+        ),
+    ]
+    if dataset_name == "lendingclub":
+        monthly_df = lendingclub_monthly_bad_rate_observation_count_table()
+        split_dir = _dataset_paths(dataset_name).results_dir / "final_report" / "split_diagnostics"
+        split_dir.mkdir(parents=True, exist_ok=True)
+        monthly_df.to_csv(split_dir / "lendingclub_monthly_bad_rate_observation_count.csv", index=False)
+        rows.append(
+            _save_if_informative(
+                dataset_name=dataset_name,
+                plot_file="lendingclub_monthly_bad_rate_observation_count.png",
+                source_table="final_report/split_diagnostics/lendingclub_monthly_bad_rate_observation_count.csv",
+                source_df=monthly_df,
+                columns_used=["issue_month", "split_segment", "observation_count", "bad_rate"],
+                purpose="Connect LendingClub DEV/OOT split rationale to monthly bad-rate and observation-count behavior.",
+                figure_factory=lambda: plot_lendingclub_monthly_bad_rate_observation_count(monthly_df),
+                category_columns=["split_segment"],
+                value_columns=["observation_count", "bad_rate"],
+            )
+        )
+    save_full_llm_cache_appendix(dataset_name)
+    manifest = pd.DataFrame(rows, columns=FINAL_REPORT_PLOT_COLUMNS)
+    manifest.to_csv(_final_report_plots_dir(dataset_name) / "plot_manifest.csv", index=False)
+    return manifest
+
+
 def summarize_split_rationale(dataset_name: str) -> str:
     dataset_name = _normalize_dataset_name(dataset_name)
     split_df = load_split_summary(dataset_name)
@@ -1138,7 +1653,8 @@ def summarize_split_rationale(dataset_name: str) -> str:
         )
     return (
         f"{shared} For LendingClub, the configured relative window uses DEV from {int(row['DEV_start'])} inclusive to {int(row['DEV_end'])} exclusive and OOT from {int(row['OOT_start'])} inclusive to {int(row['OOT_end'])} inclusive on `recent_decision`, which is derived from issue date to simulate future-loan validation.{date_text} "
-        f"This produces {int(row['DEV_rows']):,} DEV rows and {int(row['OOT_rows']):,} OOT rows, with bad rates of {row['DEV_bad_rate']:.4f} and {row['OOT_bad_rate']:.4f}; the difference is {row['bad_rate_difference']:.4f}."
+        f"This produces {int(row['DEV_rows']):,} DEV rows and {int(row['OOT_rows']):,} OOT rows, with bad rates of {row['DEV_bad_rate']:.4f} and {row['OOT_bad_rate']:.4f}; the difference is {row['bad_rate_difference']:.4f}. "
+        "OOT has a higher bad rate than DEV, which makes LendingClub a harder external validation period, while both DEV and OOT retain enough observations for a meaningful comparison."
     )
 
 
@@ -1235,7 +1751,7 @@ def summarize_dataset_findings(dataset_name: str) -> dict[str, str]:
         )
         failures = (
             "The main failure cases are consistent. Boruta underperforms despite long runtime, PCA looks mechanically stable but not robust, and `llm_then_boruta` is clearly weaker than mRMR-based comparators. "
-            "Home Credit still carries a manual-review caveat: auxiliary tables must be semantically confirmed as historical or as-of the application date, otherwise temporal meaning can be overstated."
+            "Home Credit auxiliary-table timing is treated as historical based on relative-time field semantics, but strict row-level as-of validation remains a manual-review limitation."
         )
         conclusion = (
             "On Home Credit, the evidence supports a careful claim: LLM screening is useful as a first-stage helper, especially in the stable-core hybrid, but the improvement over mRMR is marginal rather than dominant. "
@@ -1261,9 +1777,9 @@ def summarize_dataset_findings(dataset_name: str) -> dict[str, str]:
             "PCA is the obvious exception and should be flagged explicitly because its feature PSI is much higher than the rest of the table."
         )
         semantic = (
-            "Semantic diversity is narrower on LendingClub than on Home Credit because many selected sets collapse into broad 'other' or amount-related groups. "
-            "That means a good LendingClub result should not be interpreted as proof of richer semantic coverage. "
-            "The safer reading is that some LLM-family methods remain performance-competitive under a leakage-audited external dataset, even when semantic separation is less expressive."
+            "Semantic diversity on LendingClub is more interpretable after the report-layer mapping update, because common credit-score, capacity, revolving-utilization, bankcard, and account-activity features no longer collapse unnecessarily into `other`. "
+            "This relabeling improves the semantic coverage evidence but does not change feature selection results. "
+            "The safer reading is that some LLM-family methods remain performance-competitive under a leakage-audited external dataset, while semantic coverage remains dataset and rule dependent."
         )
         efficiency = (
             f"Efficiency is a more serious tradeoff on LendingClub. Boruta is expensive and weak, while the best LLM-family CatBoost runs are competitive but substantially slower than the best LR runs. "
@@ -1271,7 +1787,8 @@ def summarize_dataset_findings(dataset_name: str) -> dict[str, str]:
         )
         failures = (
             "The main failure cases are again Boruta and PCA, with `llm_then_boruta` also clearly underperforming. "
-            "LendingClub carries a separate data-governance caveat: the current processed dataset is the safe path, while raw direct use should remain blocked or tightly audited because the raw files contain post-origination leakage fields."
+            "LendingClub carries a separate data-governance caveat: the current processed dataset is the safe path, while raw direct use should remain blocked or tightly audited because the raw files contain post-origination leakage fields. "
+            "OOT has a higher bad rate than DEV, making the OOT period a harder external validation period while still retaining enough observations in both windows."
         )
         conclusion = (
             "On LendingClub, the honest claim is still moderate: LLM screening is useful as a first-stage helper, but it does not universally dominate the statistical baselines. "
@@ -1347,18 +1864,185 @@ def summarize_clip_validation_placeholder(dataset_name: str) -> dict[str, Any]:
     }
 
 
+def build_cross_dataset_summary_markdown() -> str:
+    rows: list[dict[str, Any]] = []
+    for dataset_name in ["homecredit", "lendingclub"]:
+        final_df = load_final_comparison(dataset_name)
+        stability_df = load_stability_table(dataset_name)
+        psi_df = load_psi_distribution_by_pipeline(dataset_name)
+        if final_df.empty:
+            continue
+
+        best_lr = final_df[final_df["model"].eq("lr")].sort_values("oot_auc", ascending=False).iloc[0]
+        best_cat = final_df[final_df["model"].eq("catboost")].sort_values("oot_auc", ascending=False).iloc[0]
+        baseline = final_df[final_df["selector"].isin(BASELINE_SELECTORS)].sort_values("oot_auc", ascending=False)
+        best_baseline = baseline.iloc[0] if not baseline.empty else pd.Series(dtype=object)
+        mrmr = final_df[final_df["selector"].eq("mrmr")]
+        best_mrmr_auc = float(mrmr["oot_auc"].max()) if not mrmr.empty else math.nan
+        llm_family = final_df[final_df["selector"].isin(LLM_FAMILY_SELECTORS)]
+        best_llm_auc = float(llm_family["oot_auc"].max()) if not llm_family.empty else math.nan
+        llm_psi = psi_df[psi_df["selector"].isin(LLM_FAMILY_SELECTORS)] if not psi_df.empty else pd.DataFrame()
+        non_llm_psi = psi_df[~psi_df["selector"].isin(LLM_FAMILY_SELECTORS)] if not psi_df.empty else pd.DataFrame()
+        stability_reference = stability_df[stability_df["selector"].eq("mrmr")]
+        best_stability = (
+            stability_reference.sort_values("nogueira_stability", ascending=False).iloc[0]
+            if not stability_reference.empty
+            else pd.Series(dtype=object)
+        )
+        caveat = (
+            "Home Credit auxiliary-table timing is treated as historical based on relative-time field semantics, but strict row-level as-of validation remains a manual-review limitation."
+            if dataset_name == "homecredit"
+            else "LendingClub uses the processed leakage-audited path; OOT has a higher bad rate than DEV and is a harder validation period."
+        )
+        rows.append(
+            {
+                "dataset": dataset_name,
+                "best LR selector": best_lr["selector"],
+                "best LR OOT AUC": best_lr["oot_auc"],
+                "best CatBoost selector": best_cat["selector"],
+                "best CatBoost OOT AUC": best_cat["oot_auc"],
+                "strongest non-LLM baseline": best_baseline.get("selector", ""),
+                "mRMR OOT AUC": best_mrmr_auc,
+                "best LLM-family delta vs mRMR": best_llm_auc - best_mrmr_auc
+                if pd.notna(best_llm_auc) and pd.notna(best_mrmr_auc)
+                else math.nan,
+                "LLM-family mean feature PSI": llm_psi["psi_mean"].mean() if not llm_psi.empty else math.nan,
+                "non-LLM mean feature PSI": non_llm_psi["psi_mean"].mean() if not non_llm_psi.empty else math.nan,
+                "best exact-stability selector": best_stability.get("selector", ""),
+                "key caveat": caveat,
+            }
+        )
+
+    table = _round_numeric_frame(pd.DataFrame(rows), 4)
+    lines = [
+        "# Cross-Dataset Summary",
+        "",
+        "## Main Cross-Dataset Conclusion",
+        "",
+        "Across both datasets, LLM screening is competitive and consistently low-drift. mRMR remains the strongest exact-stability reference, especially when the question is repeatable feature identity rather than semantic coverage or drift. Home Credit favors `stable_core_llm_fill`, while LendingClub favors pure `llm`. The contribution is not universal dominance; it is LLM-assisted first-stage screening as a useful, drift-aware candidate generator.",
+        "",
+        "## Cross-Dataset Comparison Table",
+        "",
+        _frame_to_markdown(table) if not table.empty else "Cross-dataset comparison table unavailable.",
+        "",
+        "## Performance Pattern",
+        "",
+        "LLM-family selectors sit near the top of the OOT leaderboard on both datasets, but the margins over mRMR are small. The safest interpretation is that LLM screening is useful as a first-stage helper, not that it replaces mRMR or universally dominates statistical selectors.",
+        "",
+        "## Exact Stability Pattern",
+        "",
+        "mRMR and deterministic baselines remain important exact-stability references. Exact feature stability does not by itself settle the research question, because a perfectly repeatable selector can still be semantically narrow, higher drift, or weaker on OOT discrimination.",
+        "",
+        "## Drift Pattern",
+        "",
+        "The post-run PSI evidence supports the lower-drift part of the LLM claim more strongly than the performance-dominance claim. LLM-family selected pools generally avoid high average selected-feature PSI, while PCA is the recurring drift and performance caution case.",
+        "",
+        "## Semantic Coverage Pattern",
+        "",
+        "Semantic coverage is dataset and metadata-rule dependent. Home Credit has clearer source-table and business-concept separation. LendingClub previously overused `other`; the revised mapping makes the coverage evidence more interpretable but should still be treated as report-layer relabeling rather than changed selection results.",
+        "",
+        "## Dataset-Specific Behavior",
+        "",
+        "Home Credit supports the stable-core hybrid most clearly. LendingClub supports the pure LLM selector more clearly and also provides a leakage-audited external validation setting with a harder OOT period because OOT bad rate is higher than DEV.",
+        "",
+        "## Final Claim Wording",
+        "",
+        "Use this wording: LLM screening is useful as a first-stage helper. Do not say LLM replaces mRMR. Do not say LLM universally dominates statistical selectors.",
+        "",
+        "## Caveats",
+        "",
+        "- Home Credit auxiliary-table timing is treated as historical based on relative-time field semantics, but strict row-level as-of validation remains a manual-review limitation.",
+        "- Paired fold tests do not strongly support many OOT gains; small AUC gaps should be described cautiously.",
+        "- The LendingClub semantic grouping improvement is metadata/report relabeling only and does not change selected features or model results.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def build_dataset_report_markdown(dataset_name: str) -> str:
     dataset_name = _normalize_dataset_name(dataset_name)
     snapshot = load_dataset_snapshot(dataset_name)
     split_summary = load_split_summary(dataset_name)
     matrix_overview = _matrix_overview(dataset_name)
+    final_df = load_final_comparison(dataset_name)
+    stability_df = load_stability_table(dataset_name)
+    drift_df = load_drift_table(dataset_name)
+    psi_distribution = load_psi_distribution_by_pipeline(dataset_name)
+    high_psi = load_high_psi_features_by_pipeline(dataset_name)
+    llm_mrmr_drift = load_llm_then_mrmr_drift_source_breakdown(dataset_name)
+    llm_top100 = load_llm_top100_candidate_psi(dataset_name)
+    semantic_redundancy = load_semantic_redundancy_table(dataset_name)
+    paired_significance = load_paired_fold_significance_tests(dataset_name)
+    best_runs = load_best_runs(dataset_name)
+    compact_llm = load_compact_llm_cache_summary(dataset_name)
+    appendix_path = save_full_llm_cache_appendix(dataset_name)
+    clip_placeholder = summarize_clip_validation_placeholder(dataset_name)
     findings = summarize_dataset_findings(dataset_name)
     warnings = _warnings(dataset_name)
+
+    leaderboard_cols = [
+        "model",
+        "selector",
+        "experiment_type",
+        "oot_auc",
+        "oot_gini",
+        "oot_ks",
+        "lift_at_10",
+        "selected_feature_count",
+        "runtime_seconds",
+        "model_score_psi",
+    ]
+    stability_cols = [
+        "model",
+        "selector",
+        "nogueira_stability",
+        "kuncheva_stability",
+        "mean_pairwise_jaccard",
+        "semantic_group_jaccard",
+        "stable_feature_count_80",
+        "stable_feature_ratio_80",
+    ]
+    drift_cols = [
+        "model",
+        "selector",
+        "selected_feature_count",
+        "psi_mean",
+        "psi_median",
+        "psi_p90",
+        "psi_max",
+        "high_psi_feature_count",
+        "high_psi_feature_ratio",
+    ]
+    semantic_cols = [
+        "model",
+        "selector",
+        "selected feature count",
+        "number of semantic groups",
+        "semantic group entropy if easy",
+        "largest group share",
+        "average within-group absolute correlation",
+        "max within-group absolute correlation",
+        "redundancy risk flag",
+    ]
+    significance_cols = [
+        "model",
+        "candidate_selector",
+        "baseline_selector",
+        "metric",
+        "mean_delta",
+        "ttest_p_value",
+        "wilcoxon_p_value",
+        "significant_at_0_05",
+        "interpretation",
+    ]
 
     lines = [
         f"# {_display_dataset_name(dataset_name)} Final Report",
         "",
         f"Dataset role: {_dataset_role(dataset_name)}.",
+        "",
+        "## Research Question and Dataset Role",
+        "",
+        "This research checks whether LLM metadata screening is useful as a first-stage feature-selection helper. Home Credit is the primary benchmark, and LendingClub is the external validation dataset. Logistic Regression and CatBoost are evaluation vehicles rather than the main contribution. Calibration, stacking, production scoring, and deployment are out of scope.",
         "",
         "## Snapshot",
         "",
@@ -1378,17 +2062,41 @@ def build_dataset_report_markdown(dataset_name: str) -> str:
         "",
         "## Topline Performance Comparison",
         "",
+        _frame_to_markdown(final_df[[col for col in leaderboard_cols if col in final_df.columns]].head(16)) if not final_df.empty else "Final comparison table unavailable.",
+        "",
         findings["topline_markdown"],
         "",
+        "Paired fold significance tests against mRMR:",
+        "",
+        _frame_to_markdown(paired_significance[[col for col in significance_cols if col in paired_significance.columns]]) if not paired_significance.empty else "Paired fold significance tests unavailable.",
+        "",
         "## Stability Review",
+        "",
+        _frame_to_markdown(stability_df[[col for col in stability_cols if col in stability_df.columns]].head(16)) if not stability_df.empty else "Stability table unavailable.",
         "",
         findings["stability_markdown"],
         "",
         "## Drift and Robustness Review",
         "",
+        _frame_to_markdown(psi_distribution[[col for col in drift_cols if col in psi_distribution.columns]].head(16)) if not psi_distribution.empty else "Feature-level PSI distribution table unavailable.",
+        "",
+        "High-PSI selected features:",
+        "",
+        _frame_to_markdown(high_psi.head(20)) if not high_psi.empty else "No high-PSI selected features were flagged, or the artifact is unavailable.",
+        "",
+        "`llm_then_mrmr` drift-source breakdown:",
+        "",
+        _frame_to_markdown(llm_mrmr_drift.head(20)) if not llm_mrmr_drift.empty else "LLM/mRMR drift-source breakdown unavailable.",
+        "",
+        "LLM top-100 candidate PSI evidence:",
+        "",
+        _frame_to_markdown(llm_top100.head(30)) if not llm_top100.empty else "LLM top-100 candidate PSI table unavailable.",
+        "",
         findings["drift_markdown"],
         "",
-        "## Semantic Coverage Review",
+        "## Semantic Coverage and Redundancy Review",
+        "",
+        _frame_to_markdown(semantic_redundancy[[col for col in semantic_cols if col in semantic_redundancy.columns]]) if not semantic_redundancy.empty else "Semantic coverage/redundancy table unavailable.",
         "",
         findings["semantic_markdown"],
         "",
@@ -1396,13 +2104,29 @@ def build_dataset_report_markdown(dataset_name: str) -> str:
         "",
         findings["efficiency_markdown"],
         "",
+        "LLM call/cache summary:",
+        "",
+        _frame_to_markdown(compact_llm),
+        "",
+        f"Full cache/hash appendix: `{_repo_relative_path(appendix_path)}`." if appendix_path is not None else "Full cache/hash appendix unavailable.",
+        "",
+        "## Best Runs Deep Dive",
+        "",
+        _frame_to_markdown(best_runs) if not best_runs.empty else "Best-run artifacts unavailable.",
+        "",
         "## Failure Cases and Surprises",
         "",
         findings["failure_markdown"],
         "",
-        "## Conclusions",
+        "## Conclusions for This Dataset",
         "",
         findings["conclusion_markdown"],
+        "",
+        f"## {clip_placeholder['title']}",
+        "",
+        clip_placeholder["summary"],
+        "",
+        _frame_to_markdown(clip_placeholder["artifacts"]),
         "",
         "## Next Actions",
         "",
