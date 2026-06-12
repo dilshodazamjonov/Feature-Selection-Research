@@ -18,7 +18,7 @@ from credit_risk_fs.evaluation.plotting import generate_experiment_plots, genera
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate plot bundles from completed experiment runs.")
-    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], required=True)
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub", "lendingclub_v2"], required=True)
     parser.add_argument("--results-dir", default=None)
     parser.add_argument("--output-dir", default=None)
     return parser

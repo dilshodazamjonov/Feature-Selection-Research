@@ -175,6 +175,10 @@ credit_feature_selection_research/
 |-- Notebooks/
 |   |-- homecredit/
 |   `-- lendingclub/
+|-- reports/
+|   |-- cross_dataset_v2_analysis.md
+|   |-- homecredit_report.md
+|   `-- lendingclub_report.md
 |-- scripts/
 |   |-- prepare_homecredit.py
 |   |-- prepare_lendingclub.py

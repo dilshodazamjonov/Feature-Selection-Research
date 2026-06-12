@@ -197,12 +197,12 @@ Features:
 Return ONLY valid JSON:
 {{
   "selected_features": ["feature_1", "feature_2"],
-  "reasoning_summary": "High-level reasoning.",
+  "reasoning_summary": "One concise high-level reason.",
   "selection_principles": ["stability", "coverage", "redundancy control"],
-  "feature_reasons": {{
-    "feature_1": "Reason the feature belongs in the broad candidate pool."
-  }}
+  "feature_reasons": {{}}
 }}
+
+Keep the response compact. Do not include per-feature explanations unless absolutely necessary.
 """.strip()
 
     def _build_metadata_signature(self, metadata: List[Dict], y: pd.Series | None) -> str:
@@ -250,32 +250,7 @@ Return ONLY valid JSON:
         fold_key = "final_dev" if self.scope == "final_dev" else f"fold_{self.fold_id}"
         return self.cache_dir / f"{safe_scope}_{fold_key}_{signature}.json"
 
-    def _call_llm(self, prompt: str) -> dict:
-        logger.info(
-            "Calling LLM (%s) for ranking. Shared pool target: %s features.",
-            self.model,
-            self.ranking_budget,
-        )
-
-        client = self._get_client()
-        response = client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a senior retail credit-risk feature-screening expert "
-                        "specializing in interpretable, stable variable selection."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-        )
-
-        content = (response.choices[0].message.content or "").strip()
-        data = json.loads(content)
+    def _normalize_llm_response(self, data: dict, response: Any, content: str) -> dict:
         raw_selected = data.get("selected_features", [])
 
         if not isinstance(raw_selected, list):
@@ -304,6 +279,85 @@ Return ONLY valid JSON:
             "total_tokens": getattr(usage, "total_tokens", None) if usage is not None else None,
             "raw_response": content,
         }
+
+    def _fallback_payload(
+        self,
+        *,
+        candidate_features: list[str],
+        errors: list[str],
+        raw_response: str,
+    ) -> dict:
+        logger.error(
+            "LLM ranking response could not be parsed after retries; using deterministic fallback ranking."
+        )
+        return {
+            "selected_features": candidate_features[: self.ranking_budget],
+            "reasoning_summary": (
+                "Deterministic fallback ranking used because the LLM returned malformed JSON."
+            ),
+            "selection_principles": ["deterministic_fallback_after_llm_json_error"],
+            "feature_reasons": {},
+            "request_model": self.model,
+            "response_model": self.model,
+            "response_id": None,
+            "prompt_tokens": None,
+            "completion_tokens": None,
+            "total_tokens": None,
+            "raw_response": raw_response,
+            "fallback_reason": "llm_json_parse_failed_after_retries",
+            "llm_response_parse_errors": errors,
+        }
+
+    def _call_llm(self, prompt: str, candidate_features: list[str] | None = None) -> dict:
+        logger.info(
+            "Calling LLM (%s) for ranking. Shared pool target: %s features.",
+            self.model,
+            self.ranking_budget,
+        )
+
+        client = self._get_client()
+        system_message = (
+            "You are a senior retail credit-risk feature-screening expert "
+            "specializing in interpretable, stable variable selection."
+        )
+        errors: list[str] = []
+        last_content = ""
+        for attempt in range(1, 4):
+            user_prompt = prompt
+            if attempt > 1:
+                user_prompt = (
+                    f"{prompt}\n\n"
+                    "CRITICAL RETRY INSTRUCTION: the previous response was not parseable JSON. "
+                    "Return compact valid JSON only. Include selected_features, a short "
+                    "reasoning_summary, selection_principles, and set feature_reasons to {}."
+                )
+            response = client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_prompt},
+                ],
+                response_format={"type": "json_object"},
+            )
+
+            content = (response.choices[0].message.content or "").strip()
+            last_content = content
+            try:
+                data = json.loads(content)
+                return self._normalize_llm_response(data, response, content)
+            except (json.JSONDecodeError, ValueError) as exc:
+                error = f"attempt={attempt}: {type(exc).__name__}: {exc}"
+                errors.append(error)
+                logger.warning("Invalid LLM JSON ranking response (%s).", error)
+
+        if candidate_features:
+            return self._fallback_payload(
+                candidate_features=candidate_features,
+                errors=errors,
+                raw_response=last_content,
+            )
+        raise ValueError(f"LLM response did not produce parseable ranking JSON: {errors}")
 
     def _write_artifacts(self, payload: dict, metadata: List[Dict], prompt: str) -> None:
         if self.artifact_dir is None:
@@ -435,9 +489,23 @@ Return ONLY valid JSON:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         cache_key_hash = self._cache_key_hash()
 
+        payload = None
         if cache_file.exists():
             logger.info("Loading cached LLM ranking from %s", cache_file)
-            payload = json.loads(cache_file.read_text(encoding="utf-8"))
+            try:
+                payload = json.loads(cache_file.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                invalid_path = cache_file.with_name(
+                    f"{cache_file.stem}.invalid_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}{cache_file.suffix}"
+                )
+                cache_file.replace(invalid_path)
+                logger.warning(
+                    "Moved invalid LLM cache file to %s after JSON parse failure: %s",
+                    invalid_path,
+                    exc,
+                )
+
+        if payload is not None:
             self.cache_hit_ = True
             self.llm_cache_hits_ = 1
             payload.setdefault("metadata_signature", self.metadata_signature_)
@@ -457,7 +525,7 @@ Return ONLY valid JSON:
             payload.setdefault("cache_key_hash", cache_key_hash)
             payload.setdefault("cache_file_name", cache_file.name)
         else:
-            payload = self._call_llm(prompt)
+            payload = self._call_llm(prompt, candidate_features=candidate_X.columns.tolist())
             self.cache_hit_ = False
             self.llm_calls_made_ = 1
             payload.update(

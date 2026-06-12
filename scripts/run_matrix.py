@@ -16,7 +16,7 @@ from credit_risk_fs.experiments.runner import main as runner_main  # noqa: E402
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the full research matrix for one dataset.")
-    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], required=True)
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub", "lendingclub_v2"], required=True)
     parser.add_argument("--config", default=None)
     parser.add_argument("--models", nargs="+", default=None)
     parser.add_argument("--force", action="store_true")

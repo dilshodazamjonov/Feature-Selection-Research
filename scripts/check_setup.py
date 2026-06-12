@@ -36,12 +36,17 @@ DATASET_FILE_REQUIREMENTS = {
         "required_columns": {"TARGET", "recent_decision"},
         "temporal_sources": {},
     },
+    "lendingclub_v2": {
+        "required_files": ["application_train.csv"],
+        "required_columns": {"TARGET", "recent_decision", "issue_d"},
+        "temporal_sources": {},
+    },
 }
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate the research setup before training.")
-    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], default="homecredit")
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub", "lendingclub_v2"], default="homecredit")
     parser.add_argument("--config", default=None)
     return parser
 

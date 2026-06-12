@@ -28,6 +28,7 @@ The refactored repository is organized around a source package under `src/credit
 - `results/homecredit`: Home Credit experiment outputs
 - `results/lendingclub`: LendingClub experiment outputs
 - `results/cross_dataset`: combined summaries when both datasets are available
+- `reports/`: markdown research summaries and approval/audit notes
 
 Each run folder is expected to contain:
 - `features/`
@@ -40,3 +41,5 @@ Each run folder is expected to contain:
 ## Compatibility
 
 Legacy top-level modules such as `Preprocessing/`, `feature_selection/`, `Models/`, `evaluation/`, `experiments/`, `pipelines/`, and `training/` are kept as thin compatibility shims while the real code lives under `src/credit_risk_fs/`.
+
+Final narrative deliverables are markdown files under `reports/`. Final-report notebooks were removed to keep the repo focused on the reproducible scripts and generated markdown artifacts.

@@ -17,10 +17,9 @@ if str(SRC_ROOT) not in sys.path:
 
 from credit_risk_fs.evaluation.drift import calculate_psi  # noqa: E402
 from credit_risk_fs.feature_metadata.builder import infer_semantic_group  # noqa: E402
-from credit_risk_fs.reporting.notebook_report import (  # noqa: E402
+from credit_risk_fs.reporting.markdown_report import (  # noqa: E402
     build_cross_dataset_summary_markdown,
     build_dataset_report_markdown,
-    save_final_report_plots,
 )
 
 
@@ -194,6 +193,9 @@ def build_llm_top100_candidate_psi(dataset: str) -> pd.DataFrame:
             selected_flag = feature in selected_set
             psi_value = selected_psi_map.get(feature)
             missing_reason = ""
+            semantic_group = item.get("semantic_group")
+            if dataset == "lendingclub":
+                semantic_group = infer_semantic_group(feature)
             if dataset == "lendingclub" and feature in lc_psi:
                 psi_value = lc_psi[feature]
             elif pd.isna(psi_value):
@@ -212,7 +214,7 @@ def build_llm_top100_candidate_psi(dataset: str) -> pd.DataFrame:
                     "in_llm_top100": True,
                     "in_final_selected_set": selected_flag,
                     "selected_by_downstream_stat_selector": bool(selected_flag and str(run["selector"]) in {"llm_then_mrmr", "llm_then_boruta"}),
-                    "semantic_group": item.get("semantic_group"),
+                    "semantic_group": semantic_group,
                     "source_table": item.get("source_table"),
                     "psi_dev_oot": psi_value,
                     "psi_flag": _psi_flag(psi_value),
@@ -503,7 +505,6 @@ def main() -> None:
 
     (REPORTS_DIR / "cross_dataset_summary.md").write_text(build_cross_dataset_summary_markdown(), encoding="utf-8")
     for dataset in DATASETS:
-        save_final_report_plots(dataset)
         (REPORTS_DIR / f"{dataset}_report.md").write_text(build_dataset_report_markdown(dataset), encoding="utf-8")
 
     print("strengthened final report artifacts")

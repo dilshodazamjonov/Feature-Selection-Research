@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Markdown report builders for saved credit-risk experiment artifacts."""
+
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -8,7 +10,6 @@ import json
 import math
 
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from credit_risk_fs.experiments.config import load_named_project_config
 from credit_risk_fs.feature_engineering.homecredit.assemble import build_application_time_proxy
@@ -17,18 +18,9 @@ from credit_risk_fs.preprocessing.lendingclub import ensure_lendingclub_target_a
 from credit_risk_fs.utils.paths import project_root, results_root
 
 
-SUPPORTED_DATASETS = {"homecredit", "lendingclub"}
+SUPPORTED_DATASETS = {"homecredit", "lendingclub", "lendingclub_v2"}
 BASELINE_SELECTORS = {"mrmr", "boruta", "pca", "domain_rule_baseline"}
 LLM_FAMILY_SELECTORS = {"llm", "llm_then_mrmr", "llm_then_boruta", "stable_core_llm_fill"}
-FINAL_REPORT_PLOT_COLUMNS = [
-    "plot_file",
-    "source_table",
-    "rows_used",
-    "columns_used",
-    "purpose",
-    "status",
-    "skip_reason",
-]
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,7 +42,11 @@ def _dataset_role(dataset_name: str) -> str:
 
 
 def _display_dataset_name(dataset_name: str) -> str:
-    return "Home Credit" if dataset_name == "homecredit" else "LendingClub"
+    if dataset_name == "homecredit":
+        return "Home Credit"
+    if dataset_name == "lendingclub_v2":
+        return "LendingClub v2"
+    return "LendingClub"
 
 
 def _round_numeric_frame(df: pd.DataFrame, digits: int = 4) -> pd.DataFrame:
@@ -412,7 +408,7 @@ def _warnings(dataset_name: str) -> list[str]:
         warnings.append(
             "Home Credit split diagnostics use application_train plus previous_application recency only, because no saved processed modeling table exists under data/homecredit/processed."
         )
-    if dataset_name == "lendingclub":
+    if dataset_name in {"lendingclub", "lendingclub_v2"}:
         warnings.append(
             "No separate encoded-feature-count artifact exists; the snapshot reports engineered candidate features from experiment summaries and source-table width from the processed application table."
         )
@@ -466,8 +462,13 @@ def _homecredit_minimal_time_frame() -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def _lendingclub_minimal_time_frame() -> pd.DataFrame:
+    return _lendingclub_minimal_time_frame_for_dataset("lendingclub")
+
+
+@lru_cache(maxsize=None)
+def _lendingclub_minimal_time_frame_for_dataset(dataset_name: str) -> pd.DataFrame:
     root = project_root()
-    app_path = root / "data" / "lendingclub" / "processed" / "application_train.csv"
+    app_path = root / "data" / dataset_name / "processed" / "application_train.csv"
     if not app_path.exists():
         return pd.DataFrame()
 
@@ -514,7 +515,7 @@ def _time_frame(dataset_name: str) -> pd.DataFrame:
     if dataset_name == "homecredit":
         frame = _homecredit_minimal_time_frame().copy()
     else:
-        frame = _lendingclub_minimal_time_frame().copy()
+        frame = _lendingclub_minimal_time_frame_for_dataset(dataset_name).copy()
     if frame.empty:
         return frame
     frame["split_segment"] = _split_segment(
@@ -568,12 +569,12 @@ def _time_bucket_summary(dataset_name: str) -> pd.DataFrame:
 
 
 def _modeling_feature_count_if_available(dataset_name: str) -> float:
-    if dataset_name != "lendingclub":
+    if dataset_name not in {"lendingclub", "lendingclub_v2"}:
         return math.nan
-    frame = _lendingclub_minimal_time_frame()
+    frame = _lendingclub_minimal_time_frame_for_dataset(dataset_name)
     if frame.empty:
         return math.nan
-    app_path = project_root() / "data" / "lendingclub" / "processed" / "application_train.csv"
+    app_path = project_root() / "data" / dataset_name / "processed" / "application_train.csv"
     header = list(pd.read_csv(app_path, nrows=0).columns)
     excluded = set(_dataset_config(dataset_name).get("excluded_feature_columns", []))
     return float(len([column for column in header if column not in excluded]))
@@ -719,7 +720,7 @@ def load_split_summary(dataset_name: str) -> pd.DataFrame:
     frame = _time_frame(dataset_name)
 
     dev_start_date = dev_end_date = oot_start_date = oot_end_date = None
-    if dataset_name == "lendingclub" and not frame.empty:
+    if dataset_name in {"lendingclub", "lendingclub_v2"} and not frame.empty:
         dev_start_date, dev_end_date = _lendingclub_date_window(frame, "DEV")
         oot_start_date, oot_end_date = _lendingclub_date_window(frame, "OOT")
 
@@ -942,6 +943,18 @@ def _top_semantic_groups(selected_df: pd.DataFrame, *, limit: int = 3) -> str:
     return ", ".join(parts) if parts else "unavailable"
 
 
+def _apply_report_semantic_mapping(dataset_name: str, selected_df: pd.DataFrame) -> pd.DataFrame:
+    """Apply report-layer semantic labels without changing saved selections."""
+    if selected_df.empty or _normalize_dataset_name(dataset_name) not in {"lendingclub", "lendingclub_v2"}:
+        return selected_df
+    feature_col = "feature_name" if "feature_name" in selected_df.columns else "feature"
+    if feature_col not in selected_df.columns:
+        return selected_df
+    relabelled = selected_df.copy()
+    relabelled["semantic_group"] = relabelled[feature_col].map(lambda feature: infer_semantic_group(str(feature)))
+    return relabelled
+
+
 def _frame_to_markdown(df: pd.DataFrame) -> str:
     if df.empty:
         return "No rows available."
@@ -998,7 +1011,7 @@ def load_best_runs(dataset_name: str) -> pd.DataFrame:
         artifacts = load_run_artifacts(dataset_name, run_id)
         summary_df = artifacts["summary_table"]
         cv_df = artifacts["cv_results"]
-        selected_df = artifacts["selected_features"]
+        selected_df = _apply_report_semantic_mapping(dataset_name, artifacts["selected_features"])
         summary_row = summary_df.iloc[0] if not summary_df.empty else {}
         rows.append(
             {
@@ -1059,7 +1072,7 @@ def load_run_artifacts(dataset_name: str, run_id: str) -> dict[str, Any]:
     cv_results = _read_csv(run_dir / "results" / "cv_results.csv")
     oot_results = _read_csv(run_dir / "results" / "oot_test_results.csv")
     selected_features = _read_csv(run_dir / "features" / "final_selected_features.csv")
-    if dataset_name == "lendingclub" and not selected_features.empty:
+    if dataset_name in {"lendingclub", "lendingclub_v2"} and not selected_features.empty:
         feature_col = "feature_name" if "feature_name" in selected_features.columns else "feature"
         if feature_col in selected_features.columns:
             selected_features = selected_features.copy()
@@ -1086,543 +1099,6 @@ def load_run_artifacts(dataset_name: str, run_id: str) -> dict[str, Any]:
         "semantic_group_summary": _round_numeric_frame(semantic_group_summary),
         "warnings": [],
     }
-
-
-def _plot_split_background(ax: plt.Axes, plot_df: pd.DataFrame) -> None:
-    dev_idx = plot_df.index[plot_df["split_segment"] == "DEV"].tolist()
-    oot_idx = plot_df.index[plot_df["split_segment"] == "OOT"].tolist()
-    if dev_idx:
-        ax.axvspan(min(dev_idx) - 0.5, max(dev_idx) + 0.5, color="#dbeafe", alpha=0.35)
-    if oot_idx:
-        ax.axvspan(min(oot_idx) - 0.5, max(oot_idx) + 0.5, color="#fde68a", alpha=0.30)
-        ax.axvline(min(oot_idx) - 0.5, color="#b45309", linestyle="--", linewidth=1.2)
-
-
-def _base_theme() -> None:
-    import seaborn as sns
-
-    sns.set_theme(style="whitegrid", context="notebook")
-
-
-def plot_observation_count_by_time(dataset_name: str) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    plot_df = _time_bucket_summary(dataset_name).copy()
-    fig, ax = plt.subplots(figsize=(12, 4))
-    if plot_df.empty:
-        ax.text(0.5, 0.5, "Time-bucket summary unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    ax.bar(range(len(plot_df)), plot_df["observation_count"], color="#2563eb")
-    ax.set_xticks(range(len(plot_df)))
-    ax.set_xticklabels(plot_df["time_bucket"], rotation=45, ha="right")
-    ax.set_ylabel("Observation Count")
-    ax.set_title(f"{_display_dataset_name(_normalize_dataset_name(dataset_name))}: observations by time bucket")
-    _plot_split_background(ax, plot_df)
-    fig.tight_layout()
-    return fig
-
-
-def plot_bad_rate_by_time(dataset_name: str) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    plot_df = _time_bucket_summary(dataset_name).copy()
-    fig, ax = plt.subplots(figsize=(12, 4))
-    if plot_df.empty:
-        ax.text(0.5, 0.5, "Time-bucket summary unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    ax.plot(range(len(plot_df)), plot_df["bad_rate"], marker="o", color="#dc2626", linewidth=2)
-    ax.set_xticks(range(len(plot_df)))
-    ax.set_xticklabels(plot_df["time_bucket"], rotation=45, ha="right")
-    ax.set_ylabel("Bad Rate")
-    ax.set_title(f"{_display_dataset_name(_normalize_dataset_name(dataset_name))}: bad rate by time bucket")
-    _plot_split_background(ax, plot_df)
-    fig.tight_layout()
-    return fig
-
-
-def plot_dev_oot_split_diagnostics(dataset_name: str) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    plot_df = _time_bucket_summary(dataset_name).copy()
-    fig, axes = plt.subplots(2, 1, figsize=(12, 7), sharex=True)
-    if plot_df.empty:
-        for ax in axes:
-            ax.text(0.5, 0.5, "Time-bucket summary unavailable.", ha="center", va="center")
-            ax.axis("off")
-        return fig
-
-    axes[0].bar(range(len(plot_df)), plot_df["observation_count"], color="#2563eb")
-    axes[0].set_ylabel("Observation Count")
-    axes[0].set_title(f"{_display_dataset_name(_normalize_dataset_name(dataset_name))}: DEV/OOT split diagnostics")
-    _plot_split_background(axes[0], plot_df)
-
-    axes[1].plot(range(len(plot_df)), plot_df["bad_rate"], marker="o", color="#dc2626", linewidth=2)
-    axes[1].set_ylabel("Bad Rate")
-    axes[1].set_xticks(range(len(plot_df)))
-    axes[1].set_xticklabels(plot_df["time_bucket"], rotation=45, ha="right")
-    _plot_split_background(axes[1], plot_df)
-    fig.tight_layout()
-    return fig
-
-
-def plot_metric_leaderboard(
-    final_df: pd.DataFrame,
-    *,
-    metric: str = "oot_auc",
-    secondary_metric: str = "oot_gini",
-) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharex=False)
-    if final_df.empty:
-        for ax in axes:
-            ax.text(0.5, 0.5, "Comparison table unavailable.", ha="center", va="center")
-            ax.axis("off")
-        return fig
-
-    for ax, model_name in zip(axes, ["lr", "catboost"], strict=False):
-        subset = final_df.loc[final_df["model"] == model_name].sort_values(metric, ascending=True)
-        if subset.empty:
-            ax.text(0.5, 0.5, f"No rows for {model_name}.", ha="center", va="center")
-            ax.axis("off")
-            continue
-        labels = subset["selector"] + " (" + subset["experiment_type"] + ")"
-        ax.barh(labels, subset[metric], color="#0f766e")
-        ax.set_title(model_name.upper())
-        ax.set_xlabel(metric.replace("_", " ").upper())
-        for idx, (_, row) in enumerate(subset.iterrows()):
-            ax.text(
-                row[metric],
-                idx,
-                f" {row[secondary_metric]:.4f} {secondary_metric.replace('_', ' ')}",
-                va="center",
-                fontsize=9,
-            )
-    fig.suptitle("OOT metric leaderboard by model and selector")
-    fig.tight_layout()
-    return fig
-
-
-def plot_stability_vs_performance(
-    stability_df: pd.DataFrame,
-    final_df: pd.DataFrame,
-    *,
-    stability_col: str = "nogueira_stability",
-    performance_col: str = "oot_auc",
-) -> plt.Figure:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    _base_theme()
-    merged = final_df.copy()
-    required_cols = [stability_col, "semantic_group_jaccard"]
-    if not set(required_cols).issubset(merged.columns):
-        supplemental = stability_df[["model", "selector", "experiment_type", *required_cols]].copy()
-        merged = merged.merge(supplemental, on=["model", "selector", "experiment_type"], how="left")
-    fig, ax = plt.subplots(figsize=(8, 6))
-    if merged.empty:
-        ax.text(0.5, 0.5, "Stability comparison unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    sns.scatterplot(
-        data=merged,
-        x=stability_col,
-        y=performance_col,
-        hue="model",
-        style="experiment_type",
-        s=120,
-        ax=ax,
-    )
-    for _, row in merged.iterrows():
-        ax.text(row[stability_col] + 0.002, row[performance_col] + 0.0005, row["selector"], fontsize=8)
-    ax.set_title("Selection stability vs OOT performance")
-    fig.tight_layout()
-    return fig
-
-
-def plot_drift_vs_performance(
-    drift_df: pd.DataFrame,
-    final_df: pd.DataFrame,
-    *,
-    drift_col: str = "selected_feature_psi_mean",
-    performance_col: str = "oot_auc",
-) -> plt.Figure:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    _base_theme()
-    merged = final_df.copy()
-    required_cols = [drift_col, "model_score_psi"]
-    if not set(required_cols).issubset(merged.columns):
-        supplemental = drift_df[["model", "selector", "experiment_type", *required_cols]].copy()
-        merged = merged.merge(supplemental, on=["model", "selector", "experiment_type"], how="left")
-    fig, ax = plt.subplots(figsize=(8, 6))
-    if merged.empty:
-        ax.text(0.5, 0.5, "Drift comparison unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    sns.scatterplot(
-        data=merged,
-        x=drift_col,
-        y=performance_col,
-        hue="model",
-        style="experiment_type",
-        size="model_score_psi",
-        sizes=(60, 220),
-        ax=ax,
-    )
-    for _, row in merged.iterrows():
-        ax.text(row[drift_col] + 0.001, row[performance_col] + 0.0005, row["selector"], fontsize=8)
-    ax.set_title("Drift vs OOT performance")
-    fig.tight_layout()
-    return fig
-
-
-def plot_semantic_coverage(semantic_df: pd.DataFrame) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    fig, ax = plt.subplots(figsize=(14, 6))
-    if semantic_df.empty:
-        ax.text(0.5, 0.5, "Semantic coverage table unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    plot_df = (
-        semantic_df.assign(model_selector=lambda df: df["model"] + ":" + df["selector"])
-        .pivot_table(
-            index="model_selector",
-            columns="semantic_group",
-            values="feature_ratio",
-            aggfunc="mean",
-            fill_value=0.0,
-        )
-    )
-    if plot_df.shape[1] > 8:
-        top_groups = plot_df.sum(axis=0).sort_values(ascending=False).head(8).index
-        plot_df = plot_df.loc[:, top_groups]
-    plot_df.plot(kind="bar", stacked=True, ax=ax, colormap="tab20")
-    ax.set_ylabel("Mean Feature Ratio")
-    ax.set_title("Semantic coverage by selector")
-    ax.legend(title="Semantic Group", bbox_to_anchor=(1.02, 1), loc="upper left")
-    fig.tight_layout()
-    return fig
-
-
-def plot_runtime_tradeoff(
-    final_df: pd.DataFrame,
-    *,
-    performance_col: str = "oot_auc",
-) -> plt.Figure:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    _base_theme()
-    fig, ax = plt.subplots(figsize=(8, 6))
-    if final_df.empty:
-        ax.text(0.5, 0.5, "Runtime tradeoff table unavailable.", ha="center", va="center")
-        ax.axis("off")
-        return fig
-
-    sns.scatterplot(
-        data=final_df,
-        x="runtime_seconds",
-        y=performance_col,
-        hue="model",
-        style="selector",
-        size="selected_feature_count",
-        sizes=(80, 240),
-        ax=ax,
-    )
-    for _, row in final_df.iterrows():
-        ax.text(row["runtime_seconds"] + 10, row[performance_col] + 0.0005, row["selector"], fontsize=8)
-    ax.set_title("Runtime vs OOT performance")
-    ax.set_xlabel("Runtime Seconds")
-    fig.tight_layout()
-    return fig
-
-
-def lendingclub_monthly_bad_rate_observation_count_table() -> pd.DataFrame:
-    frame = _time_frame("lendingclub").copy()
-    if frame.empty or "issue_d" not in frame.columns:
-        return pd.DataFrame(columns=["issue_month", "split_segment", "observation_count", "bad_rate"])
-    frame["issue_month"] = pd.to_datetime(frame["issue_d"], errors="coerce").dt.to_period("M").dt.to_timestamp()
-    grouped = (
-        frame.dropna(subset=["issue_month"])
-        .groupby(["issue_month", "split_segment"], as_index=False)
-        .agg(observation_count=("TARGET", "size"), bad_rate=("TARGET", "mean"))
-        .sort_values("issue_month")
-    )
-    grouped["issue_month"] = grouped["issue_month"].dt.strftime("%Y-%m")
-    return _round_numeric_frame(grouped[["issue_month", "split_segment", "observation_count", "bad_rate"]])
-
-
-def plot_lendingclub_monthly_bad_rate_observation_count(monthly_df: pd.DataFrame | None = None) -> plt.Figure:
-    import matplotlib.pyplot as plt
-
-    _base_theme()
-    monthly_df = lendingclub_monthly_bad_rate_observation_count_table() if monthly_df is None else monthly_df.copy()
-    fig, ax_count = plt.subplots(figsize=(12, 5))
-    if monthly_df.empty:
-        ax_count.text(0.5, 0.5, "LendingClub monthly split diagnostics unavailable.", ha="center", va="center")
-        ax_count.axis("off")
-        return fig
-
-    plot_df = monthly_df.sort_values("issue_month").reset_index(drop=True)
-    x_values = list(range(len(plot_df)))
-    colors = plot_df["split_segment"].map({"DEV": "#88b7d5", "OOT": "#f2c078"}).fillna("#d0d0d0")
-    ax_count.bar(x_values, plot_df["observation_count"], color=colors, alpha=0.75, label="Observation count")
-    ax_count.set_ylabel("Observation count")
-    ax_count.set_xlabel("Issue month")
-
-    ax_rate = ax_count.twinx()
-    ax_rate.plot(x_values, plot_df["bad_rate"], color="#2f2f2f", marker="o", linewidth=1.8, label="Bad rate")
-    ax_rate.set_ylabel("Bad rate")
-
-    for segment, color in [("DEV", "#88b7d5"), ("OOT", "#f2c078")]:
-        indexes = [idx for idx, value in enumerate(plot_df["split_segment"].tolist()) if value == segment]
-        if indexes:
-            ax_count.axvspan(min(indexes) - 0.5, max(indexes) + 0.5, color=color, alpha=0.12, label=f"{segment} region")
-
-    tick_step = max(1, len(plot_df) // 12)
-    tick_positions = list(range(0, len(plot_df), tick_step))
-    ax_count.set_xticks(tick_positions)
-    ax_count.set_xticklabels(plot_df.loc[tick_positions, "issue_month"], rotation=45, ha="right")
-    ax_count.set_title("LendingClub Monthly Bad Rate and Observation Count by Split")
-    handles_count, labels_count = ax_count.get_legend_handles_labels()
-    handles_rate, labels_rate = ax_rate.get_legend_handles_labels()
-    ax_count.legend(handles_count + handles_rate, labels_count + labels_rate, loc="upper left")
-    fig.tight_layout()
-    return fig
-
-
-def _final_report_plots_dir(dataset_name: str) -> Path:
-    path = _dataset_paths(dataset_name).results_dir / "final_report" / "plots"
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def _plot_manifest_row(
-    *,
-    plot_file: str,
-    source_table: str,
-    rows_used: int,
-    columns_used: list[str],
-    purpose: str,
-    status: str,
-    skip_reason: str = "",
-) -> dict[str, Any]:
-    return {
-        "plot_file": plot_file,
-        "source_table": source_table,
-        "rows_used": rows_used,
-        "columns_used": ";".join(columns_used),
-        "purpose": purpose,
-        "status": status,
-        "skip_reason": skip_reason,
-    }
-
-
-def _save_if_informative(
-    *,
-    dataset_name: str,
-    plot_file: str,
-    source_table: str,
-    source_df: pd.DataFrame,
-    columns_used: list[str],
-    purpose: str,
-    figure_factory: Any,
-    category_columns: list[str] | None = None,
-    value_columns: list[str] | None = None,
-) -> dict[str, Any]:
-    missing_columns = [column for column in columns_used if column not in source_df.columns]
-    if source_df.empty:
-        return _plot_manifest_row(
-            plot_file=plot_file,
-            source_table=source_table,
-            rows_used=0,
-            columns_used=columns_used,
-            purpose=purpose,
-            status="skipped",
-            skip_reason="empty source data",
-        )
-    if missing_columns:
-        return _plot_manifest_row(
-            plot_file=plot_file,
-            source_table=source_table,
-            rows_used=len(source_df),
-            columns_used=columns_used,
-            purpose=purpose,
-            status="skipped",
-            skip_reason=f"missing columns: {', '.join(missing_columns)}",
-        )
-    for column in category_columns or []:
-        if source_df[column].nunique(dropna=True) <= 1:
-            return _plot_manifest_row(
-                plot_file=plot_file,
-                source_table=source_table,
-                rows_used=len(source_df),
-                columns_used=columns_used,
-                purpose=purpose,
-                status="skipped",
-                skip_reason=f"only one category in {column}",
-            )
-    for column in value_columns or []:
-        if source_df[column].nunique(dropna=True) <= 1:
-            return _plot_manifest_row(
-                plot_file=plot_file,
-                source_table=source_table,
-                rows_used=len(source_df),
-                columns_used=columns_used,
-                purpose=purpose,
-                status="skipped",
-                skip_reason=f"constant or unavailable values in {column}",
-            )
-
-    fig = figure_factory()
-    fig.savefig(_final_report_plots_dir(dataset_name) / plot_file, dpi=160, bbox_inches="tight")
-    plt.close(fig)
-    return _plot_manifest_row(
-        plot_file=plot_file,
-        source_table=source_table,
-        rows_used=len(source_df),
-        columns_used=columns_used,
-        purpose=purpose,
-        status="created",
-    )
-
-
-def save_final_report_plots(dataset_name: str) -> pd.DataFrame:
-    """Save final-report plots and a plot manifest under results/<dataset>/final_report/plots."""
-    dataset_name = _normalize_dataset_name(dataset_name)
-    final_df = load_final_comparison(dataset_name)
-    stability_df = load_stability_table(dataset_name)
-    drift_df = load_drift_table(dataset_name)
-    semantic_df = load_semantic_coverage_table(dataset_name)
-    time_df = load_time_bucket_summary(dataset_name)
-
-    rows = [
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="dev_oot_split_diagnostics.png",
-            source_table="derived time-bucket summary",
-            source_df=time_df,
-            columns_used=["time_bucket", "split_segment", "observation_count", "bad_rate"],
-            purpose="Show DEV/OOT observation counts and bad-rate behavior by time bucket.",
-            figure_factory=lambda: plot_dev_oot_split_diagnostics(dataset_name),
-            category_columns=["split_segment"],
-            value_columns=["observation_count", "bad_rate"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="observation_count_by_time.png",
-            source_table="derived time-bucket summary",
-            source_df=time_df,
-            columns_used=["time_bucket", "observation_count", "split_segment"],
-            purpose="Show observations available by time bucket.",
-            figure_factory=lambda: plot_observation_count_by_time(dataset_name),
-            value_columns=["observation_count"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="bad_rate_by_time.png",
-            source_table="derived time-bucket summary",
-            source_df=time_df,
-            columns_used=["time_bucket", "bad_rate", "split_segment"],
-            purpose="Show target-rate behavior by time bucket.",
-            figure_factory=lambda: plot_bad_rate_by_time(dataset_name),
-            value_columns=["bad_rate"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="metric_leaderboard_oot_auc.png",
-            source_table="final_comparison_table.csv",
-            source_df=final_df,
-            columns_used=["model", "selector", "experiment_type", "oot_auc", "oot_gini"],
-            purpose="Compare OOT AUC leaderboard by model and selector.",
-            figure_factory=lambda: plot_metric_leaderboard(final_df),
-            category_columns=["selector"],
-            value_columns=["oot_auc"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="stability_vs_performance.png",
-            source_table="final_comparison_table.csv + feature_stability_table.csv",
-            source_df=final_df,
-            columns_used=["model", "selector", "experiment_type", "oot_auc", "nogueira_stability"],
-            purpose="Compare exact feature stability against OOT AUC.",
-            figure_factory=lambda: plot_stability_vs_performance(stability_df, final_df),
-            category_columns=["selector"],
-            value_columns=["oot_auc", "nogueira_stability"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="drift_vs_performance.png",
-            source_table="final_comparison_table.csv + feature_drift_table.csv",
-            source_df=final_df,
-            columns_used=["model", "selector", "experiment_type", "oot_auc", "selected_feature_psi_mean"],
-            purpose="Compare selected-feature PSI against OOT AUC.",
-            figure_factory=lambda: plot_drift_vs_performance(drift_df, final_df),
-            category_columns=["selector"],
-            value_columns=["oot_auc", "selected_feature_psi_mean"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="semantic_coverage.png",
-            source_table="analysis/semantic_redundancy/semantic_coverage_by_pipeline_relabelled.csv"
-            if dataset_name == "lendingclub"
-            else "semantic_coverage_table.csv",
-            source_df=semantic_df,
-            columns_used=["model", "selector", "semantic_group", "feature_ratio"],
-            purpose="Show semantic group mix by selector.",
-            figure_factory=lambda: plot_semantic_coverage(semantic_df),
-            category_columns=["selector", "semantic_group"],
-            value_columns=["feature_ratio"],
-        ),
-        _save_if_informative(
-            dataset_name=dataset_name,
-            plot_file="runtime_tradeoff.png",
-            source_table="final_comparison_table.csv",
-            source_df=final_df,
-            columns_used=["runtime_seconds", "oot_auc", "model", "selector", "selected_feature_count"],
-            purpose="Compare runtime, feature count, and OOT AUC.",
-            figure_factory=lambda: plot_runtime_tradeoff(final_df),
-            category_columns=["selector"],
-            value_columns=["runtime_seconds", "oot_auc"],
-        ),
-    ]
-    if dataset_name == "lendingclub":
-        monthly_df = lendingclub_monthly_bad_rate_observation_count_table()
-        split_dir = _dataset_paths(dataset_name).results_dir / "final_report" / "split_diagnostics"
-        split_dir.mkdir(parents=True, exist_ok=True)
-        monthly_df.to_csv(split_dir / "lendingclub_monthly_bad_rate_observation_count.csv", index=False)
-        rows.append(
-            _save_if_informative(
-                dataset_name=dataset_name,
-                plot_file="lendingclub_monthly_bad_rate_observation_count.png",
-                source_table="final_report/split_diagnostics/lendingclub_monthly_bad_rate_observation_count.csv",
-                source_df=monthly_df,
-                columns_used=["issue_month", "split_segment", "observation_count", "bad_rate"],
-                purpose="Connect LendingClub DEV/OOT split rationale to monthly bad-rate and observation-count behavior.",
-                figure_factory=lambda: plot_lendingclub_monthly_bad_rate_observation_count(monthly_df),
-                category_columns=["split_segment"],
-                value_columns=["observation_count", "bad_rate"],
-            )
-        )
-    save_full_llm_cache_appendix(dataset_name)
-    manifest = pd.DataFrame(rows, columns=FINAL_REPORT_PLOT_COLUMNS)
-    manifest.to_csv(_final_report_plots_dir(dataset_name) / "plot_manifest.csv", index=False)
-    return manifest
 
 
 def summarize_split_rationale(dataset_name: str) -> str:
@@ -1866,7 +1342,7 @@ def summarize_clip_validation_placeholder(dataset_name: str) -> dict[str, Any]:
 
 def build_cross_dataset_summary_markdown() -> str:
     rows: list[dict[str, Any]] = []
-    for dataset_name in ["homecredit", "lendingclub"]:
+    for dataset_name in ["homecredit", "lendingclub_v2"]:
         final_df = load_final_comparison(dataset_name)
         stability_df = load_stability_table(dataset_name)
         psi_df = load_psi_distribution_by_pipeline(dataset_name)
@@ -1927,7 +1403,7 @@ def build_cross_dataset_summary_markdown() -> str:
         "",
         "## Performance Pattern",
         "",
-        "LLM-family selectors sit near the top of the OOT leaderboard on both datasets, but the margins over mRMR are small. The safest interpretation is that LLM screening is useful as a first-stage helper, not that it replaces mRMR or universally dominates statistical selectors.",
+        "LLM-family selectors sit near the top of the OOT leaderboard on both datasets, but the margins over mRMR are small. The safest interpretation is that LLM screening is useful as a first-stage helper, with mRMR still retained as an important non-LLM reference and with no blanket superiority claim over statistical selectors.",
         "",
         "## Exact Stability Pattern",
         "",
@@ -1947,7 +1423,7 @@ def build_cross_dataset_summary_markdown() -> str:
         "",
         "## Final Claim Wording",
         "",
-        "Use this wording: LLM screening is useful as a first-stage helper. Do not say LLM replaces mRMR. Do not say LLM universally dominates statistical selectors.",
+        "Use this wording: LLM screening is useful as a first-stage helper. Keep mRMR as an important non-LLM reference, and avoid blanket superiority claims over statistical selectors.",
         "",
         "## Caveats",
         "",
@@ -2034,7 +1510,6 @@ def build_dataset_report_markdown(dataset_name: str) -> str:
         "significant_at_0_05",
         "interpretation",
     ]
-
     lines = [
         f"# {_display_dataset_name(dataset_name)} Final Report",
         "",

@@ -13,7 +13,7 @@ Across both datasets, LLM screening is competitive and consistently low-drift. m
 
 ## Performance Pattern
 
-LLM-family selectors sit near the top of the OOT leaderboard on both datasets, but the margins over mRMR are small. The safest interpretation is that LLM screening is useful as a first-stage helper, not that it replaces mRMR or universally dominates statistical selectors.
+LLM-family selectors sit near the top of the OOT leaderboard on both datasets, but the margins over mRMR are small. The safest interpretation is that LLM screening is useful as a first-stage helper, with mRMR still retained as an important non-LLM reference and with no blanket superiority claim over statistical selectors.
 
 ## Exact Stability Pattern
 
@@ -33,7 +33,7 @@ Home Credit supports the stable-core hybrid most clearly. LendingClub supports t
 
 ## Final Claim Wording
 
-Use this wording: LLM screening is useful as a first-stage helper. Do not say LLM replaces mRMR. Do not say LLM universally dominates statistical selectors.
+Use this wording: LLM screening is useful as a first-stage helper. Keep mRMR as an important non-LLM reference, and avoid blanket superiority claims over statistical selectors.
 
 ## Caveats
 

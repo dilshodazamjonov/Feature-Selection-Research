@@ -1,9 +1,8 @@
-"""Notebook reporting helpers for dataset-level research review artifacts."""
+"""Markdown reporting helpers for dataset-level research review artifacts."""
 
-from credit_risk_fs.reporting.notebook_report import (
+from credit_risk_fs.reporting.markdown_report import (
     build_cross_dataset_summary_markdown,
     build_dataset_report_markdown,
-    lendingclub_monthly_bad_rate_observation_count_table,
     load_compact_llm_cache_summary,
     load_feature_level_psi_by_run,
     load_best_runs,
@@ -24,16 +23,6 @@ from credit_risk_fs.reporting.notebook_report import (
     load_split_summary,
     load_stability_table,
     load_time_bucket_summary,
-    plot_bad_rate_by_time,
-    plot_dev_oot_split_diagnostics,
-    plot_drift_vs_performance,
-    plot_lendingclub_monthly_bad_rate_observation_count,
-    plot_metric_leaderboard,
-    plot_observation_count_by_time,
-    plot_runtime_tradeoff,
-    plot_semantic_coverage,
-    plot_stability_vs_performance,
-    save_final_report_plots,
     save_full_llm_cache_appendix,
     summarize_clip_validation_placeholder,
     summarize_dataset_findings,
@@ -43,7 +32,6 @@ from credit_risk_fs.reporting.notebook_report import (
 __all__ = [
     "build_cross_dataset_summary_markdown",
     "build_dataset_report_markdown",
-    "lendingclub_monthly_bad_rate_observation_count_table",
     "load_compact_llm_cache_summary",
     "load_feature_level_psi_by_run",
     "load_best_runs",
@@ -64,16 +52,6 @@ __all__ = [
     "load_split_summary",
     "load_stability_table",
     "load_time_bucket_summary",
-    "plot_bad_rate_by_time",
-    "plot_dev_oot_split_diagnostics",
-    "plot_drift_vs_performance",
-    "plot_lendingclub_monthly_bad_rate_observation_count",
-    "plot_metric_leaderboard",
-    "plot_observation_count_by_time",
-    "plot_runtime_tradeoff",
-    "plot_semantic_coverage",
-    "plot_stability_vs_performance",
-    "save_final_report_plots",
     "save_full_llm_cache_appendix",
     "summarize_clip_validation_placeholder",
     "summarize_dataset_findings",

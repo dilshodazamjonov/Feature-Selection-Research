@@ -16,7 +16,7 @@ from credit_risk_fs.experiments.single_run import main as single_run_main  # noq
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run one selector/model configuration.")
-    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], required=True)
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub", "lendingclub_v2"], required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--selector", required=True)
     parser.add_argument("--output-dir", default=None)

@@ -1,0 +1,22 @@
+dataset_name: lendingclub_v2
+model_selector: lr
+data_dir: data/lendingclub_v2/processed
+description_path: data/lendingclub_v2/metadata/columns_description.csv
+results_dir: results/lendingclub_v2
+random_seed: 42
+feature_budgets:
+  lr: 20
+  catboost: 40
+n_splits: 5
+dev_start_day: -1795
+oot_start_day: -1065
+oot_end_day: -730
+cv_gap_groups: 1
+excluded_feature_columns:
+  - TARGET
+  - recent_decision
+  - issue_d
+  - loan_status
+time_col: recent_decision
+preprocessor_kwargs:
+  cat_min_frequency: 50

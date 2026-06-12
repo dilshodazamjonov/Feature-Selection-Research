@@ -2,6 +2,8 @@
 
 This note is intentionally conservative and does not claim false certainty about auxiliary-table as-of semantics.
 
+Home Credit auxiliary-table timing is treated as historical based on relative-time field semantics, but strict row-level as-of validation remains a manual-review limitation.
+
 ## Auxiliary Tables Used
 
 - `previous_application`

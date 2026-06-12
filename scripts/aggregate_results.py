@@ -148,7 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Aggregate completed matrix runs into final comparison tables.",
     )
     parser.add_argument("results_dir", nargs="?", default="results")
-    parser.add_argument("--dataset", choices=["homecredit", "lendingclub"], default=None)
+    parser.add_argument("--dataset", choices=["homecredit", "lendingclub", "lendingclub_v2"], default=None)
     parser.add_argument(
         "--output",
         default=None,
