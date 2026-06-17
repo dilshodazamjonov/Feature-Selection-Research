@@ -15,11 +15,31 @@ if str(SRC_ROOT) not in sys.path:
 from credit_risk_fs.feature_metadata.builder import infer_semantic_group
 
 
-DATASETS = ("homecredit", "lendingclub")
+DATASETS = ("homecredit", "lendingclub_v2")
 RESULTS_ROOT = Path("results")
+DATA_ROOT = Path("data")
 REPORTS_ROOT = Path("reports")
 OUTPUT_SUBDIR = Path("analysis") / "clip_readiness"
+CROSS_DATASET_OUTPUT = "cross_dataset_v2"
 STABLE_CORE_THRESHOLD = 0.8
+DEV_ONLY_TRAINING_SPLIT = "DEV_ONLY"
+DEV_ONLY_LEAKAGE_RULE = (
+    "Train CLIP selector evidence only from application-time feature metadata, "
+    "DEV missingness/statistical summaries, DEV IV, DEV fold-selection frequencies, "
+    "and DEV LLM ranks. Do not use OOT labels, OOT feature summaries, PSI, target columns, "
+    "split columns, IDs, post-origination outcomes, payment/settlement/hardship fields, "
+    "or any feature marked non-safe in dataset leakage review."
+)
+PROHIBITED_TRAINING_FIELDS = (
+    "target;TARGET;label;bad_flag;split;fold_id;SK_ID_CURR;member_id;id;"
+    "psi_dev_oot_if_available;missing_rate_oot_if_available;mean_oot_if_available;"
+    "std_oot_if_available;oot_*;post_origination_status;payment;settlement;hardship;"
+    "recoveries;collection;last_pymnt;next_pymnt"
+)
+EVALUATION_ONLY_FIELDS = (
+    "psi_dev_oot_if_available;missing_rate_oot_if_available;mean_oot_if_available;"
+    "std_oot_if_available;OOT performance metrics"
+)
 
 EVIDENCE_COLUMNS = [
     "dataset",
@@ -69,14 +89,49 @@ SUMMARY_COLUMNS = [
     "features_with_stable_core_membership",
     "usable_for_clip_training_count",
     "not_usable_for_clip_training_count",
+    "dev_only_training_allowed_count",
+    "dev_only_training_blocked_count",
     "main_missing_reason",
+]
+
+DEV_ONLY_TRAINING_COLUMNS = [
+    "dataset",
+    "feature",
+    "clip_training_split",
+    "clip_training_text",
+    "description",
+    "semantic_group",
+    "source_table",
+    "dtype_if_available",
+    "missing_rate_dev",
+    "iv_score_if_available",
+    "bootstrap_selection_frequency_if_available",
+    "mrmr_selection_frequency",
+    "boruta_selection_frequency",
+    "llm_best_rank",
+    "llm_mean_rank_if_available",
+    "stable_core_membership",
+    "selected_by_any_pipeline",
+    "selected_by_mrmr",
+    "selected_by_llm",
+    "selected_by_llm_then_mrmr",
+    "selected_by_stable_core_llm_fill",
+    "allowed_for_clip_training",
+    "clip_training_exclusion_reason",
+    "leakage_review_status",
+    "leakage_review_action",
+    "leakage_review_reason",
+    "leakage_rule",
+    "prohibited_training_fields",
+    "evaluation_only_fields",
+    "evidence_source_files",
 ]
 
 
 def _read_csv(path: Path) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame()
-    return pd.read_csv(path)
+    return pd.read_csv(path, encoding_errors="replace")
 
 
 def _normalize_path(path_text: Any) -> Path:
@@ -134,6 +189,88 @@ def _empty_base(dataset: str, features: set[str]) -> pd.DataFrame:
     return pd.DataFrame({"dataset": dataset, "feature": sorted(features)})
 
 
+def _dataset_feature_catalog(dataset: str) -> pd.DataFrame:
+    path = DATA_ROOT / dataset / "metadata" / "columns_description.csv"
+    frame = _read_csv(path)
+    if frame.empty:
+        return pd.DataFrame(columns=["feature"])
+
+    frame = frame.rename(
+        columns={
+            "Row": "feature",
+            "Description": "description",
+            "Table": "source_table",
+        }
+    )
+    if "feature" not in frame.columns:
+        return pd.DataFrame(columns=["feature"])
+
+    keep = [
+        "feature",
+        "description",
+        "semantic_group",
+        "source_table",
+        "source_column_or_formula",
+        "leakage_review_status",
+        "availability_timing",
+    ]
+    catalog = frame[[col for col in keep if col in frame.columns]].copy()
+    catalog["feature"] = catalog["feature"].astype(str)
+    catalog = catalog[catalog["feature"].str.len() > 0]
+    return catalog.drop_duplicates(subset=["feature"], keep="first")
+
+
+def _homecredit_excluded_features() -> set[str]:
+    path = DATA_ROOT / "homecredit" / "metadata" / "leakage_columns.yaml"
+    if not path.exists():
+        return set()
+    excluded: set[str] = set()
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            excluded.add(stripped[2:].strip())
+    return excluded
+
+
+def _leakage_review_frame(dataset: str) -> pd.DataFrame:
+    if dataset == "lendingclub_v2":
+        path = DATA_ROOT / dataset / "metadata" / "leakage_review.csv"
+        review = _read_csv(path)
+        if review.empty or "feature" not in review.columns:
+            return pd.DataFrame(columns=["feature"])
+        review = review.rename(
+            columns={
+                "action": "leakage_review_action",
+                "reason": "leakage_review_reason",
+            }
+        )
+        keep = [
+            "feature",
+            "leakage_review_status",
+            "leakage_review_action",
+            "leakage_review_reason",
+        ]
+        return review[[col for col in keep if col in review.columns]].drop_duplicates(
+            subset=["feature"],
+            keep="first",
+        )
+
+    if dataset == "homecredit":
+        excluded = _homecredit_excluded_features()
+        rows = [
+            {
+                "feature": feature,
+                "leakage_review_status": "excluded",
+                "leakage_review_action": "exclude",
+                "leakage_review_reason": "Home Credit leakage_columns.yaml exclusion.",
+            }
+            for feature in sorted(excluded)
+        ]
+        return pd.DataFrame(rows)
+
+    return pd.DataFrame(columns=["feature"])
+
+
 def _collect_features_and_sources(dataset: str, matrix: pd.DataFrame) -> tuple[set[str], dict[str, set[str]]]:
     features: set[str] = set()
     sources: dict[str, set[str]] = defaultdict(set)
@@ -143,6 +280,13 @@ def _collect_features_and_sources(dataset: str, matrix: pd.DataFrame) -> tuple[s
         RESULTS_ROOT / dataset / "analysis" / "feature_level_drift" / "feature_level_psi_by_run.csv",
         RESULTS_ROOT / dataset / "analysis" / "feature_level_drift" / "llm_top100_candidate_psi.csv",
     ]
+    catalog = _dataset_feature_catalog(dataset)
+    if dataset == "lendingclub_v2" and not catalog.empty:
+        catalog_path = DATA_ROOT / dataset / "metadata" / "columns_description.csv"
+        for feature in catalog["feature"].dropna().astype(str):
+            features.add(feature)
+            sources[feature].add(_repo_rel(catalog_path))
+
     if not matrix.empty:
         for run_folder in matrix["output_folder"].tolist():
             folder = Path(run_folder)
@@ -177,6 +321,23 @@ def _collect_features_and_sources(dataset: str, matrix: pd.DataFrame) -> tuple[s
 
 def _metadata_frame(dataset: str, matrix: pd.DataFrame, sources: dict[str, set[str]]) -> pd.DataFrame:
     frames: list[pd.DataFrame] = []
+    catalog = _dataset_feature_catalog(dataset)
+    if not catalog.empty:
+        catalog = catalog.rename(
+            columns={
+                "source_column_or_formula": "source_table",
+            }
+        )
+        cols = [
+            "feature",
+            "description",
+            "semantic_group",
+            "source_table",
+            "leakage_review_status",
+            "availability_timing",
+        ]
+        frames.append(catalog[[col for col in cols if col in catalog.columns]].copy())
+
     base_path = RESULTS_ROOT / dataset / "feature_level_evidence.csv"
     base = _read_csv(base_path)
     if not base.empty:
@@ -253,6 +414,12 @@ def _metadata_frame(dataset: str, matrix: pd.DataFrame, sources: dict[str, set[s
         source_table=("source_table", _first_nonempty) if "source_table" in combined.columns else ("feature", lambda _: pd.NA),
         dtype_if_available=("dtype_if_available", _first_nonempty)
         if "dtype_if_available" in combined.columns
+        else ("feature", lambda _: pd.NA),
+        leakage_review_status=("leakage_review_status", _first_nonempty)
+        if "leakage_review_status" in combined.columns
+        else ("feature", lambda _: pd.NA),
+        availability_timing=("availability_timing", _first_nonempty)
+        if "availability_timing" in combined.columns
         else ("feature", lambda _: pd.NA),
         missing_rate_dev=("missing_rate_dev", _mean_numeric) if "missing_rate_dev" in combined.columns else ("feature", lambda _: pd.NA),
         mean_dev_if_available=("mean_dev_if_available", _mean_numeric)
@@ -550,6 +717,119 @@ def _main_missing_reason(frame: pd.DataFrame) -> str:
     return reasons.most_common(1)[0][0]
 
 
+def _feature_name_leakage_reason(feature: str) -> str:
+    lower = str(feature).lower()
+    exact_blocklist = {
+        "target",
+        "label",
+        "bad",
+        "bad_flag",
+        "is_bad",
+        "default",
+        "loan_status",
+        "sk_id_curr",
+        "member_id",
+        "id",
+    }
+    if lower in exact_blocklist:
+        return "blocked_feature_name"
+    blocked_fragments = [
+        "target",
+        "loan_status",
+        "recoveries",
+        "collection_recovery",
+        "last_pymnt",
+        "next_pymnt",
+        "settlement",
+        "hardship",
+        "debt_settlement",
+    ]
+    if any(fragment in lower for fragment in blocked_fragments):
+        return "blocked_post_outcome_or_target_like_name"
+    return ""
+
+
+def _leakage_exclusion_reason(row: pd.Series) -> str:
+    reasons: list[str] = []
+    name_reason = _feature_name_leakage_reason(str(row.get("feature", "")))
+    if name_reason:
+        reasons.append(name_reason)
+
+    status = str(row.get("leakage_review_status", "")).strip().lower()
+    action = str(row.get("leakage_review_action", "")).strip().lower()
+    if action == "exclude":
+        reasons.append("leakage_review_action_exclude")
+    if status and status not in {"safe", "nan", "none", "<na>"}:
+        reasons.append(f"leakage_review_status_{status}")
+    return ";".join(dict.fromkeys(reasons))
+
+
+def _clip_training_text(row: pd.Series) -> str:
+    parts = [
+        f"feature={row.get('feature', '')}",
+        f"semantic_group={row.get('semantic_group', '')}",
+        f"source_table={row.get('source_table', '')}",
+        f"dtype={row.get('dtype_if_available', '')}",
+        f"description={row.get('description', '')}",
+    ]
+    if pd.notna(row.get("missing_rate_dev")):
+        parts.append(f"dev_missing_rate={row.get('missing_rate_dev')}")
+    if pd.notna(row.get("iv_score_if_available")):
+        parts.append(f"dev_iv={row.get('iv_score_if_available')}")
+    if pd.notna(row.get("llm_best_rank")):
+        parts.append(f"dev_llm_best_rank={row.get('llm_best_rank')}")
+    return " | ".join(str(part) for part in parts)
+
+
+def build_dev_only_training_evidence(dataset: str, evidence: pd.DataFrame) -> pd.DataFrame:
+    training = evidence.copy()
+    review = _leakage_review_frame(dataset)
+    if not review.empty:
+        training = training.merge(review, on="feature", how="left")
+
+    for col in ["leakage_review_status", "leakage_review_action", "leakage_review_reason"]:
+        if col not in training.columns:
+            training[col] = pd.NA
+
+    if dataset == "homecredit":
+        training["leakage_review_status"] = training["leakage_review_status"].fillna("safe")
+        training["leakage_review_action"] = training["leakage_review_action"].fillna("include")
+        training["leakage_review_reason"] = training["leakage_review_reason"].fillna(
+            "Target/time leakage exclusions are defined in data/homecredit/metadata/leakage_columns.yaml."
+        )
+    elif dataset == "lendingclub_v2":
+        training["leakage_review_status"] = training["leakage_review_status"].fillna("safe")
+        training["leakage_review_action"] = training["leakage_review_action"].fillna("include")
+        training["leakage_review_reason"] = training["leakage_review_reason"].fillna(
+            "Included by LendingClub v2 leakage_review.csv or generated safe metadata."
+        )
+
+    leakage_reasons = training.apply(_leakage_exclusion_reason, axis=1)
+    base_reasons = training["exclusion_reason_for_clip_if_any"].fillna("").astype(str)
+    combined_reasons = []
+    for base, leakage in zip(base_reasons, leakage_reasons):
+        reasons = [reason for reason in f"{base};{leakage}".split(";") if reason]
+        combined_reasons.append(";".join(dict.fromkeys(reasons)))
+
+    training["clip_training_split"] = DEV_ONLY_TRAINING_SPLIT
+    training["clip_training_text"] = training.apply(_clip_training_text, axis=1)
+    training["clip_training_exclusion_reason"] = combined_reasons
+    training["allowed_for_clip_training"] = training["clip_training_exclusion_reason"].eq("")
+    training["leakage_rule"] = DEV_ONLY_LEAKAGE_RULE
+    training["prohibited_training_fields"] = PROHIBITED_TRAINING_FIELDS
+    training["evaluation_only_fields"] = EVALUATION_ONLY_FIELDS
+
+    for col in DEV_ONLY_TRAINING_COLUMNS:
+        if col not in training.columns:
+            training[col] = pd.NA
+
+    training = training[DEV_ONLY_TRAINING_COLUMNS].sort_values("feature").reset_index(drop=True)
+    out_dir = RESULTS_ROOT / dataset / OUTPUT_SUBDIR
+    out_dir.mkdir(parents=True, exist_ok=True)
+    training.to_csv(out_dir / "dev_only_clip_training_evidence.csv", index=False)
+    return training
+
+
 def build_dataset(dataset: str) -> tuple[pd.DataFrame, dict[str, Any]]:
     matrix = _load_matrix(dataset)
     features, sources = _collect_features_and_sources(dataset, matrix)
@@ -591,19 +871,6 @@ def build_dataset(dataset: str) -> tuple[pd.DataFrame, dict[str, Any]]:
     if dataset == "lendingclub":
         evidence["semantic_group"] = evidence["feature"].map(lambda feature: infer_semantic_group(str(feature)))
 
-    evidence["psi_available_flag"] = evidence["psi_dev_oot_if_available"].notna()
-    evidence["psi_missing_reason"] = evidence["psi_missing_reason"].fillna("")
-    missing_psi = ~evidence["psi_available_flag"]
-    default_missing_reason = "not_selected_or_no_saved_candidate_psi_artifact"
-    if dataset == "homecredit":
-        default_missing_reason = "rejected_candidate_or_unselected_feature_psi_not_saved"
-    evidence.loc[missing_psi & evidence["psi_missing_reason"].eq(""), "psi_missing_reason"] = default_missing_reason
-
-    evidence["evidence_source_files"] = evidence.apply(lambda row: _merge_sources(row, sources), axis=1)
-    evidence["exclusion_reason_for_clip_if_any"] = evidence.apply(_training_exclusion_reason, axis=1)
-    evidence["usable_for_clip_training_flag"] = evidence["exclusion_reason_for_clip_if_any"].eq("")
-    evidence["oot_fields_are_evaluation_only"] = True
-
     for col in [
         "description",
         "source_table",
@@ -612,6 +879,7 @@ def build_dataset(dataset: str) -> tuple[pd.DataFrame, dict[str, Any]]:
         "missing_rate_oot_if_available",
         "iv_score_if_available",
         "psi_dev_oot_if_available",
+        "psi_missing_reason",
         "bootstrap_selection_frequency_if_available",
         "mrmr_selection_frequency",
         "boruta_selection_frequency",
@@ -625,11 +893,25 @@ def build_dataset(dataset: str) -> tuple[pd.DataFrame, dict[str, Any]]:
         if col not in evidence.columns:
             evidence[col] = pd.NA
 
+    evidence["psi_available_flag"] = evidence["psi_dev_oot_if_available"].notna()
+    evidence["psi_missing_reason"] = evidence["psi_missing_reason"].fillna("")
+    missing_psi = ~evidence["psi_available_flag"]
+    default_missing_reason = "not_selected_or_no_saved_candidate_psi_artifact"
+    if dataset == "homecredit":
+        default_missing_reason = "rejected_candidate_or_unselected_feature_psi_not_saved"
+    evidence.loc[missing_psi & evidence["psi_missing_reason"].eq(""), "psi_missing_reason"] = default_missing_reason
+
+    evidence["evidence_source_files"] = evidence.apply(lambda row: _merge_sources(row, sources), axis=1)
+    evidence["exclusion_reason_for_clip_if_any"] = evidence.apply(_training_exclusion_reason, axis=1)
+    evidence["usable_for_clip_training_flag"] = evidence["exclusion_reason_for_clip_if_any"].eq("")
+    evidence["oot_fields_are_evaluation_only"] = True
+
     evidence = evidence[EVIDENCE_COLUMNS].sort_values("feature").reset_index(drop=True)
     out_dir = RESULTS_ROOT / dataset / OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "feature_level_evidence_for_clip.csv"
     evidence.to_csv(out_path, index=False)
+    training = build_dev_only_training_evidence(dataset, evidence)
 
     summary = {
         "dataset": dataset,
@@ -645,6 +927,8 @@ def build_dataset(dataset: str) -> tuple[pd.DataFrame, dict[str, Any]]:
         "features_with_stable_core_membership": int(evidence["stable_core_membership"].sum()),
         "usable_for_clip_training_count": int(evidence["usable_for_clip_training_flag"].sum()),
         "not_usable_for_clip_training_count": int((~evidence["usable_for_clip_training_flag"]).sum()),
+        "dev_only_training_allowed_count": int(training["allowed_for_clip_training"].sum()),
+        "dev_only_training_blocked_count": int((~training["allowed_for_clip_training"]).sum()),
         "main_missing_reason": _main_missing_reason(evidence),
     }
     return evidence, summary
@@ -717,8 +1001,11 @@ def write_report(summary: pd.DataFrame, datasets: dict[str, pd.DataFrame]) -> No
         "## Evidence Tables Created",
         "",
         "- `results/homecredit/analysis/clip_readiness/feature_level_evidence_for_clip.csv`",
-        "- `results/lendingclub/analysis/clip_readiness/feature_level_evidence_for_clip.csv`",
-        "- `results/cross_dataset/analysis/clip_readiness/feature_level_evidence_summary.csv`",
+        "- `results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv`",
+        "- `results/lendingclub_v2/analysis/clip_readiness/feature_level_evidence_for_clip.csv`",
+        "- `results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv`",
+        "- `results/cross_dataset_v2/analysis/clip_readiness/feature_level_evidence_summary.csv`",
+        "- `results/cross_dataset_v2/analysis/clip_readiness/dev_only_clip_training_evidence_summary.csv`",
         "",
         "## Cross-Dataset Summary",
         "",
@@ -730,24 +1017,26 @@ def write_report(summary: pd.DataFrame, datasets: dict[str, pd.DataFrame]) -> No
         "",
         "## Readiness Answers",
         "",
-        "1. Baseline evidence is complete enough for CLIP planning. The tables consolidate descriptions, semantic groups, DEV missingness, IV where saved, LLM ranks, fold-selection frequencies, stable-core bootstrap frequencies, selected-pipeline flags, and available PSI support.",
-        "2. Baseline evidence is not complete enough for CLIP training. Several fields needed for a clean training design are missing for material subsets, especially OOT-independent empirical summaries for rejected candidates and complete PSI/IV coverage.",
+        "1. Baseline evidence is complete enough for CLIP planning across Home Credit and LendingClub v2. The tables consolidate descriptions, semantic groups, DEV missingness, IV where saved, LLM ranks, fold-selection frequencies, stable-core bootstrap frequencies, selected-pipeline flags, and available PSI support.",
+        "2. The generated `dev_only_clip_training_evidence.csv` files are the only CLIP-training candidate evidence tables from this script. They exclude OOT/PSI fields and include explicit leakage-review decisions and blocking reasons.",
         "3. Missing fields vary by dataset, but both datasets lack saved OOT mean/std feature summaries. Features outside saved LLM/IV/selection artifacts also lack IV, LLM rank, and selector-frequency fields.",
         "4. Home Credit still lacks rejected-candidate PSI. Selected-feature PSI exists, and some LLM top-100 rows have PSI when the candidate was selected, but rejected-candidate DEV/OOT design matrices were not saved for complete PSI recovery.",
-        "5. LendingClub still has unavailable PSI for categorical or missing-frame features where numeric DEV/OOT values were unavailable or the feature was not present in the processed safe frame.",
+        "5. LendingClub v2 still has unavailable PSI for categorical or missing-frame features where numeric DEV/OOT values were unavailable or the feature was not present in the processed safe frame.",
         "6. Missing values can mostly be fixed by targeted artifact generation: save DEV-only per-feature descriptive stats for the full candidate pool, save OOT support stats separately, compute candidate PSI from saved design matrices or regenerate design-matrix diagnostics, and persist IV for the full candidate universe.",
         "7. A full experiment rerun is not required. The missing pieces are diagnostic/evidence artifacts, not changed feature-selection or model-training results.",
-        "8. Before CLIP training, generate training-safe DEV-only evidence tables, explicit train/evaluation field manifests, full candidate-pool IV, full candidate-pool missingness and numeric moments, complete LLM candidate ranks/reasons, and optional OOT PSI/mean/std support artifacts kept out of selector training.",
+        "8. Before any actual CLIP model training, use only the DEV-only evidence tables as training inputs and keep OOT PSI/mean/std support artifacts out of selector training.",
         "",
-        "## OOT Field Policy",
+        "## DEV-Only Training Leakage Policy",
         "",
-        "`oot_fields_are_evaluation_only` is set to `true` in the per-feature evidence tables. OOT PSI and OOT summary statistics may be used for evaluation/support diagnostics only and must not be used to train a selector unless explicitly approved later.",
+        DEV_ONLY_LEAKAGE_RULE,
+        "",
+        "`oot_fields_are_evaluation_only` is set to `true` in the per-feature evidence tables. OOT PSI and OOT summary statistics may be used for evaluation/support diagnostics only and must not be used to train a selector unless explicitly approved later. The DEV-only training evidence files intentionally omit the OOT/PSI columns.",
         "",
         "## Missing Artifacts",
         "",
         "- Complete saved DEV/OOT design matrices for rejected Home Credit LLM candidates.",
         "- Full candidate-pool PSI for Home Credit rejected or unselected features.",
-        "- Full candidate-pool PSI for LendingClub categorical or missing-frame features that do not have numeric DEV/OOT values in saved artifacts.",
+        "- Full candidate-pool PSI for LendingClub v2 categorical or missing-frame features that do not have numeric DEV/OOT values in saved artifacts.",
         "- Saved OOT mean/std feature-summary artifacts for both datasets.",
         "- Full candidate-pool IV artifacts for every feature in the unioned candidate universe.",
         "",
@@ -775,9 +1064,32 @@ def main() -> None:
         print(f"{dataset}: wrote {len(frame)} feature rows")
 
     summary_frame = pd.DataFrame(summaries)[SUMMARY_COLUMNS]
-    out_dir = RESULTS_ROOT / "cross_dataset" / OUTPUT_SUBDIR
+    out_dir = RESULTS_ROOT / CROSS_DATASET_OUTPUT / OUTPUT_SUBDIR
     out_dir.mkdir(parents=True, exist_ok=True)
     summary_frame.to_csv(out_dir / "feature_level_evidence_summary.csv", index=False)
+    training_summaries = []
+    for dataset in DATASETS:
+        training_path = RESULTS_ROOT / dataset / OUTPUT_SUBDIR / "dev_only_clip_training_evidence.csv"
+        training = _read_csv(training_path)
+        training_summaries.append(
+            {
+                "dataset": dataset,
+                "total_rows": int(len(training)),
+                "allowed_for_clip_training": int(training["allowed_for_clip_training"].sum())
+                if "allowed_for_clip_training" in training.columns
+                else 0,
+                "blocked_for_clip_training": int((~training["allowed_for_clip_training"].astype(bool)).sum())
+                if "allowed_for_clip_training" in training.columns
+                else int(len(training)),
+                "leakage_rule": DEV_ONLY_LEAKAGE_RULE,
+                "prohibited_training_fields": PROHIBITED_TRAINING_FIELDS,
+                "evaluation_only_fields": EVALUATION_ONLY_FIELDS,
+            }
+        )
+    pd.DataFrame(training_summaries).to_csv(
+        out_dir / "dev_only_clip_training_evidence_summary.csv",
+        index=False,
+    )
     write_report(summary_frame, datasets)
     print("wrote cross-dataset summary and readiness report")
 

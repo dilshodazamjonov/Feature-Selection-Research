@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -217,7 +218,7 @@ Keep the response compact. Do not include per-feature explanations unless absolu
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def _cache_key_payload(self) -> dict[str, Any]:
-        return {
+        payload = {
             "metadata_signature": self.metadata_signature_,
             "scope": self.scope,
             "fold_id": self.fold_id,
@@ -226,11 +227,13 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             "ranking_budget": self.ranking_budget_config or {"max_shared_pool": self.ranking_budget},
             "shared_pool_size": self.shared_pool_size,
             "config_hash": self.config_hash,
-            "feature_budget": self.feature_budget,
             "model": self.model,
             "temperature": self.temperature,
             "description_csv_path": str(self.description_csv_path),
         }
+        if not self.shared_ranking_enabled:
+            payload["feature_budget"] = self.feature_budget
+        return payload
 
     def _cache_key_hash(self) -> str:
         raw = json.dumps(self._cache_key_payload(), sort_keys=True, ensure_ascii=True, default=str)
@@ -358,6 +361,17 @@ Keep the response compact. Do not include per-feature explanations unless absolu
                 raw_response=last_content,
             )
         raise ValueError(f"LLM response did not produce parseable ranking JSON: {errors}")
+
+    def _call_llm_for_ranking(self, prompt: str, candidate_features: list[str]) -> dict:
+        """Call the LLM hook while preserving compatibility with old test doubles."""
+        signature = inspect.signature(self._call_llm)
+        supports_candidate_features = (
+            "candidate_features" in signature.parameters
+            or any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
+        )
+        if supports_candidate_features:
+            return self._call_llm(prompt, candidate_features=candidate_features)
+        return self._call_llm(prompt)
 
     def _write_artifacts(self, payload: dict, metadata: List[Dict], prompt: str) -> None:
         if self.artifact_dir is None:
@@ -525,7 +539,7 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             payload.setdefault("cache_key_hash", cache_key_hash)
             payload.setdefault("cache_file_name", cache_file.name)
         else:
-            payload = self._call_llm(prompt, candidate_features=candidate_X.columns.tolist())
+            payload = self._call_llm_for_ranking(prompt, candidate_X.columns.tolist())
             self.cache_hit_ = False
             self.llm_calls_made_ = 1
             payload.update(
