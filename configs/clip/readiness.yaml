@@ -1,0 +1,16 @@
+datasets:
+  - homecredit
+  - lendingclub_v2
+
+legacy_datasets:
+  - lendingclub
+
+training_evidence:
+  homecredit: results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv
+  lendingclub_v2: results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv
+
+cross_dataset_summary: results/cross_dataset_v2/analysis/clip_readiness/dev_only_clip_training_evidence_summary.csv
+
+min_allowed_rows:
+  homecredit: 100
+  lendingclub_v2: 100
