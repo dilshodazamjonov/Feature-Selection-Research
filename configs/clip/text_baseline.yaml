@@ -1,0 +1,58 @@
+manifest_path: results/clip/dry_run/training_manifest.json
+training_features_path: results/clip/dry_run/training_features.csv
+external_validation_features_path: results/clip/dry_run/external_validation_features.csv
+field_role_manifest_path: results/clip/dry_run/field_role_manifest.csv
+source_hashes_path: results/clip/dry_run/source_hashes.json
+
+train_dataset: homecredit
+external_validation_dataset: lendingclub_v2
+
+encoder_model_name: sentence-transformers/all-MiniLM-L6-v2
+local_model_path:
+encoder_revision: main
+batch_size: 64
+device_policy: auto
+normalize_embeddings: true
+freeze_text_encoder: true
+
+text_template_version: feature_text_v1
+text_fields:
+  - feature
+  - description
+  - semantic_group
+  - source_table
+forbidden_text_fields:
+  - clip_training_text
+  - llm_best_rank
+  - llm_mean_rank_if_available
+  - stable_core_membership
+  - bootstrap_selection_frequency_if_available
+  - mrmr_selection_frequency
+  - boruta_selection_frequency
+  - missing_rate_dev
+  - iv_score_if_available
+  - psi
+  - oot
+  - target
+  - label
+  - id
+
+grouping_priority:
+  - base_feature_family
+  - source_table
+  - semantic_group
+  - deterministic_feature_name_family
+validation_fraction: 0.2
+seed: 42
+
+anchor_field: stable_core_membership
+minimum_anchor_count: 5
+stable_core_role: anchor_only
+
+output_dir: results/clip/text_baseline
+cache_policy: reuse_if_key_matches
+
+use_llm_rank: false
+use_psi: false
+use_oot: false
+legacy_lendingclub_allowed: false

@@ -1,0 +1,104 @@
+seed: 42
+output_dir: results/clip/dry_run
+
+datasets:
+  homecredit:
+    role: train
+    source_file: results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv
+  lendingclub_v2:
+    role: external_validation
+    source_file: results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv
+
+train_dataset: homecredit
+external_validation_dataset: lendingclub_v2
+
+forbidden_path_patterns:
+  - feature_level_evidence_for_clip.csv
+  - results/lendingclub/
+  - results_v1/
+
+forbidden_field_patterns:
+  - target
+  - label
+  - bad_flag
+  - default
+  - y_true
+  - y_score
+  - prediction
+  - oot
+  - psi
+  - fold
+  - split
+  - row_id
+  - customer_id
+  - loan_id
+  - sk_id
+  - issue_date
+  - payment
+  - recovery
+  - settlement
+  - hardship
+  - charged_off
+  - post_origination_status
+
+text_field_candidates:
+  - clip_training_text
+  - description
+  - semantic_group
+  - source_table
+
+statistical_field_candidates:
+  - missing_rate_dev
+  - iv_score_if_available
+  - mrmr_selection_frequency
+  - boruta_selection_frequency
+
+supervision_only_candidates: []
+
+anchor_only_candidates:
+  - feature
+
+evaluation_only_candidates:
+  - evaluation_only_fields
+
+metadata_only_candidates:
+  - dataset
+  - clip_training_split
+  - dtype_if_available
+  - bootstrap_selection_frequency_if_available
+  - llm_best_rank
+  - llm_mean_rank_if_available
+  - stable_core_membership
+  - selected_by_any_pipeline
+  - selected_by_mrmr
+  - selected_by_llm
+  - selected_by_llm_then_mrmr
+  - selected_by_stable_core_llm_fill
+  - allowed_for_clip_training
+  - clip_training_exclusion_reason
+  - leakage_review_status
+  - leakage_review_action
+  - leakage_review_reason
+  - leakage_rule
+  - prohibited_training_fields
+  - evidence_source_files
+
+group_aware_split_candidates:
+  - semantic_group
+
+missing_value_policy: Do not silently fill missing values. Training manifest preserves missingness and excludes rows already blocked by readiness rules.
+numeric_scaling_policy: No scaling is applied in the dry-run manifest. Future encoder training must define scaling explicitly.
+split_policy: Home Credit is trainer-fit evidence. LendingClub v2 is external-validation evidence only.
+llm_rank_policy: LLM rank fields are metadata-only in the main experiment and are not CLIP training inputs.
+stable_core_policy: Stable-core fields are metadata-only in the main experiment and are not CLIP training inputs.
+oot_policy: OOT labels, metrics, predictions, and summaries are forbidden as CLIP training inputs.
+psi_policy: PSI and score/feature drift fields are forbidden as CLIP training inputs.
+
+policy:
+  llm_rank_as_input: false
+  stable_core_as_input: false
+  oot_fields_allowed: false
+  psi_fields_allowed: false
+  target_fields_allowed: false
+  id_fields_allowed: false
+  legacy_lendingclub_allowed: false
