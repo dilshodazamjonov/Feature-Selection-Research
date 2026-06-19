@@ -42,6 +42,8 @@ grouping_priority:
   - source_table
   - semantic_group
   - deterministic_feature_name_family
+derived_family_aliases:
+  REGION_RATING_CLIENT_W_CITY: REGION_RATING_CLIENT
 validation_fraction: 0.2
 seed: 42
 

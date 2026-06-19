@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import re
 from pathlib import Path
+from typing import Mapping
 
 import pandas as pd
 
+from credit_risk_fs.clip.feature_family import (
+    build_feature_family_audit,
+    derive_canonical_feature_family,
+    derive_feature_family,
+)
 from credit_risk_fs.utils.hashing import sha256_text
 from credit_risk_fs.utils.io import write_json
 
@@ -14,18 +19,8 @@ from credit_risk_fs.utils.io import write_json
 class GroupSplitResult:
     split: pd.DataFrame
     audit: dict[str, object]
-
-
-def derive_feature_family(feature_name: str) -> str:
-    name = str(feature_name)
-    for token in ["_MEAN", "_MAX", "_MIN", "_SUM", "_VAR", "_AVG", "_MEDI", "_MODE"]:
-        if name.endswith(token):
-            return name[: -len(token)]
-    name = re.sub(r"(_is_zero|_missing_flag|_flag|_ratio|_share)$", "", name)
-    parts = name.split("_")
-    if len(parts) > 3:
-        return "_".join(parts[:3])
-    return name
+    family_audit: pd.DataFrame
+    family_audit_summary: dict[str, object]
 
 
 def build_group_split(
@@ -34,6 +29,7 @@ def build_group_split(
     dataset: str = "homecredit",
     seed: int = 42,
     validation_fraction: float = 0.2,
+    derived_family_aliases: Mapping[str, str] | None = None,
 ) -> GroupSplitResult:
     if dataset != "homecredit":
         raise ValueError("group-aware split is only fit on homecredit")
@@ -41,16 +37,28 @@ def build_group_split(
         raise ValueError("validation_fraction must be between 0 and 1")
 
     working = frame.copy()
-    group_keys = []
-    group_sources = []
+    family_audit, family_summary = build_feature_family_audit(working, aliases=derived_family_aliases)
+    family_meta = family_audit.set_index("feature_name", drop=False)
+    group_keys: list[str] = []
+    group_sources: list[str] = []
+    canonical_families: list[str] = []
+    resolution_rules: list[str] = []
+    resolution_sources: list[str] = []
     for row in working.to_dict("records"):
         feature = str(row["feature_name"])
         source = str(row.get("source_table", "") or "")
         semantic = str(row.get("semantic_group", "") or "")
-        family = derive_feature_family(feature)
-        if family and family != feature:
-            group_keys.append(f"family:{family}")
-            group_sources.append("derived_feature_family")
+        family_row = family_meta.loc[feature]
+        canonical_family = str(family_row["canonical_feature_family"])
+        resolution_source = str(family_row["family_resolution_source"])
+        resolution_rule = str(family_row["family_resolution_rule"])
+        family_member_count = int(family_row["family_member_count"])
+        canonical_families.append(canonical_family)
+        resolution_sources.append(resolution_source)
+        resolution_rules.append(resolution_rule)
+        if canonical_family and (canonical_family != feature or family_member_count > 1):
+            group_keys.append(f"family:{canonical_family}")
+            group_sources.append("canonical_feature_family")
         elif source and source.lower() != "nan":
             group_keys.append(f"source:{source}")
             group_sources.append("source_table")
@@ -63,6 +71,9 @@ def build_group_split(
 
     working["group_key"] = group_keys
     working["group_source"] = group_sources
+    working["canonical_feature_family"] = canonical_families
+    working["family_resolution_source"] = resolution_sources
+    working["family_resolution_rule"] = resolution_rules
     groups = sorted(working["group_key"].unique())
     scored = sorted(
         [(group, sha256_text(f"{seed}|{group}")) for group in groups],
@@ -78,14 +89,39 @@ def build_group_split(
         validation_rows += int(working["group_key"].eq(group).sum())
 
     working["split"] = working["group_key"].map(lambda group: "validation" if group in validation_groups else "train")
-    output = working[["dataset", "feature_name", "split", "group_key", "group_source"]].copy()
+    output = working[
+        [
+            "dataset",
+            "feature_name",
+            "split",
+            "group_key",
+            "group_source",
+            "canonical_feature_family",
+            "family_resolution_source",
+            "family_resolution_rule",
+        ]
+    ].copy()
+    family_counts = output.groupby("canonical_feature_family")["feature_name"].transform("size")
+    output["family_member_count"] = family_counts.astype(int)
     output["seed"] = int(seed)
     output = output.sort_values(["dataset", "feature_name"], kind="mergesort").reset_index(drop=True)
+    family_audit = family_audit.merge(
+        output[["feature_name", "split", "group_key"]], on="feature_name", how="left"
+    ).sort_values(["dataset", "feature_name"], kind="mergesort").reset_index(drop=True)
 
     train_groups = set(output.loc[output["split"].eq("train"), "group_key"])
     validation_groups_observed = set(output.loc[output["split"].eq("validation"), "group_key"])
     overlap = sorted(train_groups.intersection(validation_groups_observed))
+    train_families = set(output.loc[output["split"].eq("train"), "canonical_feature_family"].astype(str))
+    validation_families = set(output.loc[output["split"].eq("validation"), "canonical_feature_family"].astype(str))
+    family_overlap = sorted(train_families.intersection(validation_families))
     weak_sources = int(output["group_source"].eq("feature_name_fallback").sum())
+    region_features = output[output["feature_name"].isin(["REGION_RATING_CLIENT", "REGION_RATING_CLIENT_W_CITY"])]
+    region_same_split = (
+        len(region_features) == 2
+        and region_features["split"].nunique() == 1
+        and region_features["canonical_feature_family"].nunique() == 1
+    )
     audit = {
         "dataset": dataset,
         "seed": int(seed),
@@ -96,10 +132,25 @@ def build_group_split(
         "group_count": int(output["group_key"].nunique()),
         "group_overlap_count": len(overlap),
         "group_overlap": overlap,
+        "canonical_family_count": int(output["canonical_feature_family"].nunique()),
+        "multi_feature_family_count": int(
+            output.groupby("canonical_feature_family").size().gt(1).sum()
+        ),
+        "train_validation_family_overlap_count": len(family_overlap),
+        "train_validation_family_overlap": family_overlap,
+        "region_rating_pair_same_split": bool(region_same_split),
+        "region_rating_pair": region_features[
+            ["feature_name", "split", "canonical_feature_family", "family_resolution_source", "family_resolution_rule"]
+        ].to_dict("records"),
+        "family_resolution": family_summary,
         "weak_grouping_row_count": weak_sources,
-        "warnings": ["weak feature-name fallback grouping used"] if weak_sources else [],
+        "warnings": (
+            ["weak feature-name fallback grouping used"] if weak_sources else []
+        )
+        + (["canonical family overlap exists"] if family_overlap else [])
+        + ([] if region_same_split else ["REGION_RATING_CLIENT family pair is not in one split"]),
     }
-    return GroupSplitResult(split=output, audit=audit)
+    return GroupSplitResult(split=output, audit=audit, family_audit=family_audit, family_audit_summary=family_summary)
 
 
 def save_group_split(result: GroupSplitResult, *, output_dir: str | Path) -> dict[str, Path]:
@@ -107,6 +158,25 @@ def save_group_split(result: GroupSplitResult, *, output_dir: str | Path) -> dic
     out.mkdir(parents=True, exist_ok=True)
     split_path = out / "homecredit_group_split.csv"
     audit_path = out / "group_split_audit.json"
+    family_audit_path = out / "feature_family_audit.csv"
+    family_audit_json_path = out / "feature_family_audit.json"
     result.split.to_csv(split_path, index=False)
+    result.family_audit.to_csv(family_audit_path, index=False)
     write_json(audit_path, result.audit)
-    return {"homecredit_group_split": split_path, "group_split_audit": audit_path}
+    family_payload = dict(result.family_audit_summary)
+    family_payload.update(
+        {
+            "row_count": int(len(result.family_audit)),
+            "train_validation_family_overlap_count": int(result.audit["train_validation_family_overlap_count"]),
+            "train_validation_family_overlap": result.audit["train_validation_family_overlap"],
+            "region_rating_pair_same_split": bool(result.audit["region_rating_pair_same_split"]),
+            "region_rating_pair": result.audit["region_rating_pair"],
+        }
+    )
+    write_json(family_audit_json_path, family_payload)
+    return {
+        "homecredit_group_split": split_path,
+        "group_split_audit": audit_path,
+        "feature_family_audit_csv": family_audit_path,
+        "feature_family_audit_json": family_audit_json_path,
+    }

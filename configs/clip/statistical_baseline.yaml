@@ -1,0 +1,76 @@
+manifest_path: results/clip/dry_run/training_manifest.json
+training_features_path: results/clip/dry_run/training_features.csv
+external_validation_features_path: results/clip/dry_run/external_validation_features.csv
+field_role_manifest_path: results/clip/dry_run/field_role_manifest.csv
+source_hashes_path: results/clip/dry_run/source_hashes.json
+group_split_path: results/clip/text_baseline/homecredit_group_split.csv
+group_split_audit_path: results/clip/text_baseline/group_split_audit.json
+anchor_features_path: results/clip/text_baseline/homecredit_anchor_features.csv
+anchor_manifest_path: results/clip/text_baseline/text_anchor_manifest.json
+homecredit_feature_text_path: results/clip/text_baseline/homecredit_feature_text.csv
+lendingclub_v2_feature_text_path: results/clip/text_baseline/lendingclub_v2_feature_text.csv
+
+train_dataset: homecredit
+external_validation_dataset: lendingclub_v2
+legacy_lendingclub_allowed: false
+
+approved_main_statistical_fields:
+  - missing_rate_dev
+optional_ablation_fields:
+  - iv_score_if_available
+  - bootstrap_selection_frequency_if_available
+  - mrmr_selection_frequency
+  - boruta_selection_frequency
+
+llm_fields_allowed: false
+stable_core_as_input: false
+stable_core_role: anchor_only
+oot_fields_allowed: false
+psi_fields_allowed: false
+target_fields_allowed: false
+algorithm_derived_fields_in_main_view: false
+
+field_alignment_rules:
+  require_shared_field_name: true
+  require_numeric_main_fields: true
+  require_equivalent_dev_provenance: true
+  require_allowed_leakage_status: true
+
+forbidden_field_patterns:
+  - target
+  - label
+  - bad_flag
+  - default
+  - y_true
+  - y_score
+  - prediction
+  - oot
+  - psi
+  - fold
+  - split
+  - row_id
+  - customer_id
+  - loan_id
+  - sk_id
+  - issue_date
+  - payment
+  - recovery
+  - settlement
+  - hardship
+  - charged_off
+  - post_origination_status
+
+missing_value_policy: median imputation fitted on Home Credit train split only
+imputation_strategy: median
+scaling_strategy: standard
+clipping_enabled: false
+clipping_lower_quantile: 0.01
+clipping_upper_quantile: 0.99
+fit_preprocessing_on: homecredit_train_split_only
+external_refit_allowed: false
+
+similarity_metric: cosine
+seed: 42
+output_dir: results/clip/statistical_baseline
+anchor_field: stable_core_membership
+minimum_anchor_count: 5

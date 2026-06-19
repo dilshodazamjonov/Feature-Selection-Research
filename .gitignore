@@ -22,3 +22,5 @@ results*/
 .pytest_tmp/
 pytest_tmp/
 tests_runtime/
+.tmp/
+.uv-cache/

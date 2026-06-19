@@ -10,6 +10,8 @@ import pandas as pd
 from credit_risk_fs.clip.embedding_cache import (
     EmbeddingCacheSpec,
     build_embedding_frame,
+    embedding_cache_key,
+    load_embedding_frame,
     save_embedding_frame,
     write_embedding_cache_manifest,
 )
@@ -59,6 +61,7 @@ class TextBaselineConfig:
     use_oot: bool
     stable_core_role: str
     legacy_lendingclub_allowed: bool
+    derived_family_aliases: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -102,6 +105,7 @@ def load_text_baseline_config(path: str | Path = "configs/clip/text_baseline.yam
         use_oot=bool(data.get("use_oot", False)),
         stable_core_role=str(data.get("stable_core_role", "anchor_only")),
         legacy_lendingclub_allowed=bool(data.get("legacy_lendingclub_allowed", False)),
+        derived_family_aliases=_string_dict(data.get("derived_family_aliases")),
     )
 
 
@@ -156,22 +160,14 @@ def build_text_baseline(
     if text_errors:
         raise RuntimeError("; ".join(text_errors))
 
-    config.output_dir.mkdir(parents=True, exist_ok=True)
-    paths = {
-        "homecredit_feature_text": config.output_dir / "homecredit_feature_text.csv",
-        "lendingclub_v2_feature_text": config.output_dir / "lendingclub_v2_feature_text.csv",
-    }
-    _public_text_frame(home_text).to_csv(paths["homecredit_feature_text"], index=False)
-    _public_text_frame(lc_text).to_csv(paths["lendingclub_v2_feature_text"], index=False)
-
     split_input = train.rename(columns={"feature": "feature_name"})
     split_result = build_group_split(
         split_input,
         dataset=config.train_dataset,
         seed=config.seed,
         validation_fraction=config.validation_fraction,
+        derived_family_aliases=config.derived_family_aliases,
     )
-    paths.update(save_group_split(split_result, output_dir=config.output_dir))
 
     anchor_features = _load_anchor_features(config, manifest, source_hashes)
     if len(anchor_features) < config.minimum_anchor_count:
@@ -181,6 +177,8 @@ def build_text_baseline(
 
     expected_embedding_count = {"homecredit": int(len(home_text)), "lendingclub_v2": int(len(lc_text))}
     if dry_run:
+        dry_run_dir = config.output_dir / "dry_run"
+        dry_run_dir.mkdir(parents=True, exist_ok=True)
         summary = {
             "dry_run": True,
             "encoder_loaded": False,
@@ -189,52 +187,86 @@ def build_text_baseline(
             "anchor_count": int(len(anchor_features)),
             "group_split": split_result.audit,
             "text_template_version": config.text_template_version,
+            "dry_run_output_dir": str(dry_run_dir).replace("\\", "/"),
         }
-        write_json(config.output_dir / "text_baseline_summary.json", summary)
-        paths["text_baseline_summary"] = config.output_dir / "text_baseline_summary.json"
+        paths = {
+            "text_baseline_dry_run_summary": write_json(dry_run_dir / "text_baseline_dry_run_summary.json", summary),
+            "text_dry_run_audit": write_json(
+                dry_run_dir / "text_dry_run_audit.json",
+                {
+                    "full_run_artifacts_modified": False,
+                    "encoder_loaded": False,
+                    "homecredit_texts": int(len(home_text)),
+                    "lendingclub_v2_texts": int(len(lc_text)),
+                    "group_split_preview": split_result.audit,
+                },
+            ),
+        }
         return TextBaselineResult(output_paths=paths, summary=summary)
 
-    encoder = encoder or FrozenSentenceTransformerEncoder(
-        model_name=config.encoder_model_name,
-        revision=config.encoder_revision,
-        local_model_path=config.local_model_path,
-        device=resolve_device(config.device_policy),
-    )
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+    paths = {
+        "homecredit_feature_text": config.output_dir / "homecredit_feature_text.csv",
+        "lendingclub_v2_feature_text": config.output_dir / "lendingclub_v2_feature_text.csv",
+    }
+    _public_text_frame(home_text).to_csv(paths["homecredit_feature_text"], index=False)
+    _public_text_frame(lc_text).to_csv(paths["lendingclub_v2_feature_text"], index=False)
+    paths.update(save_group_split(split_result, output_dir=config.output_dir))
+
     spec = EmbeddingCacheSpec(
-        encoder_model=encoder.model_name,
-        encoder_revision=encoder.revision,
+        encoder_model=config.encoder_model_name,
+        encoder_revision=config.encoder_revision,
         normalize_embeddings=config.normalize_embeddings,
         text_template_version=config.text_template_version,
     )
-    home_embeddings = encoder.encode(
-        home_text["feature_text"].tolist(),
-        batch_size=config.batch_size,
-        normalize_embeddings=config.normalize_embeddings,
-    )
-    lc_embeddings = encoder.encode(
-        lc_text["feature_text"].tolist(),
-        batch_size=config.batch_size,
-        normalize_embeddings=config.normalize_embeddings,
-    )
-    home_emb_frame = build_embedding_frame(text_frame=home_text, embeddings=home_embeddings, spec=spec)
-    lc_emb_frame = build_embedding_frame(text_frame=lc_text, embeddings=lc_embeddings, spec=spec)
+    cached = _load_cached_embeddings_if_valid(config=config, home_text=home_text, lc_text=lc_text, spec=spec)
+    encoder_loaded = cached is None
+    if cached is None:
+        encoder = encoder or FrozenSentenceTransformerEncoder(
+            model_name=config.encoder_model_name,
+            revision=config.encoder_revision,
+            local_model_path=config.local_model_path,
+            device=resolve_device(config.device_policy),
+        )
+        spec = EmbeddingCacheSpec(
+            encoder_model=encoder.model_name,
+            encoder_revision=encoder.revision,
+            normalize_embeddings=config.normalize_embeddings,
+            text_template_version=config.text_template_version,
+        )
+        home_embeddings = encoder.encode(
+            home_text["feature_text"].tolist(),
+            batch_size=config.batch_size,
+            normalize_embeddings=config.normalize_embeddings,
+        )
+        lc_embeddings = encoder.encode(
+            lc_text["feature_text"].tolist(),
+            batch_size=config.batch_size,
+            normalize_embeddings=config.normalize_embeddings,
+        )
+        home_emb_frame = build_embedding_frame(text_frame=home_text, embeddings=home_embeddings, spec=spec)
+        lc_emb_frame = build_embedding_frame(text_frame=lc_text, embeddings=lc_embeddings, spec=spec)
+    else:
+        home_emb_frame, lc_emb_frame = cached
+        home_embeddings = _embedding_matrix(home_emb_frame)
+        lc_embeddings = _embedding_matrix(lc_emb_frame)
     embedding_dim = int(home_embeddings.shape[1])
     embedding_errors = validate_embeddings(home_emb_frame, expected_dimension=embedding_dim, normalize=config.normalize_embeddings)
     embedding_errors.extend(validate_embeddings(lc_emb_frame, expected_dimension=embedding_dim, normalize=config.normalize_embeddings))
     if embedding_errors:
         raise RuntimeError("; ".join(embedding_errors))
 
-    paths["homecredit_text_embeddings"] = save_embedding_frame(
-        home_emb_frame, config.output_dir / "homecredit_text_embeddings.parquet"
-    )
-    paths["lendingclub_v2_text_embeddings"] = save_embedding_frame(
-        lc_emb_frame, config.output_dir / "lendingclub_v2_text_embeddings.parquet"
-    )
-    paths["embedding_cache_manifest"] = write_embedding_cache_manifest(
-        config.output_dir / "embedding_cache_manifest.json",
-        frames=[home_emb_frame, lc_emb_frame],
-        spec=spec,
-    )
+    paths["homecredit_text_embeddings"] = config.output_dir / "homecredit_text_embeddings.parquet"
+    paths["lendingclub_v2_text_embeddings"] = config.output_dir / "lendingclub_v2_text_embeddings.parquet"
+    paths["embedding_cache_manifest"] = config.output_dir / "embedding_cache_manifest.json"
+    if cached is None:
+        paths["homecredit_text_embeddings"] = save_embedding_frame(home_emb_frame, paths["homecredit_text_embeddings"])
+        paths["lendingclub_v2_text_embeddings"] = save_embedding_frame(lc_emb_frame, paths["lendingclub_v2_text_embeddings"])
+        paths["embedding_cache_manifest"] = write_embedding_cache_manifest(
+            paths["embedding_cache_manifest"],
+            frames=[home_emb_frame, lc_emb_frame],
+            spec=spec,
+        )
 
     anchor_manifest, rankings = _rank_by_anchor(
         config=config,
@@ -243,26 +275,27 @@ def build_text_baseline(
         home_embeddings=home_embeddings,
         lc_embeddings=lc_embeddings,
         anchor_features=anchor_features,
-        encoder_model=encoder.model_name,
-        encoder_revision=encoder.revision,
+        encoder_model=spec.encoder_model,
+        encoder_revision=spec.encoder_revision,
         source_manifest_hash=manifest_hash,
     )
     paths.update(rankings)
     paths["text_anchor_manifest"] = write_json(config.output_dir / "text_anchor_manifest.json", anchor_manifest)
 
     audit = {
-        "encoder_model": encoder.model_name,
-        "encoder_revision": encoder.revision,
+        "encoder_model": spec.encoder_model,
+        "encoder_revision": spec.encoder_revision,
         "embedding_dimension": embedding_dim,
         "normalize_embeddings": config.normalize_embeddings,
         "homecredit_embeddings": int(len(home_emb_frame)),
         "lendingclub_v2_embeddings": int(len(lc_emb_frame)),
+        "embedding_cache_reused": bool(cached is not None),
         "embedding_validation_errors": [],
     }
     paths["text_embedding_audit"] = write_json(config.output_dir / "text_embedding_audit.json", audit)
     summary = {
         "dry_run": False,
-        "encoder_loaded": True,
+        "encoder_loaded": bool(encoder_loaded),
         "model_trained": False,
         "contrastive_pairs_created": False,
         "homecredit_texts": int(len(home_text)),
@@ -270,9 +303,10 @@ def build_text_baseline(
         "homecredit_embeddings": int(len(home_emb_frame)),
         "lendingclub_v2_embeddings": int(len(lc_emb_frame)),
         "anchor_count": int(len(anchor_features)),
-        "encoder_model": encoder.model_name,
-        "encoder_revision": encoder.revision,
+        "encoder_model": spec.encoder_model,
+        "encoder_revision": spec.encoder_revision,
         "embedding_dimension": embedding_dim,
+        "embedding_cache_reused": bool(cached is not None),
         "group_split": split_result.audit,
     }
     paths["text_baseline_summary"] = write_json(config.output_dir / "text_baseline_summary.json", summary)
@@ -419,6 +453,69 @@ def _public_text_frame(frame: pd.DataFrame) -> pd.DataFrame:
     ].copy()
 
 
+def _load_cached_embeddings_if_valid(
+    *,
+    config: TextBaselineConfig,
+    home_text: pd.DataFrame,
+    lc_text: pd.DataFrame,
+    spec: EmbeddingCacheSpec,
+) -> tuple[pd.DataFrame, pd.DataFrame] | None:
+    if config.cache_policy != "reuse_if_key_matches":
+        return None
+    home_path = config.output_dir / "homecredit_text_embeddings.parquet"
+    lc_path = config.output_dir / "lendingclub_v2_text_embeddings.parquet"
+    manifest_path = config.output_dir / "embedding_cache_manifest.json"
+    if not home_path.exists() or not lc_path.exists() or not manifest_path.exists():
+        return None
+    manifest = read_json(manifest_path)
+    if manifest.get("encoder_model") != spec.encoder_model:
+        return None
+    if manifest.get("encoder_revision") != spec.encoder_revision:
+        return None
+    if bool(manifest.get("normalize_embeddings")) != bool(spec.normalize_embeddings):
+        return None
+    if manifest.get("text_template_version") != spec.text_template_version:
+        return None
+    home = load_embedding_frame(home_path)
+    lc = load_embedding_frame(lc_path)
+    if not _embedding_frame_matches_text(home, home_text, spec):
+        return None
+    if not _embedding_frame_matches_text(lc, lc_text, spec):
+        return None
+    return home, lc
+
+
+def _embedding_frame_matches_text(frame: pd.DataFrame, text_frame: pd.DataFrame, spec: EmbeddingCacheSpec) -> bool:
+    required = {"dataset", "feature_name", "feature_text_hash", "embedding_cache_key"}
+    if not required.issubset(frame.columns):
+        return False
+    left = frame[["dataset", "feature_name", "feature_text_hash", "embedding_cache_key"]].sort_values(
+        ["dataset", "feature_name"], kind="mergesort"
+    )
+    right = text_frame[["dataset", "feature_name", "feature_text_hash"]].sort_values(
+        ["dataset", "feature_name"], kind="mergesort"
+    )
+    if len(left) != len(right):
+        return False
+    expected_keys = [
+        embedding_cache_key(
+            dataset=str(row.dataset),
+            feature_name=str(row.feature_name),
+            feature_text_hash=str(row.feature_text_hash),
+            spec=spec,
+        )
+        for row in right.itertuples(index=False)
+    ]
+    expected = right.copy()
+    expected["embedding_cache_key"] = expected_keys
+    return bool(left.reset_index(drop=True).equals(expected.reset_index(drop=True)))
+
+
+def _embedding_matrix(frame: pd.DataFrame) -> np.ndarray:
+    columns = [col for col in frame.columns if str(col).startswith("embedding_") and len(str(col)) == 14]
+    return frame[columns].to_numpy(dtype="float32")
+
+
 def _validate_config_policy(config: TextBaselineConfig) -> None:
     if config.train_dataset != "homecredit" or config.external_validation_dataset != "lendingclub_v2":
         raise RuntimeError("text baseline requires homecredit train and lendingclub_v2 external validation")
@@ -446,3 +543,9 @@ def _optional_string(value: Any) -> str | None:
     if value in (None, "", {}, "{}", "null", "None"):
         return None
     return str(value)
+
+
+def _string_dict(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): str(item) for key, item in value.items()}

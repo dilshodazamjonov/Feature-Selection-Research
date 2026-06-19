@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pandas as pd
@@ -17,6 +18,36 @@ def test_dry_run_performs_no_model_loading(tmp_path):
     assert result.summary["encoder_loaded"] is False
     assert result.summary["model_trained"] is False
     assert result.summary["expected_embedding_count"] == {"homecredit": 436, "lendingclub_v2": 576}
+
+
+def test_text_baseline_dry_run_does_not_modify_full_run_artifacts():
+    config = load_text_baseline_config()
+    full_run_files = [
+        config.output_dir / "homecredit_feature_text.csv",
+        config.output_dir / "lendingclub_v2_feature_text.csv",
+        config.output_dir / "homecredit_group_split.csv",
+        config.output_dir / "group_split_audit.json",
+        config.output_dir / "feature_family_audit.csv",
+        config.output_dir / "feature_family_audit.json",
+        config.output_dir / "homecredit_text_embeddings.parquet",
+        config.output_dir / "lendingclub_v2_text_embeddings.parquet",
+        config.output_dir / "embedding_cache_manifest.json",
+        config.output_dir / "text_embedding_audit.json",
+        config.output_dir / "homecredit_text_only_ranking.csv",
+        config.output_dir / "lendingclub_v2_text_only_ranking.csv",
+        config.output_dir / "homecredit_anchor_features.csv",
+        config.output_dir / "text_anchor_manifest.json",
+        config.output_dir / "text_baseline_summary.json",
+    ]
+    before = {path: _sha256(path) for path in full_run_files if path.exists()}
+
+    result = build_text_baseline(config=config, dry_run=True)
+
+    after = {path: _sha256(path) for path in full_run_files if path.exists()}
+    assert before == after
+    assert all("dry_run" in str(path) for path in result.output_paths.values())
+    assert (config.output_dir / "dry_run" / "text_baseline_dry_run_summary.json").exists()
+    assert (config.output_dir / "dry_run" / "text_dry_run_audit.json").exists()
 
 
 def test_text_baseline_with_mock_encoder_uses_homecredit_anchor_unchanged(tmp_path, monkeypatch):
@@ -54,3 +85,11 @@ def test_legacy_lendingclub_is_rejected(tmp_path):
         assert "lendingclub_v2" in str(exc) or "legacy" in str(exc)
     else:
         raise AssertionError("legacy LendingClub config should fail")
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()

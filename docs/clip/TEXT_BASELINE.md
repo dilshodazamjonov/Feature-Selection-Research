@@ -73,7 +73,33 @@ Embedding rows include explicit dataset, feature name, text hash, encoder metada
 
 ## Group-Aware Split
 
-Home Credit feature-level split uses deterministic groups in this priority:
+Home Credit feature-level split uses deterministic canonical families before
+falling back to broader grouping keys. The canonical-family resolver records
+its decision for every feature in:
+
+- `results/clip/text_baseline/feature_family_audit.csv`
+- `results/clip/text_baseline/feature_family_audit.json`
+
+Resolution priority:
+
+1. explicit configured aliases
+2. formula lineage when a single source variable is clear
+3. conservative suffix rules such as `_W_CITY` and aggregate suffixes
+4. exact feature-name fallback
+
+Configured alias:
+
+```yaml
+derived_family_aliases:
+  REGION_RATING_CLIENT_W_CITY: REGION_RATING_CLIENT
+```
+
+This keeps `REGION_RATING_CLIENT` and `REGION_RATING_CLIENT_W_CITY` in the
+same split and prevents train/validation leakage through engineered variants.
+The split audit reports canonical-family counts, multi-feature families,
+fallback assignments, alias usage, and train/validation family overlap.
+
+The grouping policy then uses:
 
 1. derived base feature family
 2. source table
@@ -81,6 +107,15 @@ Home Credit feature-level split uses deterministic groups in this priority:
 4. feature-name fallback
 
 The split is for Home Credit feature-level experiments only. LendingClub v2 is never used to fit or tune the split.
+
+## Dry-Run Isolation
+
+Dry-run writes only under:
+
+`results/clip/text_baseline/dry_run/`
+
+It does not modify full-run feature text, embeddings, cache manifests, split
+artifacts, anchor manifests, rankings, source hashes, or the full-run summary.
 
 ## Anchor Construction
 
