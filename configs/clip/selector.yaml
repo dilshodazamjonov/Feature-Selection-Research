@@ -1,0 +1,26 @@
+selected_checkpoint_path: results/clip/training/seeds/seed_55/best_checkpoint.pt
+selected_checkpoint_manifest_path: results/clip/training/seeds/seed_55/checkpoint_manifest.json
+model_selection_manifest_path: results/clip/training/model_selection_manifest.json
+learned_anchor_manifest_path: results/clip/training/learned_anchor_manifest.json
+training_manifest_path: results/clip/training/training_manifest.json
+text_embedding_manifest_path: results/clip/text_baseline/embedding_cache_manifest.json
+statistical_preprocessor_path: results/clip/statistical_baseline/statistical_preprocessor.json
+source_manifest_path: results/clip/dry_run/training_manifest.json
+homecredit_scores_path: results/clip/training/homecredit_learned_scores.csv
+lendingclub_v2_scores_path: results/clip/training/lendingclub_v2_learned_scores.csv
+output_dir: results/clip/selector_integration
+cache_dir: results/clip/selector_integration/cache
+checkpoint_hash: 3f21fc12060036f117aedf9a610856c72fa9a0ce6a1540403e572de4423d7385
+anchor_hash: e5446c5141cbdf8fde8677022b75cb1905c6e4e42fb48378727ecaf31eca604d
+statistical_view_scope: missingness_only
+screening_pool_size: 100
+missing_feature_policy: error
+feature_budgets:
+  lr: 20
+  catboost: 40
+active_datasets:
+  - homecredit
+  - lendingclub_v2
+legacy_datasets:
+  - lendingclub
+no_refit: true

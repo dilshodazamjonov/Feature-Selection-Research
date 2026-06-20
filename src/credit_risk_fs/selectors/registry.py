@@ -71,6 +71,28 @@ def get_selector(selector_name: str):
             "cache_dir": "artifacts/llm_cache",
         }
 
+    if name == "clip":
+        from credit_risk_fs.selectors.clip_screening import ClipScreeningSelector
+
+        return ClipScreeningSelector, {
+            "config_path": "configs/clip/selector.yaml",
+            "dataset": "homecredit",
+            "feature_budget": 40,
+            "missing_feature_policy": "error",
+        }
+
+    if name == "clip_then_mrmr":
+        from credit_risk_fs.selectors.clip_then_mrmr import ClipThenMRMRSelector
+
+        return ClipThenMRMRSelector, {
+            "config_path": "configs/clip/selector.yaml",
+            "dataset": "homecredit",
+            "feature_budget": 40,
+            "screening_pool_size": 100,
+            "missing_feature_policy": "error",
+            "random_state": 42,
+        }
+
     if name == "domain_rule_baseline":
         from credit_risk_fs.selectors.domain_rule_baseline import (
             DomainRuleBaselineSelector,
@@ -94,6 +116,6 @@ def get_selector(selector_name: str):
     raise ValueError(
         f"Unsupported selector: {selector_name}. "
         "Available: boruta, boruta_rfe, mrmr, pca, llm, llm_then_stat, "
-        "llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
+        "llm_then_mrmr, llm_then_boruta, clip, clip_then_mrmr, domain_rule_baseline, "
         "stable_core_llm_fill, none"
     )

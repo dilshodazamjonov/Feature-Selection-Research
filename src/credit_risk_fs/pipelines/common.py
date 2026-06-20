@@ -317,6 +317,11 @@ def _resolve_selector(config: ExperimentConfig) -> tuple[type | None, dict[str, 
         if selector_name in llm_cache_selectors and not selector_kwargs.get("cache_dir"):
             selector_kwargs["cache_dir"] = "artifacts/llm_cache"
 
+    if selector_name in {"clip", "clip_then_mrmr"}:
+        selector_kwargs.setdefault("dataset", config.dataset_name)
+        selector_kwargs.setdefault("model_name", config.model_name)
+        selector_kwargs.setdefault("config_path", "configs/clip/selector.yaml")
+
     return selector_cls, selector_kwargs
 
 

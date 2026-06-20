@@ -1,0 +1,17 @@
+dataset_name: homecredit
+results_dir: results/clip/homecredit_matrix
+clip_selector:
+  enabled: true
+  config_path: configs/clip/selector.yaml
+  selectors:
+    - clip
+    - clip_then_mrmr
+  models:
+    - lr
+    - catboost
+  feature_budgets:
+    lr: 20
+    catboost: 40
+  screening_pool_size: 100
+  no_refit: true
+  note: DEV-only selector integration config; do not run without explicit matrix approval.

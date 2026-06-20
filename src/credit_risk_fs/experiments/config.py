@@ -321,6 +321,8 @@ def apply_feature_budget_to_selector_kwargs(
         updated["n_components"] = feature_budget
     elif name == "llm":
         updated["feature_budget"] = feature_budget
+    elif name in {"clip", "clip_then_mrmr"}:
+        updated["feature_budget"] = feature_budget
     elif name == "domain_rule_baseline":
         updated["feature_budget"] = feature_budget
 
