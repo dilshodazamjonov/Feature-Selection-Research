@@ -1,0 +1,7 @@
+{
+  "branch": "main",
+  "git_commit": "5159ead251a11bf10f266b2d07aea690587ba6b5",
+  "working_tree_state": "A  reports/final_clip_credit_risk_report.docx\nA  reports/final_clip_credit_risk_report.md\nA  reports/final_clip_credit_risk_report.pdf\nA  reports/final_clip_limitations.md\nA  reports/final_clip_reproducibility_manifest.json\nA  reports/final_clip_scientific_verdict.md\nA  scripts/build_clip_final_analysis.py\nA  scripts/build_clip_final_report_figures.py\nM  scripts/run_clip_final_evaluation.py\nM  scripts/train_clip_encoder.py\nA  tests/clip/test_clip_final_analysis.py\nA  tests/clip/test_clip_final_report_figures.py\n?? scripts/freeze_clip_v1.py\n?? src/credit_risk_fs/clip/v1_freeze.py\n?? src/credit_risk_fs/clip/versioning.py",
+  "freeze_commit": null,
+  "freeze_tag": null
+}

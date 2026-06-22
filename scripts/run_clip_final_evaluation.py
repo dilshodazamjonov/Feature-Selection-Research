@@ -1167,8 +1167,10 @@ def _audit_runs(
     binding: dict[str, Any],
     output_dir: Path = OUTPUT_ROOT,
     recover: bool = False,
+    write_artifacts: bool = True,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if write_artifacts:
+        output_dir.mkdir(parents=True, exist_ok=True)
     pre_file_records = _file_integrity_records(output_dir)
     audit_rows = [_classify_run(spec, binding, output_dir) for spec in specs]
     actions: list[dict[str, Any]] = []
@@ -1177,13 +1179,14 @@ def _audit_runs(
         actions.extend(_quarantine_invalid_runs(audit_rows, output_dir))
         audit_rows = [_classify_run(spec, binding, output_dir) for spec in specs]
     file_records = _file_integrity_records(output_dir)
-    _write_recovery_artifacts(
-        audit_rows=audit_rows,
-        file_records=file_records,
-        output_dir=output_dir,
-        recovery_actions=actions,
-        pre_file_records=pre_file_records,
-    )
+    if write_artifacts:
+        _write_recovery_artifacts(
+            audit_rows=audit_rows,
+            file_records=file_records,
+            output_dir=output_dir,
+            recovery_actions=actions,
+            pre_file_records=pre_file_records,
+        )
     return audit_rows, file_records, actions
 
 
@@ -1400,7 +1403,7 @@ def main() -> int:
     validation = _validate_boundaries(datasets)
     binding = validation["binding"]
     if args.status:
-        audit_rows, _, _ = _audit_runs(specs, binding=binding, output_dir=OUTPUT_ROOT, recover=False)
+        audit_rows, _, _ = _audit_runs(specs, binding=binding, output_dir=OUTPUT_ROOT, recover=False, write_artifacts=False)
         _print_status(audit_rows)
         return 0
     if args.resume:

@@ -1,0 +1,88 @@
+%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj
+4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
+5 0 obj << /Length 2609 >> stream
+BT
+/F1 10 Tf
+50 780 Td
+(Final CLIP Credit-Risk Report) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Final CLIP Credit-Risk Feature-Selection Report) Tj
+0 -14 Td
+(1. Bottom-line verdict) Tj
+0 -14 Td
+(Prompt 8 completes the final analysis and reporting layer from saved artifacts only. The scientific ) Tj
+0 -14 Td
+(The current contrastive encoder aligns semantic feature metadata with a limited DEV statistical view) Tj
+0 -14 Td
+(2. Objective and research design) Tj
+0 -14 Td
+(The study compares original statistical selectors, original LLM-assisted selectors, and two frozen C) Tj
+0 -14 Td
+(3. Data, temporal validation, and leakage controls) Tj
+0 -14 Td
+(The final analysis uses saved Prompt 7 OOT predictions and aggregate tables. Home Credit has 120,053) Tj
+0 -14 Td
+(4. Main OOT predictive results) Tj
+0 -14 Td
+(Best fixed-method result by dataset/model:) Tj
+0 -14 Td
+(- homecredit catboost: mrmr AUC 0.7668, Gini 0.5337, PSI 0.0102) Tj
+0 -14 Td
+(- homecredit lr: mrmr AUC 0.7457, Gini 0.4914, PSI 0.0065) Tj
+0 -14 Td
+(- lendingclub_v2 catboost: llm AUC 0.7137, Gini 0.4275, PSI 0.0058) Tj
+0 -14 Td
+(- lendingclub_v2 lr: llm AUC 0.6927, Gini 0.3853, PSI 0.0065) Tj
+0 -14 Td
+(Best CLIP-family result by dataset/model:) Tj
+0 -14 Td
+(- homecredit catboost: best CLIP-family selector `clip_then_mrmr` AUC 0.7035) Tj
+0 -14 Td
+(- homecredit lr: best CLIP-family selector `clip_then_mrmr` AUC 0.6632) Tj
+0 -14 Td
+(- lendingclub_v2 catboost: best CLIP-family selector `clip_then_mrmr` AUC 0.6999) Tj
+0 -14 Td
+(- lendingclub_v2 lr: best CLIP-family selector `clip_then_mrmr` AUC 0.6842) Tj
+0 -14 Td
+(Across the four dataset/model panels, `clip_then_mrmr` is consistently stronger than direct `clip`, ) Tj
+0 -14 Td
+(5. Score drift, semantic coverage, and redundancy) Tj
+0 -14 Td
+(Model score PSI is taken from saved Prompt 7 run artifacts. DEV score vectors are not persisted, so ) Tj
+0 -14 Td
+(Semantic coverage and redundancy are descriptive. Broader semantic coverage does not imply predictiv) Tj
+0 -14 Td
+(6. Representation learning and seed robustness) Tj
+0 -14 Td
+(Prompt 5 retained five seeds and selected seed 55 by the prespecified lowest Home Credit validation ) Tj
+0 -14 Td
+(7. LendingClub v2 external validation) Tj
+0 -14 Td
+(LendingClub v2 was external-only. CLIP-family results transfer enough to run valid OOT comparisons, ) Tj
+0 -14 Td
+(8. Limitations) Tj
+0 -14 Td
+(The main limitations are recorded in `results/clip/final_analysis/limitations_register.csv`. The mos) Tj
+0 -14 Td
+(9. Conclusion) Tj
+0 -14 Td
+(CLIP is scientifically usable as an experimental representation and screening extension in this repo) Tj
+ET
+endstream endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+2972
+%%EOF

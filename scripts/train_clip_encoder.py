@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
@@ -75,8 +76,6 @@ def main() -> int:
 
 
 def _dry_run(config, data) -> int:
-    output_dir = config.output_dir / "dry_run"
-    output_dir.mkdir(parents=True, exist_ok=True)
     model = SemanticStatisticalContrastiveEncoder(config.model)
     parameter_count = count_trainable_parameters(model)
     summary = {
@@ -101,8 +100,8 @@ def _dry_run(config, data) -> int:
         "lendingclub_v2_used_for_model_selection": False,
         "downstream_lr_catboost_run": False,
     }
-    write_json(output_dir / "training_dry_run_summary.json", summary)
     print("CLIP encoder dry-run complete.")
+    print(json.dumps(summary, indent=2, default=str))
     print(f"parameter count: {parameter_count}")
     print(f"statistical view scope: {config.statistical_view_scope}")
     print("optimizer steps: 0")
