@@ -82,6 +82,12 @@ class ClipThenMRMRSelector:
                 else "clip_then_mrmr_selection_manifest.csv"
             )
             self.selection_manifest_.to_csv(self.artifact_dir / name, index=False)
+            ranking_name = (
+                "clip_v2_then_mrmr_candidate_ranking.csv"
+                if self.selector_label == "clip_v2_then_mrmr"
+                else "clip_then_mrmr_candidate_ranking.csv"
+            )
+            self.clip_ranking_.to_csv(self.artifact_dir / ranking_name, index=False)
         return X.loc[:, self.selected_features_]
 
     def transform_postprocess(self, X: pd.DataFrame) -> pd.DataFrame:

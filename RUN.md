@@ -1,5 +1,88 @@
 # RUN
 
+# Complete CLIP-v2 Run
+
+## Preview The Full Pipeline
+
+```powershell
+uv run python scripts/run_clip_v2_pipeline.py --plan
+```
+
+Label: `READ-ONLY`. Purpose: preview every CLIP-v2 stage and command without doing work. Expected output: stage order, commands, and fresh-start archive preview. Modifies files: no. Trains a model: no. Safe to interrupt: yes. Next: start a clean full run.
+
+## Start A Clean Full Run
+
+LONG-RUNNING: This command trains CLIP-v2, fits eight downstream models, generates predictions, builds reports, runs tests, and performs the final audit. It may run for several hours.
+
+```powershell
+uv run python scripts/run_clip_v2_pipeline.py --fresh-start --execute
+```
+
+Label: `LONG-RUNNING`. Purpose: archive partial CLIP-v2 outputs, rebuild CLIP-v2 from scratch, run all eight downstream runs one by one, build aggregates/reports, run tests, and run final audit. Expected output: `PASS - CLIP-v2 is scientifically defensible and ready to archive` from the final audit. Modifies files: yes, under `results/clip_v2/`, `results/clip_v2_archives/`, and `reports/clip_v2_*`. Trains a model: yes. Safe to interrupt: yes, press `Ctrl+C`; then preview resume before executing it. Next: commit and tag only after final audit PASS.
+
+## Resume After Interruption
+
+```powershell
+uv run python scripts/run_clip_v2_pipeline.py --resume
+```
+
+Label: `READ-ONLY`. Purpose: preview which incomplete or stale stages would rerun. Expected output: resume plan. Modifies files: no. Trains a model: no. Safe to interrupt: yes. Next: execute resume after reviewing the plan.
+
+```powershell
+uv run python scripts/run_clip_v2_pipeline.py --resume --execute
+```
+
+Label: `LONG-RUNNING`. Purpose: resume from the first incomplete, interrupted, failed, or stale stage. Expected output: stage progress and final audit result. Modifies files: yes. Trains a model: possibly, depending on the resume point. Safe to interrupt: yes. Next: check status.
+
+## Check Status
+
+```powershell
+uv run python scripts/run_clip_v2_pipeline.py --status
+```
+
+Label: `READ-ONLY`. Purpose: inspect `results/clip_v2/pipeline_state.json`, lock status, and stage states. Expected output: JSON state summary. Modifies files: no. Trains a model: no. Safe to interrupt: yes. Next: resume or inspect logs.
+
+Pipeline log:
+
+```text
+results/clip_v2/pipeline_execution.log
+```
+
+Detailed stage-by-stage commands below are retained for debugging individual stages.
+
+## Final CLIP Comparison
+
+Read-only planning:
+
+```powershell
+uv run python scripts/run_clip_final_comparison.py --plan
+```
+
+The plan command must not write scientific outputs or mark stages complete. Do not begin execution unless the plan reports `implementation_mode: executable_research_pipeline` and synthetic end-to-end execution tests pass.
+
+Real execution:
+
+```powershell
+uv run python scripts/run_clip_final_comparison.py --fresh-start --execute
+```
+
+Expected real run counts are 184 core candidate-pool runs, including 120 random-screening repetitions, plus 20 representation-seed downstream runs and 28 ablation downstream runs. A stage is valid only after real predictions, metrics, selected features, hashes, and completion markers validate.
+
+Resume after interruption:
+
+```powershell
+uv run python scripts/run_clip_final_comparison.py --resume
+uv run python scripts/run_clip_final_comparison.py --resume --execute
+```
+
+Status:
+
+```powershell
+uv run python scripts/run_clip_final_comparison.py --status
+```
+
+Output stays under `results/clip_final_comparison/`; incomplete prior outputs are archived under `results/clip_final_comparison_archives/<timestamp>/`.
+
 ## 1. What This Repository Does
 
 This repository compares credit-risk feature-selection methods on Home Credit and LendingClub v2. It includes statistical selectors, LLM-based screening, CLIP-v1, and CLIP-v2. DEV data is used for fitting and feature selection. OOT data is held out as the main evidence because it tests whether a selector survives a later time window.

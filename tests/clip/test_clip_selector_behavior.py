@@ -61,6 +61,19 @@ def test_duplicate_or_missing_candidates_are_rejected():
         adapter.rank_candidates([feature, "__not_scored__"])
 
 
+def test_missing_candidates_can_be_excluded_with_manifest_policy():
+    adapter = ClipScoreAdapter("configs/clip_v2/selector.yaml", dataset="homecredit")
+    frame = adapter.score_frame(use_cache=True)
+    feature = str(frame.iloc[0]["feature_name"])
+
+    ranking = adapter.rank_candidates([feature, "__not_scored__"], missing_feature_policy="exclude_with_manifest")
+
+    assert set(ranking["feature_name"]) == {feature, "__not_scored__"}
+    excluded = ranking[ranking["feature_name"].eq("__not_scored__")].iloc[0]
+    assert excluded["exclusion_reason"] == "missing_clip_score"
+    assert pd.isna(excluded["clip_rank"])
+
+
 def test_legacy_lendingclub_is_rejected():
     with pytest.raises(RuntimeError, match="legacy LendingClub"):
         ClipScoreAdapter(dataset="lendingclub").score_frame()

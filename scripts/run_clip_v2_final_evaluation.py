@@ -190,7 +190,8 @@ def _execute_planned(specs: list[dict[str, str]], *, output_root: Path, binding:
                 continue
             raise RuntimeError(f"{run_id}: refusing to overwrite invalid existing run; inspect --status first")
         if progress_dir.exists():
-            raise RuntimeError(f"{run_id}: interrupted in-progress directory exists; inspect --resume first")
+            archived = _archive_in_progress(progress_dir)
+            _progress(index, total, spec, f"archived_previous_in_progress={archived}", 0.0)
         started = time.time()
         progress_dir.mkdir(parents=True, exist_ok=False)
         try:
@@ -243,6 +244,28 @@ def _execute_planned(specs: list[dict[str, str]], *, output_root: Path, binding:
     return 0
 
 
+def _archive_in_progress(progress_dir: Path) -> str:
+    archive_root = progress_dir.parent / "_archived_in_progress"
+    archive_root.mkdir(parents=True, exist_ok=True)
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    destination = archive_root / f"{progress_dir.name}_{timestamp}"
+    suffix = 1
+    while destination.exists():
+        suffix += 1
+        destination = archive_root / f"{progress_dir.name}_{timestamp}_{suffix}"
+    shutil.move(str(progress_dir), str(destination))
+    write_json(
+        destination / "ARCHIVED_IN_PROGRESS.json",
+        {
+            "archived_at_epoch_seconds": time.time(),
+            "original_path": str(progress_dir).replace("\\", "/"),
+            "archive_path": str(destination).replace("\\", "/"),
+            "reason": "retry after interrupted or failed CLIP-v2 final evaluation run",
+        },
+    )
+    return str(destination).replace("\\", "/")
+
+
 def _experiment_config(spec: dict[str, str], run_dir: Path) -> ExperimentConfig:
     project = load_named_project_config(spec["dataset"])
     feature_budget = resolve_feature_budget(project, spec["model"])
@@ -278,7 +301,7 @@ def _experiment_config(spec: dict[str, str], run_dir: Path) -> ExperimentConfig:
             "config_path": "configs/clip_v2/selector.yaml",
             "dataset": spec["dataset"],
             "model_name": spec["model"],
-            "missing_feature_policy": "error",
+            "missing_feature_policy": "exclude_with_manifest",
             "selector_label": spec["selector"],
         },
         experiment_type="clip_v2_final_evaluation",

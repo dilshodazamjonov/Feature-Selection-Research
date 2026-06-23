@@ -88,7 +88,7 @@ def get_selector(selector_name: str):
             "config_path": "configs/clip_v2/selector.yaml",
             "dataset": "homecredit",
             "feature_budget": 40,
-            "missing_feature_policy": "error",
+            "missing_feature_policy": "exclude_with_manifest",
             "selector_label": "clip_v2",
         }
 
@@ -112,7 +112,7 @@ def get_selector(selector_name: str):
             "dataset": "homecredit",
             "feature_budget": 40,
             "screening_pool_size": 100,
-            "missing_feature_policy": "error",
+            "missing_feature_policy": "exclude_with_manifest",
             "random_state": 42,
             "selector_label": "clip_v2_then_mrmr",
         }

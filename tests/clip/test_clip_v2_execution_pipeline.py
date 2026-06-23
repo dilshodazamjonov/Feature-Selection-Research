@@ -25,7 +25,9 @@ def test_clip_v2_registry_entries_and_v1_defaults_are_separate():
     assert v2_defaults["config_path"] == "configs/clip_v2/selector.yaml"
     assert v2_defaults["selector_label"] == "clip_v2"
     assert v2_mrmr_defaults["selector_label"] == "clip_v2_then_mrmr"
-    assert v2_defaults["missing_feature_policy"] == "error"
+    assert clip_defaults["missing_feature_policy"] == "error"
+    assert v2_defaults["missing_feature_policy"] == "exclude_with_manifest"
+    assert v2_mrmr_defaults["missing_feature_policy"] == "exclude_with_manifest"
 
 
 def test_v1_v2_score_cache_keys_cannot_collide():
@@ -165,6 +167,60 @@ def test_valid_completed_runs_are_skipped(tmp_path):
 
     assert status["status"] == "complete_valid"
     assert planned == []
+
+
+def test_interrupted_in_progress_is_archived_before_retry(tmp_path, monkeypatch):
+    output_root = tmp_path / "final_evaluation"
+    run_id = "homecredit_lr_clip_v2"
+    progress_dir = output_root / "runs" / f"{run_id}.in_progress"
+    progress_dir.mkdir(parents=True)
+    (progress_dir / "execution.log").write_text("failed previous attempt\n", encoding="utf-8")
+    spec = {"dataset": "homecredit", "model": "lr", "selector": "clip_v2"}
+    binding = {"checkpoint_hash": "checkpoint", "anchor_hash": "anchor"}
+
+    monkeypatch.setattr(evaluation, "_experiment_config", lambda spec, run_dir: SimpleNamespace(feature_budget=20))
+    monkeypatch.setattr(
+        evaluation,
+        "prepare_modeling_data",
+        lambda config: SimpleNamespace(
+            X_train=pd.DataFrame(np.ones((4, 3)), columns=["a", "b", "c"]),
+            y_train=pd.Series([0, 1, 0, 1]),
+            X_oot=pd.DataFrame(np.ones((3, 3)), columns=["a", "b", "c"]),
+            y_oot=pd.Series([0, 1, 0]),
+            time_col="time",
+        ),
+    )
+
+    def fake_run_experiment(config, prepared_data):
+        retry_dir = output_root / "runs" / f"{run_id}.in_progress"
+        (retry_dir / "features").mkdir(parents=True, exist_ok=True)
+        (retry_dir / "results").mkdir(parents=True, exist_ok=True)
+        (retry_dir / "llm_responses" / "final_dev").mkdir(parents=True, exist_ok=True)
+        pd.DataFrame({"feature_name": ["a", "b"]}).to_csv(retry_dir / "features" / "final_selected_features.csv", index=False)
+        pd.DataFrame({"feature_name": ["a", "b"], "final_selected": [True, True]}).to_csv(
+            retry_dir / "llm_responses" / "final_dev" / "clip_v2_selection_manifest.csv",
+            index=False,
+        )
+        pd.DataFrame({"auc": [1.0], "gini": [1.0], "ks": [1.0], "lift_at_10": [1.0], "model_score_psi": [0.01]}).to_csv(
+            retry_dir / "results" / "oot_test_results.csv",
+            index=False,
+        )
+        pd.DataFrame({"total_runtime_seconds": [1.0]}).to_csv(retry_dir / "results" / "runtime_summary.csv", index=False)
+        pd.DataFrame({"model_score_psi": [0.01]}).to_csv(retry_dir / "results" / "model_score_psi.csv", index=False)
+        pd.DataFrame({"y_true": [0, 1, 0], "y_pred_proba": [0.1, 0.9, 0.2], "y_pred": [0, 1, 0]}).to_csv(
+            retry_dir / "results" / "oot_predictions.csv",
+            index=False,
+        )
+        (retry_dir / "leakage_report.json").write_text("{}", encoding="utf-8")
+        return SimpleNamespace(exp_dir=retry_dir)
+
+    monkeypatch.setattr(evaluation, "run_experiment", fake_run_experiment)
+
+    assert evaluation._execute_planned([spec], output_root=output_root, binding=binding) == 0
+    archived = list((output_root / "runs" / "_archived_in_progress").glob(f"{run_id}.in_progress_*"))
+    assert len(archived) == 1
+    assert (archived[0] / "ARCHIVED_IN_PROGRESS.json").exists()
+    assert (output_root / "runs" / run_id / "RUN_COMPLETE.json").exists()
 
 
 def test_aggregate_builder_scans_completed_runs_without_fitting_models(tmp_path):

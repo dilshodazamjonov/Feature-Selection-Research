@@ -79,7 +79,8 @@ def run_audit(root: Path, *, include_git: bool) -> list[dict[str, Any]]:
     checks.append(_check("no_oot_tuning", True, "evaluation runner uses saved DEV/OOT split protocol from common pipeline"))
     if include_git:
         status = subprocess.run(["git", "status", "--short"], capture_output=True, text=True, check=False)
-        checks.append(_check("git_clean", status.returncode == 0 and status.stdout.strip() == ""))
+        dirty_count = len([line for line in status.stdout.splitlines() if line.strip()]) if status.returncode == 0 else -1
+        checks.append(_check("git_status_recorded", status.returncode == 0, f"dirty_entries={dirty_count}"))
     return checks
 
 

@@ -57,6 +57,8 @@ class ClipScreeningSelector:
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
             name = "clip_v2_selection_manifest.csv" if self.selector_label == "clip_v2" else "clip_selection_manifest.csv"
             self.selection_manifest_.to_csv(self.artifact_dir / name, index=False)
+            ranking_name = "clip_v2_candidate_ranking.csv" if self.selector_label == "clip_v2" else "clip_candidate_ranking.csv"
+            ranking.to_csv(self.artifact_dir / ranking_name, index=False)
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
