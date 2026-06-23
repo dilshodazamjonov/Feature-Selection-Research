@@ -22,6 +22,7 @@ class ClipThenMRMRSelector:
         missing_feature_policy: str = "error",
         random_state: int = 42,
         mrmr_method: str = "mrmr",
+        selector_label: str = "clip_then_mrmr",
     ) -> None:
         self.config_path = config_path
         self.dataset = dataset
@@ -31,6 +32,7 @@ class ClipThenMRMRSelector:
         self.missing_feature_policy = missing_feature_policy
         self.random_state = int(random_state)
         self.mrmr_method = mrmr_method
+        self.selector_label = selector_label
         self.selected_features_: list[str] | None = None
         self.selected_features: list[str] | None = None
         self.screened_features_: list[str] | None = None
@@ -74,7 +76,12 @@ class ClipThenMRMRSelector:
         self.selection_manifest_ = self._build_manifest()
         if self.artifact_dir is not None:
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
-            self.selection_manifest_.to_csv(self.artifact_dir / "clip_then_mrmr_selection_manifest.csv", index=False)
+            name = (
+                "clip_v2_then_mrmr_selection_manifest.csv"
+                if self.selector_label == "clip_v2_then_mrmr"
+                else "clip_then_mrmr_selection_manifest.csv"
+            )
+            self.selection_manifest_.to_csv(self.artifact_dir / name, index=False)
         return X.loc[:, self.selected_features_]
 
     def transform_postprocess(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -94,7 +101,7 @@ class ClipThenMRMRSelector:
         ranked["final_selected"] = ranked["feature_name"].isin(self.selected_features_)
         final_rank = {feature: rank for rank, feature in enumerate(self.selected_features_, start=1)}
         ranked["final_rank"] = ranked["feature_name"].map(final_rank)
-        ranked["selector"] = "clip_then_mrmr"
+        ranked["selector"] = self.selector_label
         ranked["model"] = self.model_name or ""
         ranked["clip_score"] = ranked["learned_similarity"]
         ranked["dataset"] = self.dataset

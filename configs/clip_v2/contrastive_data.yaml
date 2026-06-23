@@ -1,0 +1,61 @@
+experiment_version: clip_v2
+statistical_view_version: compact_target_free_v2
+statistical_input_dimension: 13
+output_root: results/clip_v2
+v1_reference_manifest: results/clip_versions/v1/freeze_manifest.json
+manifest_path: results/clip/dry_run/training_manifest.json
+source_hashes_path: results/clip/dry_run/source_hashes.json
+group_split_path: results/clip/text_baseline/homecredit_group_split.csv
+homecredit_text_embeddings_path: results/clip/text_baseline/homecredit_text_embeddings.parquet
+lendingclub_v2_text_embeddings_path: results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet
+embedding_cache_manifest_path: results/clip/text_baseline/embedding_cache_manifest.json
+text_embedding_audit_path: results/clip/text_baseline/text_embedding_audit.json
+homecredit_statistical_vectors_path: results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet
+lendingclub_v2_statistical_vectors_path: results/clip_v2/statistical_view/lendingclub_v2_statistical_vectors.parquet
+statistical_feature_order_path: results/clip_v2/statistical_view/statistical_feature_order.json
+statistical_preprocessor_path: results/clip_v2/statistical_view/statistical_preprocessor.json
+statistical_anchor_manifest_path: results/clip_v2/statistical_view/statistical_anchor_manifest.json
+homecredit_feature_text_path: results/clip/text_baseline/homecredit_feature_text.csv
+lendingclub_v2_feature_text_path: results/clip/text_baseline/lendingclub_v2_feature_text.csv
+output_dir: results/clip_v2/contrastive_data
+seed: 42
+training_dataset: homecredit
+external_validation_dataset: lendingclub_v2
+legacy_lendingclub_allowed: false
+
+pair_key_fields:
+  - dataset
+  - feature_name
+  - split
+  - group_key
+  - text_hash
+  - statistical_vector_hash
+
+negative_policy:
+  in_batch_negatives: true
+  in_batch_negative_scope: homecredit_train_only
+  explicit_hard_negatives_enabled: false
+  cross_dataset_negatives_enabled: false
+  validation_as_training_negative: false
+  exclude_same_feature: true
+  exclude_same_base_family: true
+  exclude_near_duplicate_text: true
+  near_duplicate_text_threshold: 0.95
+  exclude_duplicate_formula: true
+  formula_duplicate_policy: exact_source_table_or_formula
+  exclude_duplicate_statistics: true
+  min_safe_negative_count: 25
+
+external_validation_policy:
+  lendingclub_v2_training_allowed: false
+  lendingclub_v2_validation_allowed: false
+  lendingclub_v2_external_evaluation_allowed: true
+
+tensor_schema:
+  expected_dtype: float32
+  padding_policy: none
+  stable_core_as_input: false
+  llm_rank_as_input: false
+  oot_allowed: false
+  psi_allowed: false
+  target_allowed: false

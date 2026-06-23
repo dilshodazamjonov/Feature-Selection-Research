@@ -27,6 +27,7 @@ class ClipScoreAdapter:
         self.binding = validate_clip_selector_binding(self.config)
         self.checkpoint_hash = str(self.binding["checkpoint_hash"])
         self.anchor_hash = str(self.binding["anchor_hash"])
+        self.experiment_version = str(self.binding.get("experiment_version", "clip_v1"))
 
     def score_frame(self, *, use_cache: bool = True, write_cache: bool = False) -> pd.DataFrame:
         if self.dataset == "lendingclub":
@@ -40,10 +41,10 @@ class ClipScoreAdapter:
             return select_cache_columns(frame)
 
         source_path = self.config.homecredit_scores_path if self.dataset == "homecredit" else self.config.lendingclub_v2_scores_path
-        joint_path = (
-            Path("results/clip/training/homecredit_joint_embeddings.parquet")
+        joint_path = source_path.parent / (
+            "homecredit_joint_embeddings.parquet"
             if self.dataset == "homecredit"
-            else Path("results/clip/training/lendingclub_v2_joint_embeddings.parquet")
+            else "lendingclub_v2_joint_embeddings.parquet"
         )
         scores = pd.read_csv(source_path)
         joint = pd.read_parquet(joint_path)
@@ -54,6 +55,7 @@ class ClipScoreAdapter:
             checkpoint_hash=self.checkpoint_hash,
             anchor_hash=self.anchor_hash,
             preprocessor_hash=sha256_file(self.config.statistical_preprocessor_path),
+            experiment_version=self.experiment_version,
             code_version=self._code_version(),
         )
         validate_score_cache(cache, checkpoint_hash=self.checkpoint_hash, anchor_hash=self.anchor_hash)
@@ -94,7 +96,8 @@ class ClipScoreAdapter:
         return scored
 
     def _cache_path(self) -> Path:
-        name = "homecredit_clip_scores.csv" if self.dataset == "homecredit" else "lendingclub_v2_clip_scores.csv"
+        prefix = "clip_v2" if self.experiment_version == "clip_v2" else "clip"
+        name = f"homecredit_{prefix}_scores.csv" if self.dataset == "homecredit" else f"lendingclub_v2_{prefix}_scores.csv"
         return self.config.output_dir / name
 
     def _code_version(self) -> str:

@@ -1,0 +1,32 @@
+experiment_version: clip_v2
+statistical_view_version: compact_target_free_v2
+statistical_input_dimension: 13
+output_root: results/clip_v2
+v1_reference_manifest: results/clip_versions/v1/freeze_manifest.json
+checkpoint_manifest_path: results/clip_v2/training/model_selection_manifest.json
+selected_checkpoint_path: results/clip_v2/training/selected_checkpoint.pt
+selected_checkpoint_manifest_path: results/clip_v2/training/selected_checkpoint_manifest.json
+model_selection_manifest_path: results/clip_v2/training/model_selection_manifest.json
+learned_anchor_manifest_path: results/clip_v2/training/learned_anchor_manifest.json
+training_manifest_path: results/clip_v2/training/training_manifest.json
+text_embedding_manifest_path: results/clip/text_baseline/embedding_cache_manifest.json
+statistical_preprocessor_path: results/clip_v2/statistical_view/statistical_preprocessor.json
+source_manifest_path: results/clip/dry_run/training_manifest.json
+homecredit_scores_path: results/clip_v2/training/homecredit_learned_scores.csv
+lendingclub_v2_scores_path: results/clip_v2/training/lendingclub_v2_learned_scores.csv
+output_dir: results/clip_v2/selector_integration
+score_cache_root: results/clip_v2/selector_integration
+cache_dir: results/clip_v2/selector_integration/cache
+feature_budgets:
+  lr: 20
+  catboost: 40
+screening_pool_size: 100
+missing_feature_policy: error
+active_datasets:
+  - homecredit
+  - lendingclub_v2
+legacy_datasets:
+  - lendingclub
+legacy_lendingclub_allowed: false
+external_refit_allowed: false
+no_refit: true

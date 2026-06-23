@@ -15,6 +15,7 @@ SCORE_CACHE_VERSION = "clip_selector_score_cache_v1"
 
 def score_cache_key(
     *,
+    experiment_version: str,
     dataset: str,
     feature_name: str,
     checkpoint_hash: str,
@@ -30,6 +31,7 @@ def score_cache_key(
         "|".join(
             [
                 SCORE_CACHE_VERSION,
+                experiment_version,
                 dataset,
                 feature_name,
                 checkpoint_hash,
@@ -53,6 +55,7 @@ def build_score_cache_frame(
     checkpoint_hash: str,
     anchor_hash: str,
     preprocessor_hash: str,
+    experiment_version: str,
     code_version: str,
 ) -> pd.DataFrame:
     merged = scores.merge(
@@ -74,6 +77,7 @@ def build_score_cache_frame(
         raise RuntimeError("score cache alignment failed")
     merged["score_cache_key"] = [
         score_cache_key(
+            experiment_version=experiment_version,
             dataset=str(row.dataset),
             feature_name=str(row.feature_name),
             checkpoint_hash=checkpoint_hash,
@@ -88,6 +92,7 @@ def build_score_cache_frame(
         for row in merged.itertuples(index=False)
     ]
     merged["score_cache_version"] = SCORE_CACHE_VERSION
+    merged["experiment_version"] = experiment_version
     merged["fusion_rule"] = FUSION_RULE
     merged["preprocessor_hash"] = preprocessor_hash
     merged["code_version"] = code_version
@@ -132,7 +137,10 @@ def validate_score_cache(frame: pd.DataFrame, *, checkpoint_hash: str, anchor_ha
 
 
 def select_cache_columns(frame: pd.DataFrame) -> pd.DataFrame:
-    return frame[
+    selected = frame.copy()
+    if "experiment_version" not in selected.columns:
+        selected["experiment_version"] = "clip_v1"
+    return selected[
         [
             "dataset",
             "feature_name",
@@ -147,6 +155,7 @@ def select_cache_columns(frame: pd.DataFrame) -> pd.DataFrame:
             "statistical_view_scope",
             "score_cache_key",
             "score_cache_version",
+            "experiment_version",
             "fusion_rule",
             "preprocessor_hash",
             "code_version",

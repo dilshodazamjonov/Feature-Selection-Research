@@ -16,6 +16,7 @@ FUSION_RULE = "L2-normalized average of projected text and projected statistical
 
 @dataclass(frozen=True)
 class ClipSelectorConfig:
+    experiment_version: str
     selected_checkpoint_path: Path
     selected_checkpoint_manifest_path: Path
     model_selection_manifest_path: Path
@@ -43,6 +44,7 @@ def load_clip_selector_config(path: str | Path = "configs/clip/selector.yaml") -
     data = _parse_simple_yaml(Path(path).read_text(encoding="utf-8"))
     budgets = data.get("feature_budgets", {}) if isinstance(data.get("feature_budgets"), dict) else {}
     return ClipSelectorConfig(
+        experiment_version=str(data.get("experiment_version", "clip_v1")),
         selected_checkpoint_path=Path(str(data.get("selected_checkpoint_path", "results/clip/training/seeds/seed_55/best_checkpoint.pt"))),
         selected_checkpoint_manifest_path=Path(
             str(data.get("selected_checkpoint_manifest_path", "results/clip/training/seeds/seed_55/checkpoint_manifest.json"))
@@ -121,7 +123,8 @@ def validate_clip_selector_binding(config: ClipSelectorConfig) -> dict[str, Any]
         raise RuntimeError("learned anchor is not Home Credit")
     if "training-split" not in str(anchor.get("anchor_policy", "")):
         raise RuntimeError("learned anchor is not training-split only")
-    if anchor.get("anchor_hash") != config.anchor_hash:
+    expected_anchor_hash = config.anchor_hash or str(anchor.get("anchor_hash", ""))
+    if anchor.get("anchor_hash") != expected_anchor_hash:
         raise RuntimeError("anchor hash mismatch")
     if anchor.get("checkpoint_hash") != observed_checkpoint_hash:
         raise RuntimeError("anchor checkpoint hash mismatch")
@@ -132,11 +135,12 @@ def validate_clip_selector_binding(config: ClipSelectorConfig) -> dict[str, Any]
 
     for dataset, path in [("homecredit", config.homecredit_scores_path), ("lendingclub_v2", config.lendingclub_v2_scores_path)]:
         frame = pd.read_csv(path)
-        validate_score_frame(frame, dataset=dataset, checkpoint_hash=observed_checkpoint_hash, anchor_hash=config.anchor_hash)
+        validate_score_frame(frame, dataset=dataset, checkpoint_hash=observed_checkpoint_hash, anchor_hash=expected_anchor_hash)
 
     return {
+        "experiment_version": config.experiment_version,
         "checkpoint_hash": observed_checkpoint_hash,
-        "anchor_hash": config.anchor_hash,
+        "anchor_hash": expected_anchor_hash,
         "statistical_view_scope": config.statistical_view_scope,
         "selection_rule": selection.get("selection_rule"),
         "anchor_count": int(anchor.get("anchor_count", 0)),

@@ -19,12 +19,14 @@ class ClipScreeningSelector:
         feature_budget: int = 40,
         model_name: str | None = None,
         missing_feature_policy: str = "error",
+        selector_label: str = "clip",
     ) -> None:
         self.config_path = config_path
         self.dataset = dataset
         self.feature_budget = int(feature_budget)
         self.model_name = model_name
         self.missing_feature_policy = missing_feature_policy
+        self.selector_label = selector_label
         self.selected_features_: list[str] | None = None
         self.selected_features: list[str] | None = None
         self.ranking_: pd.DataFrame | None = None
@@ -44,7 +46,7 @@ class ClipScreeningSelector:
         selected["screening_pool_member"] = True
         selected["final_selected"] = True
         selected["final_rank"] = range(1, len(selected) + 1)
-        selected["selector"] = "clip"
+        selected["selector"] = self.selector_label
         selected["model"] = self.model_name or ""
         selected["clip_score"] = selected["learned_similarity"]
         self.selected_features_ = selected["feature_name"].astype(str).tolist()
@@ -53,7 +55,8 @@ class ClipScreeningSelector:
         self.selection_manifest_ = _selection_columns(selected, dataset=self.dataset)
         if self.artifact_dir is not None:
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
-            self.selection_manifest_.to_csv(self.artifact_dir / "clip_selection_manifest.csv", index=False)
+            name = "clip_v2_selection_manifest.csv" if self.selector_label == "clip_v2" else "clip_selection_manifest.csv"
+            self.selection_manifest_.to_csv(self.artifact_dir / name, index=False)
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

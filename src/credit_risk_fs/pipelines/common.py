@@ -317,10 +317,13 @@ def _resolve_selector(config: ExperimentConfig) -> tuple[type | None, dict[str, 
         if selector_name in llm_cache_selectors and not selector_kwargs.get("cache_dir"):
             selector_kwargs["cache_dir"] = "artifacts/llm_cache"
 
-    if selector_name in {"clip", "clip_then_mrmr"}:
+    if selector_name in {"clip", "clip_then_mrmr", "clip_v2", "clip_v2_then_mrmr"}:
         selector_kwargs.setdefault("dataset", config.dataset_name)
         selector_kwargs.setdefault("model_name", config.model_name)
-        selector_kwargs.setdefault("config_path", "configs/clip/selector.yaml")
+        selector_kwargs.setdefault(
+            "config_path",
+            "configs/clip_v2/selector.yaml" if selector_name.startswith("clip_v2") else "configs/clip/selector.yaml",
+        )
 
     return selector_cls, selector_kwargs
 
