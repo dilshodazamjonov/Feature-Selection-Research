@@ -19,6 +19,7 @@ if str(SRC) not in sys.path:
 from credit_risk_fs.clip.statistical_preprocessor_v2 import RobustStatisticalPreprocessorV2  # noqa: E402
 from credit_risk_fs.clip.statistical_schema_v2 import DESCRIPTOR_COLUMNS_V2  # noqa: E402
 from credit_risk_fs.clip.statistical_view_v2 import build_statistical_view_frame  # noqa: E402
+from credit_risk_fs.clip.exact_duplicates import find_exact_dev_duplicate_pairs  # noqa: E402
 from credit_risk_fs.clip.v2_validation import validate_clip_v2_config, validate_no_v1_output_paths  # noqa: E402
 from credit_risk_fs.experiments.config import _parse_simple_yaml, load_named_project_config  # noqa: E402
 from credit_risk_fs.pipelines.common import ExperimentConfig, drop_excluded_feature_columns, prepare_modeling_data  # noqa: E402
@@ -83,6 +84,7 @@ def _status_payload(config: dict[str, Any]) -> dict[str, Any]:
         "statistical_feature_order.json",
         "statistical_anchor_manifest.json",
         "statistical_view_summary.json",
+        "exact_dev_duplicate_pairs.parquet",
     ]
     return {
         "status": "complete" if all((output_dir / name).exists() for name in expected) else "incomplete",
@@ -124,6 +126,13 @@ def _execute(config: dict[str, Any]) -> int:
     lc_meta = _lc_metadata(external_features, source_manifest_hash)
     preprocessor = RobustStatisticalPreprocessorV2()
     train_features = set(group_split.loc[group_split["split"].astype(str).eq("train"), "feature_name"].astype(str))
+    exact_duplicate_features = sorted(train_features.intersection(set(home_data.columns.astype(str))))
+    exact_dev_duplicates = find_exact_dev_duplicate_pairs(
+        home_data,
+        feature_names=exact_duplicate_features,
+        dataset="homecredit",
+        split="train",
+    )
     home_values = home_meta.merge(home_descriptors[["feature_name", *DESCRIPTOR_COLUMNS_V2]], on="feature_name", how="left")
     lc_values = lc_meta.merge(lc_descriptors[["feature_name", *DESCRIPTOR_COLUMNS_V2]], on="feature_name", how="left")
     fit_values = home_values[home_values["feature_name"].astype(str).isin(train_features)]
@@ -134,6 +143,7 @@ def _execute(config: dict[str, Any]) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     home_vectors.to_parquet(output_dir / "homecredit_statistical_vectors.parquet", index=False)
     lc_vectors.to_parquet(output_dir / "lendingclub_v2_statistical_vectors.parquet", index=False)
+    exact_dev_duplicates.to_parquet(output_dir / "exact_dev_duplicate_pairs.parquet", index=False)
     write_json(output_dir / "statistical_preprocessor.json", preprocessor.to_state())
     write_json(
         output_dir / "statistical_feature_order.json",
@@ -151,6 +161,7 @@ def _execute(config: dict[str, Any]) -> int:
         "homecredit_vectors": int(len(home_vectors)),
         "lendingclub_v2_vectors": int(len(lc_vectors)),
         "homecredit_train_fit_vectors": int(len(fit_values)),
+        "exact_dev_duplicate_directed_pairs": int(len(exact_dev_duplicates)),
         "preprocessor_hash": preprocessor.preprocessor_hash_,
         "anchor_hash": anchor_manifest["anchor_hash"],
         "source_manifest_hash": source_manifest_hash,

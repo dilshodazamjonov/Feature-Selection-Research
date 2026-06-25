@@ -10,6 +10,8 @@ import torch
 
 from credit_risk_fs.clip.model import ClipModelConfig
 from credit_risk_fs.experiments.config import _parse_simple_yaml
+from credit_risk_fs.clip.exact_duplicates import feature_order_hash
+from credit_risk_fs.clip.negative_policy import MASK_PRODUCING_REASONS, NEGATIVE_POLICY_VERSION
 from credit_risk_fs.utils.hashing import sha256_file
 from credit_risk_fs.utils.io import read_json
 
@@ -183,6 +185,8 @@ def load_and_validate_training_inputs(config: ClipTrainingConfig) -> TrainingDat
         raise RuntimeError("canonical/base family overlap is nonzero")
     if negative_manifest.get("cross_dataset_negatives_enabled") or negative_manifest.get("validation_as_training_negative"):
         raise RuntimeError("negative policy violates training boundary")
+    if negative_manifest.get("policy_version") != NEGATIVE_POLICY_VERSION:
+        raise RuntimeError("negative policy artifact is stale and requires rebuilding")
     if pair_manifest.get("training_dataset") != "homecredit" or pair_manifest.get("external_validation_dataset") != "lendingclub_v2":
         raise RuntimeError("pair manifest dataset boundary mismatch")
 
@@ -225,6 +229,7 @@ def tensors_for_pairs(
     text_frame: pd.DataFrame,
     stat_frame: pd.DataFrame,
 ) -> tuple[torch.Tensor, torch.Tensor]:
+    _validate_positive_identity(pairs)
     text_cols = _embedding_columns(text_frame)
     stat_cols = _statistical_columns(stat_frame)
     text_by_key = text_frame.set_index("embedding_cache_key", drop=False)
@@ -245,26 +250,31 @@ def tensors_for_pairs(
 
 def false_negative_mask(pairs: pd.DataFrame, exclusions: pd.DataFrame | None = None) -> torch.Tensor:
     features = pairs["feature_name"].astype(str).tolist()
+    if len(features) != len(set(features)):
+        raise ValueError("pair frame contains duplicate feature identities")
+    order_hash = feature_order_hash(features)
     index = {feature: idx for idx, feature in enumerate(features)}
     mask = np.zeros((len(features), len(features)), dtype=bool)
     if exclusions is not None and len(exclusions):
+        reasons = set(exclusions["exclusion_reason"].astype(str))
+        unsupported = reasons - MASK_PRODUCING_REASONS
+        if unsupported:
+            raise ValueError(f"unsupported mask-producing reasons: {sorted(unsupported)}")
+        if "policy_version" in exclusions and set(exclusions["policy_version"].astype(str)) != {NEGATIVE_POLICY_VERSION}:
+            raise ValueError("negative exclusion policy version is stale")
+        if "feature_order_hash" in exclusions and set(exclusions["feature_order_hash"].astype(str)) != {order_hash}:
+            raise ValueError("negative exclusion feature order hash is stale")
         for row in exclusions.to_dict("records"):
             a = str(row.get("anchor_feature_name"))
             b = str(row.get("excluded_feature_name"))
             if a in index and b in index and a != b:
                 mask[index[a], index[b]] = True
-    for column in ["base_feature_family", "source_table_or_formula", "statistical_vector_hash", "normalized_text_hash"]:
-        if column not in pairs.columns:
-            continue
-        for _, frame in pairs.groupby(column, dropna=False):
-            members = frame["feature_name"].astype(str).tolist()
-            if len(members) < 2:
-                continue
-            for a in members:
-                for b in members:
-                    if a != b:
-                        mask[index[a], index[b]] = True
     np.fill_diagonal(mask, False)
+    if not np.array_equal(mask, mask.T):
+        raise ValueError("negative exclusion mask must be symmetric")
+    valid_negatives = (~mask).sum(axis=1) - 1
+    if len(features) > 1 and (valid_negatives < 1).any():
+        raise ValueError("negative exclusion mask leaves a row with zero valid negatives")
     return torch.tensor(mask, dtype=torch.bool)
 
 
@@ -293,6 +303,31 @@ def _validate_alignment(pairs: pd.DataFrame, text: pd.DataFrame, stat: pd.DataFr
     if len(text_cols) != text_dim or len(stat_cols) != stat_dim:
         raise RuntimeError("tensor dimensions do not match schema")
     tensors_for_pairs(pairs, text, stat)
+
+
+def _validate_positive_identity(pairs: pd.DataFrame) -> None:
+    required = {
+        "feature_id",
+        "dataset",
+        "feature_name",
+        "source_manifest_hash",
+        "text_embedding_row_id",
+        "statistical_vector_row_id",
+        "positive_pair_index",
+        "feature_order_hash",
+    }
+    missing = required - set(pairs.columns)
+    if missing:
+        raise RuntimeError(f"positive pair identity columns missing: {sorted(missing)}")
+    for column in ["feature_id", "feature_name", "positive_pair_index"]:
+        if pairs[column].duplicated().any():
+            raise RuntimeError(f"duplicate positive identity values in {column}")
+    expected_indexes = list(range(len(pairs)))
+    if pairs["positive_pair_index"].astype(int).tolist() != expected_indexes:
+        raise RuntimeError("positive-pair indices do not match row order")
+    expected_hash = feature_order_hash(pairs["feature_name"].astype(str).tolist())
+    if set(pairs["feature_order_hash"].astype(str)) != {expected_hash}:
+        raise RuntimeError("positive-pair feature order hash is stale")
 
 
 def _validate_no_forbidden_columns(columns: set[str]) -> None:

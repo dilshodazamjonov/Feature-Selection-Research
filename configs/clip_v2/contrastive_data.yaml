@@ -15,6 +15,7 @@ lendingclub_v2_statistical_vectors_path: results/clip_v2/statistical_view/lendin
 statistical_feature_order_path: results/clip_v2/statistical_view/statistical_feature_order.json
 statistical_preprocessor_path: results/clip_v2/statistical_view/statistical_preprocessor.json
 statistical_anchor_manifest_path: results/clip_v2/statistical_view/statistical_anchor_manifest.json
+exact_dev_duplicate_pairs_path: results/clip_v2/statistical_view/exact_dev_duplicate_pairs.parquet
 homecredit_feature_text_path: results/clip/text_baseline/homecredit_feature_text.csv
 lendingclub_v2_feature_text_path: results/clip/text_baseline/lendingclub_v2_feature_text.csv
 output_dir: results/clip_v2/contrastive_data
@@ -37,13 +38,18 @@ negative_policy:
   explicit_hard_negatives_enabled: false
   cross_dataset_negatives_enabled: false
   validation_as_training_negative: false
-  exclude_same_feature: true
-  exclude_same_base_family: true
-  exclude_near_duplicate_text: true
+  policy_version: identity_equivalence_v2
+  same_feature: mask
+  verified_alias: mask
+  exact_dev_duplicate: mask
+  documented_identity_transform: mask
+  diagnostic_same_family: diagnostic_only
+  diagnostic_text_similarity: diagnostic_only
+  diagnostic_statistical_similarity: diagnostic_only
+  same_source_table: diagnostic_only
+  verified_aliases: []
+  documented_identity_transforms: []
   near_duplicate_text_threshold: 0.95
-  exclude_duplicate_formula: true
-  formula_duplicate_policy: exact_source_table_or_formula
-  exclude_duplicate_statistics: true
   min_safe_negative_count: 25
 
 external_validation_policy:

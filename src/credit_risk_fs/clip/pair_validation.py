@@ -132,6 +132,10 @@ def validate_positive_pairs(pairs: pd.DataFrame, *, role: str, dataset: str, spl
         errors.append(f"{role}: split mismatch")
     if pairs["pair_id"].duplicated().any():
         errors.append(f"{role}: duplicate pair IDs")
+    if "feature_id" not in pairs or pairs["feature_id"].duplicated().any():
+        errors.append(f"{role}: missing or duplicate feature IDs")
+    if "positive_pair_index" not in pairs or pairs["positive_pair_index"].duplicated().any():
+        errors.append(f"{role}: missing or duplicate positive-pair indices")
     if pairs["feature_name"].duplicated().any():
         errors.append(f"{role}: duplicate feature pairs")
     if pairs["text_hash"].isna().any() or pairs["statistical_vector_hash"].isna().any():

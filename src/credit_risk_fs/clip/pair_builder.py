@@ -6,6 +6,7 @@ from typing import Any
 import pandas as pd
 
 from credit_risk_fs.clip.contrastive_schema import CONTRASTIVE_DATA_VERSION, ContrastiveBuildResult, ContrastiveDataConfig
+from credit_risk_fs.clip.exact_duplicates import feature_order_hash
 from credit_risk_fs.clip.negative_policy import build_negative_policy
 from credit_risk_fs.clip.pair_validation import (
     embedding_columns,
@@ -37,6 +38,7 @@ def load_contrastive_data_config(path: str | Path = "configs/clip/contrastive_da
         statistical_feature_order_path=Path(str(data.get("statistical_feature_order_path", ""))),
         statistical_preprocessor_path=Path(str(data.get("statistical_preprocessor_path", ""))),
         statistical_anchor_manifest_path=Path(str(data.get("statistical_anchor_manifest_path", ""))),
+        exact_dev_duplicate_pairs_path=Path(str(data.get("exact_dev_duplicate_pairs_path", ""))),
         homecredit_feature_text_path=Path(str(data.get("homecredit_feature_text_path", ""))),
         lendingclub_v2_feature_text_path=Path(str(data.get("lendingclub_v2_feature_text_path", ""))),
         output_dir=Path(str(data.get("output_dir", "results/clip/contrastive_data"))),
@@ -68,6 +70,7 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         config.statistical_feature_order_path,
         config.statistical_preprocessor_path,
         config.statistical_anchor_manifest_path,
+        config.exact_dev_duplicate_pairs_path,
         config.homecredit_feature_text_path,
         config.lendingclub_v2_feature_text_path,
     ]
@@ -86,6 +89,7 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
     feature_order = read_json(config.statistical_feature_order_path)
     preprocessor = read_json(config.statistical_preprocessor_path)
     stat_anchor = read_json(config.statistical_anchor_manifest_path)
+    exact_dev_duplicates = pd.read_parquet(config.exact_dev_duplicate_pairs_path)
     home_text = pd.read_parquet(config.homecredit_text_embeddings_path)
     lc_text = pd.read_parquet(config.lendingclub_v2_text_embeddings_path)
     home_stat = pd.read_parquet(config.homecredit_statistical_vectors_path)
@@ -125,6 +129,9 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
     train_pairs = home_pairs[home_pairs["split"].eq("train")].copy()
     validation_pairs = home_pairs[home_pairs["split"].eq("validation")].copy()
     external_pairs = lc_pairs.copy()
+    train_pairs = _index_positive_pairs(train_pairs)
+    validation_pairs = _index_positive_pairs(validation_pairs)
+    external_pairs = _index_positive_pairs(external_pairs)
     errors.extend(validate_positive_pairs(train_pairs, role="train_positive", dataset="homecredit", split="train"))
     errors.extend(validate_positive_pairs(validation_pairs, role="validation_positive", dataset="homecredit", split="validation"))
     errors.extend(
@@ -145,6 +152,9 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         train_pairs=train_pairs,
         all_homecredit_pairs=home_pairs,
         text_embeddings=home_text,
+        exact_dev_duplicates=exact_dev_duplicates,
+        verified_aliases=config.negative_policy.get("verified_aliases", []),
+        documented_identity_transforms=config.negative_policy.get("documented_identity_transforms", []),
         near_duplicate_text_threshold=float(config.negative_policy.get("near_duplicate_text_threshold", 0.95)),
         min_safe_negative_count=int(config.negative_policy.get("min_safe_negative_count", 25)),
     )
@@ -331,7 +341,17 @@ def build_positive_pairs(
         )
         for row in merged.itertuples(index=False)
     ]
+    merged = merged.sort_values(["dataset", "feature_name"], kind="mergesort").reset_index(drop=True)
+    merged["feature_id"] = [
+        sha256_text(f"{row.dataset}|{row.feature_name}|{row.source_manifest_hash}")
+        for row in merged.itertuples(index=False)
+    ]
+    merged["positive_pair_index"] = range(len(merged))
+    merged["feature_order_hash"] = feature_order_hash(merged["feature_name"].astype(str).tolist())
     columns = [
+        "feature_id",
+        "positive_pair_index",
+        "feature_order_hash",
         "pair_id",
         "dataset",
         "feature_name",
@@ -358,7 +378,14 @@ def build_positive_pairs(
         "allowed_for_validation",
         "allowed_for_external_evaluation",
     ]
-    return merged[columns].sort_values(["dataset", "feature_name"], kind="mergesort").reset_index(drop=True)
+    return merged[columns]
+
+
+def _index_positive_pairs(pairs: pd.DataFrame) -> pd.DataFrame:
+    frame = pairs.sort_values(["dataset", "feature_name"], kind="mergesort").reset_index(drop=True)
+    frame["positive_pair_index"] = range(len(frame))
+    frame["feature_order_hash"] = feature_order_hash(frame["feature_name"].astype(str).tolist())
+    return frame
 
 
 def _group_source_from_key(group_key: str) -> str:

@@ -34,7 +34,12 @@ def symmetric_masked_contrastive_loss(
         if false_negative_mask.shape != (batch_size, batch_size):
             raise ValueError("false_negative_mask shape must match batch")
         mask = false_negative_mask.to(device=logits.device, dtype=torch.bool).clone()
+        if not torch.equal(mask, mask.T):
+            raise ValueError("false_negative_mask must be symmetric")
         mask.fill_diagonal_(False)
+        valid_negatives = (~mask).sum(dim=1) - 1
+        if torch.any(valid_negatives < 1):
+            raise ValueError("false_negative_mask leaves a row with zero valid negatives")
         masked_negative_count = int(mask.sum().item())
         logits = logits.masked_fill(mask, torch.finfo(logits.dtype).min)
     labels = torch.arange(batch_size, device=logits.device)

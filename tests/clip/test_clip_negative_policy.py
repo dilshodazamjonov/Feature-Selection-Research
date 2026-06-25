@@ -2,194 +2,192 @@ from __future__ import annotations
 
 import pandas as pd
 
-from credit_risk_fs.clip.negative_policy import build_negative_policy
+from credit_risk_fs.clip.exact_duplicates import feature_order_hash, find_exact_dev_duplicate_pairs
+from credit_risk_fs.clip.negative_policy import NEGATIVE_POLICY_VERSION, build_negative_policy
+from credit_risk_fs.clip.training_validation import false_negative_mask
 
 
-def test_negative_policy_excludes_same_feature_same_family_and_duplicate_statistics(tmp_path):
-    train = pd.read_parquet("results/clip/contrastive_data/homecredit_train_positive_pairs.parquet")
-    validation = pd.read_parquet("results/clip/contrastive_data/homecredit_validation_positive_pairs.parquet")
-    text = pd.read_parquet("results/clip/text_baseline/homecredit_text_embeddings.parquet")
-
-    negative = build_negative_policy(
-        train_pairs=train,
-        all_homecredit_pairs=pd.concat([train, validation], ignore_index=True),
-        text_embeddings=text,
+def test_identity_only_policy_keeps_diagnostic_relations_as_negatives():
+    pairs = _pairs()
+    result = build_negative_policy(
+        train_pairs=pairs,
+        all_homecredit_pairs=pairs,
+        text_embeddings=_embeddings(pairs),
+        min_safe_negative_count=0,
     )
 
-    reasons = set(negative.exclusion_pairs["exclusion_reason"])
-    assert "same_feature" in reasons
-    assert "same_canonical_family" in reasons
-    assert "duplicate_statistical_vector" in reasons
-    assert "duplicate_formula" in reasons
-    assert "near_duplicate_text_embedding" in reasons
-    assert negative.manifest["cross_dataset_negatives_enabled"] is False
-    assert negative.manifest["explicit_hard_negatives_enabled"] is False
-    assert negative.manifest["validation_as_training_negative"] is False
-    assert negative.manifest["near_duplicate_text_threshold"] == 0.95
-    assert negative.candidate_audit["remaining_safe_negative_count"].min() >= 25
-    assert not negative.near_duplicate_audit.empty
+    assert result.exclusion_pairs.empty
+    assert result.manifest["policy_version"] == NEGATIVE_POLICY_VERSION
+    assert result.manifest["diagnostic_relation_counts"]["same_source_table"] > 0
+    assert result.manifest["diagnostic_relation_counts"]["diagnostic_same_family"] > 0
+    assert result.manifest["diagnostic_relation_counts"]["diagnostic_text_similarity"] > 0
+    assert result.manifest["diagnostic_relation_counts"]["diagnostic_statistical_similarity"] > 0
+    assert false_negative_mask(pairs, result.exclusion_pairs).sum().item() == 0
 
 
-def test_same_base_family_is_excluded_as_negative():
-    pairs = pd.DataFrame(
-        [
-            {
-                "pair_id": "p1",
-                "dataset": "homecredit",
-                "feature_name": "A_MEAN",
-                "base_feature_family": "family:A",
-                "canonical_feature_family": "A",
-                "text_hash": "t1",
-                "normalized_text_hash": "nt1",
-                "source_table_or_formula": "formula1",
-                "statistical_vector_hash": "s1",
-                "group_key": "family:A",
-                "split": "train",
-            },
-            {
-                "pair_id": "p2",
-                "dataset": "homecredit",
-                "feature_name": "A_MAX",
-                "base_feature_family": "family:A",
-                "canonical_feature_family": "A",
-                "text_hash": "t2",
-                "normalized_text_hash": "nt2",
-                "source_table_or_formula": "formula2",
-                "statistical_vector_hash": "s2",
-                "group_key": "family:A",
-                "split": "train",
-            },
-            {
-                "pair_id": "p3",
-                "dataset": "homecredit",
-                "feature_name": "B",
-                "base_feature_family": "name:B",
-                "canonical_feature_family": "B",
-                "text_hash": "t3",
-                "normalized_text_hash": "nt3",
-                "source_table_or_formula": "formula3",
-                "statistical_vector_hash": "s3",
-                "group_key": "name:B",
-                "split": "train",
-            },
-        ]
-    )
-
+def test_unrelated_same_table_and_ext_sources_remain_negatives():
+    pairs = _pairs()
     result = build_negative_policy(train_pairs=pairs, all_homecredit_pairs=pairs, min_safe_negative_count=0)
-    subset = result.exclusion_pairs[
-        (result.exclusion_pairs["anchor_feature_name"].eq("A_MEAN"))
-        & (result.exclusion_pairs["excluded_feature_name"].eq("A_MAX"))
-    ]
-    assert "same_canonical_family" in set(subset["exclusion_reason"])
+    mask = false_negative_mask(pairs, result.exclusion_pairs)
+    index = {name: idx for idx, name in enumerate(pairs["feature_name"])}
+
+    assert not mask[index["AMT_ANNUITY"], index["DAYS_BIRTH"]]
+    assert not mask[index["EXT_SOURCE_1"], index["EXT_SOURCE_2"]]
+    assert not mask[index["EXT_SOURCE_2"], index["EXT_SOURCE_3"]]
 
 
-def test_near_duplicate_text_threshold_is_used_and_exact_duplicates_are_distinct():
-    pairs = _pair_frame()
-    embeddings = _embedding_frame(pairs)
-
+def test_verified_alias_and_exact_dev_duplicates_are_masked_symmetrically():
+    pairs = _pairs()
+    dev = pd.DataFrame(
+        {
+            name: [1, None, 3, 4] if name in {"ALIAS_A", "ALIAS_B"} else range(4)
+            for name in pairs["feature_name"]
+        }
+    )
+    exact = find_exact_dev_duplicate_pairs(
+        dev,
+        feature_names=pairs["feature_name"].tolist(),
+        dataset="homecredit",
+        split="train",
+    )
     result = build_negative_policy(
         train_pairs=pairs,
         all_homecredit_pairs=pairs,
-        text_embeddings=embeddings,
-        near_duplicate_text_threshold=0.95,
+        exact_dev_duplicates=exact,
+        verified_aliases=[["EXT_SOURCE_1", "EXT_SOURCE_2"]],
         min_safe_negative_count=0,
     )
+    mask = false_negative_mask(pairs, result.exclusion_pairs)
+    index = {name: idx for idx, name in enumerate(pairs["feature_name"])}
 
-    reasons = set(result.exclusion_pairs["exclusion_reason"])
-    assert "exact_text_duplicate" in reasons
-    assert "near_duplicate_text_embedding" in reasons
-    exact_rows = result.near_duplicate_audit[result.near_duplicate_audit["exclusion_reason"].eq("exact_text_duplicate")]
-    near_rows = result.near_duplicate_audit[result.near_duplicate_audit["exclusion_reason"].eq("near_duplicate_text_embedding")]
-    assert not exact_rows.empty
-    assert not near_rows.empty
-    assert exact_rows["exact_text_duplicate"].all()
-    assert not near_rows["exact_text_duplicate"].any()
+    assert mask[index["ALIAS_A"], index["ALIAS_B"]]
+    assert mask[index["ALIAS_B"], index["ALIAS_A"]]
+    assert mask[index["EXT_SOURCE_1"], index["EXT_SOURCE_2"]]
+    assert mask[index["EXT_SOURCE_2"], index["EXT_SOURCE_1"]]
+    assert not mask.diag().any()
 
 
-def test_cosine_below_threshold_is_allowed_when_no_other_exclusion_applies():
-    pairs = _pair_frame()
-    embeddings = _embedding_frame(pairs)
-
-    result = build_negative_policy(
-        train_pairs=pairs,
-        all_homecredit_pairs=pairs,
-        text_embeddings=embeddings,
-        near_duplicate_text_threshold=0.99,
-        min_safe_negative_count=0,
-    )
-    subset = result.exclusion_pairs[
-        (result.exclusion_pairs["anchor_feature_name"].eq("NEAR_A"))
-        & (result.exclusion_pairs["excluded_feature_name"].eq("NEAR_B"))
-    ]
-
-    assert "near_duplicate_text_embedding" not in set(subset["exclusion_reason"])
-
-
-def test_validation_and_lendingclub_do_not_enter_training_negative_candidates():
-    train = pd.read_parquet("results/clip/contrastive_data/homecredit_train_positive_pairs.parquet")
-    validation = pd.read_parquet("results/clip/contrastive_data/homecredit_validation_positive_pairs.parquet")
-    text = pd.read_parquet("results/clip/text_baseline/homecredit_text_embeddings.parquet")
-
-    result = build_negative_policy(
-        train_pairs=train,
-        all_homecredit_pairs=pd.concat([train, validation], ignore_index=True),
-        text_embeddings=text,
-    )
-
-    validation_features = set(validation["feature_name"].astype(str))
-    excluded_features = set(result.exclusion_pairs["excluded_feature_name"].astype(str))
-    assert not validation_features.intersection(excluded_features)
-
-
-def _pair_frame() -> pd.DataFrame:
-    return pd.DataFrame(
+def test_mask_rejects_stale_order_hash_and_zero_valid_negatives():
+    pairs = _pairs().iloc[:3].copy().reset_index(drop=True)
+    stale = pd.DataFrame(
         [
-            _row("EXACT_A", "p1", "k1", "same_text", "formula1", "s1", "family:EXACT_A"),
-            _row("EXACT_B", "p2", "k2", "same_text", "formula2", "s2", "family:EXACT_B"),
-            _row("NEAR_A", "p3", "k3", "near_a", "formula3", "s3", "family:NEAR_A"),
-            _row("NEAR_B", "p4", "k4", "near_b", "formula4", "s4", "family:NEAR_B"),
-            _row("FAR", "p5", "k5", "far", "formula5", "s5", "family:FAR"),
+            _exclusion("AMT_ANNUITY", "DAYS_BIRTH", pairs, "stale"),
+            _exclusion("DAYS_BIRTH", "AMT_ANNUITY", pairs, "stale"),
         ]
     )
+    try:
+        false_negative_mask(pairs, stale)
+    except ValueError as error:
+        assert "order hash" in str(error)
+    else:
+        raise AssertionError("stale mask order hash was accepted")
+
+    order_hash = feature_order_hash(pairs["feature_name"].tolist())
+    complete = []
+    for a in pairs["feature_name"]:
+        for b in pairs["feature_name"]:
+            if a != b:
+                complete.append(_exclusion(a, b, pairs, order_hash))
+    try:
+        false_negative_mask(pairs, pd.DataFrame(complete))
+    except ValueError as error:
+        assert "zero valid negatives" in str(error)
+    else:
+        raise AssertionError("zero-valid-negative mask was accepted")
 
 
-def _row(feature: str, pair_id: str, key: str, normalized_hash: str, formula: str, stat_hash: str, family: str) -> dict:
-    return {
-        "pair_id": pair_id,
-        "dataset": "homecredit",
-        "feature_name": feature,
-        "base_feature_family": family,
-        "canonical_feature_family": family.replace("family:", ""),
-        "text_hash": f"text_{feature}",
-        "normalized_text_hash": normalized_hash,
-        "source_table_or_formula": formula,
-        "statistical_vector_hash": stat_hash,
-        "group_key": family,
-        "split": "train",
-        "text_embedding_row_id": key,
-        "semantic_group": "test_group",
-    }
+def test_mask_is_deterministic_and_batch_order_invariant():
+    pairs = _pairs()
+    result = build_negative_policy(
+        train_pairs=pairs,
+        all_homecredit_pairs=pairs,
+        verified_aliases=[["ALIAS_A", "ALIAS_B"]],
+        min_safe_negative_count=0,
+    )
+    first = false_negative_mask(pairs, result.exclusion_pairs)
+    second = false_negative_mask(pairs, result.exclusion_pairs)
+    assert first.equal(second)
+
+    shuffled = pairs.sample(frac=1.0, random_state=42).reset_index(drop=True)
+    shuffled["positive_pair_index"] = range(len(shuffled))
+    shuffled["feature_order_hash"] = feature_order_hash(shuffled["feature_name"].tolist())
+    remapped = result.exclusion_pairs.copy()
+    remapped["feature_order_hash"] = feature_order_hash(shuffled["feature_name"].tolist())
+    shuffled_mask = false_negative_mask(shuffled, remapped)
+    original_index = {name: idx for idx, name in enumerate(pairs["feature_name"])}
+    shuffled_index = {name: idx for idx, name in enumerate(shuffled["feature_name"])}
+    assert first[original_index["ALIAS_A"], original_index["ALIAS_B"]]
+    assert shuffled_mask[shuffled_index["ALIAS_A"], shuffled_index["ALIAS_B"]]
 
 
-def _embedding_frame(pairs: pd.DataFrame) -> pd.DataFrame:
-    values = {
-        "k1": [1.0, 0.0, 0.0],
-        "k2": [1.0, 0.0, 0.0],
-        "k3": [1.0, 0.0, 0.0],
-        "k4": [0.96, 0.28, 0.0],
-        "k5": [0.0, 1.0, 0.0],
-    }
+def _pairs() -> pd.DataFrame:
+    features = [
+        "AMT_ANNUITY",
+        "DAYS_BIRTH",
+        "EXT_SOURCE_1",
+        "EXT_SOURCE_2",
+        "EXT_SOURCE_3",
+        "APARTMENTS_AVG",
+        "APARTMENTS_MEDI",
+        "ALIAS_A",
+        "ALIAS_B",
+    ]
+    order_hash = feature_order_hash(features)
     rows = []
-    for row in pairs.to_dict("records"):
-        vector = values[row["text_embedding_row_id"]]
+    for index, feature in enumerate(features):
+        source = "application_train"
+        family = "family:EXT_SOURCE" if feature.startswith("EXT_SOURCE") else f"family:{feature.split('_')[0]}"
+        stat_hash = "same_stat" if feature in {"EXT_SOURCE_1", "EXT_SOURCE_2"} else f"stat_{feature}"
+        normalized_text = "same_text" if feature in {"APARTMENTS_AVG", "APARTMENTS_MEDI"} else f"text_{feature}"
         rows.append(
             {
+                "feature_id": f"feature_{index}",
+                "positive_pair_index": index,
+                "feature_order_hash": order_hash,
+                "pair_id": f"pair_{index}",
                 "dataset": "homecredit",
+                "feature_name": feature,
+                "base_feature_family": family,
+                "canonical_feature_family": family,
+                "text_hash": f"text_hash_{feature}",
+                "normalized_text_hash": normalized_text,
+                "source_table_or_formula": source,
+                "statistical_vector_hash": stat_hash,
+                "group_key": family,
+                "split": "train",
+                "text_embedding_row_id": f"embedding_{index}",
+                "statistical_vector_row_id": f"statistical_{index}",
+                "source_manifest_hash": "source_hash",
+                "semantic_group": "application",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _embeddings(pairs: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    for index, row in pairs.iterrows():
+        vector = [1.0, 0.0] if row["feature_name"] in {"APARTMENTS_AVG", "APARTMENTS_MEDI"} else [0.0, 1.0]
+        rows.append(
+            {
                 "feature_name": row["feature_name"],
                 "embedding_cache_key": row["text_embedding_row_id"],
                 "embedding_0000": vector[0],
                 "embedding_0001": vector[1],
-                "embedding_0002": vector[2],
             }
         )
     return pd.DataFrame(rows)
+
+
+def _exclusion(a: str, b: str, pairs: pd.DataFrame, order_hash: str) -> dict:
+    by_feature = pairs.set_index("feature_name")
+    return {
+        "anchor_feature_name": a,
+        "excluded_feature_name": b,
+        "anchor_pair_id": by_feature.loc[a, "pair_id"],
+        "excluded_pair_id": by_feature.loc[b, "pair_id"],
+        "exclusion_reason": "verified_alias",
+        "evidence": "test alias",
+        "policy_version": NEGATIVE_POLICY_VERSION,
+        "feature_order_hash": order_hash,
+    }

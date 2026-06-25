@@ -22,6 +22,7 @@ class ContrastiveDataConfig:
     statistical_feature_order_path: Path
     statistical_preprocessor_path: Path
     statistical_anchor_manifest_path: Path
+    exact_dev_duplicate_pairs_path: Path
     homecredit_feature_text_path: Path
     lendingclub_v2_feature_text_path: Path
     output_dir: Path
