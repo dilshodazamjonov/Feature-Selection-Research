@@ -50,39 +50,6 @@ results/clip_v2/pipeline_execution.log
 
 Detailed stage-by-stage commands below are retained for debugging individual stages.
 
-## Final CLIP Comparison
-
-Read-only planning:
-
-```powershell
-uv run python scripts/run_clip_final_comparison.py --plan
-```
-
-The plan command must not write scientific outputs or mark stages complete. Do not begin execution unless the plan reports `implementation_mode: executable_research_pipeline` and synthetic end-to-end execution tests pass.
-
-Real execution:
-
-```powershell
-uv run python scripts/run_clip_final_comparison.py --fresh-start --execute
-```
-
-Expected real run counts are 184 core candidate-pool runs, including 120 random-screening repetitions, plus 20 representation-seed downstream runs and 28 ablation downstream runs. A stage is valid only after real predictions, metrics, selected features, hashes, and completion markers validate.
-
-Resume after interruption:
-
-```powershell
-uv run python scripts/run_clip_final_comparison.py --resume
-uv run python scripts/run_clip_final_comparison.py --resume --execute
-```
-
-Status:
-
-```powershell
-uv run python scripts/run_clip_final_comparison.py --status
-```
-
-Output stays under `results/clip_final_comparison/`; incomplete prior outputs are archived under `results/clip_final_comparison_archives/<timestamp>/`.
-
 ## 1. What This Repository Does
 
 This repository compares credit-risk feature-selection methods on Home Credit and LendingClub v2. It includes statistical selectors, LLM-based screening, CLIP-v1, and CLIP-v2. DEV data is used for fitting and feature selection. OOT data is held out as the main evidence because it tests whether a selector survives a later time window.
