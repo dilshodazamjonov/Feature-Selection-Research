@@ -152,7 +152,15 @@ def _score_frame(embeddings: pd.DataFrame, centroid: np.ndarray, checkpoint_hash
 
 
 def _training_anchor_names(homecredit_pairs: pd.DataFrame) -> set[str]:
-    anchor_path = Path("results/clip/statistical_baseline/homecredit_statistical_anchor_features.csv")
+    candidates = [
+        Path("results/clip_v2/statistical_view/homecredit_statistical_anchor_features.csv"),
+        Path("results/clip/statistical_baseline/homecredit_statistical_anchor_features.csv"),
+    ]
+    anchor_path = next((path for path in candidates if path.exists()), None)
+    if anchor_path is None:
+        raise RuntimeError(
+            "no leakage-safe Home Credit statistical anchor feature artifact exists"
+        )
     anchors = pd.read_csv(anchor_path)
     train_features = set(homecredit_pairs.loc[homecredit_pairs["split"].eq("train"), "feature_name"].astype(str))
     return set(anchors["feature_name"].astype(str)).intersection(train_features)

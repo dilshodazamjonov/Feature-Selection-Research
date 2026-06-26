@@ -211,7 +211,9 @@ def load_and_validate_training_inputs(config: ClipTrainingConfig) -> TrainingDat
         train_pairs=train.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
         validation_pairs=validation.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
         external_pairs=external.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
-        homecredit_pairs=pd.concat([train, validation], ignore_index=True).sort_values("feature_name", kind="mergesort").reset_index(drop=True),
+        homecredit_pairs=_reindex_combined_positive_pairs(
+            pd.concat([train, validation], ignore_index=True)
+        ),
         homecredit_text=home_text,
         lendingclub_text=lc_text,
         homecredit_stat=home_stat,
@@ -328,6 +330,15 @@ def _validate_positive_identity(pairs: pd.DataFrame) -> None:
     expected_hash = feature_order_hash(pairs["feature_name"].astype(str).tolist())
     if set(pairs["feature_order_hash"].astype(str)) != {expected_hash}:
         raise RuntimeError("positive-pair feature order hash is stale")
+
+
+def _reindex_combined_positive_pairs(pairs: pd.DataFrame) -> pd.DataFrame:
+    frame = pairs.sort_values("feature_name", kind="mergesort").reset_index(drop=True)
+    frame["positive_pair_index"] = range(len(frame))
+    frame["feature_order_hash"] = feature_order_hash(
+        frame["feature_name"].astype(str).tolist()
+    )
+    return frame
 
 
 def _validate_no_forbidden_columns(columns: set[str]) -> None:

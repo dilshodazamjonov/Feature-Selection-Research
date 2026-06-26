@@ -221,8 +221,22 @@ def _write_full_outputs(*, config, data, results: list[SeedTrainingResult]) -> N
 def _baseline_comparison(retrieval: pd.DataFrame, output_dir: Path) -> dict[str, str | float | None]:
     best = retrieval.sort_values(["validation_loss", "seed"], kind="mergesort").iloc[0]
     learned = pd.read_csv(output_dir / "homecredit_learned_scores.csv")
-    text_rank = pd.read_csv("results/clip/text_baseline/homecredit_text_only_ranking.csv")
-    stat_rank = pd.read_csv("results/clip/statistical_baseline/homecredit_statistical_only_ranking.csv")
+    text_path = Path("results/clip/text_baseline/homecredit_text_only_ranking.csv")
+    stat_path = Path("results/clip/statistical_baseline/homecredit_statistical_only_ranking.csv")
+    if not text_path.exists() or not stat_path.exists():
+        return {
+            "comparison_scope": "representation-level diagnostics only; no downstream OOT AUC",
+            "validation_retrieval_mrr": float(best["validation_mean_reciprocal_rank"]),
+            "validation_positive_minus_negative_margin": float(
+                best["validation_positive_minus_negative_margin"]
+            ),
+            "learned_vs_text_rank_spearman_validation": None,
+            "learned_vs_statistical_rank_spearman_validation": None,
+            "frozen_baseline_note": "optional legacy rank artifacts are absent and were not restored",
+            "claim": "learned encoder diagnostics are contrastive/alignment metrics, not feature-selection superiority",
+        }
+    text_rank = pd.read_csv(text_path)
+    stat_rank = pd.read_csv(stat_path)
     validation_learned = learned[learned["split"].astype(str).eq("validation")][
         ["feature_name", "learned_rank", "learned_similarity"]
     ]
