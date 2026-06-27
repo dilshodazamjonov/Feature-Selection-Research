@@ -34,6 +34,12 @@ class ContrastiveDataConfig:
     negative_policy: dict[str, Any]
     external_validation_policy: dict[str, Any]
     tensor_schema: dict[str, Any]
+    training_feature_manifest: Path
+    external_feature_manifest: Path
+    training_raw_statistical_source: Path
+    external_raw_statistical_source: Path
+    training_statistical_fit_scope: str
+    external_statistical_transform_scope: str
 
 
 @dataclass(frozen=True)

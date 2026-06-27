@@ -57,8 +57,8 @@ def train_seed(
     parameter_count = count_trainable_parameters(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
-    train_text, train_stat = tensors_for_pairs(data.train_pairs, data.homecredit_text, data.homecredit_stat)
-    val_text, val_stat = tensors_for_pairs(data.validation_pairs, data.homecredit_text, data.homecredit_stat)
+    train_text, train_stat = tensors_for_pairs(data.train_pairs, data.training_text, data.training_stat)
+    val_text, val_stat = tensors_for_pairs(data.validation_pairs, data.training_text, data.training_stat)
     train_text = train_text.to(device)
     train_stat = train_stat.to(device)
     val_text = val_text.to(device)
@@ -164,6 +164,13 @@ def train_seed(
                 git_commit=_git_commit(),
                 statistical_view_scope=config.statistical_view_scope,
                 extra={
+                    "source_dataset": data.training_dataset,
+                    "external_dataset": data.external_dataset,
+                    "pairing_policy_version": "identity_equivalence_v2",
+                    "configuration_hash": config.configuration_hash,
+                    "data_manifest_hash": config.data_manifest_hash,
+                    "statistical_preprocessor_hash": config.statistical_preprocessor_hash,
+                    "source_anchor_hash": config.source_anchor_hash,
                     "initial_temperature": float(config.model.initial_temperature),
                     "final_temperature": float(model.temperature().detach().cpu().item()),
                     "statistical_fields": data.statistical_fields,
@@ -205,8 +212,10 @@ def train_seed(
             "early_stopping_epoch": int(final_epoch),
             "total_optimizer_steps": int(total_steps),
             "model_trained": True,
-            "lendingclub_v2_used_for_training": False,
-            "lendingclub_v2_used_for_model_selection": False,
+            "source_dataset": data.training_dataset,
+            "external_dataset": data.external_dataset,
+            "external_dataset_used_for_training": False,
+            "external_dataset_used_for_model_selection": False,
             "statistical_view_scope": config.statistical_view_scope,
         },
     )

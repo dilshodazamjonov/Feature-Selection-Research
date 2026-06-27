@@ -52,6 +52,24 @@ def load_contrastive_data_config(path: str | Path = "configs/clip/contrastive_da
         if isinstance(data.get("external_validation_policy"), dict)
         else {},
         tensor_schema=data.get("tensor_schema", {}) if isinstance(data.get("tensor_schema"), dict) else {},
+        training_feature_manifest=Path(
+            str(data.get("training_feature_manifest", data.get("manifest_path", "")))
+        ),
+        external_feature_manifest=Path(
+            str(data.get("external_feature_manifest", data.get("manifest_path", "")))
+        ),
+        training_raw_statistical_source=Path(
+            str(data.get("training_raw_statistical_source", ""))
+        ),
+        external_raw_statistical_source=Path(
+            str(data.get("external_raw_statistical_source", ""))
+        ),
+        training_statistical_fit_scope=str(
+            data.get("training_statistical_fit_scope", "dev_training_features_only")
+        ),
+        external_statistical_transform_scope=str(
+            data.get("external_statistical_transform_scope", "transform_only")
+        ),
     )
 
 
@@ -100,7 +118,7 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
 
     text_dim = int(embedding_audit["embedding_dimension"])
     stat_dim = int(feature_order["vector_dimension"])
-    errors.extend(validate_group_split(split))
+    errors.extend(validate_group_split(split, dataset=config.training_dataset))
     errors.extend(validate_view_frame(text=home_text, stat=home_stat, dataset="homecredit", expected_text_dim=text_dim, expected_stat_dim=stat_dim))
     errors.extend(
         validate_view_frame(text=lc_text, stat=lc_stat, dataset="lendingclub_v2", expected_text_dim=text_dim, expected_stat_dim=stat_dim)
@@ -117,6 +135,7 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         dataset="homecredit",
         text_dim=text_dim,
         stat_dim=stat_dim,
+        training_dataset=config.training_dataset,
     )
     lc_pairs = build_positive_pairs(
         text=lc_text,
@@ -125,20 +144,24 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         dataset="lendingclub_v2",
         text_dim=text_dim,
         stat_dim=stat_dim,
+        training_dataset=config.training_dataset,
     )
-    train_pairs = home_pairs[home_pairs["split"].eq("train")].copy()
-    validation_pairs = home_pairs[home_pairs["split"].eq("validation")].copy()
-    external_pairs = lc_pairs.copy()
+    pairs_by_dataset = {"homecredit": home_pairs, "lendingclub_v2": lc_pairs}
+    source_pairs = pairs_by_dataset[config.training_dataset]
+    external_source_pairs = pairs_by_dataset[config.external_validation_dataset]
+    train_pairs = source_pairs[source_pairs["split"].eq("train")].copy()
+    validation_pairs = source_pairs[source_pairs["split"].eq("validation")].copy()
+    external_pairs = external_source_pairs.copy()
     train_pairs = _index_positive_pairs(train_pairs)
     validation_pairs = _index_positive_pairs(validation_pairs)
     external_pairs = _index_positive_pairs(external_pairs)
-    errors.extend(validate_positive_pairs(train_pairs, role="train_positive", dataset="homecredit", split="train"))
-    errors.extend(validate_positive_pairs(validation_pairs, role="validation_positive", dataset="homecredit", split="validation"))
+    errors.extend(validate_positive_pairs(train_pairs, role="train_positive", dataset=config.training_dataset, split="train"))
+    errors.extend(validate_positive_pairs(validation_pairs, role="validation_positive", dataset=config.training_dataset, split="validation"))
     errors.extend(
         validate_positive_pairs(
             external_pairs,
             role="external_validation_positive",
-            dataset="lendingclub_v2",
+            dataset=config.external_validation_dataset,
             split="external_validation",
         )
     )
@@ -150,20 +173,23 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
 
     negative = build_negative_policy(
         train_pairs=train_pairs,
-        all_homecredit_pairs=home_pairs,
-        text_embeddings=home_text,
+        all_homecredit_pairs=source_pairs,
+        text_embeddings=(
+            home_text if config.training_dataset == "homecredit" else lc_text
+        ),
         exact_dev_duplicates=exact_dev_duplicates,
+        training_dataset=config.training_dataset,
         verified_aliases=config.negative_policy.get("verified_aliases", []),
         documented_identity_transforms=config.negative_policy.get("documented_identity_transforms", []),
         near_duplicate_text_threshold=float(config.negative_policy.get("near_duplicate_text_threshold", 0.95)),
         min_safe_negative_count=int(config.negative_policy.get("min_safe_negative_count", 25)),
     )
     split_manifest = {
-        "training_dataset": "homecredit",
-        "external_validation_dataset": "lendingclub_v2",
-        "homecredit_train_pairs": int(len(train_pairs)),
-        "homecredit_validation_pairs": int(len(validation_pairs)),
-        "lendingclub_v2_external_pairs": int(len(external_pairs)),
+        "training_dataset": config.training_dataset,
+        "external_validation_dataset": config.external_validation_dataset,
+        "training_pair_count": int(len(train_pairs)),
+        "validation_pair_count": int(len(validation_pairs)),
+        "external_pair_count": int(len(external_pairs)),
         "group_overlap_count": 0,
         "base_family_overlap_count": len(base_overlap),
         "base_family_overlap": base_overlap,
@@ -209,13 +235,26 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
     output_dir.mkdir(parents=True, exist_ok=True)
     paths: dict[str, Path] = {}
     if not dry_run:
-        paths["homecredit_train_positive_pairs"] = _save_parquet(train_pairs, output_dir / "homecredit_train_positive_pairs.parquet")
-        paths["homecredit_validation_positive_pairs"] = _save_parquet(
-            validation_pairs, output_dir / "homecredit_validation_positive_pairs.parquet"
+        paths["training_positive_pairs"] = _save_parquet(
+            train_pairs, output_dir / f"{config.training_dataset}_train_positive_pairs.parquet"
         )
-        paths["lendingclub_v2_external_pairs"] = _save_parquet(
-            external_pairs, output_dir / "lendingclub_v2_external_pairs.parquet"
+        paths["validation_positive_pairs"] = _save_parquet(
+            validation_pairs,
+            output_dir / f"{config.training_dataset}_validation_positive_pairs.parquet"
         )
+        paths["external_positive_pairs"] = _save_parquet(
+            external_pairs,
+            output_dir / f"{config.external_validation_dataset}_external_pairs.parquet"
+        )
+        if (
+            config.training_dataset == "homecredit"
+            and config.external_validation_dataset == "lendingclub_v2"
+        ):
+            paths["homecredit_train_positive_pairs"] = paths["training_positive_pairs"]
+            paths["homecredit_validation_positive_pairs"] = paths[
+                "validation_positive_pairs"
+            ]
+            paths["lendingclub_v2_external_pairs"] = paths["external_positive_pairs"]
         paths["negative_exclusion_pairs"] = _save_parquet(negative.exclusion_pairs, output_dir / "negative_exclusion_pairs.parquet")
         paths["near_duplicate_text_audit"] = output_dir / "near_duplicate_text_audit.csv"
         negative.near_duplicate_audit.to_csv(paths["near_duplicate_text_audit"], index=False)
@@ -250,9 +289,9 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         "training_log_created": False,
         "text_embedding_dimension": text_dim,
         "statistical_vector_dimension": stat_dim,
-        "homecredit_train_pair_count": int(len(train_pairs)),
-        "homecredit_validation_pair_count": int(len(validation_pairs)),
-        "lendingclub_v2_external_pair_count": int(len(external_pairs)),
+        "training_pair_count": int(len(train_pairs)),
+        "validation_pair_count": int(len(validation_pairs)),
+        "external_pair_count": int(len(external_pairs)),
         "negative_excluded_counts_by_reason": negative.manifest["excluded_reason_counts"],
         "near_duplicate_text_threshold": float(config.negative_policy.get("near_duplicate_text_threshold", 0.95)),
         "remaining_safe_negative_min": int(negative.candidate_audit["remaining_safe_negative_count"].min()),
@@ -265,6 +304,17 @@ def build_contrastive_data(*, config: ContrastiveDataConfig, dry_run: bool) -> C
         "split_hash": sha256_file(config.group_split_path),
         "pair_manifest_hash": sha256_file(paths["contrastive_pair_manifest"]),
     }
+    if (
+        config.training_dataset == "homecredit"
+        and config.external_validation_dataset == "lendingclub_v2"
+    ):
+        summary.update(
+            {
+                "homecredit_train_pair_count": int(len(train_pairs)),
+                "homecredit_validation_pair_count": int(len(validation_pairs)),
+                "lendingclub_v2_external_pair_count": int(len(external_pairs)),
+            }
+        )
     return ContrastiveBuildResult(output_paths=paths, summary=summary)
 
 
@@ -276,6 +326,7 @@ def build_positive_pairs(
     dataset: str,
     text_dim: int,
     stat_dim: int,
+    training_dataset: str = "homecredit",
 ) -> pd.DataFrame:
     text_meta = text[
         ["dataset", "feature_name", "feature_text_hash", "source_manifest_hash", "embedding_cache_key"]
@@ -316,7 +367,7 @@ def build_positive_pairs(
     ]
     merged["text_embedding_dimension"] = int(text_dim)
     merged["statistical_vector_dimension"] = int(stat_dim)
-    if dataset == "homecredit":
+    if dataset == training_dataset:
         merged["pair_role"] = merged["split"].map(lambda value: "train_positive" if value == "train" else "validation_positive")
         merged["allowed_for_training"] = merged["split"].eq("train")
         merged["allowed_for_validation"] = merged["split"].eq("validation")
@@ -422,10 +473,10 @@ def _quality_audit(
     split_manifest: dict[str, Any],
 ) -> pd.DataFrame:
     checks = [
-        ("homecredit_train_pair_count", len(train_pairs) > 0, len(train_pairs)),
-        ("homecredit_validation_pair_count", len(validation_pairs) > 0, len(validation_pairs)),
-        ("lendingclub_v2_external_pair_count", len(external_pairs) > 0, len(external_pairs)),
-        ("lendingclub_v2_not_training", not external_pairs["allowed_for_training"].any(), 0),
+        ("training_pair_count", len(train_pairs) > 0, len(train_pairs)),
+        ("validation_pair_count", len(validation_pairs) > 0, len(validation_pairs)),
+        ("external_pair_count", len(external_pairs) > 0, len(external_pairs)),
+        ("external_not_training", not external_pairs["allowed_for_training"].any(), 0),
         ("group_overlap_count", split_manifest["group_overlap_count"] == 0, split_manifest["group_overlap_count"]),
         ("base_family_overlap_count", split_manifest["base_family_overlap_count"] == 0, split_manifest["base_family_overlap_count"]),
         ("hard_negatives_disabled", not negative_manifest["explicit_hard_negatives_enabled"], 0),
@@ -449,14 +500,14 @@ def _pair_manifest(
         "external_validation_dataset": config.external_validation_dataset,
         "legacy_lendingclub_allowed": config.legacy_lendingclub_allowed,
         "pair_counts": {
-            "homecredit_train_positive": int(len(train_pairs)),
-            "homecredit_validation_positive": int(len(validation_pairs)),
-            "lendingclub_v2_external_positive": int(len(external_pairs)),
+            "training_positive": int(len(train_pairs)),
+            "validation_positive": int(len(validation_pairs)),
+            "external_positive": int(len(external_pairs)),
         },
         "pair_hashes": {
-            "homecredit_train_positive": sha256_text(train_pairs.to_csv(index=False)),
-            "homecredit_validation_positive": sha256_text(validation_pairs.to_csv(index=False)),
-            "lendingclub_v2_external_positive": sha256_text(external_pairs.to_csv(index=False)),
+            "training_positive": sha256_text(train_pairs.to_csv(index=False)),
+            "validation_positive": sha256_text(validation_pairs.to_csv(index=False)),
+            "external_positive": sha256_text(external_pairs.to_csv(index=False)),
         },
         "tensor_schema": tensor_schema,
         "negative_policy": negative_manifest,

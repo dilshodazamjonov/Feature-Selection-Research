@@ -31,8 +31,8 @@ def build_group_split(
     validation_fraction: float = 0.2,
     derived_family_aliases: Mapping[str, str] | None = None,
 ) -> GroupSplitResult:
-    if dataset != "homecredit":
-        raise ValueError("group-aware split is only fit on homecredit")
+    if not dataset:
+        raise ValueError("dataset is required")
     if not 0 < validation_fraction < 1:
         raise ValueError("validation_fraction must be between 0 and 1")
 
@@ -117,7 +117,7 @@ def build_group_split(
     family_overlap = sorted(train_families.intersection(validation_families))
     weak_sources = int(output["group_source"].eq("feature_name_fallback").sum())
     region_features = output[output["feature_name"].isin(["REGION_RATING_CLIENT", "REGION_RATING_CLIENT_W_CITY"])]
-    region_same_split = (
+    region_same_split = True if region_features.empty else (
         len(region_features) == 2
         and region_features["split"].nunique() == 1
         and region_features["canonical_feature_family"].nunique() == 1
@@ -156,7 +156,8 @@ def build_group_split(
 def save_group_split(result: GroupSplitResult, *, output_dir: str | Path) -> dict[str, Path]:
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    split_path = out / "homecredit_group_split.csv"
+    dataset = str(result.audit["dataset"])
+    split_path = out / f"{dataset}_group_split.csv"
     audit_path = out / "group_split_audit.json"
     family_audit_path = out / "feature_family_audit.csv"
     family_audit_json_path = out / "feature_family_audit.json"
@@ -175,7 +176,8 @@ def save_group_split(result: GroupSplitResult, *, output_dir: str | Path) -> dic
     )
     write_json(family_audit_json_path, family_payload)
     return {
-        "homecredit_group_split": split_path,
+        "group_split": split_path,
+        f"{dataset}_group_split": split_path,
         "group_split_audit": audit_path,
         "feature_family_audit_csv": family_audit_path,
         "feature_family_audit_json": family_audit_json_path,

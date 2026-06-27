@@ -22,8 +22,8 @@ def find_exact_dev_duplicate_pairs(
     dataset: str = "homecredit",
     split: str = "train",
 ) -> pd.DataFrame:
-    if dataset != "homecredit" or split != "train":
-        raise ValueError("exact duplicate evidence must use Home Credit DEV training rows only")
+    if not dataset or split not in {"train", "dev"}:
+        raise ValueError("exact duplicate evidence requires one declared source dataset and DEV/train rows")
     names = [str(name) for name in feature_names]
     if len(names) != len(set(names)):
         raise ValueError("feature_names contains duplicates")
@@ -46,7 +46,7 @@ def find_exact_dev_duplicate_pairs(
                 if not canonical[feature_a].equals(canonical[feature_b]):
                     continue
                 evidence = (
-                    f"exact equality across {len(data)} aligned Home Credit DEV rows, "
+                    f"exact equality across {len(data)} aligned {dataset} DEV rows, "
                     "including identical missingness positions"
                 )
                 for anchor, excluded in ((feature_a, feature_b), (feature_b, feature_a)):

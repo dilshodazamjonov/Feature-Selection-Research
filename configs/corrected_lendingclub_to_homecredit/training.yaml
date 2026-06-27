@@ -1,0 +1,59 @@
+experiment_version: corrected_lendingclub_to_homecredit_transfer_v1
+pairing_policy_version: identity_equivalence_v2
+training_dataset: lendingclub_v2
+external_dataset: homecredit
+output_dir: results/corrected_lendingclub_to_homecredit_transfer/training
+tensor_schema_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/contrastive_tensor_schema.json
+contrastive_pair_manifest_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/contrastive_pair_manifest.json
+train_pairs_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_train_positive_pairs.parquet
+validation_pairs_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_validation_positive_pairs.parquet
+external_pairs_path: results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_external_pairs.parquet
+negative_exclusion_pairs_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/negative_exclusion_pairs.parquet
+negative_policy_manifest_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/negative_policy_manifest.json
+homecredit_text_embeddings_path: results/clip/text_baseline/homecredit_text_embeddings.parquet
+lendingclub_v2_text_embeddings_path: results/corrected_lendingclub_to_homecredit_transfer/training/inputs/lendingclub_v2_text_embeddings.parquet
+homecredit_statistical_vectors_path: results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_statistical_vectors.parquet
+lendingclub_v2_statistical_vectors_path: results/corrected_lendingclub_to_homecredit_transfer/training/inputs/lendingclub_v2_statistical_vectors.parquet
+text_embedding_manifest_path: results/clip/text_baseline/embedding_cache_manifest.json
+statistical_preprocessor_path: results/corrected_lendingclub_to_homecredit_transfer/training/statistical_preprocessor/statistical_preprocessor.json
+source_manifest_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/data_manifest.json
+split_manifest_path: results/corrected_lendingclub_to_homecredit_transfer/pairing/feature_split_manifest.json
+configuration_hash: resolved_at_runtime
+data_manifest_hash: resolved_at_runtime
+statistical_preprocessor_hash: resolved_at_runtime
+source_anchor_hash: resolved_at_runtime
+model:
+  text_input_dim: 384
+  statistical_input_dim: 13
+  text_hidden_dim: 64
+  statistical_hidden_dim: 16
+  shared_embedding_dim: 32
+  dropout: 0.05
+  activation: gelu
+optimizer: AdamW
+learning_rate: 0.001
+weight_decay: 0.01
+batch_size: 64
+max_epochs: 80
+early_stopping_patience: 15
+minimum_improvement: 0.0001
+gradient_clipping_enabled: true
+gradient_clip_norm: 1.0
+selection_metric: validation_loss
+statistical_view_scope: compact_target_free_v2
+deterministic: true
+device_policy: cpu
+smoke_test_steps: 3
+seeds:
+  - 11
+  - 22
+  - 33
+  - 44
+  - 55
+collapse_thresholds:
+  variance_min: 0.000001
+  unique_min_fraction: 0.25
+  mean_pairwise_cosine_max: 0.98
+  pairwise_cosine_std_min: 0.0001
+  norm_tolerance: 0.0001
+

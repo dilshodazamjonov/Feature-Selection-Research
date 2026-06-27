@@ -32,6 +32,7 @@ def build_negative_policy(
     *,
     train_pairs: pd.DataFrame,
     all_homecredit_pairs: pd.DataFrame,
+    training_dataset: str = "homecredit",
     text_embeddings: pd.DataFrame | None = None,
     exact_dev_duplicates: pd.DataFrame | None = None,
     verified_aliases: Iterable[Iterable[str]] = (),
@@ -42,7 +43,7 @@ def build_negative_policy(
     float_tolerance: float = 1e-8,
 ) -> NegativePolicyResult:
     train = train_pairs.copy().reset_index(drop=True)
-    _validate_training_boundary(train, all_homecredit_pairs)
+    _validate_training_boundary(train, all_homecredit_pairs, training_dataset=training_dataset)
     features = train["feature_name"].astype(str).tolist()
     feature_set = set(features)
     order_hash = feature_order_hash(features)
@@ -106,7 +107,8 @@ def build_negative_policy(
     audit_frame = pd.DataFrame(audit_rows).sort_values("feature_name", kind="mergesort").reset_index(drop=True)
     manifest = {
         "policy_version": NEGATIVE_POLICY_VERSION,
-        "policy": "all in-batch Home Credit train features are negatives unless verified identity-equivalent",
+        "policy": f"all in-batch {training_dataset} train features are negatives unless verified identity-equivalent",
+        "training_dataset": training_dataset,
         "mask_producing_relations": [
             "same_feature",
             "verified_alias",
@@ -145,11 +147,16 @@ def build_negative_policy(
     return NegativePolicyResult(exclusion_frame, audit_frame, near_audit, sensitivity, manifest)
 
 
-def _validate_training_boundary(train: pd.DataFrame, all_homecredit_pairs: pd.DataFrame) -> None:
+def _validate_training_boundary(
+    train: pd.DataFrame,
+    all_homecredit_pairs: pd.DataFrame,
+    *,
+    training_dataset: str,
+) -> None:
     if train["feature_name"].duplicated().any():
         raise ValueError("training pairs contain duplicate feature identities")
-    if not train["split"].astype(str).eq("train").all() or not train["dataset"].astype(str).eq("homecredit").all():
-        raise ValueError("negative policy only accepts Home Credit training rows")
+    if not train["split"].astype(str).eq("train").all() or not train["dataset"].astype(str).eq(training_dataset).all():
+        raise ValueError(f"negative policy only accepts {training_dataset} training rows")
     if len(all_homecredit_pairs):
         unexpected = all_homecredit_pairs[
             all_homecredit_pairs["split"].astype(str).eq("train")
@@ -192,8 +199,9 @@ def _exact_duplicate_rows(
     missing = required - set(exact_dev_duplicates.columns)
     if missing:
         raise ValueError(f"exact DEV duplicate evidence missing columns: {sorted(missing)}")
-    if set(exact_dev_duplicates["dataset"].astype(str)) != {"homecredit"}:
-        raise ValueError("exact duplicate evidence is not Home Credit-only")
+    training_datasets = set(train["dataset"].astype(str))
+    if set(exact_dev_duplicates["dataset"].astype(str)) != training_datasets:
+        raise ValueError("exact duplicate evidence does not match the training dataset")
     if set(exact_dev_duplicates["split"].astype(str)) != {"train"}:
         raise ValueError("exact duplicate evidence is not DEV train-only")
     if set(exact_dev_duplicates["exclusion_reason"].astype(str)) != {"exact_dev_duplicate"}:

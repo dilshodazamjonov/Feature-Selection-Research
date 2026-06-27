@@ -24,10 +24,21 @@ def validate_required_contrastive_artifacts(paths: Iterable[str | Path]) -> list
 
 def validate_contrastive_config(config: ContrastiveDataConfig) -> list[str]:
     errors = []
-    if config.training_dataset != "homecredit":
-        errors.append("contrastive data boundary requires homecredit as training_dataset")
-    if config.external_validation_dataset != "lendingclub_v2":
-        errors.append("contrastive data boundary requires lendingclub_v2 as external_validation_dataset")
+    if not config.training_dataset:
+        errors.append("training_dataset is required")
+    if not config.external_validation_dataset:
+        errors.append("external_validation_dataset is required")
+    if config.training_dataset == config.external_validation_dataset:
+        errors.append("training and external datasets must be different")
+    if "lendingclub" in {
+        config.training_dataset.lower(),
+        config.external_validation_dataset.lower(),
+    }:
+        errors.append("legacy lendingclub is forbidden; use lendingclub_v2")
+    if "oot" in config.training_statistical_fit_scope.lower():
+        errors.append("training statistical fit scope must exclude OOT")
+    if "transform_only" not in config.external_statistical_transform_scope.lower():
+        errors.append("external statistical transform scope must be transform_only")
     if config.legacy_lendingclub_allowed:
         errors.append("legacy LendingClub is forbidden")
     policy = config.negative_policy
@@ -51,7 +62,7 @@ def validate_manifest_boundary(*, manifest: dict, source_hashes: dict, config: C
     if manifest.get("external_validation_dataset") != config.external_validation_dataset:
         errors.append("Prompt 1 manifest external dataset mismatch")
     if set(manifest.get("active_datasets", [])) != {config.training_dataset, config.external_validation_dataset}:
-        errors.append("Prompt 1 active datasets are not exactly homecredit and lendingclub_v2")
+        errors.append("Prompt 1 active datasets do not match the declared roles")
     activity = manifest.get("training_activity", {})
     if activity.get("model_trained") or activity.get("contrastive_pairs_created"):
         errors.append("Prompt 1 manifest indicates prohibited training or pair creation")
@@ -101,14 +112,17 @@ def validate_view_frame(
     return errors
 
 
-def validate_group_split(split: pd.DataFrame) -> list[str]:
+def validate_group_split(split: pd.DataFrame, *, dataset: str | None = None) -> list[str]:
     errors = []
     required = {"dataset", "feature_name", "split", "group_key", "group_source"}
     missing = sorted(required - set(split.columns))
     if missing:
         return [f"group split missing columns: {missing}"]
-    if set(split["dataset"].astype(str)) != {"homecredit"}:
-        errors.append("group split must be HomeCredit-only")
+    observed = set(split["dataset"].astype(str))
+    if len(observed) != 1:
+        errors.append("group split must contain exactly one source dataset")
+    elif dataset is not None and observed != {dataset}:
+        errors.append(f"group split dataset mismatch: expected {dataset}, observed {sorted(observed)}")
     if split["feature_name"].duplicated().any():
         errors.append("group split contains duplicate features")
     train_groups = set(split.loc[split["split"].eq("train"), "group_key"].astype(str))
@@ -142,5 +156,5 @@ def validate_positive_pairs(pairs: pd.DataFrame, *, role: str, dataset: str, spl
         errors.append(f"{role}: missing hashes")
     if role == "external_validation_positive":
         if pairs["allowed_for_training"].any() or pairs["allowed_for_validation"].any() or not pairs["allowed_for_external_evaluation"].all():
-            errors.append("LendingClub v2 pair permissions are invalid")
+            errors.append(f"{dataset} external pair permissions are invalid")
     return errors

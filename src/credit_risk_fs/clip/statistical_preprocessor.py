@@ -30,7 +30,25 @@ class StatisticalPreprocessor:
     clip_upper_: dict[str, float] = field(default_factory=dict)
     preprocessor_hash_: str = ""
 
-    def fit(self, frame: pd.DataFrame) -> "StatisticalPreprocessor":
+    def fit(
+        self,
+        frame: pd.DataFrame,
+        *,
+        dataset: str | None = None,
+        split: str | None = None,
+    ) -> "StatisticalPreprocessor":
+        observed_dataset = dataset or _single_metadata_value(frame, "dataset")
+        observed_split = split or _single_metadata_value(frame, "split")
+        if observed_dataset is not None and observed_dataset != self.fit_dataset:
+            raise ValueError(
+                f"statistical preprocessor fit is source-only: expected {self.fit_dataset}, "
+                f"observed {observed_dataset}"
+            )
+        if observed_split is not None and observed_split != self.fit_split:
+            raise ValueError(
+                f"statistical preprocessor fit-split mismatch: expected {self.fit_split}, "
+                f"observed {observed_split}"
+            )
         values = self._numeric_frame(frame)
         if len(values) == 0:
             raise ValueError("cannot fit statistical preprocessor on zero rows")
@@ -92,8 +110,14 @@ class StatisticalPreprocessor:
             raise ValueError("statistical transform produced non-finite values")
         return transformed[self.field_order].astype("float32")
 
-    def fit_transform(self, frame: pd.DataFrame) -> pd.DataFrame:
-        return self.fit(frame).transform(frame)
+    def fit_transform(
+        self,
+        frame: pd.DataFrame,
+        *,
+        dataset: str | None = None,
+        split: str | None = None,
+    ) -> pd.DataFrame:
+        return self.fit(frame, dataset=dataset, split=split).transform(frame)
 
     def compute_hash(self) -> str:
         payload = self.to_state(include_hash=False)
@@ -191,6 +215,14 @@ def build_vector_frame(
     ]
     base["input_field_hash"] = fields_hash
     base["preprocessor_hash"] = preprocessor.preprocessor_hash_
+    base["descriptor_state"] = base["dataset"].map(
+        lambda value: (
+            "source_fitted_transformed_descriptor"
+            if str(value) == preprocessor.fit_dataset
+            else "external_frozen_transformed_descriptor"
+        )
+    )
+    base["preprocessor_fit_dataset"] = preprocessor.fit_dataset
     base["statistical_vector"] = [json.dumps([float(value) for value in row]) for row in vector_values]
     base["statistical_vector_hash"] = [sha256_text(value) for value in base["statistical_vector"]]
     base["vector_dimension"] = len(preprocessor.field_order)
@@ -234,3 +266,12 @@ def preprocessing_audit(
 
 def _missingness(frame: pd.DataFrame, fields: list[str]) -> dict[str, float]:
     return {field: float(frame[field].isna().mean()) if field in frame.columns and len(frame) else 1.0 for field in fields}
+
+
+def _single_metadata_value(frame: pd.DataFrame, column: str) -> str | None:
+    if column not in frame.columns:
+        return None
+    values = set(frame[column].dropna().astype(str))
+    if len(values) > 1:
+        raise ValueError(f"statistical fit frame contains multiple {column} values: {sorted(values)}")
+    return next(iter(values), None)

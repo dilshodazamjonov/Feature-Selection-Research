@@ -34,41 +34,59 @@ def build_learned_outputs(
         upstream_hashes=data.upstream_hashes,
         map_location="cpu",
     )
-    home_text, home_stat = tensors_for_pairs(data.homecredit_pairs, data.homecredit_text, data.homecredit_stat)
-    lc_text, lc_stat = tensors_for_pairs(data.external_pairs, data.lendingclub_text, data.lendingclub_stat)
+    source_text, source_stat = tensors_for_pairs(
+        data.source_pairs, data.training_text, data.training_stat
+    )
+    external_text, external_stat = tensors_for_pairs(
+        data.external_pairs, data.external_text, data.external_stat
+    )
     with torch.no_grad():
-        home_text_proj, home_stat_proj = model(home_text, home_stat)
-        lc_text_proj, lc_stat_proj = model(lc_text, lc_stat)
-    home_joint = _joint(home_text_proj, home_stat_proj)
-    lc_joint = _joint(lc_text_proj, lc_stat_proj)
+        source_text_proj, source_stat_proj = model(source_text, source_stat)
+        external_text_proj, external_stat_proj = model(external_text, external_stat)
+    source_joint = _joint(source_text_proj, source_stat_proj)
+    external_joint = _joint(external_text_proj, external_stat_proj)
     checkpoint_hash = str(json.loads(selected_checkpoint_manifest_path.read_text(encoding="utf-8"))["checkpoint_sha256"])
 
-    home_embeddings = _embedding_frame(data.homecredit_pairs, home_text_proj, home_stat_proj, home_joint, checkpoint_hash, config)
-    lc_embeddings = _embedding_frame(data.external_pairs, lc_text_proj, lc_stat_proj, lc_joint, checkpoint_hash, config)
-    home_path = output_dir / "homecredit_joint_embeddings.parquet"
-    lc_path = output_dir / "lendingclub_v2_joint_embeddings.parquet"
-    home_embeddings.to_parquet(home_path, index=False)
-    lc_embeddings.to_parquet(lc_path, index=False)
+    source_embeddings = _embedding_frame(
+        data.source_pairs,
+        source_text_proj,
+        source_stat_proj,
+        source_joint,
+        checkpoint_hash,
+        config,
+    )
+    external_embeddings = _embedding_frame(
+        data.external_pairs,
+        external_text_proj,
+        external_stat_proj,
+        external_joint,
+        checkpoint_hash,
+        config,
+    )
+    source_path = output_dir / f"{data.training_dataset}_joint_embeddings.parquet"
+    external_path = output_dir / f"{data.external_dataset}_joint_embeddings.parquet"
+    source_embeddings.to_parquet(source_path, index=False)
+    external_embeddings.to_parquet(external_path, index=False)
 
-    anchor_names = _training_anchor_names(data.homecredit_pairs)
-    anchor_frame = home_embeddings[home_embeddings["feature_name"].isin(anchor_names)].copy()
+    anchor_names = _training_anchor_names(data.source_pairs, dataset=data.training_dataset)
+    anchor_frame = source_embeddings[source_embeddings["feature_name"].isin(anchor_names)].copy()
     if anchor_frame.empty:
-        raise RuntimeError("no Home Credit training-split anchors available for learned scoring")
-    joint_cols = [col for col in home_embeddings.columns if str(col).startswith("joint_") and len(str(col)) == 10]
+        raise RuntimeError(f"no {data.training_dataset} training-split anchors available for learned scoring")
+    joint_cols = [col for col in source_embeddings.columns if str(col).startswith("joint_") and len(str(col)) == 10]
     centroid = anchor_frame[joint_cols].to_numpy(dtype=float).mean(axis=0)
     centroid = centroid / max(float(np.linalg.norm(centroid)), 1e-12)
     anchor_hash = sha256_text(",".join(f"{value:.12g}" for value in centroid.tolist()))
 
-    home_scores = _score_frame(home_embeddings, centroid, checkpoint_hash, anchor_hash, config)
-    lc_scores = _score_frame(lc_embeddings, centroid, checkpoint_hash, anchor_hash, config)
-    home_score_path = output_dir / "homecredit_learned_scores.csv"
-    lc_score_path = output_dir / "lendingclub_v2_learned_scores.csv"
-    home_scores.to_csv(home_score_path, index=False)
-    lc_scores.to_csv(lc_score_path, index=False)
+    source_scores = _score_frame(source_embeddings, centroid, checkpoint_hash, anchor_hash, config)
+    external_scores = _score_frame(external_embeddings, centroid, checkpoint_hash, anchor_hash, config)
+    source_score_path = output_dir / f"{data.training_dataset}_learned_scores.csv"
+    external_score_path = output_dir / f"{data.external_dataset}_learned_scores.csv"
+    source_scores.to_csv(source_score_path, index=False)
+    external_scores.to_csv(external_score_path, index=False)
     anchor_manifest = {
-        "anchor_dataset": "homecredit",
-        "anchor_policy": "Home Credit training-split stable-core anchor only",
-        "lendingclub_v2_anchor_policy": "uses unchanged Home Credit learned anchor",
+        "anchor_dataset": data.training_dataset,
+        "external_dataset": data.external_dataset,
+        "anchor_policy": f"{data.training_dataset} approved training-split anchor only",
         "anchor_count": int(len(anchor_frame)),
         "anchor_hash": anchor_hash,
         "checkpoint_hash": checkpoint_hash,
@@ -78,10 +96,10 @@ def build_learned_outputs(
     }
     anchor_path = write_json(output_dir / "learned_anchor_manifest.json", anchor_manifest)
     return {
-        "homecredit_joint_embeddings": home_path,
-        "lendingclub_v2_joint_embeddings": lc_path,
-        "homecredit_learned_scores": home_score_path,
-        "lendingclub_v2_learned_scores": lc_score_path,
+        "source_joint_embeddings": source_path,
+        "external_joint_embeddings": external_path,
+        "source_learned_scores": source_score_path,
+        "external_learned_scores": external_score_path,
         "learned_anchor_manifest": anchor_path,
         "anchor_manifest": anchor_manifest,
     }
@@ -151,7 +169,11 @@ def _score_frame(embeddings: pd.DataFrame, centroid: np.ndarray, checkpoint_hash
     ]
 
 
-def _training_anchor_names(homecredit_pairs: pd.DataFrame) -> set[str]:
+def _training_anchor_names(source_pairs: pd.DataFrame, *, dataset: str) -> set[str]:
+    if dataset != "homecredit":
+        raise RuntimeError(
+            "BLOCKED — no approved leakage-safe LendingClub source anchor"
+        )
     candidates = [
         Path("results/clip_v2/statistical_view/homecredit_statistical_anchor_features.csv"),
         Path("results/clip/statistical_baseline/homecredit_statistical_anchor_features.csv"),
@@ -162,7 +184,7 @@ def _training_anchor_names(homecredit_pairs: pd.DataFrame) -> set[str]:
             "no leakage-safe Home Credit statistical anchor feature artifact exists"
         )
     anchors = pd.read_csv(anchor_path)
-    train_features = set(homecredit_pairs.loc[homecredit_pairs["split"].eq("train"), "feature_name"].astype(str))
+    train_features = set(source_pairs.loc[source_pairs["split"].eq("train"), "feature_name"].astype(str))
     return set(anchors["feature_name"].astype(str)).intersection(train_features)
 
 

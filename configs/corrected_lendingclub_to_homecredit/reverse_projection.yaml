@@ -1,0 +1,23 @@
+projection_version: corrected_reverse_projection_v1
+pairing_policy_version: identity_equivalence_v2
+training_dataset: lendingclub_v2
+external_dataset: homecredit
+projection_heads_frozen: true
+statistical_preprocessor_frozen: true
+source_anchor_frozen: true
+external_refit_allowed: false
+external_target_allowed: false
+external_oot_allowed: false
+fusion_rule: l2_normalized_mean_of_projected_text_and_statistical_views
+seed_list:
+  - 11
+  - 22
+  - 33
+  - 44
+  - 55
+reference_seed: 11
+alignment_method: orthogonal_procrustes_svd
+embedding_aggregation: l2_normalize_align_mean_l2_normalize
+score_aggregation: arithmetic_mean_all_fixed_seeds
+rank_aggregation: rank_of_consensus_score
+

@@ -62,6 +62,7 @@ def load_checkpoint(
     manifest_path: str | Path,
     config: ClipTrainingConfig,
     upstream_hashes: dict[str, str],
+    expected_metadata: dict[str, Any] | None = None,
     map_location: str | torch.device = "cpu",
 ) -> SemanticStatisticalContrastiveEncoder:
     manifest = read_json(manifest_path)
@@ -71,6 +72,12 @@ def load_checkpoint(
     for key, observed in upstream_hashes.items():
         if manifest.get(key) != observed:
             raise RuntimeError(f"upstream artifact hash mismatch for {key}")
+    for key, expected in (expected_metadata or {}).items():
+        if manifest.get(key) != expected:
+            raise RuntimeError(
+                f"checkpoint metadata mismatch for {key}: "
+                f"expected {expected!r}, observed {manifest.get(key)!r}"
+            )
     payload = torch.load(checkpoint_path, map_location=map_location)
     model_config = ClipModelConfig(**payload["model_config"])
     if model_config.text_input_dim != config.model.text_input_dim:

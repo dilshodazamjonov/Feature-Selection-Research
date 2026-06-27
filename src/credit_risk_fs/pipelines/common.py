@@ -94,6 +94,10 @@ class ExperimentConfig:
     experiment_type: str = "single"
     config_hash: str | None = None
     data_fingerprint: dict[str, Any] | None = None
+    method: str = ""
+    source_training_dataset: str = ""
+    external_dataset: str = ""
+    pairing_policy_version: str = "not_applicable_non_clip"
 
 
 @dataclass(slots=True)
@@ -106,6 +110,8 @@ class PreparedExperimentData:
     dropped_older_row_count: int = 0
     dropped_missing_time_row_count: int = 0
     source_row_count: int = 0
+    dev_stable_row_ids: pd.Series | None = None
+    oot_stable_row_ids: pd.Series | None = None
 
 
 @dataclass(slots=True)
@@ -253,6 +259,8 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
     y_train_full = cv_data[config.target].copy()
     X_oot_full = oot_data.drop(columns=[config.target])
     y_oot = oot_data[config.target].copy()
+    dev_stable_row_ids = _stable_row_ids(cv_data, dataset=config.dataset_name)
+    oot_stable_row_ids = _stable_row_ids(oot_data, dataset=config.dataset_name)
 
     drop_cols = [col for col in config.drop_id_cols if col in X_train_full.columns]
     X_train = X_train_full.drop(columns=drop_cols, errors="ignore")
@@ -273,6 +281,8 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
         dropped_older_row_count=dropped_older_row_count,
         dropped_missing_time_row_count=dropped_missing_time_row_count,
         source_row_count=source_row_count,
+        dev_stable_row_ids=dev_stable_row_ids.reset_index(drop=True),
+        oot_stable_row_ids=oot_stable_row_ids.reset_index(drop=True),
     )
 
 
@@ -748,13 +758,50 @@ def run_experiment(
         index=False,
     )
     pd.DataFrame([utility_metrics]).to_csv(results_dir / "credit_risk_utility.csv", index=False)
-    pd.DataFrame(
+    data_manifest_hash = hashlib.sha256(
+        canonical_config_json(config.data_fingerprint or data_fingerprint).encode("utf-8")
+    ).hexdigest()
+    prediction_common = {
+        "dataset": config.dataset_name,
+        "run_id": exp_dir.name,
+        "method": config.method or config.experiment_name,
+        "model": config.model_name,
+        "source_training_dataset": config.source_training_dataset or config.dataset_name,
+        "external_dataset": config.external_dataset or config.dataset_name,
+        "data_manifest_hash": data_manifest_hash,
+        "configuration_hash": config.config_hash or "",
+        "pairing_policy_version": config.pairing_policy_version,
+    }
+    dev_ids = prepared.dev_stable_row_ids
+    oot_ids = prepared.oot_stable_row_ids
+    if dev_ids is None or oot_ids is None:
+        raise RuntimeError("stable row IDs were not preserved for prediction export")
+    dev_predictions = pd.DataFrame(
         {
-            "y_true": prepared.y_oot.values,
-            "y_pred_proba": oot_proba,
-            "y_pred": (oot_proba >= oot_threshold).astype(int),
+            "stable_row_id": dev_ids.values,
+            "split": "dev",
+            "target": prepared.y_train.values,
+            "prediction_probability": train_proba,
+            "predicted_class": (train_proba >= oot_threshold).astype(int),
+            **prediction_common,
         }
-    ).to_csv(results_dir / "oot_predictions.csv", index=False)
+    )
+    oot_predictions = pd.DataFrame(
+        {
+            "stable_row_id": oot_ids.values,
+            "split": "oot",
+            "target": prepared.y_oot.values,
+            "prediction_probability": oot_proba,
+            "predicted_class": (oot_proba >= oot_threshold).astype(int),
+            **prediction_common,
+        }
+    )
+    if dev_predictions["stable_row_id"].duplicated().any() or oot_predictions["stable_row_id"].duplicated().any():
+        raise RuntimeError("stable row IDs are not unique within a prediction split")
+    if set(dev_predictions["stable_row_id"].astype(str)) & set(oot_predictions["stable_row_id"].astype(str)):
+        raise RuntimeError("DEV/OOT stable row ID overlap")
+    dev_predictions.to_csv(results_dir / "dev_predictions.csv", index=False)
+    oot_predictions.to_csv(results_dir / "oot_predictions.csv", index=False)
     pd.DataFrame([oot_metrics]).to_csv(results_dir / "oot_test_results.csv", index=False)
 
     summary_row = build_experiment_summary_row(
@@ -792,3 +839,21 @@ def run_experiment(
     )
 
     return ExperimentRun(config=config, exp_dir=exp_dir, summary=summary_row)
+
+
+def _stable_row_ids(frame: pd.DataFrame, *, dataset: str) -> pd.Series:
+    preferred = [
+        column
+        for column in ("SK_ID_CURR", "member_id", "id", "loan_id")
+        if column in frame.columns
+    ]
+    if preferred:
+        source = frame[preferred].astype("string").fillna("<missing>").agg("|".join, axis=1)
+    else:
+        source = pd.Series(frame.index.astype(str), index=frame.index)
+    values = source.map(
+        lambda value: hashlib.sha256(f"{dataset}|{value}".encode("utf-8")).hexdigest()
+    )
+    if values.duplicated().any():
+        raise ValueError("source data cannot produce unique stable row IDs")
+    return values

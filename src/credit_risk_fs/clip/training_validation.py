@@ -54,6 +54,12 @@ class ClipTrainingConfig:
     collapse_thresholds: dict[str, float]
     statistical_view_scope: str
     smoke_test_steps: int
+    training_dataset: str
+    external_dataset: str
+    configuration_hash: str
+    data_manifest_hash: str
+    statistical_preprocessor_hash: str
+    source_anchor_hash: str
 
 
 @dataclass(frozen=True)
@@ -61,11 +67,13 @@ class TrainingDataBundle:
     train_pairs: pd.DataFrame
     validation_pairs: pd.DataFrame
     external_pairs: pd.DataFrame
-    homecredit_pairs: pd.DataFrame
-    homecredit_text: pd.DataFrame
-    lendingclub_text: pd.DataFrame
-    homecredit_stat: pd.DataFrame
-    lendingclub_stat: pd.DataFrame
+    source_pairs: pd.DataFrame
+    training_text: pd.DataFrame
+    external_text: pd.DataFrame
+    training_stat: pd.DataFrame
+    external_stat: pd.DataFrame
+    training_dataset: str
+    external_dataset: str
     negative_exclusions: pd.DataFrame
     upstream_hashes: dict[str, str]
     text_dim: int
@@ -142,6 +150,14 @@ def load_training_config(path: str | Path = "configs/clip/training.yaml") -> Cli
         collapse_thresholds=data.get("collapse_thresholds", {}) if isinstance(data.get("collapse_thresholds"), dict) else {},
         statistical_view_scope=str(data.get("statistical_view_scope", STATISTICAL_VIEW_SCOPE_MISSINGNESS_ONLY)),
         smoke_test_steps=int(data.get("smoke_test_steps", 3)),
+        training_dataset=str(data.get("training_dataset", "homecredit")),
+        external_dataset=str(
+            data.get("external_dataset", data.get("external_validation_dataset", "lendingclub_v2"))
+        ),
+        configuration_hash=str(data.get("configuration_hash", "")),
+        data_manifest_hash=str(data.get("data_manifest_hash", "")),
+        statistical_preprocessor_hash=str(data.get("statistical_preprocessor_hash", "")),
+        source_anchor_hash=str(data.get("source_anchor_hash", "")),
     )
 
 
@@ -187,37 +203,59 @@ def load_and_validate_training_inputs(config: ClipTrainingConfig) -> TrainingDat
         raise RuntimeError("negative policy violates training boundary")
     if negative_manifest.get("policy_version") != NEGATIVE_POLICY_VERSION:
         raise RuntimeError("negative policy artifact is stale and requires rebuilding")
-    if pair_manifest.get("training_dataset") != "homecredit" or pair_manifest.get("external_validation_dataset") != "lendingclub_v2":
+    if config.training_dataset == config.external_dataset:
+        raise RuntimeError("training and external datasets must be different")
+    if (
+        pair_manifest.get("training_dataset") != config.training_dataset
+        or pair_manifest.get("external_validation_dataset") != config.external_dataset
+    ):
         raise RuntimeError("pair manifest dataset boundary mismatch")
 
     train = pd.read_parquet(config.train_pairs_path)
     validation = pd.read_parquet(config.validation_pairs_path)
     external = pd.read_parquet(config.external_pairs_path)
     negative = pd.read_parquet(config.negative_exclusion_pairs_path)
-    home_text = pd.read_parquet(config.homecredit_text_embeddings_path)
-    lc_text = pd.read_parquet(config.lendingclub_v2_text_embeddings_path)
-    home_stat = pd.read_parquet(config.homecredit_statistical_vectors_path)
-    lc_stat = pd.read_parquet(config.lendingclub_v2_statistical_vectors_path)
+    by_dataset_text = {
+        "homecredit": pd.read_parquet(config.homecredit_text_embeddings_path),
+        "lendingclub_v2": pd.read_parquet(config.lendingclub_v2_text_embeddings_path),
+    }
+    by_dataset_stat = {
+        "homecredit": pd.read_parquet(config.homecredit_statistical_vectors_path),
+        "lendingclub_v2": pd.read_parquet(config.lendingclub_v2_statistical_vectors_path),
+    }
+    if config.training_dataset not in by_dataset_text or config.external_dataset not in by_dataset_text:
+        raise RuntimeError("training loader has no configured artifact path for a declared dataset")
+    training_text = by_dataset_text[config.training_dataset]
+    external_text = by_dataset_text[config.external_dataset]
+    training_stat = by_dataset_stat[config.training_dataset]
+    external_stat = by_dataset_stat[config.external_dataset]
 
-    _validate_pair_roles(train, dataset="homecredit", split="train", training=True)
-    _validate_pair_roles(validation, dataset="homecredit", split="validation", validation=True)
-    _validate_pair_roles(external, dataset="lendingclub_v2", split="external_validation", external=True)
+    _validate_pair_roles(train, dataset=config.training_dataset, split="train", training=True)
+    _validate_pair_roles(validation, dataset=config.training_dataset, split="validation", validation=True)
+    _validate_pair_roles(
+        external,
+        dataset=config.external_dataset,
+        split="external_validation",
+        external=True,
+    )
     _validate_no_forbidden_columns(set(train.columns).union(set(validation.columns)).union(set(external.columns)))
-    _validate_alignment(train, home_text, home_stat, text_dim=text_dim, stat_dim=stat_dim)
-    _validate_alignment(validation, home_text, home_stat, text_dim=text_dim, stat_dim=stat_dim)
-    _validate_alignment(external, lc_text, lc_stat, text_dim=text_dim, stat_dim=stat_dim)
+    _validate_alignment(train, training_text, training_stat, text_dim=text_dim, stat_dim=stat_dim)
+    _validate_alignment(validation, training_text, training_stat, text_dim=text_dim, stat_dim=stat_dim)
+    _validate_alignment(external, external_text, external_stat, text_dim=text_dim, stat_dim=stat_dim)
 
     return TrainingDataBundle(
         train_pairs=train.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
         validation_pairs=validation.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
         external_pairs=external.sort_values("feature_name", kind="mergesort").reset_index(drop=True),
-        homecredit_pairs=_reindex_combined_positive_pairs(
+        source_pairs=_reindex_combined_positive_pairs(
             pd.concat([train, validation], ignore_index=True)
         ),
-        homecredit_text=home_text,
-        lendingclub_text=lc_text,
-        homecredit_stat=home_stat,
-        lendingclub_stat=lc_stat,
+        training_text=training_text,
+        external_text=external_text,
+        training_stat=training_stat,
+        external_stat=external_stat,
+        training_dataset=config.training_dataset,
+        external_dataset=config.external_dataset,
         negative_exclusions=negative,
         upstream_hashes=_upstream_hashes(config),
         text_dim=text_dim,

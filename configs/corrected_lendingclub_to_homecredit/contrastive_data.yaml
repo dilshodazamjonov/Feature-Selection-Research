@@ -1,0 +1,55 @@
+experiment_version: corrected_lendingclub_to_homecredit_transfer_v1
+pairing_policy_version: identity_equivalence_v2
+training_dataset: lendingclub_v2
+external_dataset: homecredit
+external_validation_dataset: homecredit
+training_feature_manifest: results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv
+external_feature_manifest: results/corrected_homecredit_clip/feature_universe/feature_universe_reconciliation.csv
+training_raw_statistical_source: data/lendingclub_v2/processed/application_train.csv
+external_raw_statistical_source: data/homecredit/raw
+training_text_embeddings_path: results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet
+external_text_embeddings_path: results/clip/text_baseline/homecredit_text_embeddings.parquet
+training_statistical_fit_scope: lendingclub_v2_dev_training_features_only
+external_statistical_transform_scope: transform_only_with_frozen_lendingclub_preprocessor
+training_time_column: recent_decision
+training_target_column: TARGET
+training_dev_start_day: -1795
+training_oot_start_day: -1065
+training_oot_end_day: -730
+feature_split_seed: 42
+validation_fraction: 0.2
+min_safe_negative_count: 25
+exact_duplicate_policy: aligned_dev_rows_identical_mask_and_values
+target_allowed_in_representation: false
+oot_allowed_in_representation: false
+external_refit_allowed: false
+
+source_anchor:
+  source_dataset: lendingclub_v2
+  dev_window:
+    start: -1795
+    end: -1065
+  temporal_subwindows: 4
+  subwindow_strategy: equal_duration
+  subwindow_boundaries:
+    - -1795
+    - -1612.5
+    - -1430
+    - -1247.5
+    - -1065
+  training_split_only: true
+  target_used: false
+  oot_used: false
+  external_data_used: false
+  max_adjacent_window_psi: 0.10
+  max_missing_rate_difference: 0.05
+  member_count: 23
+  ranking:
+    - max_adjacent_window_psi
+    - max_missing_rate_difference
+    - feature_id
+  fail_if_insufficient_members: true
+  min_non_missing_per_subwindow: 100
+  numeric_bins: 10
+  categorical_min_count: 50
+  psi_epsilon: 0.000001

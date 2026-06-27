@@ -1,0 +1,18 @@
+downstream_version: corrected_reverse_transfer_downstream_v1
+pairing_policy_version: identity_equivalence_v2
+method: lendingclub_clip_to_homecredit_mrmr
+models:
+  - lr
+  - catboost
+lr_candidate_pool_size: 60
+lr_feature_budget: 20
+catboost_candidate_pool_size: 100
+catboost_feature_budget: 40
+candidate_pool_sweep_allowed: false
+mrmr_fit_scope: homecredit_dev_target_only
+homecredit_oot_allowed_in_mrmr: false
+llm_stage_allowed: false
+hyperparameter_tuning_allowed: false
+valid_baseline_execution_allowed: false
+prediction_stable_row_ids_required: true
+
