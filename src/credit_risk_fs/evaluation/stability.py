@@ -197,6 +197,11 @@ def semantic_group_frequency_frame(tables: list[pd.DataFrame]) -> pd.DataFrame:
             columns=["semantic_group", "selection_count", "total_folds", "selection_frequency"]
         )
 
+    combined = combined.loc[combined["semantic_group"].notna()].copy()
+    if combined.empty:
+        return pd.DataFrame(
+            columns=["semantic_group", "selection_count", "total_folds", "selection_frequency"]
+        )
     combined["semantic_group"] = combined["semantic_group"].astype(str)
     for semantic_group, group in combined.groupby("semantic_group"):
         rows.append(
@@ -212,6 +217,60 @@ def semantic_group_frequency_frame(tables: list[pd.DataFrame]) -> pd.DataFrame:
         ["selection_frequency", "selection_count", "semantic_group"],
         ascending=[False, False, True],
     )
+
+
+def candidate_universe_from_frozen_pool(
+    candidate_pool_path: str | Path,
+    *,
+    selected_sets: list[set[str]] | None = None,
+) -> int:
+    """Derive and validate a stability universe from a frozen candidate-pool artifact."""
+    path = Path(candidate_pool_path)
+    pool = pd.read_csv(path)
+    required = {
+        "feature_name",
+        "candidate_pool_size",
+        "candidate_pool_frozen_before_mrmr",
+    }
+    missing = required - set(pool.columns)
+    if missing:
+        raise ValueError(f"candidate pool missing columns: {sorted(missing)}")
+    if pool.empty or pool["feature_name"].isna().any():
+        raise ValueError("candidate pool is empty or contains missing feature names")
+    feature_names = pool["feature_name"].astype(str)
+    if feature_names.duplicated().any():
+        raise ValueError("candidate pool contains duplicate feature names")
+    declared_sizes = pd.to_numeric(
+        pool["candidate_pool_size"], errors="coerce"
+    ).dropna().unique()
+    if len(declared_sizes) != 1 or int(declared_sizes[0]) != len(pool):
+        raise ValueError("candidate pool row count does not match its declared size")
+    frozen = pool["candidate_pool_frozen_before_mrmr"].map(
+        lambda value: str(value).strip().lower()
+    )
+    if not frozen.eq("true").all():
+        raise ValueError("stability candidate pool must be frozen before mRMR")
+    eligible = set(feature_names)
+    for fold, selected in enumerate(selected_sets or [], start=1):
+        unexpected = selected - eligible
+        if unexpected:
+            raise ValueError(
+                f"fold {fold} selected features outside the frozen candidate pool: "
+                f"{sorted(unexpected)}"
+            )
+    return len(eligible)
+
+
+def _validated_ratio(numerator: int, denominator: int, *, name: str) -> float:
+    if denominator <= 0:
+        return np.nan
+    ratio = float(numerator / denominator)
+    if not 0.0 <= ratio <= 1.0:
+        raise ValueError(
+            f"{name} must be within [0, 1], got {ratio} "
+            f"from {numerator}/{denominator}"
+        )
+    return ratio
 
 
 def _rank_map(table: pd.DataFrame) -> dict[str, float]:
@@ -299,7 +358,8 @@ def write_feature_stability_artifacts(
     exp_dir: str | Path,
     model: str,
     selector: str,
-    total_candidate_features: int,
+    total_candidate_features: int | None = None,
+    candidate_pool_path: str | Path | None = None,
 ) -> dict[str, float]:
     """Write feature-selection stability artifacts for one experiment."""
     exp_path = Path(exp_dir)
@@ -309,6 +369,19 @@ def write_feature_stability_artifacts(
     tables = read_fold_feature_tables(features_dir)
     selected_sets = selected_sets_from_tables(tables)
     semantic_group_sets = semantic_group_sets_from_tables(tables)
+    if candidate_pool_path is not None:
+        if total_candidate_features is not None:
+            raise ValueError(
+                "provide candidate_pool_path or total_candidate_features, not both"
+            )
+        total_candidate_features = candidate_universe_from_frozen_pool(
+            candidate_pool_path,
+            selected_sets=selected_sets,
+        )
+    if total_candidate_features is None:
+        raise ValueError("a stability candidate universe is required")
+    if any(len(selected) > total_candidate_features for selected in selected_sets):
+        raise ValueError("selected set is larger than the candidate universe")
     frequency_df = selection_frequency_frame(tables)
     frequency_df.to_csv(features_dir / "selection_frequency.csv", index=False)
     semantic_group_frequency_df = semantic_group_frequency_frame(tables)
@@ -316,25 +389,26 @@ def write_feature_stability_artifacts(
 
     stable_count_80 = int((frequency_df["selection_frequency"] >= 0.8).sum()) if not frequency_df.empty else 0
     selected_feature_count = int(np.mean([len(item) for item in selected_sets])) if selected_sets else 0
-    stable_ratio_80 = (
-        float(stable_count_80 / selected_feature_count)
-        if selected_feature_count
-        else np.nan
+    stable_ratio_80 = _validated_ratio(
+        stable_count_80,
+        selected_feature_count,
+        name="stable_feature_ratio_80",
     )
     stable_semantic_group_count_80 = (
         int((semantic_group_frequency_df["selection_frequency"] >= 0.8).sum())
         if not semantic_group_frequency_df.empty
         else 0
     )
-    selected_semantic_group_count = (
-        int(np.mean([len(item) for item in semantic_group_sets]))
-        if semantic_group_sets
-        else 0
+    # A stable-group count is a subset of the groups represented in at least
+    # one fold. Using the (floored) mean groups per fold can make the ratio
+    # exceed one when group coverage differs by fold.
+    represented_semantic_group_count = (
+        len(set().union(*semantic_group_sets)) if semantic_group_sets else 0
     )
-    semantic_group_stable_ratio_80 = (
-        float(stable_semantic_group_count_80 / selected_semantic_group_count)
-        if selected_semantic_group_count
-        else np.nan
+    semantic_group_stable_ratio_80 = _validated_ratio(
+        stable_semantic_group_count_80,
+        represented_semantic_group_count,
+        name="semantic_group_stable_ratio_80",
     )
 
     metrics = {

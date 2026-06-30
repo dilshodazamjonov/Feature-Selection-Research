@@ -232,6 +232,7 @@ def run_kfold_training(
     excluded_feature_columns=None,
     feature_budget=None,
     stable_row_ids=None,
+    stability_candidate_pool_path=None,
 ):
     """
     Run a time-series aware K-Fold training pipeline with preprocessing, feature selection, 
@@ -559,12 +560,16 @@ def run_kfold_training(
             index=False,
         )
 
-    total_candidate_features = int(X_model.shape[1])
+    stability_kwargs = (
+        {"candidate_pool_path": stability_candidate_pool_path}
+        if stability_candidate_pool_path is not None
+        else {"total_candidate_features": int(X_model.shape[1])}
+    )
     write_feature_stability_artifacts(
         exp_dir=exp_dir,
         model=model_name.split("_", 1)[0],
         selector=selector_name or model_name,
-        total_candidate_features=total_candidate_features,
+        **stability_kwargs,
     )
 
     # OOF evaluation - compute metrics but don't save (already computed above)

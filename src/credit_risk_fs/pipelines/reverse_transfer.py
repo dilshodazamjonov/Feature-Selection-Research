@@ -32,6 +32,7 @@ from credit_risk_fs.clip.reverse_transfer import (
     atomic_registry_transaction,
     aggregate_seed_embeddings,
     append_registry_rows,
+    build_summary_manifest,
     build_feature_positive_pairs,
     canonical_artifact_id,
     canonical_registry_value,
@@ -48,6 +49,7 @@ from credit_risk_fs.clip.reverse_transfer import (
     validate_prediction_splits,
     validate_registry_bundle,
     validate_summary_manifest,
+    validate_summary_manifest_payloads,
 )
 from credit_risk_fs.clip.source_anchor import (
     build_feature_stability_evidence,
@@ -845,6 +847,10 @@ def _evaluate_model_artifact_paths(output_dir: Path, model: str) -> list[Path]:
     return [
         output_dir / f"candidate_pools/{model}_candidate_pool.csv",
         base / "data/source_identity_manifest.json",
+        base / "features/feature_stability_metrics.csv",
+        base / "features/fold_selected_features.csv",
+        base / "features/selection_frequency.csv",
+        base / "features/semantic_group_stability.csv",
         base / "features/final_selected_features.csv",
         base / "models/final_model.model",
         base / "models/final_model_bundle.joblib",
@@ -2672,6 +2678,7 @@ def _evaluate(
             external_dataset=EXTERNAL_DATASET,
             pairing_policy_version=PAIRING_POLICY_VERSION,
             stable_row_id_column=str(config["stable_row_id_column"]),
+            stability_candidate_pool_path=str(pool_path),
         )
         if prepared is None:
             prepared = prepare_modeling_data(experiment)
@@ -3083,11 +3090,16 @@ def _register(
         ],
         "output_root": _relative(output_dir),
     }
-    summary_manifest["registry_file_hashes"] = {
-        _relative(path): sha256_text(registry_payloads[path].decode("utf-8"))
-        for path in [*required, guide_path]
-    }
-    validate_summary_manifest(summary_manifest)
+    summary_manifest = build_summary_manifest(
+        summary_manifest,
+        registry_root=registry_root,
+        payloads=registry_payloads,
+    )
+    validate_summary_manifest_payloads(
+        summary_manifest,
+        registry_root=registry_root,
+        payloads=registry_payloads,
+    )
     registry_payloads[summary_manifest_path] = json.dumps(
         summary_manifest, indent=2, ensure_ascii=False
     ).encode("utf-8")

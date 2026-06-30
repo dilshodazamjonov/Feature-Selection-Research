@@ -105,6 +105,7 @@ class ExperimentConfig:
     external_dataset: str = ""
     pairing_policy_version: str = "not_applicable_non_clip"
     stable_row_id_column: str | None = None
+    stability_candidate_pool_path: str | None = None
 
 
 @dataclass(slots=True)
@@ -668,6 +669,7 @@ def run_experiment(
         excluded_feature_columns=config.excluded_feature_columns,
         feature_budget=config.feature_budget,
         stable_row_ids=prepared.dev_stable_row_ids,
+        stability_candidate_pool_path=config.stability_candidate_pool_path,
     )
 
     exp_dir_attr = results_df.attrs.get("exp_dir")

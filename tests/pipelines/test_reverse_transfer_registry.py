@@ -13,12 +13,14 @@ from credit_risk_fs.clip.reverse_transfer import (
     RegistryConflictError,
     append_registry_rows,
     atomic_registry_transaction,
+    build_summary_manifest,
     canonical_artifact_id,
     canonical_registry_value,
     registry_bundle_dry_run,
     validate_registry_bundle,
     validate_registry_frame,
     validate_sha256,
+    validate_summary_manifest_payloads,
 )
 from credit_risk_fs.utils.hashing import sha256_file
 
@@ -772,3 +774,90 @@ def test_transaction_manifest_replacement_is_the_commit_boundary(
         metadata={"run_ids": ["r1"]},
     )
     assert second["transaction_outcome"] == "IDEMPOTENT_NO_OP"
+
+
+def _summary_payloads() -> dict[Path, bytes]:
+    return {
+        Path("summary/run_index.csv"): (
+            b"run_id,reuse_status\n"
+            b"r1,reusable_existing\n"
+            b"r2,newly_executed\n"
+        ),
+        Path("summary/artifact_registry.csv"): (
+            b"artifact_id,reuse_status\n"
+            b"a1,reusable_existing\n"
+            b"a2,newly_executed\n"
+            b"a3,newly_executed\n"
+        ),
+        Path("summary/reusable_metrics.csv"): b"metric\n1\n2\n",
+        Path("summary/selected_feature_registry.csv"): b"feature\nx\n",
+        Path("summary/results_access_guide.md"): b"# deterministic guide\n",
+    }
+
+
+def test_summary_manifest_counts_and_hashes_match_final_payloads() -> None:
+    payloads = _summary_payloads()
+    manifest = build_summary_manifest(
+        {
+            "registry_version": "test",
+            "run_counts": {
+                "reusable_existing": 99,
+                "newly_executed": 99,
+                "total": 198,
+            },
+            "artifact_counts": {
+                "reusable_existing": 99,
+                "newly_executed": 99,
+                "total": 198,
+            },
+            "registry_file_hashes": {},
+        },
+        registry_root="summary",
+        payloads=payloads,
+    )
+
+    assert manifest["run_counts"]["total"] == 2
+    assert manifest["artifact_counts"]["total"] == 3
+    assert manifest["reusable_metric_rows"] == 2
+    assert manifest["selected_feature_artifact_rows"] == 1
+    validate_summary_manifest_payloads(
+        manifest, registry_root="summary", payloads=payloads
+    )
+
+
+def test_stale_summary_manifest_is_detected() -> None:
+    payloads = _summary_payloads()
+    manifest = build_summary_manifest(
+        {
+            "registry_version": "test",
+            "run_counts": {"total": 0},
+            "artifact_counts": {"total": 0},
+            "registry_file_hashes": {},
+        },
+        registry_root="summary",
+        payloads=payloads,
+    )
+    manifest["run_counts"]["total"] = 999
+
+    with pytest.raises(ValueError, match="stale"):
+        validate_summary_manifest_payloads(
+            manifest, registry_root="summary", payloads=payloads
+        )
+
+
+def test_summary_manifest_regeneration_is_deterministic() -> None:
+    payloads = _summary_payloads()
+    base = {
+        "registry_version": "test",
+        "run_counts": {"total": 0},
+        "artifact_counts": {"total": 0},
+        "registry_file_hashes": {},
+    }
+
+    first = build_summary_manifest(
+        base, registry_root="summary", payloads=payloads
+    )
+    second = build_summary_manifest(
+        first, registry_root="summary", payloads=payloads
+    )
+    assert first == second

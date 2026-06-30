@@ -1,7 +1,11 @@
+import itertools
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from credit_risk_fs.evaluation.stability import (
+    candidate_universe_from_frozen_pool,
     kuncheva_stability,
     mean_pairwise_jaccard,
     nogueira_stability,
@@ -110,4 +114,113 @@ def test_semantic_group_stability_computes_correctly(tmp_path):
     assert external_row["selection_frequency"] == 1.0
     assert metrics["semantic_group_jaccard"] == 1 / 3
     assert metrics["stable_semantic_group_count_80"] == 1
-    assert metrics["semantic_group_stable_ratio_80"] == 0.5
+    assert metrics["semantic_group_stable_ratio_80"] == 1 / 3
+
+
+def _write_candidate_pool(path, size):
+    pd.DataFrame(
+        {
+            "feature_name": [f"f{index}" for index in range(size)],
+            "candidate_pool_size": [size] * size,
+            "candidate_pool_frozen_before_mrmr": [True] * size,
+        }
+    ).to_csv(path, index=False)
+
+
+@pytest.mark.parametrize(("size", "budget"), [(60, 20), (100, 40)])
+def test_stability_universe_comes_from_frozen_candidate_pool(
+    tmp_path, size, budget
+):
+    pool = tmp_path / "candidate_pool.csv"
+    _write_candidate_pool(pool, size)
+    selected = [{f"f{index}" for index in range(budget)} for _ in range(5)]
+
+    assert candidate_universe_from_frozen_pool(
+        pool, selected_sets=selected
+    ) == size
+
+
+def test_full_model_universe_is_rejected_for_reverse_transfer_pool(tmp_path):
+    pool = tmp_path / "candidate_pool.csv"
+    _write_candidate_pool(pool, 529)
+    frame = pd.read_csv(pool).iloc[:60].copy()
+    frame["candidate_pool_size"] = 60
+    frame.to_csv(pool, index=False)
+
+    assert candidate_universe_from_frozen_pool(pool) == 60
+    with pytest.raises(ValueError, match="declared size"):
+        invalid = pd.read_csv(pool)
+        invalid["candidate_pool_size"] = 529
+        invalid.to_csv(pool, index=False)
+        candidate_universe_from_frozen_pool(pool)
+
+
+def test_nogueira_matches_independent_indicator_implementation():
+    selected = [
+        {"a", "b", "c"},
+        {"a", "b", "d"},
+        {"a", "b", "e"},
+        {"a", "c", "d"},
+        {"a", "b", "c"},
+    ]
+    universe = sorted(set().union(*selected) | {"f", "g"})
+    matrix = np.array(
+        [[feature in fold for feature in universe] for fold in selected],
+        dtype=float,
+    )
+    sample_variances = matrix.var(axis=0, ddof=1)
+    average_size = matrix.sum(axis=1).mean()
+    expected = 1.0 - (
+        sample_variances.mean()
+        / ((average_size / len(universe)) * (1 - average_size / len(universe)))
+    )
+
+    assert np.isclose(nogueira_stability(selected, len(universe)), expected)
+
+
+def test_kuncheva_matches_independent_pairwise_implementation():
+    selected = [
+        {"a", "b", "c"},
+        {"a", "b", "d"},
+        {"a", "c", "e"},
+    ]
+    universe_size = 8
+    values = []
+    for left, right in itertools.combinations(selected, 2):
+        k = len(left)
+        values.append(
+            (len(left & right) * universe_size - k * k)
+            / (k * (universe_size - k))
+        )
+
+    assert np.isclose(kuncheva_stability(selected, universe_size), np.mean(values))
+
+
+def test_jaccard_does_not_depend_on_candidate_universe():
+    selected = [{"a", "b"}, {"a", "c"}, {"a", "d"}]
+
+    before = mean_pairwise_jaccard(selected)
+    nogueira_stability(selected, 529)
+    nogueira_stability(selected, 60)
+    assert mean_pairwise_jaccard(selected) == before
+
+
+def test_empty_semantic_groups_are_explicitly_empty(tmp_path):
+    features_dir = tmp_path / "exp" / "features"
+    features_dir.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {"fold_id": 1, "feature_name": "a", "semantic_group": None},
+            {"fold_id": 2, "feature_name": "b", "semantic_group": None},
+        ]
+    ).to_csv(features_dir / "fold_selected_features.csv", index=False)
+
+    metrics = write_feature_stability_artifacts(
+        exp_dir=tmp_path / "exp",
+        model="lr",
+        selector="test",
+        total_candidate_features=10,
+    )
+
+    assert pd.read_csv(features_dir / "semantic_group_stability.csv").empty
+    assert np.isnan(metrics["semantic_group_stable_ratio_80"])

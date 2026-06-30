@@ -1965,6 +1965,85 @@ def validate_summary_manifest(manifest: Mapping[str, Any]) -> None:
         validate_sha256(hash_value, field=f"registry_file_hashes[{path}]")
 
 
+def build_summary_manifest(
+    base_manifest: Mapping[str, Any],
+    *,
+    registry_root: str | Path,
+    payloads: Mapping[str | Path, bytes],
+) -> dict[str, Any]:
+    """Deterministically refresh summary counts and hashes from final registry bytes."""
+    root = Path(registry_root)
+    content_by_name = {Path(path).name: content for path, content in payloads.items()}
+    table_names = (
+        "run_index.csv",
+        "artifact_registry.csv",
+        "reusable_metrics.csv",
+        "selected_feature_registry.csv",
+    )
+    required_names = {*table_names, "results_access_guide.md"}
+    missing = required_names - set(content_by_name)
+    if missing:
+        raise ValueError(f"summary inputs missing: {sorted(missing)}")
+    frames = {
+        name: pd.read_csv(io.BytesIO(content_by_name[name]))
+        for name in table_names
+    }
+
+    def status_counts(
+        frame: pd.DataFrame, existing: Mapping[str, Any]
+    ) -> dict[str, int]:
+        if "reuse_status" not in frame:
+            raise ValueError("summary source table lacks reuse_status")
+        observed = frame["reuse_status"].fillna("").astype(str).value_counts().to_dict()
+        ordered_keys = [key for key in existing if key != "total"]
+        ordered_keys.extend(sorted(set(observed) - set(ordered_keys)))
+        counts = {key: int(observed.get(key, 0)) for key in ordered_keys}
+        counts["total"] = int(len(frame))
+        return counts
+
+    summary = dict(base_manifest)
+    summary["run_counts"] = status_counts(
+        frames["run_index.csv"], base_manifest.get("run_counts", {})
+    )
+    summary["artifact_counts"] = status_counts(
+        frames["artifact_registry.csv"], base_manifest.get("artifact_counts", {})
+    )
+    summary["reusable_metric_rows"] = int(len(frames["reusable_metrics.csv"]))
+    summary["selected_feature_artifact_rows"] = int(
+        len(frames["selected_feature_registry.csv"])
+    )
+    summary["registry_file_hashes"] = {
+        (root / name).as_posix(): hashlib.sha256(content_by_name[name]).hexdigest()
+        for name in (*table_names, "results_access_guide.md")
+    }
+    validate_summary_manifest(summary)
+    return summary
+
+
+def validate_summary_manifest_payloads(
+    manifest: Mapping[str, Any],
+    *,
+    registry_root: str | Path,
+    payloads: Mapping[str | Path, bytes],
+) -> None:
+    """Reject stale counts or hashes against a final registry payload set."""
+    expected = build_summary_manifest(
+        manifest,
+        registry_root=registry_root,
+        payloads=payloads,
+    )
+    fields = (
+        "run_counts",
+        "artifact_counts",
+        "reusable_metric_rows",
+        "selected_feature_artifact_rows",
+        "registry_file_hashes",
+    )
+    stale = [field for field in fields if manifest.get(field) != expected.get(field)]
+    if stale:
+        raise ValueError(f"summary manifest is stale: {stale}")
+
+
 def validate_transaction_manifest(manifest: Mapping[str, Any]) -> None:
     required = {
         "transaction_id",
