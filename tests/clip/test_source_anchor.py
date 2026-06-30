@@ -19,7 +19,7 @@ from credit_risk_fs.clip.source_anchor import (
     validate_source_anchor_artifacts,
     vector_hash,
 )
-from credit_risk_fs.utils.hashing import sha256_file, sha256_text
+from credit_risk_fs.utils.hashing import sha256_file
 
 
 def _config(**overrides) -> SourceAnchorConfig:
@@ -223,6 +223,18 @@ def test_aliases_exact_duplicates_and_validation_features_are_not_members() -> N
     )
 
 
+def test_cross_type_identity_conflicts_cannot_coexist_in_anchor() -> None:
+    evidence = _evidence_rows(25)
+    evidence["identity_conflict_group"] = ""
+    evidence.loc[0, "identity_conflict_group"] = "all_identity:shared"
+    evidence.loc[1, "identity_conflict_group"] = "all_identity:shared"
+    members, audit = select_anchor_members(evidence, config=_config())
+    assert not {"id-00", "id-01"}.issubset(set(members.feature_id))
+    assert audit.loc[
+        audit.feature_id.eq("id-01"), "selection_exclusion_reason"
+    ].iloc[0] == "identity_equivalent_to_higher_ranked_member"
+
+
 def test_per_seed_anchor_normalizes_members_and_centroid() -> None:
     members = _evidence_rows(23)
     embeddings = pd.DataFrame(
@@ -273,10 +285,14 @@ def test_incorrect_anchor_metadata_and_hashes_are_rejected(tmp_path) -> None:
         configuration_hash="config",
         data_manifest_hash="data",
         evidence_hash=sha256_file(evidence_path),
+        external_dataset="homecredit",
+        source_feature_universe_hash="universe",
+        feature_split_hash="split",
+        identity_evidence_hash="identity",
+        raw_statistical_evidence_hash="raw",
+        statistical_preprocessor_hash="preprocessor",
     )
-    manifest["anchor_members_hash"] = sha256_text(
-        members_path.read_text(encoding="utf-8")
-    )
+    manifest["anchor_members_hash"] = sha256_file(members_path)
     validate_source_anchor_artifacts(
         config=config,
         members=members,
@@ -284,6 +300,12 @@ def test_incorrect_anchor_metadata_and_hashes_are_rejected(tmp_path) -> None:
         training_feature_ids=set(members.feature_id),
         configuration_hash="config",
         data_manifest_hash="data",
+        external_dataset="homecredit",
+        source_feature_universe_hash="universe",
+        feature_split_hash="split",
+        identity_evidence_hash="identity",
+        raw_statistical_evidence_hash="raw",
+        statistical_preprocessor_hash="preprocessor",
         member_path=members_path,
         evidence_path=evidence_path,
     )
@@ -297,6 +319,12 @@ def test_incorrect_anchor_metadata_and_hashes_are_rejected(tmp_path) -> None:
             training_feature_ids=set(members.feature_id),
             configuration_hash="config",
             data_manifest_hash="data",
+            external_dataset="homecredit",
+            source_feature_universe_hash="universe",
+            feature_split_hash="split",
+            identity_evidence_hash="identity",
+            raw_statistical_evidence_hash="raw",
+            statistical_preprocessor_hash="preprocessor",
             member_path=members_path,
             evidence_path=evidence_path,
         )
@@ -309,6 +337,12 @@ def test_incorrect_anchor_metadata_and_hashes_are_rejected(tmp_path) -> None:
             training_feature_ids=set(members.feature_id),
             configuration_hash="config",
             data_manifest_hash="data",
+            external_dataset="homecredit",
+            source_feature_universe_hash="universe",
+            feature_split_hash="split",
+            identity_evidence_hash="identity",
+            raw_statistical_evidence_hash="raw",
+            statistical_preprocessor_hash="preprocessor",
             member_path=members_path,
             evidence_path=evidence_path,
         )

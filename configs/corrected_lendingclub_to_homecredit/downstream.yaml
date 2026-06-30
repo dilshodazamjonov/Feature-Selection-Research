@@ -15,4 +15,4 @@ llm_stage_allowed: false
 hyperparameter_tuning_allowed: false
 valid_baseline_execution_allowed: false
 prediction_stable_row_ids_required: true
-
+stable_row_id_column: SK_ID_CURR

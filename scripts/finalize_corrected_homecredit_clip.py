@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from credit_risk_fs.clip.reverse_transfer import canonical_artifact_id
+
 
 ROOT = Path("results/corrected_homecredit_clip")
 REG = Path("results/research_summary")
@@ -121,9 +123,16 @@ def main() -> None:
         if not path.is_file():
             continue
         rel = path.as_posix()
+        content_hash = sha(path)
         artifact_rows.append({
-            "artifact_id": sha(path)[:20], "artifact_type": _type(path),
-            "relative_path": rel, "file_exists": True, "file_hash": sha(path),
+            "artifact_id": canonical_artifact_id(
+                run_id="",
+                artifact_type=_type(path),
+                relative_path=rel,
+                content_hash=content_hash,
+            ),
+            "artifact_type": _type(path),
+            "relative_path": rel, "file_exists": True, "file_hash": content_hash,
             "created_by_run_id": "", "depends_on_clip": True, "depends_on_old_pairing": False,
             "pairing_policy_version": "identity_equivalence_v2", "reuse_status": "newly_executed",
             "human_description": "Corrected Home Credit CLIP professor-requested artifact.",

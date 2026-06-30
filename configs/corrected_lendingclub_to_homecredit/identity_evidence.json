@@ -1,0 +1,9 @@
+{
+  "identity_evidence_version": "explicit_identity_evidence_v1",
+  "pairing_policy_version": "identity_equivalence_v2",
+  "source_dataset": "lendingclub_v2",
+  "external_dataset": "homecredit",
+  "verified_aliases": [],
+  "documented_identity_transforms": [],
+  "notes": "Only explicitly verified identity relations belong here. Similar names, source tables, semantic groups, text similarity, correlation, and equal statistical summaries are diagnostic-only."
+}

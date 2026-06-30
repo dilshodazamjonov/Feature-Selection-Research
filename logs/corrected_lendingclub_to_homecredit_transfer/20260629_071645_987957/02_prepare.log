@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "D:\python projects\Research\scripts\run_corrected_lendingclub_to_homecredit_transfer.py", line 17, in <module>
+    raise SystemExit(run_cli())
+                     ~~~~~~~^^
+  File "D:\python projects\Research\src\credit_risk_fs\pipelines\reverse_transfer.py", line 132, in run_cli
+    execute_plan(
+    ~~~~~~~~~~~~^
+        config=config,
+        ^^^^^^^^^^^^^^
+    ...<5 lines>...
+        skip_existing=bool(args.skip_existing),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\python projects\Research\src\credit_risk_fs\pipelines\reverse_transfer.py", line 414, in execute_plan
+    payload = handlers[stage](**handler_kwargs)
+  File "D:\python projects\Research\src\credit_risk_fs\pipelines\reverse_transfer.py", line 772, in _prepare
+    raw = pd.read_csv(data_path, usecols=[time_col, target_col, *feature_names])
+  File "D:\python projects\Research\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "D:\python projects\Research\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 306, in _read
+    return parser.read(nrows)
+           ~~~~~~~~~~~^^^^^^^
+  File "D:\python projects\Research\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1947, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+        ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        nrows
+        ^^^^^
+    )
+    ^
+  File "D:\python projects\Research\.venv\Lib\site-packages\pandas\io\parsers\c_parser_wrapper.py", line 217, in read
+    data = _concatenate_chunks(chunks, self.names)
+  File "D:\python projects\Research\.venv\Lib\site-packages\pandas\io\parsers\c_parser_wrapper.py", line 361, in _concatenate_chunks
+    warning_columns.append(column_names[name])
+                           ~~~~~~~~~~~~^^^^^^
+IndexError: list index out of range

@@ -45,6 +45,7 @@ class GroupedTimeSeriesSplit:
             )
 
         splitter = TimeSeriesSplit(n_splits=self.n_splits)
+        assigned_validation_times: set[object] = set()
 
         for train_row_idx, val_row_idx in splitter.split(np.arange(len(time_values))):
             val_start_time = time_values[val_row_idx[0]]
@@ -55,7 +56,15 @@ class GroupedTimeSeriesSplit:
             train_end_pos = max(val_start_pos - self.gap, 0)
 
             train_times = unique_times[:train_end_pos]
-            val_times = unique_times[val_start_pos:val_end_pos]
+            candidate_val_times = unique_times[val_start_pos:val_end_pos]
+            val_times = np.asarray(
+                [
+                    value
+                    for value in candidate_val_times
+                    if value not in assigned_validation_times
+                ]
+            )
+            assigned_validation_times.update(val_times.tolist())
 
             train_idx = np.flatnonzero(np.isin(time_values, train_times))
             val_idx = np.flatnonzero(np.isin(time_values, val_times))

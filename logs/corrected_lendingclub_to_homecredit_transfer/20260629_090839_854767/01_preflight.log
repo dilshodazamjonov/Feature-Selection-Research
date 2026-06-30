@@ -1,0 +1,264 @@
+{
+  "status": "dry_run_no_scientific_execution",
+  "resolved_stages": [
+    "prepare",
+    "train",
+    "project",
+    "evaluate",
+    "register"
+  ],
+  "roles": {
+    "training_dataset": "lendingclub_v2",
+    "external_dataset": "homecredit",
+    "training_feature_manifest": "results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv",
+    "external_feature_manifest": "results/corrected_homecredit_clip/feature_universe/feature_universe_reconciliation.csv",
+    "training_raw_statistical_source": "data/lendingclub_v2/processed/application_train.csv",
+    "external_raw_statistical_source": "data/homecredit/raw",
+    "training_statistical_fit_scope": "lendingclub_v2_dev_training_features_only",
+    "external_statistical_transform_scope": "transform_only_with_frozen_lendingclub_preprocessor",
+    "pairing_policy_version": "identity_equivalence_v2",
+    "source_domain": "lendingclub_v2",
+    "external_domain": "homecredit"
+  },
+  "seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "models": [
+    "lr",
+    "catboost"
+  ],
+  "fixed_budgets": {
+    "lr": {
+      "candidate_pool_size": 60,
+      "feature_budget": 20
+    },
+    "catboost": {
+      "candidate_pool_size": 100,
+      "feature_budget": 40
+    }
+  },
+  "inputs": {
+    "training_feature_manifest": {
+      "path": "results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv",
+      "exists": true,
+      "sha256": "9d9e8164c3587140d29294712f9b16e106d0391255d7c39d5896c8adb0c3bdc0"
+    },
+    "external_feature_manifest": {
+      "path": "results/corrected_homecredit_clip/feature_universe/feature_universe_reconciliation.csv",
+      "exists": true,
+      "sha256": "d4e06ae1a0952586b72f99f81bc7bd09a814d00618f47da29d128b255f56d001"
+    },
+    "training_raw_statistical_source": {
+      "path": "data/lendingclub_v2/processed/application_train.csv",
+      "exists": true,
+      "sha256": "ce9583dcc8ed2394cca3456c1c5528a2b08b659a04a02823b65ddc31d95267ae"
+    },
+    "external_raw_statistical_source": {
+      "path": "data/homecredit/raw",
+      "exists": true,
+      "sha256": null
+    },
+    "training_text_embeddings_path": {
+      "path": "results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet",
+      "exists": true,
+      "sha256": "308d6142f7eae66eecb646a5c0ed7db5177491d29c3fc88c2b669b070d4937fb"
+    },
+    "external_text_embeddings_path": {
+      "path": "results/clip/text_baseline/homecredit_text_embeddings.parquet",
+      "exists": true,
+      "sha256": "9f165aabe7dbeac5f5eab73ec72931cb399d184c887f4a3750381add615ddb60"
+    },
+    "identity_evidence_path": {
+      "path": "configs/corrected_lendingclub_to_homecredit/identity_evidence.json",
+      "exists": true,
+      "sha256": "2d088a27898fa289bf06b52b0259e445f6346a20ebbab83bb083ec45404a2d14"
+    }
+  },
+  "outputs": {
+    "feature_reconciliation": "results\\corrected_lendingclub_to_homecredit_transfer\\feature_universe\\feature_reconciliation.csv",
+    "source_train_pairs": "results\\corrected_lendingclub_to_homecredit_transfer\\pairing\\lendingclub_v2_train_positive_pairs.parquet",
+    "source_validation_pairs": "results\\corrected_lendingclub_to_homecredit_transfer\\pairing\\lendingclub_v2_validation_positive_pairs.parquet",
+    "identity_evidence": "results\\corrected_lendingclub_to_homecredit_transfer\\pairing\\identity_evidence_manifest.json",
+    "training": "results\\corrected_lendingclub_to_homecredit_transfer\\training\\seeds",
+    "source_anchor": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\source_anchor_manifest.json",
+    "reverse_embeddings": "results\\corrected_lendingclub_to_homecredit_transfer\\reverse_projection\\homecredit_reverse_embeddings.parquet",
+    "reverse_scores": "results\\corrected_lendingclub_to_homecredit_transfer\\reverse_projection\\homecredit_reverse_scores.csv",
+    "reverse_reconciliation": "results\\corrected_lendingclub_to_homecredit_transfer\\reverse_projection\\homecredit_reverse_feature_reconciliation.csv",
+    "projection_manifest": "results\\corrected_lendingclub_to_homecredit_transfer\\reverse_projection\\reverse_projection_manifest.json",
+    "alignment_manifest": "results\\corrected_lendingclub_to_homecredit_transfer\\reverse_projection\\alignment_manifest.json",
+    "candidate_pools": "results\\corrected_lendingclub_to_homecredit_transfer\\candidate_pools",
+    "downstream": "results\\corrected_lendingclub_to_homecredit_transfer\\downstream"
+  },
+  "provenance_contract": {
+    "stable_row_id_column": "SK_ID_CURR",
+    "generated_index_ids_allowed": false,
+    "dev_prediction_metric_artifact": "results/dev_oof_predictions.csv",
+    "dev_metric_scope": "dev_oof_cross_validated",
+    "raw_dev_evidence": "target-free raw LendingClub DEV values with canonical SHA-256",
+    "reuse_validation": "current stage plus complete transitive upstream chain and declared inputs",
+    "registry_equivalence": "canonical type/path/JSON normalization with atomic idempotent no-op"
+  },
+  "safeguards": {
+    "external_refit_allowed": false,
+    "source_oot_allowed": false,
+    "external_target_allowed_before_mrmr": false,
+    "baseline_execution_allowed": false,
+    "llm_execution_allowed": false,
+    "existing_homecredit_clip_retraining_allowed": false,
+    "umap_generation_allowed": false,
+    "overwrite_completed_outputs": false
+  },
+  "source_anchor": {
+    "source_dataset": "lendingclub_v2",
+    "dev_start": -1795.0,
+    "dev_end": -1065.0,
+    "temporal_subwindows": 4,
+    "subwindow_strategy": "equal_duration",
+    "subwindow_boundaries": [
+      -1795.0,
+      -1612.5,
+      -1430.0,
+      -1247.5,
+      -1065.0
+    ],
+    "training_split_only": true,
+    "target_used": false,
+    "oot_used": false,
+    "external_data_used": false,
+    "max_adjacent_window_psi": 0.1,
+    "max_missing_rate_difference": 0.05,
+    "member_count": 23,
+    "ranking": [
+      "max_adjacent_window_psi",
+      "max_missing_rate_difference",
+      "feature_id"
+    ],
+    "fail_if_insufficient_members": true,
+    "min_non_missing_per_subwindow": 100,
+    "numeric_bins": 10,
+    "categorical_min_count": 50,
+    "psi_epsilon": 1e-06,
+    "pairing_policy_version": "identity_equivalence_v2",
+    "anchor_rule_version": "lendingclub_dev_temporal_stable_core_v1",
+    "output_paths": {
+      "subwindow_config": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\stability_subwindow_config.json",
+      "stability_evidence": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\feature_stability_evidence.csv",
+      "candidate_audit": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\anchor_candidate_audit.csv",
+      "members": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\anchor_members.csv",
+      "seed_manifest": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\seed_anchor_manifest.csv",
+      "manifest": "results\\corrected_lendingclub_to_homecredit_transfer\\source_anchor\\source_anchor_manifest.json"
+    },
+    "fail_closed_conditions": [
+      "fewer_or_more_than_23_members",
+      "target_or_oot_or_external_data_used",
+      "member_outside_training_split",
+      "identity_equivalent_members",
+      "threshold_or_hash_mismatch",
+      "non_lendingclub_source_anchor",
+      "downstream_performance_used_for_selection"
+    ]
+  },
+  "registry_dry_run": {
+    "schema_version": "reverse_transfer_registry_v2",
+    "canonicalization_version": "schema_aware_registry_v2",
+    "transaction_outcome": "CONFLICT",
+    "missing_artifacts": [
+      "results/corrected_lendingclub_to_homecredit_transfer/feature_universe/feature_reconciliation.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_feature_split.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/identity_evidence_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/identity_relations.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_exact_dev_duplicates.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_train_positive_pairs.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/lendingclub_v2_validation_positive_pairs.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/negative_exclusion_pairs.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/feature_split_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/negative_policy_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/raw_dev_statistical_evidence_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/pairing/data_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/statistical_preprocessor/statistical_preprocessor.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/statistical_preprocessor/statistical_preprocessor.joblib",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/inputs/lendingclub_v2_text_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/inputs/lendingclub_v2_statistical_vectors.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/feature_stability_evidence.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/anchor_candidate_audit.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/anchor_members.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/source_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/source_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_11/best_checkpoint.pt",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_11/checkpoint_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_11_anchor.npy",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_11_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_11_lendingclub_validation_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_22/best_checkpoint.pt",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_22/checkpoint_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_22_anchor.npy",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_22_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_22_lendingclub_validation_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_33/best_checkpoint.pt",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_33/checkpoint_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_33_anchor.npy",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_33_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_33_lendingclub_validation_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_44/best_checkpoint.pt",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_44/checkpoint_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_44_anchor.npy",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_44_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_44_lendingclub_validation_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_55/best_checkpoint.pt",
+      "results/corrected_lendingclub_to_homecredit_transfer/training/seeds/seed_55/checkpoint_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_55_anchor.npy",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_55_anchor_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_55_lendingclub_validation_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/seed_anchor_manifest.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/source_anchor/lendingclub_validation_consensus_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_11_homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_22_homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_33_homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_44_homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_55_homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_raw_descriptors.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_statistical_vectors.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_embeddings.parquet",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_scores.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_feature_reconciliation.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/alignment_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/alignment_exclusions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/reverse_projection_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/comparisons/reverse_transfer_metrics.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/candidate_pools/lr_candidate_pool.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/data/source_identity_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/final_selected_features.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/dev_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/dev_oof_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/oot_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/prediction_metrics.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/manifests/fold_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/manifests/prediction_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/manifests/metric_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/candidate_pools/catboost_candidate_pool.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/data/source_identity_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/final_selected_features.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/dev_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/dev_oof_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/oot_predictions.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/prediction_metrics.csv",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/manifests/fold_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/manifests/prediction_manifest.json",
+      "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/manifests/metric_manifest.json"
+    ],
+    "affected_files": [
+      "results/research_summary/run_index.csv",
+      "results/research_summary/artifact_registry.csv",
+      "results/research_summary/reusable_metrics.csv",
+      "results/research_summary/selected_feature_registry.csv",
+      "results/research_summary/results_access_guide.md",
+      "results/research_summary/summary_manifest.json"
+    ],
+    "writes_performed": false,
+    "success_transaction_manifest_written": false
+  }
+}

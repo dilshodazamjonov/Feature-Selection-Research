@@ -166,6 +166,7 @@ def train_seed(
                 extra={
                     "source_dataset": data.training_dataset,
                     "external_dataset": data.external_dataset,
+                    "fit_scope": f"{data.training_dataset}_contrastive_training_features_dev_only",
                     "pairing_policy_version": "identity_equivalence_v2",
                     "configuration_hash": config.configuration_hash,
                     "data_manifest_hash": config.data_manifest_hash,

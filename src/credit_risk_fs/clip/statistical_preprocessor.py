@@ -23,6 +23,7 @@ class StatisticalPreprocessor:
     clipping_upper_quantile: float = 0.99
     fit_dataset: str = "homecredit"
     fit_split: str = "train"
+    raw_dev_statistical_evidence_hash: str = ""
     imputation_values_: dict[str, float] = field(default_factory=dict)
     center_: dict[str, float] = field(default_factory=dict)
     scale_: dict[str, float] = field(default_factory=dict)
@@ -133,6 +134,7 @@ class StatisticalPreprocessor:
             "clipping_upper_quantile": float(self.clipping_upper_quantile),
             "fit_dataset": self.fit_dataset,
             "fit_split": self.fit_split,
+            "raw_dev_statistical_evidence_hash": self.raw_dev_statistical_evidence_hash,
             "imputation_values": dict(self.imputation_values_),
             "center": dict(self.center_),
             "scale": dict(self.scale_),

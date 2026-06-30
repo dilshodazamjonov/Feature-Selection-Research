@@ -1,4 +1,6 @@
 import os
+import hashlib
+import json
 import random
 import time
 from datetime import datetime
@@ -21,6 +23,152 @@ from credit_risk_fs.utils.logging import setup_logging
 
 # Setup module logger
 logger = setup_logging("kfold_trainer", level=logging.INFO)
+
+
+def build_fold_prediction_frame(
+    *,
+    validation_ids,
+    validation_targets,
+    prediction_probabilities,
+    fold: int,
+    threshold: float,
+) -> pd.DataFrame:
+    if isinstance(validation_ids, pd.Series) and isinstance(
+        validation_targets, pd.Series
+    ):
+        if not validation_ids.index.equals(validation_targets.index):
+            raise RuntimeError(
+                f"fold {fold}: validation target/ID indexes are misaligned"
+            )
+    identifiers = np.asarray(validation_ids)
+    targets = np.asarray(validation_targets)
+    probabilities = np.asarray(prediction_probabilities).reshape(-1)
+    lengths = {len(identifiers), len(targets), len(probabilities)}
+    if len(lengths) != 1:
+        raise RuntimeError(
+            f"fold {fold}: validation IDs, targets, and predictions differ in length"
+        )
+    frame = pd.DataFrame(
+        {
+            "stable_row_id": identifiers,
+            "target": targets,
+            "prediction_probability": probabilities,
+            "fold_id": np.full(len(identifiers), int(fold), dtype=int),
+        }
+    )
+    if frame["stable_row_id"].isna().any():
+        raise RuntimeError(f"fold {fold}: validation stable IDs contain nulls")
+    frame["stable_row_id"] = frame["stable_row_id"].astype(str)
+    if frame["stable_row_id"].duplicated().any():
+        raise RuntimeError(f"fold {fold}: validation stable IDs are duplicated")
+    if frame["target"].isna().any():
+        raise RuntimeError(f"fold {fold}: validation targets contain nulls")
+    numeric = pd.to_numeric(frame["prediction_probability"], errors="coerce")
+    if (
+        numeric.isna().any()
+        or not np.isfinite(numeric).all()
+        or not numeric.between(0, 1).all()
+    ):
+        raise RuntimeError(f"fold {fold}: predictions are not finite probabilities")
+    frame["prediction_probability"] = numeric.to_numpy()
+    frame["predicted_class"] = (
+        frame["prediction_probability"].to_numpy() >= float(threshold)
+    ).astype(int)
+    return frame.sort_values("stable_row_id", kind="mergesort").reset_index(
+        drop=True
+    )
+
+
+def reconcile_oof_predictions(
+    fold_predictions: list[pd.DataFrame],
+    fold_manifest: list[dict],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if len(fold_predictions) != len(fold_manifest):
+        raise RuntimeError("OOF reconciliation is missing a fold prediction frame")
+    summaries: list[dict[str, int]] = []
+    validation_union: set[str] = set()
+    errors: list[str] = []
+    for manifest in fold_manifest:
+        fold = int(manifest["fold_id"])
+        validation_values = list(map(str, manifest["validation_ids"]))
+        validation_ids = set(validation_values)
+        frame = fold_predictions[fold - 1].copy()
+        prediction_values = frame["stable_row_id"].astype(str)
+        prediction_ids = set(prediction_values)
+        duplicate_validation_ids = len(validation_values) - len(validation_ids)
+        duplicate_prediction_ids = int(prediction_values.duplicated().sum())
+        missing = validation_ids - prediction_ids
+        extra = prediction_ids - validation_ids
+        probabilities = pd.to_numeric(
+            frame["prediction_probability"], errors="coerce"
+        )
+        non_finite = int(
+            probabilities.isna().sum()
+            + (~np.isfinite(probabilities.fillna(0).to_numpy())).sum()
+        )
+        wrong_fold = not frame["fold_id"].astype(int).eq(fold).all()
+        overlap = validation_union & validation_ids
+        summaries.append(
+            {
+                "fold": fold,
+                "validation_rows": len(validation_values),
+                "prediction_rows": len(frame),
+                "validation_unique_ids": len(validation_ids),
+                "prediction_unique_ids": len(prediction_ids),
+                "missing_prediction_ids": len(missing),
+                "extra_prediction_ids": len(extra),
+                "duplicate_validation_ids": duplicate_validation_ids,
+                "duplicate_prediction_ids": duplicate_prediction_ids,
+                "non_finite_predictions": non_finite,
+            }
+        )
+        if (
+            len(frame) != len(validation_values)
+            or duplicate_validation_ids
+            or duplicate_prediction_ids
+            or missing
+            or extra
+            or non_finite
+            or wrong_fold
+            or overlap
+        ):
+            errors.append(f"fold {fold}")
+        validation_union.update(validation_ids)
+    reconciliation = pd.DataFrame(summaries)
+    if errors:
+        raise RuntimeError(
+            "OOF row reconciliation failed for " + ", ".join(errors)
+        )
+    oof = pd.concat(fold_predictions, ignore_index=True)
+    oof_ids = oof["stable_row_id"].astype(str)
+    if (
+        len(oof) != int(reconciliation["validation_rows"].sum())
+        or oof_ids.nunique() != len(oof)
+        or set(oof_ids) != validation_union
+    ):
+        raise RuntimeError("OOF union does not equal all fold validation IDs")
+    return (
+        oof.sort_values(["fold_id", "stable_row_id"], kind="mergesort")
+        .reset_index(drop=True),
+        reconciliation.sort_values("fold", kind="mergesort").reset_index(
+            drop=True
+        ),
+    )
+
+
+def evaluate_reconciled_oof(
+    fold_predictions: list[pd.DataFrame],
+    fold_manifest: list[dict],
+) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    oof, reconciliation = reconcile_oof_predictions(
+        fold_predictions, fold_manifest
+    )
+    metrics = evaluate_model(
+        oof["target"].to_numpy(),
+        oof["prediction_probability"].to_numpy(),
+        y_pred=oof["predicted_class"].to_numpy(),
+    )
+    return oof, reconciliation, metrics
 
 
 def _build_stability_confidence_summary(results_df: pd.DataFrame) -> pd.DataFrame:
@@ -83,6 +231,7 @@ def run_kfold_training(
     selector_name=None,
     excluded_feature_columns=None,
     feature_budget=None,
+    stable_row_ids=None,
 ):
     """
     Run a time-series aware K-Fold training pipeline with preprocessing, feature selection, 
@@ -179,13 +328,17 @@ def run_kfold_training(
 
     df = X.copy()
     df["_target_"] = y.values
+    if stable_row_ids is not None:
+        if len(stable_row_ids) != len(df):
+            raise ValueError("stable row ID count does not match DEV rows")
+        df["_stable_row_id_"] = np.asarray(stable_row_ids)
     df = df.sort_values(time_col).reset_index(drop=True)
 
     y_sorted = df["_target_"].copy()
     X_model = df.drop(
         columns=[
             col
-            for col in {"_target_", time_col, *excluded_feature_columns}
+            for col in {"_target_", "_stable_row_id_", time_col, *excluded_feature_columns}
             if col in df.columns
         ]
     )
@@ -197,6 +350,10 @@ def run_kfold_training(
     oof_pred_label = np.zeros(len(df), dtype=int)
     oof_mask = np.zeros(len(df), dtype=bool)
     oof_true = y_sorted.values.copy()
+    oof_fold_id = np.zeros(len(df), dtype=int)
+    fold_identity_manifest = []
+    fold_prediction_frames: list[pd.DataFrame] = []
+    seen_validation_ids: set[str] = set()
     prev_selected_features = None  # For Jaccard similarity tracking
 
     # Track time periods for each fold (for later analysis)
@@ -207,6 +364,33 @@ def run_kfold_training(
     start_total = time.time()
 
     for fold, (tr_idx, va_idx) in enumerate(splitter.split(df[time_col].values), 1):
+        if stable_row_ids is not None:
+            training_ids = df.loc[tr_idx, "_stable_row_id_"].astype(str).tolist()
+            validation_ids = df.loc[va_idx, "_stable_row_id_"].astype(str).tolist()
+            if len(validation_ids) != len(set(validation_ids)):
+                raise RuntimeError(f"fold {fold} validation IDs are duplicated")
+            if seen_validation_ids & set(validation_ids):
+                raise RuntimeError(
+                    f"fold {fold} validation IDs overlap an earlier fold"
+                )
+            if set(training_ids) & set(validation_ids):
+                raise RuntimeError(f"fold {fold} training/validation ID overlap")
+            seen_validation_ids.update(validation_ids)
+            fold_identity_manifest.append(
+                {
+                    "fold_id": fold,
+                    "training_id_hash": hashlib.sha256(
+                        json.dumps(sorted(training_ids), separators=(",", ":")).encode()
+                    ).hexdigest(),
+                    "validation_id_hash": hashlib.sha256(
+                        json.dumps(sorted(validation_ids), separators=(",", ":")).encode()
+                    ).hexdigest(),
+                    "validation_row_count": len(validation_ids),
+                    "model_fit_scope": "fold_training_ids_only",
+                    "training_ids": training_ids,
+                    "validation_ids": validation_ids,
+                }
+            )
         # Track time periods for this fold
         time_values = df[time_col].values
         fold_time_info.append({
@@ -249,10 +433,21 @@ def run_kfold_training(
             prev_selected_features=prev_selected_features,
         )
         fold_metrics.update(fold_time_info[-1])
+        if stable_row_ids is not None:
+            fold_prediction_frames.append(
+                build_fold_prediction_frame(
+                    validation_ids=df.loc[va_idx, "_stable_row_id_"],
+                    validation_targets=y_sorted.iloc[va_idx],
+                    prediction_probabilities=val_proba,
+                    fold=fold,
+                    threshold=decision_threshold,
+                )
+            )
 
         oof_pred[va_idx] = val_proba
         oof_pred_label[va_idx] = (val_proba >= decision_threshold).astype(int)
         oof_mask[va_idx] = True
+        oof_fold_id[va_idx] = fold
         fold_results.append(fold_metrics)
         fold_selected_rows.extend(selected_rows)
         hybrid_trace_rows.extend(hybrid_rows)
@@ -308,12 +503,35 @@ def run_kfold_training(
         )
         logger.info(stability_line)
 
-    # OOF metrics
-    oof_metrics_safe = evaluate_model(
-        oof_true[oof_mask],
-        oof_pred[oof_mask],
-        y_pred=oof_pred_label[oof_mask],
-    )
+    oof_predictions = None
+    if stable_row_ids is not None:
+        (
+            oof_predictions,
+            oof_reconciliation,
+            oof_metrics_safe,
+        ) = evaluate_reconciled_oof(
+            fold_prediction_frames, fold_identity_manifest
+        )
+        oof_reconciliation.to_csv(
+            os.path.join(results_dir, "oof_reconciliation.csv"), index=False
+        )
+        oof_metric_true = oof_predictions["target"].to_numpy()
+        oof_metric_probability = oof_predictions[
+            "prediction_probability"
+        ].to_numpy()
+        oof_metric_class = oof_predictions["predicted_class"].to_numpy()
+    else:
+        oof_metric_true = oof_true[oof_mask]
+        oof_metric_probability = oof_pred[oof_mask]
+        oof_metric_class = oof_pred_label[oof_mask]
+
+    # OOF metrics are forbidden until row reconciliation has passed.
+    if stable_row_ids is None:
+        oof_metrics_safe = evaluate_model(
+            oof_metric_true,
+            oof_metric_probability,
+            y_pred=oof_metric_class,
+        )
 
     results_df = pd.DataFrame(fold_results)
     numeric_cols = results_df.select_dtypes(include=[np.number]).columns
@@ -351,24 +569,32 @@ def run_kfold_training(
 
     # OOF evaluation - compute metrics but don't save (already computed above)
     evaluate_model_wrapper(
-        y_true=oof_true[oof_mask],
-        y_pred_proba=oof_pred[oof_mask],
+        y_true=oof_metric_true,
+        y_pred_proba=oof_metric_probability,
         fold_number="oof",
         selected_features=None,
         psi_feature_mean=None,
         psi_feature_max=None,
         psi_model=None,
-        y_pred=oof_pred_label[oof_mask],
+        y_pred=oof_metric_class,
     )
 
     # ========== Log OOF (Out-of-Fold) results ==========
     logger.info("")
-    logger.info(f"OOF | samples={int(oof_mask.sum()):,} | auc={oof_metrics_safe['auc']:.4f} | gini={oof_metrics_safe['gini']:.4f} | ks={oof_metrics_safe['ks']:.4f} | prec={oof_metrics_safe['precision']:.4f} | rec={oof_metrics_safe['recall']:.4f} | f1={oof_metrics_safe['f1']:.4f} | acc={oof_metrics_safe['accuracy']:.4f}")
+    logger.info(f"OOF | samples={len(oof_metric_true):,} | auc={oof_metrics_safe['auc']:.4f} | gini={oof_metrics_safe['gini']:.4f} | ks={oof_metrics_safe['ks']:.4f} | prec={oof_metrics_safe['precision']:.4f} | rec={oof_metrics_safe['recall']:.4f} | f1={oof_metrics_safe['f1']:.4f} | acc={oof_metrics_safe['accuracy']:.4f}")
 
     logger.info("")
     logger.info(f"CV Complete | results={os.path.join(results_dir, 'cv_results.csv')} | stability={os.path.join(features_dir, 'feature_stability_metrics.csv')} | total_time={(time.time() - start_total) / 60:.2f}min")
 
     final_results_df.attrs["exp_dir"] = exp_dir
+    if stable_row_ids is not None:
+        if oof_predictions is None:
+            raise RuntimeError("OOF reconciliation did not return predictions")
+        final_results_df.attrs["oof_predictions"] = oof_predictions
+        final_results_df.attrs["oof_eligible_stable_row_ids"] = set(
+            oof_predictions["stable_row_id"]
+        )
+        final_results_df.attrs["fold_identity_manifest"] = fold_identity_manifest
     final_results_df.attrs["cv_runtime_seconds"] = time.time() - start_total
     for metric in [
         "preprocessing_time_sec",

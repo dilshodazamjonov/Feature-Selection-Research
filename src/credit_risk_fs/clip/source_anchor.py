@@ -295,9 +295,32 @@ def build_feature_stability_evidence(
     ]
     if any(window.empty for window in windows):
         raise ValueError("one or more fixed DEV subwindows are empty")
+    verified_aliases = [tuple(str(value) for value in pair) for pair in verified_aliases]
+    documented_identity_transforms = [
+        tuple(str(value) for value in pair)
+        for pair in documented_identity_transforms
+    ]
     exact_groups = _identity_groups_from_duplicate_frame(exact_duplicates)
     alias_groups = _identity_groups_from_pairs(verified_aliases)
     transform_groups = _identity_groups_from_pairs(documented_identity_transforms)
+    unified_pairs: list[tuple[str, str]] = []
+    if exact_duplicates is not None and not exact_duplicates.empty:
+        unified_pairs.extend(
+            (
+                str(row.anchor_feature_name),
+                str(row.excluded_feature_name),
+            )
+            for row in exact_duplicates.itertuples(index=False)
+        )
+    unified_pairs.extend(
+        (str(left), str(right))
+        for left, right in verified_aliases
+    )
+    unified_pairs.extend(
+        (str(left), str(right))
+        for left, right in documented_identity_transforms
+    )
+    unified_groups = _union_groups(unified_pairs, prefix="all_identity")
     rows: list[dict[str, Any]] = []
     bucketizers: dict[str, FrozenBucketizer] = {}
     for candidate in candidates.sort_values("feature_id", kind="mergesort").to_dict(
@@ -376,6 +399,7 @@ def build_feature_stability_evidence(
                 "exact_duplicate_group": exact_groups.get(feature_name, ""),
                 "alias_group": alias_groups.get(feature_name, ""),
                 "identity_transform_group": transform_groups.get(feature_name, ""),
+                "identity_conflict_group": unified_groups.get(feature_name, ""),
                 "contrastive_split": split,
                 "eligibility_status": "eligible" if threshold_pass else "excluded",
                 "exclusion_reason": exclusion,
@@ -415,6 +439,7 @@ def select_anchor_members(
                 "exact_duplicate_group",
                 "alias_group",
                 "identity_transform_group",
+                "identity_conflict_group",
             )
             if str(row.get(column, ""))
         }
@@ -508,7 +533,14 @@ def build_source_anchor_manifest(
     configuration_hash: str,
     data_manifest_hash: str,
     evidence_hash: str,
+    external_dataset: str,
+    source_feature_universe_hash: str,
+    feature_split_hash: str,
+    identity_evidence_hash: str,
+    raw_statistical_evidence_hash: str,
+    statistical_preprocessor_hash: str,
     anchor_hashes_by_seed: Mapping[str, str] | None = None,
+    checkpoint_hashes_by_seed: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     config.validate()
     if len(members) != config.member_count:
@@ -516,8 +548,16 @@ def build_source_anchor_manifest(
     return {
         "anchor_rule_version": ANCHOR_RULE_VERSION,
         "source_dataset": config.source_dataset,
+        "external_dataset": external_dataset,
+        "fit_scope": "lendingclub_v2_dev_training_split_only",
         "dev_window": [config.dev_start, config.dev_end],
         "subwindow_boundaries": list(config.subwindow_boundaries),
+        "integer_day_allocation": [
+            [-1795, -1613],
+            [-1612, -1431],
+            [-1430, -1248],
+            [-1247, -1066],
+        ],
         "target_used": False,
         "oot_used": False,
         "external_data_used": False,
@@ -539,9 +579,16 @@ def build_source_anchor_manifest(
         "training_split_only": True,
         "configuration_hash": configuration_hash,
         "data_manifest_hash": data_manifest_hash,
+        "source_feature_universe_hash": source_feature_universe_hash,
+        "feature_split_hash": feature_split_hash,
+        "identity_evidence_hash": identity_evidence_hash,
+        "raw_dev_statistical_evidence_hash": raw_statistical_evidence_hash,
+        "raw_statistical_evidence_hash": raw_statistical_evidence_hash,
+        "statistical_preprocessor_hash": statistical_preprocessor_hash,
         "feature_stability_evidence_hash": evidence_hash,
         "anchor_members_hash": sha256_text(members.to_csv(index=False)),
         "anchor_hashes_by_seed": dict(anchor_hashes_by_seed or {}),
+        "checkpoint_hashes_by_seed": dict(checkpoint_hashes_by_seed or {}),
         "selected_using_downstream_performance": False,
         "external_results_used_for_selection": False,
     }
@@ -555,6 +602,13 @@ def validate_source_anchor_artifacts(
     training_feature_ids: set[str],
     configuration_hash: str,
     data_manifest_hash: str,
+    external_dataset: str,
+    source_feature_universe_hash: str,
+    feature_split_hash: str,
+    identity_evidence_hash: str,
+    raw_statistical_evidence_hash: str,
+    statistical_preprocessor_hash: str,
+    require_seed_hashes: bool = False,
     member_path: str | Path | None = None,
     evidence_path: str | Path | None = None,
 ) -> None:
@@ -562,6 +616,8 @@ def validate_source_anchor_artifacts(
     errors: list[str] = []
     expected = {
         "source_dataset": "lendingclub_v2",
+        "external_dataset": external_dataset,
+        "fit_scope": "lendingclub_v2_dev_training_split_only",
         "target_used": False,
         "oot_used": False,
         "external_data_used": False,
@@ -571,6 +627,12 @@ def validate_source_anchor_artifacts(
         "actual_member_count": 23,
         "configuration_hash": configuration_hash,
         "data_manifest_hash": data_manifest_hash,
+        "source_feature_universe_hash": source_feature_universe_hash,
+        "feature_split_hash": feature_split_hash,
+        "identity_evidence_hash": identity_evidence_hash,
+        "raw_dev_statistical_evidence_hash": raw_statistical_evidence_hash,
+        "raw_statistical_evidence_hash": raw_statistical_evidence_hash,
+        "statistical_preprocessor_hash": statistical_preprocessor_hash,
         "selected_using_downstream_performance": False,
         "external_results_used_for_selection": False,
     }
@@ -590,24 +652,40 @@ def validate_source_anchor_artifacts(
     if len(members) != 23 or members["feature_id"].duplicated().any():
         errors.append("anchor must contain 23 unique members")
     member_ids = set(members["feature_id"].astype(str))
+    if manifest.get("anchor_member_feature_ids") != members["feature_id"].astype(str).tolist():
+        errors.append("anchor member IDs do not match the approved member table")
     if not member_ids.issubset(training_feature_ids):
         errors.append("anchor members fall outside the LendingClub training split")
     for column in (
         "exact_duplicate_group",
         "alias_group",
         "identity_transform_group",
+        "identity_conflict_group",
     ):
+        if column not in members:
+            continue
         nonempty = members[column].fillna("").astype(str)
         if nonempty[nonempty.ne("")].duplicated().any():
             errors.append(f"anchor contains duplicate identity group in {column}")
-    if member_path is not None and manifest.get("anchor_members_hash") != sha256_text(
-        Path(member_path).read_text(encoding="utf-8")
-    ):
+    if member_path is not None and manifest.get(
+        "anchor_members_hash"
+    ) != sha256_file(member_path):
         errors.append("anchor members hash mismatch")
     if evidence_path is not None and manifest.get(
         "feature_stability_evidence_hash"
     ) != sha256_file(evidence_path):
         errors.append("feature stability evidence hash mismatch")
+    if errors:
+        raise ValueError("; ".join(errors))
+    if require_seed_hashes:
+        checkpoint_hashes = manifest.get("checkpoint_hashes_by_seed", {})
+        anchor_hashes = manifest.get("anchor_hashes_by_seed", {})
+        if set(checkpoint_hashes) != {"11", "22", "33", "44", "55"}:
+            errors.append("source anchor checkpoint hashes are incomplete")
+        if set(anchor_hashes) != {"11", "22", "33", "44", "55"}:
+            errors.append("source anchor seed hashes are incomplete")
+        if any(not str(value) for value in [*checkpoint_hashes.values(), *anchor_hashes.values()]):
+            errors.append("source anchor seed provenance contains empty hashes")
     if errors:
         raise ValueError("; ".join(errors))
 
@@ -641,6 +719,10 @@ def validate_seed_anchor(
     )
     if expected_hash != observed_hash:
         errors.append("source-manifest seed anchor hash mismatch")
+    if seed_manifest.get("raw_dev_statistical_evidence_hash") != source_manifest.get(
+        "raw_dev_statistical_evidence_hash"
+    ):
+        errors.append("seed anchor raw DEV evidence hash mismatch")
     if not np.isclose(np.linalg.norm(vector), 1.0, rtol=0, atol=1e-6):
         errors.append("seed anchor is not L2-normalized")
     if errors:
@@ -656,6 +738,12 @@ def write_anchor_selection_artifacts(
     members: pd.DataFrame,
     configuration_hash: str,
     data_manifest_hash: str,
+    external_dataset: str,
+    source_feature_universe_hash: str,
+    feature_split_hash: str,
+    identity_evidence_hash: str,
+    raw_statistical_evidence_hash: str,
+    statistical_preprocessor_hash: str,
 ) -> dict[str, Path]:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -665,6 +753,17 @@ def write_anchor_selection_artifacts(
     evidence_path = output / "feature_stability_evidence.csv"
     audit_path = output / "anchor_candidate_audit.csv"
     members_path = output / "anchor_members.csv"
+    if not raw_statistical_evidence_hash:
+        raise ValueError("raw DEV statistical evidence hash is required")
+    evidence = evidence.assign(
+        raw_dev_statistical_evidence_hash=raw_statistical_evidence_hash
+    )
+    audit = audit.assign(
+        raw_dev_statistical_evidence_hash=raw_statistical_evidence_hash
+    )
+    members = members.assign(
+        raw_dev_statistical_evidence_hash=raw_statistical_evidence_hash
+    )
     evidence.to_csv(evidence_path, index=False)
     audit.to_csv(audit_path, index=False)
     members.to_csv(members_path, index=False)
@@ -674,9 +773,17 @@ def write_anchor_selection_artifacts(
         configuration_hash=configuration_hash,
         data_manifest_hash=data_manifest_hash,
         evidence_hash=sha256_file(evidence_path),
+        external_dataset=external_dataset,
+        source_feature_universe_hash=source_feature_universe_hash,
+        feature_split_hash=feature_split_hash,
+        identity_evidence_hash=identity_evidence_hash,
+        raw_statistical_evidence_hash=raw_statistical_evidence_hash,
+        statistical_preprocessor_hash=statistical_preprocessor_hash,
     )
-    manifest_path = write_json(output / "source_anchor_manifest.json", manifest)
-    seed_manifest_path = output / "seed_anchor_manifest.csv"
+    manifest_path = write_json(
+        output / "source_anchor_selection_manifest.json", manifest
+    )
+    seed_manifest_path = output / "seed_anchor_manifest_template.csv"
     pd.DataFrame(
         columns=[
             "seed",
@@ -692,8 +799,8 @@ def write_anchor_selection_artifacts(
         "feature_stability_evidence": evidence_path,
         "anchor_candidate_audit": audit_path,
         "anchor_members": members_path,
-        "seed_anchor_manifest": seed_manifest_path,
-        "source_anchor_manifest": manifest_path,
+        "seed_anchor_manifest_template": seed_manifest_path,
+        "source_anchor_selection_manifest": manifest_path,
     }
 
 
