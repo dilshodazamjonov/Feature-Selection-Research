@@ -1,0 +1,629 @@
+{
+  "package_version": "2.0",
+  "creation_timestamp": "2026-07-04T06:35:56.826299+00:00",
+  "source_audit_status": "passed",
+  "generated_files": [
+    {
+      "path": "results/final_research_package_v2/artifact_inventory.md",
+      "sha256": "e74bb54052d9905455a18a52b0a4091c72dcfd206e94d827ae628c289588c71f",
+      "size_bytes": 8712
+    },
+    {
+      "path": "results/final_research_package_v2/claims_and_evidence.csv",
+      "sha256": "7acea2d24ffb8693a709abd3dc55307a94acd47afdc4d7f71fdd5b849efea381",
+      "size_bytes": 4755
+    },
+    {
+      "path": "results/final_research_package_v2/diagnostics/forward_homecredit_to_lendingclub_umap_coordinates.csv",
+      "sha256": "3847b876800ba0e136b9a5072ac4e2f3eaf8a0c3b7cf1684bb40ceb606f1da6b",
+      "size_bytes": 39776
+    },
+    {
+      "path": "results/final_research_package_v2/diagnostics/forward_homecredit_to_lendingclub_umap_manifest.json",
+      "sha256": "7790d24fa049cf2af09ab7a3fcc492524a16de22c6586fa9d0345890f8f7806a",
+      "size_bytes": 3555
+    },
+    {
+      "path": "results/final_research_package_v2/diagnostics/reverse_lendingclub_to_homecredit_umap_coordinates.csv",
+      "sha256": "ffb3dfe9b461338c97a7736c51e959c6f7fbf394776835b410e3bb1bf69061ef",
+      "size_bytes": 57899
+    },
+    {
+      "path": "results/final_research_package_v2/diagnostics/reverse_lendingclub_to_homecredit_umap_manifest.json",
+      "sha256": "72a33739b2cdf5556b63968f5d806df9b312e994b535b5ef17c917badfbcf43d",
+      "size_bytes": 4567
+    },
+    {
+      "path": "results/final_research_package_v2/directional_embedding_diagnostics.csv",
+      "sha256": "6a077cefbee125d5e9c901c3f4a75f088822881250fbcab191c2a3e01234c2de",
+      "size_bytes": 1566
+    },
+    {
+      "path": "results/final_research_package_v2/figures/figure_1_homecredit_pipeline_oot_auc.png",
+      "sha256": "7ed7fc2c0164bcae320cdaa128a99efc9c9ed33bdadbd8ce1b23c2c64b0e05bb",
+      "size_bytes": 178208
+    },
+    {
+      "path": "results/final_research_package_v2/figures/figure_2_task1_incremental_value.png",
+      "sha256": "193e0777d4d1ec1f08162d4c390cd60f8a22dd8eb41c87133df88420ca0df799",
+      "size_bytes": 311550
+    },
+    {
+      "path": "results/final_research_package_v2/figures/figure_3_forward_homecredit_to_lendingclub_umap.png",
+      "sha256": "65efe79faabe126acdfa8733e3dfbb26629238ea2075cc42a8ab08b3eea017fd",
+      "size_bytes": 401940
+    },
+    {
+      "path": "results/final_research_package_v2/figures/figure_4_reverse_lendingclub_to_homecredit_umap.png",
+      "sha256": "50eb7481a870c2945c80b1adb64ebb2e2e6f25a1df07d595f69e1eda8090526a",
+      "size_bytes": 320959
+    },
+    {
+      "path": "results/final_research_package_v2/figures/figure_5_reverse_transfer_performance_stability.png",
+      "sha256": "98d9c13b7bbe1afe022434db398a8e778f2b49c7f50471e1e45676aab3e8d1ee",
+      "size_bytes": 168020
+    },
+    {
+      "path": "results/final_research_package_v2/final_research_report.md",
+      "sha256": "13318a0eecd6cebd0f07809c6e024d4048122e5f4d86fa9f38be8e8a785a2b96",
+      "size_bytes": 28010
+    },
+    {
+      "path": "results/final_research_package_v2/final_results_tables.csv",
+      "sha256": "bddca6c754d89166e280b31078632f25282de451ddddf43147feaa34b4da1b79",
+      "size_bytes": 6234
+    },
+    {
+      "path": "results/final_research_package_v2/professor_cover_message.md",
+      "sha256": "e724abd8d83fea5858182132b4663d010b50264dc30b433b2037f4880578f608",
+      "size_bytes": 1297
+    },
+    {
+      "path": "results/final_research_package_v2/professor_summary.md",
+      "sha256": "42ff826b2aca1076c8023b192a65ef1b9f6e2912257c2996bebff41b20c8e842",
+      "size_bytes": 4734
+    },
+    {
+      "path": "results/final_research_package_v2/reproducibility_summary.md",
+      "sha256": "987ce0c8bb39ef655779f287b5b85d73b92e07d4a1905ed05fff207337691258",
+      "size_bytes": 3502
+    },
+    {
+      "path": "results/final_research_package_v2/task1_incremental_comparison.csv",
+      "sha256": "212600c977971ba0fa8abb395bdccb8735276c81749d945f75bb681abe2e41dd",
+      "size_bytes": 1809
+    }
+  ],
+  "source_artifacts": [
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/combined_pipeline_manifest.json",
+      "sha256": "00f8430f6a7f7bd06f5ea801fc51cf95bb3c0aa552fd168de7165fefe7ab7722",
+      "size_bytes": 483
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_corrected_clip_then_mrmr/features/feature_stability_metrics.csv",
+      "sha256": "0071313a4abcb933b3f80cd812fae65c9f65015a413c4bc77cdf875016923b9b",
+      "size_bytes": 543
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "sha256": "9d43c7b97bd297d4ad3f3066e46fb7f159f15dbf1ec4d98aca8d740124360f91",
+      "size_bytes": 2835
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_corrected_clip_then_mrmr/results/oot_predictions.csv",
+      "sha256": "6466422c427ca39ff6bf512b217ee56754a8c474f1deb2dce611d25278b53406",
+      "size_bytes": 2930529
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_llm_then_corrected_clip_then_mrmr/features/feature_stability_metrics.csv",
+      "sha256": "ec77915c17805fd26e624698719f7d6209c7e2f6de315e6ec42bef7ff8d89f8e",
+      "size_bytes": 545
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_llm_then_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "sha256": "c3b3a313da7b97164eddef4432ecba864948fc20a4a06d64ee9b32ae1de142c5",
+      "size_bytes": 2862
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_llm_then_corrected_clip_then_mrmr/results/oot_predictions.csv",
+      "sha256": "3576d549e809559e24036423cf5dd96fe4c0788f6227d8078ba0a5ec5359f225",
+      "size_bytes": 2933267
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_corrected_clip_then_mrmr/features/feature_stability_metrics.csv",
+      "sha256": "59e8c80957673cc823da0ee4148b4f861be181483754468662a27e6dd6346374",
+      "size_bytes": 557
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "sha256": "4d15217769a43f6295c596140e9a8042cf5d1127c4f35f29364acb2150fe91d4",
+      "size_bytes": 2841
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_corrected_clip_then_mrmr/results/oot_predictions.csv",
+      "sha256": "ae3852603cde8b99e346304616b7c62d70f9085eb598c3808990362180467d36",
+      "size_bytes": 2907409
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_llm_then_corrected_clip_then_mrmr/features/feature_stability_metrics.csv",
+      "sha256": "cb6f94ec61f088cf35e29fb5412b90fd2b7c24d3c38708aeec1d57de776e5118",
+      "size_bytes": 556
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_llm_then_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "sha256": "7e3fc05526bc492d3fb6e0285412817ef147c5f872d16b82607414f9710cc25f",
+      "size_bytes": 2862
+    },
+    {
+      "path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_llm_then_corrected_clip_then_mrmr/results/oot_predictions.csv",
+      "sha256": "3ffda78dd66953b58279aafe96991f51b7a6b9eda9e038163c91de79ff88e156",
+      "size_bytes": 2912123
+    },
+    {
+      "path": "results/corrected_homecredit_clip/feature_universe/feature_universe_reconciliation.csv",
+      "sha256": "d4e06ae1a0952586b72f99f81bc7bd09a814d00618f47da29d128b255f56d001",
+      "size_bytes": 87873
+    },
+    {
+      "path": "results/corrected_homecredit_clip/training/lendingclub_v2_joint_embeddings.parquet",
+      "sha256": "350c70fb987f9b7e1b8b324ed4b66cad1f867ddf0f87c3928a7ad95afb90daef",
+      "size_bytes": 238451
+    },
+    {
+      "path": "results/corrected_homecredit_clip/training/training_manifest.json",
+      "sha256": "4ca46d07bda173e5ae88bdd41a906de2e884dfb37142e9695671b106150af3b6",
+      "size_bytes": 2151
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/feature_stability_metrics.csv",
+      "sha256": "2e139a42d305361cc1465301b64583d13b5a8f27422a3f3728eca5e854572e40",
+      "size_bytes": 543
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/oot_predictions.csv",
+      "sha256": "5c781ea2858429323c03dad2b30acdccc8f3aabf4f30c1992c69c4c81ea9c5c6",
+      "size_bytes": 50702020
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/prediction_metrics.csv",
+      "sha256": "90ab6fa7a89bddf9adeb7b3f0802571a80dd11a19caf0ecf8f6c88e91a03f6b2",
+      "size_bytes": 1605
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/feature_stability_metrics.csv",
+      "sha256": "1cc9b647ae2b28fbbe5d473a372ca67f19154178937064c15852513a2df32b73",
+      "size_bytes": 529
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/oot_predictions.csv",
+      "sha256": "00992da71332d98fd5774074b7bb423a7e1b16acfaebb68e19a5e634ce790237",
+      "size_bytes": 51290965
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/prediction_metrics.csv",
+      "sha256": "503499cf4b75578ce45052146e249ae1802a3342d9070de0b9f349455351b2cd",
+      "size_bytes": 1608
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_embeddings.parquet",
+      "sha256": "9deecbc5831969f4b316576acb597fc000e05163233554d7d067f3cd90d00a9f",
+      "size_bytes": 195322
+    },
+    {
+      "path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/reverse_projection_manifest.json",
+      "sha256": "78ceb5c3673fd8eb6f774529e31c326cb568d5aca3ae2c78eadf02c12c447593",
+      "size_bytes": 2543
+    },
+    {
+      "path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/features/feature_stability_metrics.csv",
+      "sha256": "4c980c6d27bd26468c618e37edb56141b0fdddbdd243a07d6ab9f6b64fd22379",
+      "size_bytes": 562
+    },
+    {
+      "path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/results/experiment_summary.csv",
+      "sha256": "16f9adeb7b04e2542bcea79f929547ab3a0847c148c55dfffd65f7c49fe30edd",
+      "size_bytes": 2805
+    },
+    {
+      "path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/results/oot_predictions.csv",
+      "sha256": "36604d9dd7065b0073b1e723e4e174ba92c40e19ac4168000ad5be9eeeb9e202",
+      "size_bytes": 2939734
+    },
+    {
+      "path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/features/feature_stability_metrics.csv",
+      "sha256": "0ebb9db21ebe609a2e7e78965fb0b398bd73b912ab828ca60e14bbdb61756479",
+      "size_bytes": 558
+    },
+    {
+      "path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/results/experiment_summary.csv",
+      "sha256": "0d5f4cb6f0a00aa4c017cfb936fafd35e4ca3e11be8a23eec2a7af92b73f140a",
+      "size_bytes": 2771
+    },
+    {
+      "path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/results/oot_predictions.csv",
+      "sha256": "046c41212b5ada1403952ae61969a670ad712bfb6bed9c6d91d0f1a9fde57040",
+      "size_bytes": 2940615
+    },
+    {
+      "path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/features/feature_stability_metrics.csv",
+      "sha256": "9a499c2d118fccae0336a43dd047b41b0b95a91fcd5f36c066be55094d4fc744",
+      "size_bytes": 561
+    },
+    {
+      "path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/results/experiment_summary.csv",
+      "sha256": "00e65f77288b688fb34718a60c4315a39d7870ae06fc22a4894e94f26a240c8d",
+      "size_bytes": 2801
+    },
+    {
+      "path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/results/oot_predictions.csv",
+      "sha256": "21f4bda0588936b76c4c3773eafff7f44000fc8910873443ecda7a6ed2a1cb9c",
+      "size_bytes": 2912111
+    },
+    {
+      "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/features/feature_stability_metrics.csv",
+      "sha256": "ab0934d38ce68aab3dec30db5c88b6c2e643df5cbfaf196993cba52bdb8d539d",
+      "size_bytes": 558
+    },
+    {
+      "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/results/experiment_summary.csv",
+      "sha256": "1fd3615a476acd38b90527068df12d0541ab702c2900fe9e363e27bfc2cddf8d",
+      "size_bytes": 2773
+    },
+    {
+      "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/results/oot_predictions.csv",
+      "sha256": "104010fb309d8f5f614c7077799497ba60e4246e4cf1f547add6c1e69e639687",
+      "size_bytes": 2912130
+    },
+    {
+      "path": "results/research_summary/artifact_registry.csv",
+      "sha256": "14c5ae3518c977194d35906f408ad935eb17008c46f7fede09575a76fad891e5",
+      "size_bytes": 192185
+    },
+    {
+      "path": "results/research_summary/reusable_metrics.csv",
+      "sha256": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+      "size_bytes": 54485
+    },
+    {
+      "path": "results/research_summary/run_index.csv",
+      "sha256": "cbef4a487252a06a5e3279d75262a3ed1ecba42a89e90f42a3077e1a93c9339e",
+      "size_bytes": 40902
+    },
+    {
+      "path": "results/research_summary/selected_feature_registry.csv",
+      "sha256": "7efea919e3507a277e58708b56eae499ad0028457916e800bc161ec0b6432a82",
+      "size_bytes": 15903
+    }
+  ],
+  "authenticated_metric_summary": [
+    {
+      "pipeline": "Home Credit mRMR baseline",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "LR",
+      "candidate_pool_size": 529,
+      "final_feature_count": 20,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7456889163655954,
+      "oot_ks": 0.3618273893168265,
+      "auc_drop": null,
+      "score_psi": 0.0064942157560373,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": 0.7713555992141453,
+      "mean_pairwise_jaccard": 0.6416722408026756,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "Home Credit mRMR baseline",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "CatBoost",
+      "candidate_pool_size": 529,
+      "final_feature_count": 40,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7668389381913719,
+      "oot_ks": 0.4016996079162481,
+      "auc_drop": null,
+      "score_psi": 0.0102022055166872,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": 0.7295501022494888,
+      "mean_pairwise_jaccard": 0.6036987993068539,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "LLM → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "LR",
+      "candidate_pool_size": 60,
+      "final_feature_count": 20,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7380984234041859,
+      "oot_ks": 0.35369094567003695,
+      "auc_drop": null,
+      "score_psi": 0.0037977934894958,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.4043443920640806,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "LLM → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "CatBoost",
+      "candidate_pool_size": 100,
+      "final_feature_count": 40,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7629538541556307,
+      "oot_ks": 0.3929239518494214,
+      "auc_drop": null,
+      "score_psi": 0.0082855696687963,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.2965565796210957,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "corrected CLIP → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "LR",
+      "candidate_pool_size": 60,
+      "final_feature_count": 20,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7336398378322221,
+      "oot_ks": 0.3390429494528978,
+      "auc_drop": null,
+      "score_psi": 0.0222948197842986,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.7642574816487859,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "corrected CLIP → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "CatBoost",
+      "candidate_pool_size": 100,
+      "final_feature_count": 40,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7626757739835102,
+      "oot_ks": 0.3924831775894104,
+      "auc_drop": null,
+      "score_psi": 0.0246147097918829,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.8027730723382897,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "LLM → corrected CLIP → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "LR",
+      "candidate_pool_size": 60,
+      "final_feature_count": 20,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7369963072415038,
+      "oot_ks": 0.35422401066061543,
+      "auc_drop": null,
+      "score_psi": 0.0048976503279266,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.7291850178806701,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_lr_llm_then_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "LLM → corrected CLIP → mRMR",
+      "source_dataset": "Home Credit",
+      "evaluation_dataset": "Home Credit",
+      "model": "CatBoost",
+      "candidate_pool_size": 100,
+      "final_feature_count": 40,
+      "dev_oof_rows": null,
+      "dev_oof_auc": null,
+      "oot_rows": 120053,
+      "oot_auc": 0.7638195167065402,
+      "oot_ks": 0.3920456243253447,
+      "auc_drop": null,
+      "score_psi": 0.0040936597885268,
+      "psi_scope": "final DEV-fit in-sample score distribution vs OOT; shared calculate_psi implementation",
+      "nogueira_stability": null,
+      "mean_pairwise_jaccard": 0.7951946372487215,
+      "prediction_provenance": "saved 120,053-row OOT predictions; no stable borrower IDs; no pooled DEV OOF predictions",
+      "evidence_status": "authenticated_oot_limited_row_identity",
+      "source_metric_path": "results/corrected_homecredit_clip/combined_pipeline/runs/homecredit_catboost_llm_then_corrected_clip_then_mrmr/results/experiment_summary.csv",
+      "notes": "OOT AUC and KS reproduced from saved row-level predictions. DEV pooled OOF and AUC drop unavailable."
+    },
+    {
+      "pipeline": "LendingClub corrected CLIP → Home Credit",
+      "source_dataset": "LendingClub v2",
+      "evaluation_dataset": "Home Credit",
+      "model": "LR",
+      "candidate_pool_size": 60,
+      "final_feature_count": 20,
+      "dev_oof_rows": 82647.0,
+      "dev_oof_auc": 0.5890154000387499,
+      "oot_rows": 120053,
+      "oot_auc": 0.573202684690282,
+      "oot_ks": 0.1057690578245511,
+      "auc_drop": 0.0158127153484678,
+      "score_psi": 0.0735901410225949,
+      "psi_scope": "DEV OOF reference vs OOT; DEV-OOF quantile bins",
+      "nogueira_stability": 0.76,
+      "mean_pairwise_jaccard": 0.7298437794089969,
+      "prediction_provenance": "saved OOT and pooled DEV OOF predictions with stable SK_ID_CURR; prediction and metric manifests",
+      "evidence_status": "authenticated_direct_predictions_and_manifests",
+      "source_metric_path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/results/prediction_metrics.csv",
+      "notes": "Direct saved-prediction metric supersedes the legacy results/model_score_psi.csv scalar."
+    },
+    {
+      "pipeline": "LendingClub corrected CLIP → Home Credit",
+      "source_dataset": "LendingClub v2",
+      "evaluation_dataset": "Home Credit",
+      "model": "CatBoost",
+      "candidate_pool_size": 100,
+      "final_feature_count": 40,
+      "dev_oof_rows": 82647.0,
+      "dev_oof_auc": 0.6563253233976742,
+      "oot_rows": 120053,
+      "oot_auc": 0.6766033514680966,
+      "oot_ks": 0.26113238394285354,
+      "auc_drop": -0.0202780280704223,
+      "score_psi": 0.0173949955006039,
+      "psi_scope": "DEV OOF reference vs OOT; DEV-OOF quantile bins",
+      "nogueira_stability": 0.7791666666666667,
+      "mean_pairwise_jaccard": 0.7690564862086263,
+      "prediction_provenance": "saved OOT and pooled DEV OOF predictions with stable SK_ID_CURR; prediction and metric manifests",
+      "evidence_status": "authenticated_direct_predictions_and_manifests",
+      "source_metric_path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/results/prediction_metrics.csv",
+      "notes": "Direct saved-prediction metric supersedes the legacy results/model_score_psi.csv scalar."
+    }
+  ],
+  "task1_incremental_value_summary": [
+    {
+      "model": "LR",
+      "llm_only_oot_auc": 0.7380984234041859,
+      "combined_oot_auc": 0.7369963072415038,
+      "delta_oot_auc_combined_minus_llm": -0.0011021161626820764,
+      "auc_direction": "lower",
+      "llm_only_oot_ks": 0.35369094567003695,
+      "combined_oot_ks": 0.35422401066061543,
+      "delta_oot_ks_combined_minus_llm": 0.0005330649905784801,
+      "ks_direction": "higher",
+      "llm_only_score_psi": 0.0037977934894958,
+      "combined_score_psi": 0.0048976503279266,
+      "delta_score_psi_combined_minus_llm": 0.0010998568384307998,
+      "psi_direction": "higher_worse",
+      "psi_comparability": "comparable: same Home Credit DEV/OOT windows and shared final-DEV-fit-score vs OOT calculate_psi implementation",
+      "llm_only_mean_pairwise_jaccard": 0.4043443920640806,
+      "combined_mean_pairwise_jaccard": 0.7291850178806701,
+      "delta_jaccard_combined_minus_llm": 0.3248406258165895,
+      "stability_metric": "mean pairwise Jaccard recomputed from saved fold sets; saved Nogueira/Kuncheva omitted because they used N=529 instead of the authenticated 60/100 candidate pools",
+      "required_category": "available evidence is inconclusive",
+      "incremental_value_conclusion": "No predictive gain; feature-selection stability improved, while score PSI was slightly higher (worse)."
+    },
+    {
+      "model": "CatBoost",
+      "llm_only_oot_auc": 0.7629538541556307,
+      "combined_oot_auc": 0.7638195167065402,
+      "delta_oot_auc_combined_minus_llm": 0.000865662550909585,
+      "auc_direction": "higher",
+      "llm_only_oot_ks": 0.3929239518494214,
+      "combined_oot_ks": 0.3920456243253447,
+      "delta_oot_ks_combined_minus_llm": -0.0008783275240767385,
+      "ks_direction": "lower",
+      "llm_only_score_psi": 0.0082855696687963,
+      "combined_score_psi": 0.0040936597885268,
+      "delta_score_psi_combined_minus_llm": -0.004191909880269499,
+      "psi_direction": "lower_better",
+      "psi_comparability": "comparable: same Home Credit DEV/OOT windows and shared final-DEV-fit-score vs OOT calculate_psi implementation",
+      "llm_only_mean_pairwise_jaccard": 0.2965565796210957,
+      "combined_mean_pairwise_jaccard": 0.7951946372487215,
+      "delta_jaccard_combined_minus_llm": 0.4986380576276258,
+      "stability_metric": "mean pairwise Jaccard recomputed from saved fold sets; saved Nogueira/Kuncheva omitted because they used N=529 instead of the authenticated 60/100 candidate pools",
+      "required_category": "corrected CLIP improved stability but not prediction",
+      "incremental_value_conclusion": "The AUC change was tiny and KS decreased; score PSI and feature-selection stability improved."
+    }
+  ],
+  "directional_embedding_diagnostic_summary": [
+    {
+      "direction": "Home Credit → LendingClub v2",
+      "source_representation": "corrected Home Credit-trained CLIP (selected seed 55)",
+      "projected_dataset": "LendingClub v2",
+      "valid_embedding_count": 576,
+      "semantic_group_count": 17,
+      "knn_k": 10,
+      "cosine_knn_purity": 0.528125,
+      "shuffle_permutations": 200,
+      "shuffled_mean": 0.10102256944444445,
+      "shuffled_p95": 0.10818576388888888,
+      "shuffled_p975": 0.1104296875,
+      "umap_trustworthiness": 0.9797115051045693,
+      "excluded_feature_count": 0,
+      "main_exclusion_reasons": "none within the authenticated 576-row external-pair universe",
+      "semantic_taxonomy": "LendingClub v2 semantic-group taxonomy (17 groups)",
+      "comparison_limitations": "The LendingClub and Home Credit taxonomies differ materially; purity values must not be ranked as if labels were identical.",
+      "source_embedding_path": "results/corrected_homecredit_clip/training/lendingclub_v2_joint_embeddings.parquet",
+      "source_manifest_path": "results/corrected_homecredit_clip/training/training_manifest.json"
+    },
+    {
+      "direction": "LendingClub v2 → Home Credit",
+      "source_representation": "five-seed corrected LendingClub v2-trained CLIP consensus",
+      "projected_dataset": "Home Credit",
+      "valid_embedding_count": 436,
+      "semantic_group_count": 11,
+      "knn_k": 10,
+      "cosine_knn_purity": 0.7538990825688073,
+      "shuffle_permutations": 200,
+      "shuffled_mean": 0.14014564220183487,
+      "shuffled_p95": 0.15120412844036693,
+      "shuffled_p975": 0.15390481651376145,
+      "umap_trustworthiness": 0.9876015883232063,
+      "excluded_feature_count": 95,
+      "main_exclusion_reasons": "missing_semantic_text_embedding: 95",
+      "semantic_taxonomy": "Home Credit semantic-group taxonomy (11 represented groups)",
+      "comparison_limitations": "The Home Credit and LendingClub taxonomies differ materially; purity values must not be ranked as if labels were identical.",
+      "source_embedding_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_embeddings.parquet",
+      "source_manifest_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/reverse_projection_manifest.json"
+    }
+  ],
+  "known_limitations": [
+    "Task 1 lacks stable borrower IDs and pooled DEV OOF predictions.",
+    "Task 1 saved Nogueira/Kuncheva values used an invalid N=529 universe and are omitted; pairwise Jaccard is used.",
+    "Task 1 PSI and reverse-transfer PSI have different reference scopes and are not directly compared.",
+    "Forward corrected downstream prediction is unavailable; bidirectional predictive robustness is unsupported.",
+    "Directional semantic taxonomies differ, and separate UMAP coordinates are not geometrically comparable."
+  ],
+  "validation": {
+    "all_required_files_exist": true,
+    "all_csv_files_parse": true,
+    "markdown_links_resolve": true,
+    "placeholder_text_absent": true,
+    "report_word_count": 3669,
+    "professor_summary_word_count": 663,
+    "professor_cover_message_word_count": 171
+  },
+  "scientific_source_mutations": [],
+  "manifest_self_hash": null,
+  "manifest_self_hash_note": "Intentionally omitted; no canonical self-hash method is defined.",
+  "pdf_readiness_status": "READY FOR PROFESSOR PDF EXPORT"
+}

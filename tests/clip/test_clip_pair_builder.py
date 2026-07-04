@@ -11,12 +11,14 @@ from credit_risk_fs.clip.pair_builder import build_contrastive_data, load_contra
 
 
 def _config(tmp_path):
-    config = load_contrastive_data_config()
+    config = load_contrastive_data_config(
+        "configs/corrected_homecredit_clip/contrastive_data.yaml"
+    )
     return config.__class__(**{**config.__dict__, "output_dir": tmp_path})
 
 
 def test_positive_pairs_align_same_feature_across_views(tmp_path):
-    base = Path("results/clip/contrastive_data")
+    base = Path("results/corrected_homecredit_clip/contrastive_data")
     train = pd.read_parquet(base / "homecredit_train_positive_pairs.parquet")
     validation = pd.read_parquet(base / "homecredit_validation_positive_pairs.parquet")
     external = pd.read_parquet(base / "lendingclub_v2_external_pairs.parquet")
@@ -35,11 +37,13 @@ def test_positive_pairs_align_same_feature_across_views(tmp_path):
     assert validation["pair_id"].is_unique
     assert external["pair_id"].is_unique
     assert train["text_embedding_dimension"].eq(384).all()
-    assert train["statistical_vector_dimension"].eq(1).all()
+    assert train["statistical_vector_dimension"].eq(13).all()
 
 
 def test_pair_building_and_pair_ids_are_deterministic(tmp_path):
-    train = pd.read_parquet("results/clip/contrastive_data/homecredit_train_positive_pairs.parquet")
+    train = pd.read_parquet(
+        "results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet"
+    )
     row = train.iloc[0]
     expected = sha256_text(
         "|".join(
@@ -74,7 +78,9 @@ def test_contrastive_dry_run_does_not_overwrite_full_pair_artifacts(tmp_path):
 
 
 def test_contrastive_dry_run_keeps_actual_full_run_hashes_unchanged():
-    config = load_contrastive_data_config()
+    config = load_contrastive_data_config(
+        "configs/corrected_homecredit_clip/contrastive_data.yaml"
+    )
     full_run_files = [
         config.output_dir / "homecredit_train_positive_pairs.parquet",
         config.output_dir / "homecredit_validation_positive_pairs.parquet",

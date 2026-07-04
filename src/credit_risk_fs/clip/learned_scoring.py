@@ -174,12 +174,10 @@ def _training_anchor_names(source_pairs: pd.DataFrame, *, dataset: str) -> set[s
         raise RuntimeError(
             "BLOCKED — no approved leakage-safe LendingClub source anchor"
         )
-    candidates = [
-        Path("results/clip_v2/statistical_view/homecredit_statistical_anchor_features.csv"),
-        Path("results/clip/statistical_baseline/homecredit_statistical_anchor_features.csv"),
-    ]
-    anchor_path = next((path for path in candidates if path.exists()), None)
-    if anchor_path is None:
+    anchor_path = Path(
+        "results/clip_v2/statistical_view/homecredit_statistical_anchor_features.csv"
+    )
+    if not anchor_path.exists():
         raise RuntimeError(
             "no leakage-safe Home Credit statistical anchor feature artifact exists"
         )

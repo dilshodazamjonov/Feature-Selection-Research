@@ -160,6 +160,8 @@ def test_pipeline_runs_on_tiny_dummy_dataset(tmp_path):
         X_oot=X_oot,
         y_oot=y_oot,
         time_col="time",
+        dev_stable_row_ids=pd.Series([f"dev-{index}" for index in range(8)]),
+        oot_stable_row_ids=pd.Series([f"oot-{index}" for index in range(2)]),
     )
     config = ExperimentConfig(
         experiment_name="none",
@@ -269,6 +271,8 @@ def test_feature_selection_fit_never_uses_oot_rows(tmp_path):
         X_oot=X_oot,
         y_oot=y_oot,
         time_col="time",
+        dev_stable_row_ids=pd.Series([f"dev-{index}" for index in range(8)]),
+        oot_stable_row_ids=pd.Series([f"oot-{index}" for index in range(2)]),
     )
     config = ExperimentConfig(
         experiment_name="spy",

@@ -1,0 +1,101 @@
+{
+  "status_detail": "schema-preserving registry append complete",
+  "registry_files_updated": [
+    "results/research_summary/run_index.csv",
+    "results/research_summary/artifact_registry.csv",
+    "results/research_summary/reusable_metrics.csv",
+    "results/research_summary/selected_feature_registry.csv",
+    "results/research_summary/results_access_guide.md",
+    "results/research_summary/summary_manifest.json"
+  ],
+  "result_origin": "newly_executed",
+  "registration_transaction_hash": "a43d152d674a8254ebe334c991def2085e976031728c992af65fcf6c01e44f1c",
+  "registration_transaction": {
+    "source_dataset": "lendingclub_v2",
+    "external_dataset": "homecredit",
+    "pairing_policy_version": "identity_equivalence_v2",
+    "configuration_hash": "f20630b9efcaaaff7e47ec30d4f66b0c94d8c29d50160bf45377b52a4a5cdc6a",
+    "data_manifest_hash": "847a79875ab52626f950d159ed3dae3c0957f16e1a251d9b8428bedd098e1065",
+    "raw_dev_statistical_evidence_hash": "a13e43ce46d3175398e50959966020d8020c218dda0367c0a4d4fe8a4207f992",
+    "run_ids": [
+      "catboost",
+      "logistic_regression"
+    ],
+    "old_invalid_rows_preserved": true,
+    "status": "committed",
+    "transaction_status": "NEW_TRANSACTION",
+    "transaction_outcome": "NEW_TRANSACTION",
+    "transaction_version": "atomic_registry_transaction_v2",
+    "schema_version": "reverse_transfer_registry_v2",
+    "canonicalization_version": "schema_aware_registry_v2",
+    "timestamp": "2026-06-29T13:49:34.841775+00:00",
+    "commit_boundary": "validated_transaction_manifest_atomic_replacement",
+    "transaction_id": "baf8039c3731bee9b993e5e61b6ad5cdbc2a32071235b9e9eb7da204bdb3ce17",
+    "registry_paths": [
+      "results/research_summary/run_index.csv",
+      "results/research_summary/artifact_registry.csv",
+      "results/research_summary/reusable_metrics.csv",
+      "results/research_summary/selected_feature_registry.csv",
+      "results/research_summary/results_access_guide.md",
+      "results/research_summary/summary_manifest.json"
+    ],
+    "original_file_existence": {
+      "results/research_summary/run_index.csv": true,
+      "results/research_summary/artifact_registry.csv": true,
+      "results/research_summary/reusable_metrics.csv": true,
+      "results/research_summary/selected_feature_registry.csv": true,
+      "results/research_summary/results_access_guide.md": true,
+      "results/research_summary/summary_manifest.json": true
+    },
+    "pre_transaction_hashes": {
+      "results/research_summary/run_index.csv": "52de367b3bbfd35f58158749f1a462e29a89d36514f473edfe30fb0171ba80cc",
+      "results/research_summary/artifact_registry.csv": "11bb8645c7ece5fb694d22c0a1a9e6f898c2caa36cfbdea30fbb60f3116fcc19",
+      "results/research_summary/reusable_metrics.csv": "aeea7bce7926673ae760c82d17f9db7787ff0f0162f16edccdd9f688ca969135",
+      "results/research_summary/selected_feature_registry.csv": "076a43f3e9dc0672fe0500875e1df3b20c98d8e10852412f8ac4af85ebbcf608",
+      "results/research_summary/results_access_guide.md": "38b8c925cd86dbd4d6de05c345f5e566e39fd792ef4a1a5acfbd0a23440194cf",
+      "results/research_summary/summary_manifest.json": "5a3621787b7565849976d4000502a1bb36f361cd9c86d86e1616829a1ce0e5b7"
+    },
+    "updated_files": {
+      "results/research_summary/run_index.csv": "a388a6671f4112cbbf5ad11442e8af6b393a1a3ba1f71af4de1e63c2555481a0",
+      "results/research_summary/artifact_registry.csv": "5969884923f1412a7d3b3d44e39d71c6643fbd3831f656ea4ab9e555ff76642a",
+      "results/research_summary/reusable_metrics.csv": "6ab7134478b19056292c6810aaabed8dcf483353e873d4caf3457eed2732a6eb",
+      "results/research_summary/selected_feature_registry.csv": "16de42dece715336d98fd5a21d2c75ec6d96e774ed087fb7cc1432ddd1aa9655",
+      "results/research_summary/results_access_guide.md": "0b6e86085b6ecc26c87cadb330fbcc46542fde1ce9dca1670f3ee73ee3eec2ad",
+      "results/research_summary/summary_manifest.json": "52bbe82d134f0fe4f0d393afaac9fe51304922b1160f5825bcf0f766441509d0"
+    }
+  },
+  "registered_output_hashes": {
+    "results/research_summary/run_index.csv": "a388a6671f4112cbbf5ad11442e8af6b393a1a3ba1f71af4de1e63c2555481a0",
+    "results/research_summary/artifact_registry.csv": "5969884923f1412a7d3b3d44e39d71c6643fbd3831f656ea4ab9e555ff76642a",
+    "results/research_summary/reusable_metrics.csv": "6ab7134478b19056292c6810aaabed8dcf483353e873d4caf3457eed2732a6eb",
+    "results/research_summary/selected_feature_registry.csv": "16de42dece715336d98fd5a21d2c75ec6d96e774ed087fb7cc1432ddd1aa9655",
+    "results/research_summary/results_access_guide.md": "0b6e86085b6ecc26c87cadb330fbcc46542fde1ce9dca1670f3ee73ee3eec2ad",
+    "results/research_summary/summary_manifest.json": "52bbe82d134f0fe4f0d393afaac9fe51304922b1160f5825bcf0f766441509d0"
+  },
+  "stage": "register",
+  "status": "complete",
+  "pairing_policy_version": "identity_equivalence_v2",
+  "source_dataset": "lendingclub_v2",
+  "external_dataset": "homecredit",
+  "configuration_hash": "f20630b9efcaaaff7e47ec30d4f66b0c94d8c29d50160bf45377b52a4a5cdc6a",
+  "requested_seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "requested_models": [
+    "lr",
+    "catboost"
+  ],
+  "artifact_hashes": {
+    "results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.json": "a43d152d674a8254ebe334c991def2085e976031728c992af65fcf6c01e44f1c"
+  },
+  "data_manifest_hash": "847a79875ab52626f950d159ed3dae3c0957f16e1a251d9b8428bedd098e1065",
+  "identity_evidence_hash": "2d088a27898fa289bf06b52b0259e445f6346a20ebbab83bb083ec45404a2d14",
+  "feature_universe_hash": "0fb3877519f7977c3e3aaedaf6c237b7cf8cefc7063fd3b7ffb450d52cea3f1c",
+  "feature_split_hash": "e1454483eaac81f8dc93ecabbb3ed9f95fe58d5aeeb04abe06abde4c5707069b",
+  "raw_dev_statistical_evidence_hash": "a13e43ce46d3175398e50959966020d8020c218dda0367c0a4d4fe8a4207f992",
+  "statistical_preprocessor_hash": "693133fd3cd2f8bae7144f328664b90d0124a5cb691ff2c4d517961ef3dbe350"
+}

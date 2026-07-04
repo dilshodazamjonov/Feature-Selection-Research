@@ -1,0 +1,45 @@
+{
+  "migration_version": "registry_artifact_identity_migration_v1",
+  "artifact_identity_version": "canonical_artifact_identity_v1",
+  "registry_schema_version": "reverse_transfer_registry_v2",
+  "timestamp": "2026-07-04T06:09:47.398146+00:00",
+  "reason": "repair all pre-existing central registry identity and canonicalization conflicts",
+  "identity_changes": [],
+  "foreign_key_updates": [],
+  "missing_historical_artifact_updates": [],
+  "derived_artifact_updates": [
+    {
+      "old_artifact_id": "8f110850803f87facdabc51a0abc7134bce04a42ddbeb601bcdd8a56bb092d2a",
+      "new_artifact_id": "e3f01ff4308f5f4c75e0bdcd2e8a5aeeb3d0f91d9f1d22aa7293f54ec4c33b88",
+      "canonical_path": "results/research_summary/results_access_guide.md",
+      "old_content_sha256": "0b6e86085b6ecc26c87cadb330fbcc46542fde1ce9dca1670f3ee73ee3eec2ad",
+      "new_content_sha256": "7b808909d3bf5c884272aec8544023086f39435069129a5ae918ac53306ac1eb",
+      "reason": "derived access guide changed during registration"
+    }
+  ],
+  "normalized_output_folder_rows": 0,
+  "affected_files": [
+    "artifact_registry.csv",
+    "reusable_metrics.csv",
+    "selected_feature_registry.csv",
+    "summary_manifest.json"
+  ],
+  "backup_location": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260704T060945Z/backups",
+  "pre_migration_registry_hashes": {
+    "run_index.csv": "cbef4a487252a06a5e3279d75262a3ed1ecba42a89e90f42a3077e1a93c9339e",
+    "artifact_registry.csv": "30443ca493a1c1cbe820f1c9d2530308b75d3e6a2a90f342909509f409fe2257",
+    "reusable_metrics.csv": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+    "selected_feature_registry.csv": "7efea919e3507a277e58708b56eae499ad0028457916e800bc161ec0b6432a82",
+    "results_access_guide.md": "7b808909d3bf5c884272aec8544023086f39435069129a5ae918ac53306ac1eb",
+    "summary_manifest.json": "23ada00c06378cf829921e6843aa0d10f4e9a758bb7247d85c79747383a17feb"
+  },
+  "post_migration_registry_hashes": {
+    "run_index.csv": "cbef4a487252a06a5e3279d75262a3ed1ecba42a89e90f42a3077e1a93c9339e",
+    "artifact_registry.csv": "4f94f226700f551f57319870f7c124807f91a809c72114cd60292e1def3737dc",
+    "reusable_metrics.csv": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+    "selected_feature_registry.csv": "7efea919e3507a277e58708b56eae499ad0028457916e800bc161ec0b6432a82",
+    "results_access_guide.md": "7b808909d3bf5c884272aec8544023086f39435069129a5ae918ac53306ac1eb",
+    "summary_manifest.json": "c25847b1273016880e2bd8d431caac19832a4ad52c7b40e900259d470ec05069"
+  },
+  "validation_result": "passed_before_atomic_replacement"
+}

@@ -1,0 +1,49 @@
+{
+  "repair_version": "final_pre_prompt4_stability_repair_v2",
+  "reason": "saved-selection stability and central-summary metadata repair",
+  "status": "committed",
+  "transaction_status": "NEW_TRANSACTION",
+  "transaction_outcome": "NEW_TRANSACTION",
+  "transaction_version": "atomic_registry_transaction_v2",
+  "schema_version": "reverse_transfer_registry_v2",
+  "canonicalization_version": "schema_aware_registry_v2",
+  "timestamp": "2026-06-30T06:07:58.365857+00:00",
+  "commit_boundary": "validated_transaction_manifest_atomic_replacement",
+  "transaction_id": "202c780944f871dfee6dccff1654ac9cf386ae4574d327e5667a11982652a8d9",
+  "registry_paths": [
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/feature_stability_metrics.csv",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/feature_stability_metrics.csv",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/evaluate_stage_manifest.json",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.json",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.json",
+    "D:/python projects/Research/results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/repair_manifest.json",
+    "D:/python projects/Research/results/research_summary/summary_manifest.json"
+  ],
+  "original_file_existence": {
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/feature_stability_metrics.csv": true,
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/feature_stability_metrics.csv": true,
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/evaluate_stage_manifest.json": true,
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.json": true,
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.json": true,
+    "D:/python projects/Research/results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/repair_manifest.json": false,
+    "D:/python projects/Research/results/research_summary/summary_manifest.json": true
+  },
+  "pre_transaction_hashes": {
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/feature_stability_metrics.csv": "0fffa42968e128bdaf46e6eb66b3177ac32a8923987c9c0a720a7f1f45a56a32",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/feature_stability_metrics.csv": "1a8887bf3b6125e1b1a18c7d7d79fad485c26e84e3b0d16e2a013189beeca302",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/evaluate_stage_manifest.json": "83b5c390e1b4c8bdf350a0961f768c0acb64c715300f6c462a55e3b2dfd9149b",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.json": "511a194a28b43fc74fce55ebc59c5f996f111b3a4c2bb0b02c5cd918a4e75009",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.json": "013e0b414305256497f20adcb56dcf62b9f59a7fd5f72268ad288d43f045ffcd",
+    "D:/python projects/Research/results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/repair_manifest.json": null,
+    "D:/python projects/Research/results/research_summary/summary_manifest.json": "8262e05bfb5c89ec9f7ec1399d9b146f952ba678039db68dd1a8d9f1c1919125"
+  },
+  "updated_files": {
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression/features/feature_stability_metrics.csv": "1cc9b647ae2b28fbbe5d473a372ca67f19154178937064c15852513a2df32b73",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/downstream/catboost/features/feature_stability_metrics.csv": "2e139a42d305361cc1465301b64583d13b5a8f27422a3f3728eca5e854572e40",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/evaluate_stage_manifest.json": "b96a9faf0eac23b7ed3c7ea7ee7659c9d7a6217fe8447e5f527c40db764ee6f3",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.json": "95497dd5b0997df27e0282d69fcdaa99f1984fbefc5ad705e7fb5a8ef3ecae44",
+    "D:/python projects/Research/results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.json": "7b30380035268bb3297eb4309830b248a263f15a61eb9314ba9a7f4976db25f9",
+    "D:/python projects/Research/results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/repair_manifest.json": "a4bb70460d157cfab8afbe05cd182514aaa18c947de91694f49cd9801b40cfab",
+    "D:/python projects/Research/results/research_summary/summary_manifest.json": "5fdbd8b7d4af145c588e06d71b2d2b9135fe8c52ba1598fb7447df6820bbbaf2"
+  }
+}

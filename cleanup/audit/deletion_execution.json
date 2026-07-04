@@ -1,0 +1,1721 @@
+{
+  "groups": [
+    {
+      "bytes_removed": 294020463,
+      "categories": [
+        "DRY_RUN_OR_SMOKE_OUTPUT",
+        "DUPLICATE_CONTENT",
+        "FAILED_OR_INCOMPLETE_OUTPUT",
+        "INVALID_SCIENTIFIC_OUTPUT",
+        "SUPERSEDED_VALID_OUTPUT"
+      ],
+      "completed_at_utc": "2026-07-04T06:35:04.492078+00:00",
+      "directories_removed": 141,
+      "entries": [
+        {
+          "bytes_removed": 94969157,
+          "category": "FAILED_OR_INCOMPLETE_OUTPUT",
+          "directories_removed": 13,
+          "files_removed": 42,
+          "path": "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression.incomplete_oof_overlap_20260629",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 8411,
+          "category": "DRY_RUN_OR_SMOKE_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 2,
+          "path": "results/clip/text_baseline/dry_run",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 73624,
+          "category": "DRY_RUN_OR_SMOKE_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 3,
+          "path": "results/clip/statistical_baseline/dry_run",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 1933061,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 10,
+          "files_removed": 51,
+          "path": "results/clip_v2/training",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 3403422,
+          "category": "DUPLICATE_CONTENT",
+          "directories_removed": 2,
+          "files_removed": 17,
+          "path": "results/clip_v2/text_baseline",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 1006314,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 2,
+          "path": "results/clip_v2/selector_integration",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 187232613,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 104,
+          "files_removed": 389,
+          "path": "results/clip_v2/final_evaluation",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 1117992,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 2,
+          "files_removed": 22,
+          "path": "results/clip_v2/final_analysis",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 631014,
+          "category": "DRY_RUN_OR_SMOKE_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 7,
+          "path": "results/clip_v2/dry_run",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 749519,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 13,
+          "path": "results/clip_v2/contrastive_data",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 5489,
+          "category": "DRY_RUN_OR_SMOKE_OUTPUT",
+          "directories_removed": 1,
+          "files_removed": 3,
+          "path": "results/clip_pairing_repair/smoke",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 524239,
+          "category": "SUPERSEDED_VALID_OUTPUT",
+          "directories_removed": 2,
+          "files_removed": 11,
+          "path": "results/final_research_package",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 411,
+          "category": "FAILED_OR_INCOMPLETE_OUTPUT",
+          "directories_removed": 2,
+          "files_removed": 1,
+          "path": "results/corrected_lendingclub_to_homecredit_transfer_failed_20260629_140834",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 421,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_scientific_verdict.md",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 9512,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_reproducibility_manifest.json",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 1207,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_limitations.md",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 3156,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_credit_risk_report.pdf",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 4677,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_credit_risk_report.md",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 2805,
+          "category": "INVALID_SCIENTIFIC_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "reports/final_clip_credit_risk_report.docx",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 2204463,
+          "category": "SUPERSEDED_VALID_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "report_input_bundle/03_REPORT_PLOTS.pdf",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 138956,
+          "category": "SUPERSEDED_VALID_OUTPUT",
+          "directories_removed": 0,
+          "files_removed": 1,
+          "path": "report_input_bundle/02_REPORT_TABLES.xlsx",
+          "status": "deleted"
+        }
+      ],
+      "files_removed": 571,
+      "started_at_utc": "2026-07-04T06:35:03.311874+00:00"
+    },
+    {
+      "bytes_removed": 2931485,
+      "categories": [
+        "MIGRATION_BACKUP"
+      ],
+      "completed_at_utc": "2026-07-04T06:36:09.628356+00:00",
+      "directories_removed": 39,
+      "entries": [
+        {
+          "bytes_removed": 313762,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 1,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260704T060945Z/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 515168,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 1,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T135128Z/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 487569,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 1,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134725Z/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 487569,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 1,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134550Z/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 35220,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 5,
+          "files_removed": 8,
+          "path": "results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/staged",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 26224,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 10,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/final_pre_prompt4_stability_repair_v2/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 35220,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 5,
+          "files_removed": 8,
+          "path": "results/research_summary/migrations/final_pre_prompt4_stability_repair_v1/staged",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 16844,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 10,
+          "files_removed": 4,
+          "path": "results/research_summary/migrations/final_pre_prompt4_stability_repair_v1/backups",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 487569,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 2,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T133751Z",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 487569,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 2,
+          "files_removed": 6,
+          "path": "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T133634Z",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 38771,
+          "category": "MIGRATION_BACKUP",
+          "directories_removed": 1,
+          "files_removed": 5,
+          "path": "results/corrected_lendingclub_to_homecredit_transfer_implementation_backup",
+          "status": "deleted"
+        }
+      ],
+      "files_removed": 67,
+      "started_at_utc": "2026-07-04T06:36:09.507409+00:00"
+    },
+    {
+      "bytes_removed": 0,
+      "categories": [
+        "UNUSED_CODE"
+      ],
+      "completed_at_utc": "2026-07-04T06:36:53.631419+00:00",
+      "directories_removed": 0,
+      "entries": [
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/selectors/clip_then_mrmr.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/selectors/clip_screening.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/repairs/reverse_transfer_stability.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/repairs/__init__.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/v1_freeze.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/statistical_validation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/statistical_schema.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/statistical_fields.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/statistical_baseline.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/selector_validation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/selector_adapter.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/score_cache.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/evaluation_aggregation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Notebooks/archive/lendingclub/eda.ipynb",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Notebooks/archive/homecredit/test_prediction.ipynb",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Notebooks/archive/homecredit/data_prep.ipynb",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Notebooks/archive/homecredit/analysis.ipynb",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_v2_semantic_map.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_v2_pipeline_orchestrator.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_v2_execution_pipeline.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_v2_audit.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_v1_freeze_and_v2_boundaries.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_statistical_fields.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_statistical_external_validation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_statistical_baseline.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_significance.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_selector_registry.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_selector_integration.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_selector_cache.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_selector_behavior.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_prediction_artifacts.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_metric_consistency.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_final_report_figures.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_final_evaluation_recovery.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_final_evaluation_config.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_final_analysis.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_evaluation_aggregation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/test_clip_baseline_comparison.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/conftest.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Notebooks/archive/final_report_analysis_plots.ipynb",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/STATISTICAL_BASELINE.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/CLIP_V2_METHODOLOGY.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/CLIP_V1_FREEZE.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/CLIP_TRAINING.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/CLIP_SELECTOR_INTEGRATION.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/clip/CLIP_FINAL_EVALUATION.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/experiments/clip_lendingclub_v2_matrix.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/experiments/clip_homecredit_matrix.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip_v2/training.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip_v2/selector.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip_v2/evaluation.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip_v2/contrastive_data.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip_v2/analysis.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip/training.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip/statistical_baseline.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip/selector.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "configs/clip/contrastive_data.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "utils/logging_config.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "utils/feature_metadata.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "training/oot_trainer.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "training/kfold_trainer.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "training/fold.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "training/cv_utils.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/validate_clip_v2_selector_integration.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/validate_clip_selector_integration.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/validate_clip_pairing_repair.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/train_clip_v2_encoder.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/train_clip_encoder.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/strengthen_final_report_artifacts.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_statistical_comparison.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_single_experiment.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_llm_vs_statistical.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_hybrid_comparison.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_corrected_reverse_transfer_all.ps1",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_clip_v2_pipeline.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_clip_v2_final_evaluation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_clip_final_evaluation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/run_all_experiments.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/repair_reverse_transfer_stability.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/rebuild_clip_v2_evaluation_aggregates.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/rebuild_clip_evaluation_aggregates.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/plan_clip_v2_ablation.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/migrate_registry_artifact_integrity.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/freeze_clip_v1.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/finalize_corrected_homecredit_clip.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/check_research_setup.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_review_support_artifacts.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_v2_final_analysis.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_v2_contrastive_data.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_statistical_baseline.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_final_report_figures.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_final_analysis.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/build_clip_contrastive_data.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/audit_clip_v2.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "report_input_bundle/01_REPORT_EVIDENCE.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Preprocessing/preprocessing.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Preprocessing/feature_engineering.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Preprocessing/data_process.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Preprocessing/__init__.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "pipelines/comparison.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "pipelines/common.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "pipelines/__init__.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Models/utils.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Models/random_forest_model.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Models/logistic_regression_model.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Models/catboost_model.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/README.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/pca.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/mrmr.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/missing_filter.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/llm_selector.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/hybrid.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/boruta_rfe.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/tracking.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/statistical_baselines.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/single_experiment.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/run_all.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/matrix.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/llm_vs_statistical.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/hybrid_comparison.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/config.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/common.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/__init__.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/stability_scores.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/shapley.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/plotting.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/metrics.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/feature_utils.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/feature_stability.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/RESEARCH_IMPLEMENTATION_REPORT.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "docs/PROJECT_STRUCTURE.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "test.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "RUNS.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "run_experiment.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "report.md",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "plots.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "main.py",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "config.yaml",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "UNUSED_CODE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "_legacy_shim.py",
+          "status": "already_absent"
+        }
+      ],
+      "files_removed": 0,
+      "started_at_utc": "2026-07-04T06:36:53.615359+00:00"
+    },
+    {
+      "bytes_removed": 709646,
+      "categories": [
+        "TEMPORARY_OR_CACHE"
+      ],
+      "completed_at_utc": "2026-07-04T06:42:32.062331+00:00",
+      "directories_removed": 15,
+      "entries": [
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/feature_engineering/lendingclub/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/feature_engineering/homecredit/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/utils/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/selectors/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/reporting/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/repairs/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/preprocessing/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/pipelines/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/models/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/feature_metadata/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/feature_engineering/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/experiments/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/evaluation/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/data/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/clip/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/pipelines/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/clip/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "src/credit_risk_fs/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "cleanup/tools/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "utils/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "training/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "scripts/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Preprocessing/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "pipelines/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "Models/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "feature_selection/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "experiments/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "evaluation/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "credit_risk_fs/__pycache__",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": "tests_runtime",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 652605,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 4,
+          "files_removed": 6,
+          "path": "catboost_info",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 52797,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 1,
+          "files_removed": 13,
+          "path": "__pycache__",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 1,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 1,
+          "files_removed": 2,
+          "path": ".uv-tools",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 3545,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 6,
+          "files_removed": 8,
+          "path": ".uv-cache",
+          "status": "deleted"
+        },
+        {
+          "bytes_removed": 0,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 0,
+          "files_removed": 0,
+          "path": ".tmp",
+          "status": "already_absent"
+        },
+        {
+          "bytes_removed": 698,
+          "category": "TEMPORARY_OR_CACHE",
+          "directories_removed": 3,
+          "files_removed": 5,
+          "path": ".pytest_cache",
+          "status": "deleted"
+        }
+      ],
+      "files_removed": 34,
+      "started_at_utc": "2026-07-04T06:42:32.001620+00:00"
+    }
+  ],
+  "version": "cleanup_deletion_execution_v1"
+}

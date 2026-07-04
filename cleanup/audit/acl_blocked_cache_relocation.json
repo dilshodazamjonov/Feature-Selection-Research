@@ -1,0 +1,16 @@
+{
+  "version": "acl_blocked_cache_relocation_v1",
+  "reason": "Windows ACL denied recursive read/delete and permission repair for generated pytest directories",
+  "ownership_repair": "failed_access_denied",
+  "acl_reset": "failed_access_denied",
+  "external_root": "D:/python projects/Research_pre_cleanup_backup_20260704/acl_blocked_caches",
+  "moved_out_of_repository": [
+    ".tmp",
+    "tests_runtime"
+  ],
+  "retained_review_required": [
+    ".pytest_tmp",
+    "pytest_tmp"
+  ],
+  "scientific_dependency": false
+}

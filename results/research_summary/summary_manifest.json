@@ -1,0 +1,119 @@
+{
+  "registry_version": "research_evidence_registry_v1",
+  "generated_without_experiments": true,
+  "models_trained": false,
+  "models_evaluated": false,
+  "feature_selection_executed": false,
+  "embeddings_generated": false,
+  "clip_scores_recomputed": false,
+  "original_artifacts_moved_renamed_deleted_or_modified": true,
+  "repaired_pairing_policy_version": "identity_equivalence_v2",
+  "invalid_old_pairing_policy_version": "faulty_source_table_mask_pre_identity_equivalence_v2",
+  "run_counts": {
+    "reusable_existing": 32,
+    "invalid_pairing_policy": 0,
+    "newly_executed": 11,
+    "total": 43
+  },
+  "artifact_counts": {
+    "invalid_pairing_policy": 0,
+    "reusable_existing": 312,
+    "newly_executed": 236,
+    "unknown_requires_review": 0,
+    "total": 548
+  },
+  "reusable_metric_rows": 38,
+  "selected_feature_artifact_rows": 38,
+  "future_execution_contract": "Execute only genuinely new professor-requested experiments or experiments invalidated by the old CLIP pairing policy. Reuse all verified valid comparison experiments through the registry. Do not rerun a completed valid experiment merely because it is required in a final comparison.",
+  "equivalence_fields": [
+    "dataset",
+    "method",
+    "model",
+    "seed",
+    "split definition",
+    "feature budget",
+    "configuration hash",
+    "data-manifest hash",
+    "pairing-policy version"
+  ],
+  "required_result_origin_values": [
+    "reused_existing",
+    "newly_executed"
+  ],
+  "invalid_old_policy_rows_allowed_in_final_scientific_comparison": false,
+  "later_agents_read_first": [
+    "results/research_summary/run_index.csv",
+    "results/research_summary/results_access_guide.md",
+    "results/research_summary/summary_manifest.json"
+  ],
+  "deleted_experiment_matrix_restored": false,
+  "legacy_clip_v1_artifacts_restored": false,
+  "registry_file_hashes": {
+    "results/research_summary/run_index.csv": "cbef4a487252a06a5e3279d75262a3ed1ecba42a89e90f42a3077e1a93c9339e",
+    "results/research_summary/artifact_registry.csv": "14c5ae3518c977194d35906f408ad935eb17008c46f7fede09575a76fad891e5",
+    "results/research_summary/reusable_metrics.csv": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+    "results/research_summary/selected_feature_registry.csv": "7efea919e3507a277e58708b56eae499ad0028457916e800bc161ec0b6432a82",
+    "results/research_summary/results_access_guide.md": "1bb6f5b907d0d046a9ba4e18c30bab11b318a2a5045c45f3d3f8db42c7ccd90c"
+  },
+  "corrected_homecredit_clip": {
+    "status": "pass_after_provenance_fix",
+    "pairing_policy_version": "identity_equivalence_v2",
+    "seeds_completed": 5,
+    "projected_features": 436,
+    "new_runs": 4,
+    "comparison_path": "results/corrected_homecredit_clip/combined_pipeline/comparison_table.csv",
+    "provenance_fix_path": "results/corrected_homecredit_clip/provenance_fix",
+    "prediction_row_id_limitation_documented": true,
+    "future_prediction_row_id_required": true
+  },
+  "registry_integrity_migration": {
+    "migration_version": "registry_artifact_identity_migration_v1",
+    "artifact_identity_version": "canonical_artifact_identity_v1",
+    "reason": "replace content-only truncated artifact IDs that mapped to multiple canonical paths",
+    "repaired_artifact_rows": 0,
+    "normalized_output_folders": 0,
+    "missing_historical_artifacts_marked_absent": 0,
+    "foreign_key_hashes_repaired": 0,
+    "derived_artifact_references_repaired": 1
+  },
+  "corrected_lendingclub_to_homecredit_transfer": {
+    "status": "executed",
+    "source_dataset": "lendingclub_v2",
+    "external_dataset": "homecredit",
+    "pairing_policy_version": "identity_equivalence_v2",
+    "new_runs": 2,
+    "stable_prediction_row_ids": true,
+    "dev_metric_scope": "dev_oof_cross_validated",
+    "raw_dev_statistical_evidence_hash": "a13e43ce46d3175398e50959966020d8020c218dda0367c0a4d4fe8a4207f992",
+    "output_root": "results/corrected_lendingclub_to_homecredit_transfer"
+  },
+  "invalid_policy_registry_cleanup": {
+    "migration_version": "final_repository_cleanup_invalid_policy_tombstone_v1",
+    "tombstone_path": "results/finalized_research/audit/history/invalid_old_policy_registry_tombstones.json",
+    "tombstone_sha256": "b26a1c155094af8dff30ec6e8492a476a5eb52bc68b45511bc1065e6761a9e63",
+    "removed_run_rows": 14,
+    "removed_artifact_rows": 491,
+    "removed_metric_rows": 0,
+    "removed_selected_feature_rows": 8,
+    "external_backup_sha256": "4036da53c4e91074cd84a4c561981eeb35923b125925c7dd9fedceabbb762e4d"
+  },
+  "non_scientific_smoke_cleanup": {
+    "migration_version": "final_repository_cleanup_non_scientific_smoke_tombstone_v1",
+    "removed_artifact_rows": 3,
+    "tombstone_path": "results/finalized_research/audit/history/non_scientific_smoke_registry_tombstones.json",
+    "tombstone_sha256": "2946cd9d8f9c7bcf050d3cce8f7b41eca4de41e76319a51bf430fdb80ca9dcb0"
+  },
+  "final_repository_cleanup": {
+    "status": "completed_and_validated",
+    "timestamp": "2026-07-04T06:43:25.125549+00:00",
+    "canonical_entry_point": "results/finalized_research/README.md",
+    "deletion_manifest": "cleanup/audit/deletion_manifest.csv",
+    "deletion_manifest_sha256": "a43311a55cb816c9540e32d1d39bfaef68c22adef0822f922608e048ad5c84af",
+    "deletion_execution": "cleanup/audit/deletion_execution.json",
+    "deletion_execution_sha256": "1b0b6212512e9862981190a212719d9db39f6a2444569a8ded90cd93417b625a",
+    "external_backup_manifest": "cleanup/audit/external_backup_manifest.json",
+    "external_backup_manifest_sha256": "749d2c7cbb4da47311118fba43b3690b8a1f6fa2562c5ff23f9ebffe47bed83e",
+    "invalid_old_policy_outputs_active": false,
+    "non_scientific_smoke_outputs_active": false
+  }
+}

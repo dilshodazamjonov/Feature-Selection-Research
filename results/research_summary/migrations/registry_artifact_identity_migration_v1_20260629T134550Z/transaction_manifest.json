@@ -1,0 +1,50 @@
+{
+  "migration_version": "registry_artifact_identity_migration_v1",
+  "artifact_identity_version": "canonical_artifact_identity_v1",
+  "identity_change_count": 23,
+  "status": "committed",
+  "transaction_status": "NEW_TRANSACTION",
+  "transaction_outcome": "NEW_TRANSACTION",
+  "transaction_version": "atomic_registry_transaction_v2",
+  "schema_version": "reverse_transfer_registry_v2",
+  "canonicalization_version": "schema_aware_registry_v2",
+  "timestamp": "2026-06-29T13:45:52.765819+00:00",
+  "commit_boundary": "validated_transaction_manifest_atomic_replacement",
+  "transaction_id": "aa73975de00078b83af51da78f91eb1865ce2e87376d9dc06703f70ac9f86358",
+  "registry_paths": [
+    "results/research_summary/run_index.csv",
+    "results/research_summary/artifact_registry.csv",
+    "results/research_summary/reusable_metrics.csv",
+    "results/research_summary/selected_feature_registry.csv",
+    "results/research_summary/results_access_guide.md",
+    "results/research_summary/summary_manifest.json",
+    "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134550Z/migration_manifest.json"
+  ],
+  "original_file_existence": {
+    "results/research_summary/run_index.csv": true,
+    "results/research_summary/artifact_registry.csv": true,
+    "results/research_summary/reusable_metrics.csv": true,
+    "results/research_summary/selected_feature_registry.csv": true,
+    "results/research_summary/results_access_guide.md": true,
+    "results/research_summary/summary_manifest.json": true,
+    "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134550Z/migration_manifest.json": false
+  },
+  "pre_transaction_hashes": {
+    "results/research_summary/run_index.csv": "52de367b3bbfd35f58158749f1a462e29a89d36514f473edfe30fb0171ba80cc",
+    "results/research_summary/artifact_registry.csv": "c0d0a200eb851cce15923b285af5cd7f8504eda96c78617df71f4975adc09e71",
+    "results/research_summary/reusable_metrics.csv": "bb310b52f722ee657a7c9dd7c31e583b0dbf2bb97f73c52f4bf60df354cc84a7",
+    "results/research_summary/selected_feature_registry.csv": "78add4b53f770dd2c794b4792b6e34eef6051805942ccf7fa2fd6708d0a2963c",
+    "results/research_summary/results_access_guide.md": "38b8c925cd86dbd4d6de05c345f5e566e39fd792ef4a1a5acfbd0a23440194cf",
+    "results/research_summary/summary_manifest.json": "52ddd4e90d245068f190ab8902ae4da2f3b48644c03c92793706d7af7c7b3ab0",
+    "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134550Z/migration_manifest.json": null
+  },
+  "updated_files": {
+    "results/research_summary/run_index.csv": "52de367b3bbfd35f58158749f1a462e29a89d36514f473edfe30fb0171ba80cc",
+    "results/research_summary/artifact_registry.csv": "11bb8645c7ece5fb694d22c0a1a9e6f898c2caa36cfbdea30fbb60f3116fcc19",
+    "results/research_summary/reusable_metrics.csv": "aeea7bce7926673ae760c82d17f9db7787ff0f0162f16edccdd9f688ca969135",
+    "results/research_summary/selected_feature_registry.csv": "076a43f3e9dc0672fe0500875e1df3b20c98d8e10852412f8ac4af85ebbcf608",
+    "results/research_summary/results_access_guide.md": "f462eae738b322065885bbba1c0f4756faddbc5111ff18e319e29533ba26605d",
+    "results/research_summary/summary_manifest.json": "409ab10f3421176ed6df287f755dfedeed66bcf056a31666c0d61762a15c5328",
+    "results/research_summary/migrations/registry_artifact_identity_migration_v1_20260629T134550Z/migration_manifest.json": "d77820172633904f825df7b132fb4df01eeca6ecab3827fdd6a6c33b947a3ae6"
+  }
+}

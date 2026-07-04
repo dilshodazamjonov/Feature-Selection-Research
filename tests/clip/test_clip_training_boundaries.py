@@ -4,7 +4,7 @@ from credit_risk_fs.clip.training_validation import load_and_validate_training_i
 
 
 def test_training_inputs_enforce_homecredit_train_and_external_lendingclub_only():
-    config = load_training_config()
+    config = load_training_config("configs/corrected_homecredit_clip/training.yaml")
     data = load_and_validate_training_inputs(config)
 
     assert set(data.train_pairs["dataset"]) == {"homecredit"}
@@ -14,12 +14,12 @@ def test_training_inputs_enforce_homecredit_train_and_external_lendingclub_only(
     assert not data.validation_pairs["allowed_for_training"].any()
     assert set(data.external_pairs["dataset"]) == {"lendingclub_v2"}
     assert not data.external_pairs["allowed_for_training"].any()
-    assert data.statistical_dim == 1
-    assert config.statistical_view_scope == "missingness_only"
+    assert data.statistical_dim == 13
+    assert config.statistical_view_scope == "compact_target_free_v2"
 
 
 def test_forbidden_fields_are_absent_from_pair_inputs():
-    config = load_training_config()
+    config = load_training_config("configs/corrected_homecredit_clip/training.yaml")
     data = load_and_validate_training_inputs(config)
     columns = set(data.train_pairs.columns).union(data.validation_pairs.columns).union(data.external_pairs.columns)
 

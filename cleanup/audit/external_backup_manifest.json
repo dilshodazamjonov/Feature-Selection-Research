@@ -1,0 +1,43 @@
+{
+  "backup_path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\scientific_cleanup_candidates.zip",
+  "backup_sha256": "4036da53c4e91074cd84a4c561981eeb35923b125925c7dd9fedceabbb762e4d",
+  "backup_size_bytes": 90490889,
+  "backup_version": "final_repository_cleanup_external_backup_v1",
+  "crc_validation": "passed",
+  "created_at_utc": "2026-07-04T06:07:01.469960+00:00",
+  "invalid_reports": [
+    "reports/final_clip_credit_risk_report.docx",
+    "reports/final_clip_credit_risk_report.md",
+    "reports/final_clip_credit_risk_report.pdf",
+    "reports/final_clip_limitations.md",
+    "reports/final_clip_reproducibility_manifest.json",
+    "reports/final_clip_scientific_verdict.md"
+  ],
+  "member_count": 580,
+  "registry_files": [
+    "results/research_summary/run_index.csv",
+    "results/research_summary/artifact_registry.csv",
+    "results/research_summary/reusable_metrics.csv",
+    "results/research_summary/selected_feature_registry.csv",
+    "results/research_summary/results_access_guide.md",
+    "results/research_summary/summary_manifest.json"
+  ],
+  "repository_root": "D:\\python projects\\Research",
+  "scientific_candidate_roots": [
+    "results/final_research_package",
+    "results/corrected_lendingclub_to_homecredit_transfer_failed_20260629_140834",
+    "results/corrected_lendingclub_to_homecredit_transfer/downstream/logistic_regression.incomplete_oof_overlap_20260629",
+    "results/corrected_lendingclub_to_homecredit_transfer_implementation_backup",
+    "results/clip/statistical_baseline/dry_run",
+    "results/clip/text_baseline/dry_run",
+    "results/clip_pairing_repair/smoke",
+    "results/clip_v2/contrastive_data",
+    "results/clip_v2/dry_run",
+    "results/clip_v2/final_analysis",
+    "results/clip_v2/final_evaluation",
+    "results/clip_v2/selector_integration",
+    "results/clip_v2/text_baseline",
+    "results/clip_v2/training"
+  ],
+  "uncompressed_size_bytes": 292231085
+}

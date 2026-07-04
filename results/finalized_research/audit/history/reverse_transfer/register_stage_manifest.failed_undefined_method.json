@@ -1,0 +1,19 @@
+{
+  "stage": "register",
+  "status": "in_progress",
+  "configuration_hash": "f20630b9efcaaaff7e47ec30d4f66b0c94d8c29d50160bf45377b52a4a5cdc6a",
+  "source_dataset": "lendingclub_v2",
+  "external_dataset": "homecredit",
+  "pairing_policy_version": "identity_equivalence_v2",
+  "requested_seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "requested_models": [
+    "lr",
+    "catboost"
+  ]
+}

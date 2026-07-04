@@ -1,0 +1,32 @@
+{
+  "external_backup_manifest": "cleanup/audit/external_backup_manifest.json",
+  "migration_version": "final_repository_cleanup_invalid_policy_tombstone_v1",
+  "post_migration_hashes": {
+    "results/finalized_research/audit/history/invalid_old_policy_registry_tombstones.json": "b26a1c155094af8dff30ec6e8492a476a5eb52bc68b45511bc1065e6761a9e63",
+    "results/research_summary/artifact_registry.csv": "30443ca493a1c1cbe820f1c9d2530308b75d3e6a2a90f342909509f409fe2257",
+    "results/research_summary/results_access_guide.md": "7b808909d3bf5c884272aec8544023086f39435069129a5ae918ac53306ac1eb",
+    "results/research_summary/reusable_metrics.csv": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+    "results/research_summary/run_index.csv": "cbef4a487252a06a5e3279d75262a3ed1ecba42a89e90f42a3077e1a93c9339e",
+    "results/research_summary/selected_feature_registry.csv": "7efea919e3507a277e58708b56eae499ad0028457916e800bc161ec0b6432a82",
+    "results/research_summary/summary_manifest.json": "23ada00c06378cf829921e6843aa0d10f4e9a758bb7247d85c79747383a17feb"
+  },
+  "pre_migration_hashes": {
+    "artifact_registry.csv": "f0a35316ca261ae9ecd0eb6a0af4e80d73f6d52ca3101fc2a68abcb3d1363bb4",
+    "results_access_guide.md": "0b6e86085b6ecc26c87cadb330fbcc46542fde1ce9dca1670f3ee73ee3eec2ad",
+    "reusable_metrics.csv": "d85d7c4cc31d712db350e74bffb0350875d2f76ee57be9242f4c9e18292482b8",
+    "run_index.csv": "a388a6671f4112cbbf5ad11442e8af6b393a1a3ba1f71af4de1e63c2555481a0",
+    "selected_feature_registry.csv": "277ac5dcd6784e292868eb7e35ebadf0499ec9ec65f5939517af3169fff9deb8",
+    "summary_manifest.json": "5fdbd8b7d4af145c588e06d71b2d2b9135fe8c52ba1598fb7447df6820bbbaf2"
+  },
+  "reason": "tombstone invalid old-policy rows before artifact deletion",
+  "registry_schema_version": "reverse_transfer_registry_v2",
+  "removed_row_counts": {
+    "artifact_registry.csv": 491,
+    "reusable_metrics.csv": 0,
+    "run_index.csv": 14,
+    "selected_feature_registry.csv": 8
+  },
+  "timestamp": "2026-07-04T06:09:21.829529+00:00",
+  "tombstone_path": "results/finalized_research/audit/history/invalid_old_policy_registry_tombstones.json",
+  "validation": "passed_before_atomic_replacement"
+}

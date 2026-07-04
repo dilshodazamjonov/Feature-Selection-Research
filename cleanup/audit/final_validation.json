@@ -1,0 +1,24 @@
+{
+  "active_run_paths_verified": 165,
+  "active_runs": 43,
+  "canonical_artifacts_verified": 2341,
+  "package_generated_files": 18,
+  "package_paths_verified": 58,
+  "package_source_artifacts": 40,
+  "pending_inputs": {
+    "feature_level_drift": 71,
+    "llm_cost_scalability": 111,
+    "significance": 205
+  },
+  "registry_bundle": "passed",
+  "registry_rows": {
+    "artifact_registry.csv": 548,
+    "reusable_metrics.csv": 38,
+    "run_index.csv": 43,
+    "selected_feature_registry.csv": 38
+  },
+  "removed_paths_verified_absent": 12,
+  "successful_stage_artifacts_verified": 117,
+  "successful_stage_manifests_verified": 5,
+  "summary_manifest": "passed"
+}

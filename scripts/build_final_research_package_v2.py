@@ -1481,7 +1481,6 @@ def validate_outputs(expected_files: list[Path]) -> dict:
 
 
 def main() -> None:
-    assert (ROOT / "results/final_research_package").exists()
     OUT.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
     DIAG.mkdir(parents=True, exist_ok=True)

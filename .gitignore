@@ -13,7 +13,7 @@ wheels/
 # files 
 *.csv
 *.parquet
-data/
+/data/
 *.pkl
 outputs/
 results*/

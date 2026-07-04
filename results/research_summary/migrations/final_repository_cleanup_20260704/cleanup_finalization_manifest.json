@@ -1,0 +1,8 @@
+{
+  "deletion_execution_sha256": "1b0b6212512e9862981190a212719d9db39f6a2444569a8ded90cd93417b625a",
+  "deletion_manifest_sha256": "a43311a55cb816c9540e32d1d39bfaef68c22adef0822f922608e048ad5c84af",
+  "summary_manifest_sha256": "f7e212872afc5e9768cdb8f6bf3655d03dd20f1f9ed2cc328aa49e03b8f5a6b8",
+  "timestamp": "2026-07-04T06:43:25.125549+00:00",
+  "validation_state": "ready_for_final_validation",
+  "version": "final_repository_cleanup_finalization_v1"
+}

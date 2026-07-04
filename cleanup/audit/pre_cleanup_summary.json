@@ -1,0 +1,16 @@
+{
+  "branch": "main",
+  "commit": "0f86c7c4b9cd24a66c776b69322dedc976a0fd9e",
+  "directory_count": 5473,
+  "excluded_top_level_paths": [
+    ".git",
+    "cleanup"
+  ],
+  "file_count": 42488,
+  "generated_at_utc": "2026-07-04T05:54:47.715459+00:00",
+  "repository_root": "D:\\python projects\\Research",
+  "size_bytes": 14418127790,
+  "status": [
+    "## main...origin/main"
+  ]
+}

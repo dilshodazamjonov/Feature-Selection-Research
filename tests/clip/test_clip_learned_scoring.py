@@ -6,9 +6,10 @@ from credit_risk_fs.utils.io import read_json
 
 
 def test_learned_scores_use_homecredit_anchor_and_keep_lendingclub_external():
-    anchor = read_json("results/clip/training/learned_anchor_manifest.json")
-    home = pd.read_csv("results/clip/training/homecredit_learned_scores.csv")
-    lc = pd.read_csv("results/clip/training/lendingclub_v2_learned_scores.csv")
+    root = "results/corrected_homecredit_clip/training"
+    anchor = read_json(f"{root}/learned_anchor_manifest.json")
+    home = pd.read_csv(f"{root}/homecredit_learned_scores.csv")
+    lc = pd.read_csv(f"{root}/lendingclub_v2_learned_scores.csv")
 
     assert anchor["anchor_dataset"] == "homecredit"
     assert anchor["anchor_count"] == 23
@@ -18,5 +19,5 @@ def test_learned_scores_use_homecredit_anchor_and_keep_lendingclub_external():
     assert set(lc["split"]) == {"external_validation"}
     assert home["learned_rank"].is_unique
     assert lc["learned_rank"].is_unique
-    assert set(home["statistical_view_scope"]) == {"missingness_only"}
-    assert set(lc["statistical_view_scope"]) == {"missingness_only"}
+    assert set(home["statistical_view_scope"]) == {"compact_target_free_v2"}
+    assert set(lc["statistical_view_scope"]) == {"compact_target_free_v2"}

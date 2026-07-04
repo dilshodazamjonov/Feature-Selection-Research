@@ -81,24 +81,26 @@ class TrainingDataBundle:
     statistical_fields: list[str]
 
 
-def load_training_config(path: str | Path = "configs/clip/training.yaml") -> ClipTrainingConfig:
+def load_training_config(
+    path: str | Path = "configs/corrected_homecredit_clip/training.yaml",
+) -> ClipTrainingConfig:
     data = _parse_simple_yaml(Path(path).read_text(encoding="utf-8"))
     model_data = data.get("model", {}) if isinstance(data.get("model"), dict) else {}
     return ClipTrainingConfig(
-        tensor_schema_path=Path(str(data.get("tensor_schema_path", "results/clip/contrastive_data/contrastive_tensor_schema.json"))),
+        tensor_schema_path=Path(str(data.get("tensor_schema_path", "results/corrected_homecredit_clip/contrastive_data/contrastive_tensor_schema.json"))),
         contrastive_pair_manifest_path=Path(
-            str(data.get("contrastive_pair_manifest_path", "results/clip/contrastive_data/contrastive_pair_manifest.json"))
+            str(data.get("contrastive_pair_manifest_path", "results/corrected_homecredit_clip/contrastive_data/contrastive_pair_manifest.json"))
         ),
-        train_pairs_path=Path(str(data.get("train_pairs_path", "results/clip/contrastive_data/homecredit_train_positive_pairs.parquet"))),
+        train_pairs_path=Path(str(data.get("train_pairs_path", "results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet"))),
         validation_pairs_path=Path(
-            str(data.get("validation_pairs_path", "results/clip/contrastive_data/homecredit_validation_positive_pairs.parquet"))
+            str(data.get("validation_pairs_path", "results/corrected_homecredit_clip/contrastive_data/homecredit_validation_positive_pairs.parquet"))
         ),
-        external_pairs_path=Path(str(data.get("external_pairs_path", "results/clip/contrastive_data/lendingclub_v2_external_pairs.parquet"))),
+        external_pairs_path=Path(str(data.get("external_pairs_path", "results/corrected_homecredit_clip/contrastive_data/lendingclub_v2_external_pairs.parquet"))),
         negative_exclusion_pairs_path=Path(
-            str(data.get("negative_exclusion_pairs_path", "results/clip/contrastive_data/negative_exclusion_pairs.parquet"))
+            str(data.get("negative_exclusion_pairs_path", "results/corrected_homecredit_clip/contrastive_data/negative_exclusion_pairs.parquet"))
         ),
         negative_policy_manifest_path=Path(
-            str(data.get("negative_policy_manifest_path", "results/clip/contrastive_data/negative_policy_manifest.json"))
+            str(data.get("negative_policy_manifest_path", "results/corrected_homecredit_clip/contrastive_data/negative_policy_manifest.json"))
         ),
         homecredit_text_embeddings_path=Path(
             str(data.get("homecredit_text_embeddings_path", "results/clip/text_baseline/homecredit_text_embeddings.parquet"))
@@ -107,20 +109,20 @@ def load_training_config(path: str | Path = "configs/clip/training.yaml") -> Cli
             str(data.get("lendingclub_v2_text_embeddings_path", "results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet"))
         ),
         homecredit_statistical_vectors_path=Path(
-            str(data.get("homecredit_statistical_vectors_path", "results/clip/statistical_baseline/homecredit_statistical_vectors.parquet"))
+            str(data.get("homecredit_statistical_vectors_path", "results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet"))
         ),
         lendingclub_v2_statistical_vectors_path=Path(
-            str(data.get("lendingclub_v2_statistical_vectors_path", "results/clip/statistical_baseline/lendingclub_v2_statistical_vectors.parquet"))
+            str(data.get("lendingclub_v2_statistical_vectors_path", "results/clip_v2/statistical_view/lendingclub_v2_statistical_vectors.parquet"))
         ),
         text_embedding_manifest_path=Path(
             str(data.get("text_embedding_manifest_path", "results/clip/text_baseline/embedding_cache_manifest.json"))
         ),
         statistical_preprocessor_path=Path(
-            str(data.get("statistical_preprocessor_path", "results/clip/statistical_baseline/statistical_preprocessor.json"))
+            str(data.get("statistical_preprocessor_path", "results/clip_v2/statistical_view/statistical_preprocessor.json"))
         ),
         source_manifest_path=Path(str(data.get("source_manifest_path", "results/clip/dry_run/training_manifest.json"))),
-        split_manifest_path=Path(str(data.get("split_manifest_path", "results/clip/contrastive_data/split_manifest.json"))),
-        output_dir=Path(str(data.get("output_dir", "results/clip/training"))),
+        split_manifest_path=Path(str(data.get("split_manifest_path", "results/corrected_homecredit_clip/contrastive_data/split_manifest.json"))),
+        output_dir=Path(str(data.get("output_dir", "results/corrected_homecredit_clip/training"))),
         model=ClipModelConfig(
             text_input_dim=int(model_data.get("text_input_dim", 384)),
             statistical_input_dim=int(model_data.get("statistical_input_dim", 1)),

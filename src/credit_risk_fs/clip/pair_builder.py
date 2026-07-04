@@ -23,7 +23,9 @@ from credit_risk_fs.utils.hashing import sha256_file, sha256_text
 from credit_risk_fs.utils.io import read_json, write_json
 
 
-def load_contrastive_data_config(path: str | Path = "configs/clip/contrastive_data.yaml") -> ContrastiveDataConfig:
+def load_contrastive_data_config(
+    path: str | Path = "configs/corrected_homecredit_clip/contrastive_data.yaml",
+) -> ContrastiveDataConfig:
     data = _parse_simple_yaml(Path(path).read_text(encoding="utf-8"))
     return ContrastiveDataConfig(
         manifest_path=Path(str(data.get("manifest_path", "results/clip/dry_run/training_manifest.json"))),
@@ -41,7 +43,9 @@ def load_contrastive_data_config(path: str | Path = "configs/clip/contrastive_da
         exact_dev_duplicate_pairs_path=Path(str(data.get("exact_dev_duplicate_pairs_path", ""))),
         homecredit_feature_text_path=Path(str(data.get("homecredit_feature_text_path", ""))),
         lendingclub_v2_feature_text_path=Path(str(data.get("lendingclub_v2_feature_text_path", ""))),
-        output_dir=Path(str(data.get("output_dir", "results/clip/contrastive_data"))),
+        output_dir=Path(
+            str(data.get("output_dir", "results/corrected_homecredit_clip/contrastive_data"))
+        ),
         seed=int(data.get("seed", 42)),
         training_dataset=str(data.get("training_dataset", "homecredit")),
         external_validation_dataset=str(data.get("external_validation_dataset", "lendingclub_v2")),

@@ -1,0 +1,5 @@
+# Preserve byte-authenticated research and audit artifacts exactly across clones.
+cleanup/audit/** binary
+results/final_research_package_v2/** binary
+results/finalized_research/** binary
+results/research_summary/** binary

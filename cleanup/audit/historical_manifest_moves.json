@@ -1,0 +1,30 @@
+{
+  "moves": [
+    {
+      "destination": "results/finalized_research/audit/history/reverse_transfer/register_stage_manifest.failed_pre_migration_conflict.json",
+      "reason": "compact failed/pre-repair history removed from active manifests",
+      "sha256": "e95e0ec8eaba908e13072f0cf83d3166f47604f43da9a43f5d2fc60935083c68",
+      "source": "results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.failed_pre_migration_conflict.json"
+    },
+    {
+      "destination": "results/finalized_research/audit/history/reverse_transfer/register_stage_manifest.failed_undefined_method.json",
+      "reason": "compact failed/pre-repair history removed from active manifests",
+      "sha256": "e95e0ec8eaba908e13072f0cf83d3166f47604f43da9a43f5d2fc60935083c68",
+      "source": "results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.failed_undefined_method.json"
+    },
+    {
+      "destination": "results/finalized_research/audit/history/reverse_transfer/register_stage_manifest.pre_guide_reference_repair.json",
+      "reason": "compact failed/pre-repair history removed from active manifests",
+      "sha256": "2d84538048926fe0734811e94a341987c6a65252bcdcebe66eb772316b4a1ee4",
+      "source": "results/corrected_lendingclub_to_homecredit_transfer/manifests/register_stage_manifest.pre_guide_reference_repair.json"
+    },
+    {
+      "destination": "results/finalized_research/audit/history/reverse_transfer/registration_transaction_manifest.pre_guide_reference_repair.json",
+      "reason": "compact failed/pre-repair history removed from active manifests",
+      "sha256": "a43d152d674a8254ebe334c991def2085e976031728c992af65fcf6c01e44f1c",
+      "source": "results/corrected_lendingclub_to_homecredit_transfer/manifests/registration_transaction_manifest.pre_guide_reference_repair.json"
+    }
+  ],
+  "timestamp": "2026-07-04T06:36:42.172942+00:00",
+  "version": "historical_manifest_move_v1"
+}

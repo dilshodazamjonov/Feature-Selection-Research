@@ -1,0 +1,76 @@
+{
+  "status": "authenticated_report_diagnostic",
+  "direction": "LendingClub v2 → Home Credit",
+  "coordinates_status": "newly calculated from immutable saved embeddings",
+  "source_embedding_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_embeddings.parquet",
+  "source_embedding_sha256": "9deecbc5831969f4b316576acb597fc000e05163233554d7d067f3cd90d00a9f",
+  "source_manifest_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/reverse_projection_manifest.json",
+  "source_manifest_sha256": "78ceb5c3673fd8eb6f774529e31c326cb568d5aca3ae2c78eadf02c12c447593",
+  "pairing_policy_version": "identity_equivalence_v2",
+  "embedding_rows": 436,
+  "embedding_dimensions": 32,
+  "feature_identity_unique": true,
+  "semantic_labels_complete": true,
+  "semantic_group_count": 11,
+  "umap_settings": {
+    "implementation": "umap.UMAP from umap-learn",
+    "package_version": "0.5.12",
+    "n_neighbors": 15,
+    "min_dist": 0.1,
+    "metric": "cosine",
+    "n_components": 2,
+    "random_state": 42
+  },
+  "knn_procedure": {
+    "validated_task3_replication": true,
+    "metric": "cosine",
+    "k": 10,
+    "implementation": "NearestNeighbors(n_neighbors=11).kneighbors(return_distance=False)[:,1:]"
+  },
+  "shuffle_procedure": {
+    "seed": 20260625,
+    "permutations": 200,
+    "labels_permuted_with_embeddings_fixed": true
+  },
+  "diagnostics": {
+    "direction": "LendingClub v2 → Home Credit",
+    "source_representation": "five-seed corrected LendingClub v2-trained CLIP consensus",
+    "projected_dataset": "Home Credit",
+    "valid_embedding_count": 436,
+    "semantic_group_count": 11,
+    "knn_k": 10,
+    "cosine_knn_purity": 0.7538990825688073,
+    "shuffle_permutations": 200,
+    "shuffled_mean": 0.14014564220183487,
+    "shuffled_p95": 0.15120412844036693,
+    "shuffled_p975": 0.15390481651376145,
+    "umap_trustworthiness": 0.9876015883232063,
+    "excluded_feature_count": 95,
+    "main_exclusion_reasons": "missing_semantic_text_embedding: 95",
+    "semantic_taxonomy": "Home Credit semantic-group taxonomy (11 represented groups)",
+    "comparison_limitations": "The Home Credit and LendingClub taxonomies differ materially; purity values must not be ranked as if labels were identical.",
+    "source_embedding_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/homecredit_reverse_embeddings.parquet",
+    "source_manifest_path": "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/reverse_projection_manifest.json"
+  },
+  "authentication": {
+    "seed_embedding_paths_and_sha256": {
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_11_homecredit_reverse_embeddings.parquet": "6b1d549437aa1672608bd35f193812ad02eb9fa58316defadf74cc0f2a8bf811",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_22_homecredit_reverse_embeddings.parquet": "d1d6ca5990f20722132d8c53a041dac42ade049feb2866f0a617f36dffe2fe4b",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_33_homecredit_reverse_embeddings.parquet": "3d15aa2f0ff2a248808d68625e71140a170f2874b61909569aa33b0dfd75acf7",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_44_homecredit_reverse_embeddings.parquet": "fbca9c9a1c6ec1a71592e60c65e6121e2c93ae063607aad2ac7865e80ca70c42",
+      "results/corrected_lendingclub_to_homecredit_transfer/reverse_projection/seed_55_homecredit_reverse_embeddings.parquet": "d4325c47a1c14df34733b14ad8f5caeb9c3e765c13d0f02e9507ec85f03a13de"
+    },
+    "reference_seed": 11,
+    "alignment_method": "orthogonal_procrustes_svd",
+    "embedding_aggregation": "l2_normalize_align_mean_l2_normalize",
+    "external_refit": false,
+    "feature_reconciliation_rows": 531,
+    "eligible_rows": 436,
+    "excluded_rows": 95
+  },
+  "coordinate_path": "results/final_research_package_v2/diagnostics/reverse_lendingclub_to_homecredit_umap_coordinates.csv",
+  "coordinate_sha256": "ffb3dfe9b461338c97a7736c51e959c6f7fbf394776835b410e3bb1bf69061ef",
+  "figure_path": "results/final_research_package_v2/figures/figure_4_reverse_lendingclub_to_homecredit_umap.png",
+  "figure_sha256": "50eb7481a870c2945c80b1adb64ebb2e2e6f25a1df07d595f69e1eda8090526a",
+  "interpretation_limit": "UMAP axes have no direct substantive interpretation; separate UMAP layouts are not geometrically comparable and do not establish downstream predictive utility."
+}

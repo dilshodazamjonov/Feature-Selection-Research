@@ -5,7 +5,7 @@ from credit_risk_fs.clip.training_validation import load_and_validate_training_i
 
 
 def test_same_seed_smoke_training_reproduces_checkpoint_hash(tmp_path):
-    config = load_training_config()
+    config = load_training_config("configs/corrected_homecredit_clip/training.yaml")
     data = load_and_validate_training_inputs(config)
     snapshot = "test_config_snapshot: true\n"
 
