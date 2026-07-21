@@ -102,9 +102,9 @@ def test_model_specific_selector_budgets_are_applied():
     assert (
         apply_feature_budget_to_selector_kwargs(
             "boruta",
-            {"rfe_kwargs": {"n_features": 40}},
+            {"n_features": 40},
             20,
-        )["rfe_kwargs"]["n_features"]
+        )["n_features"]
         == 20
     )
     assert apply_feature_budget_to_selector_kwargs("pca", {"n_components": 0.95}, 40)[
@@ -116,16 +116,16 @@ def test_model_specific_selector_budgets_are_applied():
     ] == 20
 
 
-def test_boruta_budget_sets_final_cap_without_enabling_rfe():
+def test_boruta_budget_sets_direct_cap_without_rfe_configuration():
     kwargs = apply_feature_budget_to_selector_kwargs(
         "boruta",
-        {"use_rfe": False, "n_features": 40, "rfe_kwargs": {"n_features": 40}},
+        {"n_features": 40},
         20,
     )
 
-    assert kwargs["use_rfe"] is False
     assert kwargs["n_features"] == 20
-    assert kwargs["rfe_kwargs"]["n_features"] == 20
+    assert "use_rfe" not in kwargs
+    assert "rfe_kwargs" not in kwargs
 
 
 def test_temporal_split_validation_stays_after_training():

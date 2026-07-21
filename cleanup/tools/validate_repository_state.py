@@ -193,13 +193,224 @@ def validate_active_paths(root: Path, frames: dict[str, pd.DataFrame]) -> dict[s
     return {"active_runs": len(active_runs), "active_run_paths_verified": len(checked)}
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=Path, default=Path.cwd())
-    parser.add_argument("--output")
-    args = parser.parse_args()
-    root = args.root.resolve()
-    sys.path.insert(0, str(root / "src"))
+def _resolve_active_reference(
+    repository_root: Path,
+    results_root: Path,
+    value: object,
+    *,
+    field: str,
+) -> Path:
+    text = str(value).strip()
+    if not text:
+        raise ValueError(f"active run {field} must not be empty")
+    supplied = Path(text)
+    if ".." in supplied.parts:
+        raise ValueError(f"active run {field} contains path traversal: {text}")
+    candidates = (
+        [supplied.resolve()]
+        if supplied.is_absolute()
+        else [
+            (repository_root / supplied).resolve(),
+            (results_root / supplied).resolve(),
+        ]
+    )
+    for candidate in candidates:
+        try:
+            candidate.relative_to(results_root)
+        except ValueError:
+            continue
+        return candidate
+    raise ValueError(f"active run {field} escapes results root: {text}")
+
+
+def validate_active_results(root: Path) -> dict[str, object]:
+    """Validate the new active-results layout and every registered run."""
+
+    from credit_risk_fs.experiments.result_paths import (  # noqa: PLC0415
+        RESULT_SUBDIRECTORIES,
+        RUN_INDEX_COLUMNS,
+        sanitize_component,
+    )
+    from credit_risk_fs.experiments.tracking import (  # noqa: PLC0415
+        STANDARD_ARTIFACTS,
+    )
+
+    results_root = (root / "results").resolve()
+    if not results_root.is_dir():
+        raise ValueError(f"active results directory missing: {results_root}")
+    readme_path = results_root / "README.md"
+    if not readme_path.is_file():
+        raise ValueError("active results README.md is missing")
+    missing_directories = [
+        name
+        for name in RESULT_SUBDIRECTORIES
+        if not (results_root / name).is_dir()
+    ]
+    if missing_directories:
+        raise ValueError(
+            f"active results directories missing: {missing_directories}"
+        )
+
+    index_path = results_root / "run_index.csv"
+    if not index_path.is_file():
+        raise ValueError("active results run_index.csv is missing")
+    with index_path.open("r", encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file)
+        header = tuple(reader.fieldnames or ())
+        missing_columns = [
+            column for column in RUN_INDEX_COLUMNS if column not in header
+        ]
+        if missing_columns:
+            raise ValueError(
+                f"active run index missing required columns: {missing_columns}"
+            )
+        rows = list(reader)
+
+    run_ids = [str(row["run_id"]).strip() for row in rows]
+    if any(not run_id for run_id in run_ids):
+        raise ValueError("active run index contains an empty run_id")
+    duplicates = sorted(
+        run_id for run_id in set(run_ids) if run_ids.count(run_id) > 1
+    )
+    if duplicates:
+        raise ValueError(f"active run index contains duplicate run IDs: {duplicates}")
+
+    checked_artifacts = 0
+    for row in rows:
+        run_id = str(row["run_id"]).strip()
+        empty_identity_fields = [
+            field
+            for field in ("dataset", "selector", "model", "status")
+            if not str(row[field]).strip()
+        ]
+        if empty_identity_fields:
+            raise ValueError(
+                f"active run {run_id} has empty fields: {empty_identity_fields}"
+            )
+        dataset = sanitize_component(row["dataset"], field_name="dataset")
+        run_directory = _resolve_active_reference(
+            root,
+            results_root,
+            row["run_directory"],
+            field="run_directory",
+        )
+        expected_parent = results_root / "runs" / dataset
+        if run_directory.parent != expected_parent or run_directory.name != run_id:
+            raise ValueError(
+                f"active run directory does not match runs/<dataset>/<run_id>: "
+                f"{row['run_directory']}"
+            )
+        if not run_directory.is_dir():
+            raise ValueError(f"active run directory missing: {row['run_directory']}")
+
+        config_path = _resolve_active_reference(
+            root,
+            results_root,
+            row["config_path"],
+            field="config_path",
+        )
+        manifest_path = _resolve_active_reference(
+            root,
+            results_root,
+            row["manifest_path"],
+            field="manifest_path",
+        )
+        for field, path in (
+            ("config_path", config_path),
+            ("manifest_path", manifest_path),
+        ):
+            try:
+                path.relative_to(run_directory)
+            except ValueError as exc:
+                raise ValueError(
+                    f"active run {field} is outside its run directory: {path}"
+                ) from exc
+            if not path.is_file():
+                raise ValueError(f"active run references missing {field}: {path}")
+
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"active run manifest is unreadable: {manifest_path}") from exc
+        if str(manifest.get("run_id", "")) != run_id:
+            raise ValueError(f"active run manifest run_id mismatch: {manifest_path}")
+        artifacts = manifest.get("artifacts")
+        if not isinstance(artifacts, dict):
+            raise ValueError(
+                f"active run manifest lacks an artifact contract: {manifest_path}"
+            )
+        missing_artifact_entries = sorted(set(STANDARD_ARTIFACTS) - set(artifacts))
+        if missing_artifact_entries:
+            raise ValueError(
+                f"active run manifest omits standard artifact entries: "
+                f"{missing_artifact_entries}"
+            )
+        completed = str(row["status"]).strip().lower() == "completed"
+        for artifact_name, entry in artifacts.items():
+            if not isinstance(entry, dict):
+                raise ValueError(
+                    f"active run artifact entry is invalid: {artifact_name}"
+                )
+            if not isinstance(entry.get("applicable"), bool) or not isinstance(
+                entry.get("present"), bool
+            ):
+                raise ValueError(
+                    f"active run artifact flags must be booleans: {artifact_name}"
+                )
+            applicable = entry["applicable"]
+            present = entry["present"]
+            relative = str(entry.get("path", "")).strip()
+            if applicable and not relative:
+                raise ValueError(
+                    f"active run artifact path is empty: {artifact_name}"
+                )
+            if not relative:
+                continue
+            artifact_path = Path(relative)
+            if artifact_path.is_absolute():
+                raise ValueError(
+                    f"active run artifact path must be relative: {artifact_name}"
+                )
+            if ".." in artifact_path.parts:
+                raise ValueError(
+                    f"active run artifact path contains traversal: {artifact_name}"
+                )
+            resolved_artifact = (run_directory / artifact_path).resolve()
+            try:
+                resolved_artifact.relative_to(run_directory)
+            except ValueError as exc:
+                raise ValueError(
+                    f"active run artifact escapes run directory: {relative}"
+                ) from exc
+            if present and not resolved_artifact.is_file():
+                raise ValueError(
+                    f"active run references missing artifact "
+                    f"{artifact_name}: {resolved_artifact}"
+                )
+            if not present and resolved_artifact.exists():
+                raise ValueError(
+                    f"active run manifest marks existing artifact absent: "
+                    f"{artifact_name}"
+                )
+            if completed and applicable and not present:
+                raise ValueError(
+                    f"completed active run lacks applicable artifact: "
+                    f"{artifact_name}"
+                )
+            checked_artifacts += int(present)
+
+    return {
+        "status": "passed",
+        "required_directories": len(RESULT_SUBDIRECTORIES),
+        "run_index_columns": list(RUN_INDEX_COLUMNS),
+        "registered_runs": len(rows),
+        "artifacts_verified": checked_artifacts,
+    }
+
+
+def validate_legacy_repository(root: Path) -> dict[str, object]:
+    """Run the preserved scientific checks against an explicit legacy checkout."""
+
     from credit_risk_fs.clip.reverse_transfer import (  # noqa: PLC0415
         validate_registry_bundle,
         validate_summary_manifest_payloads,
@@ -209,9 +420,7 @@ def main() -> int:
     frames = {
         name: pd.read_csv(registry_root / name) for name in REGISTRY_FILES
     }
-    validate_registry_bundle(
-        frames, verify_artifacts=True, repository_root=root
-    )
+    validate_registry_bundle(frames, verify_artifacts=True, repository_root=root)
     payloads = {
         registry_root / name: (registry_root / name).read_bytes()
         for name in SUMMARY_PAYLOADS
@@ -220,19 +429,51 @@ def main() -> int:
         (registry_root / "summary_manifest.json").read_text(encoding="utf-8")
     )
     validate_summary_manifest_payloads(
-        summary, registry_root=Path("results/research_summary"), payloads=payloads
+        summary,
+        registry_root=Path("results/research_summary"),
+        payloads=payloads,
     )
-
-    results = {
+    return {
+        "status": "passed",
         "registry_rows": {name: len(frame) for name, frame in frames.items()},
         **validate_active_paths(root, frames),
         **validate_package(root),
         **validate_canonical_manifest(root),
         **validate_stage_manifests(root),
-        **validate_removed_paths(root),
         "pending_inputs": validate_pending(root),
         "summary_manifest": "passed",
         "registry_bundle": "passed",
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--output")
+    parser.add_argument(
+        "--legacy-repository-root",
+        type=Path,
+        default=None,
+        help=(
+            "Optional read-only legacy checkout containing results/research_summary "
+            "and the other historical scientific artifacts."
+        ),
+    )
+    args = parser.parse_args(argv)
+    root = args.root.resolve()
+    sys.path.insert(0, str(root / "src"))
+    legacy = (
+        validate_legacy_repository(args.legacy_repository_root.resolve())
+        if args.legacy_repository_root is not None
+        else {
+            "status": "external_optional",
+            "location": "not configured",
+        }
+    )
+    results = {
+        "active_results": validate_active_results(root),
+        "historical_results": legacy,
+        **validate_removed_paths(root),
     }
     output = json.dumps(results, indent=2, sort_keys=True) + "\n"
     if args.output:

@@ -14,6 +14,7 @@ from openai import OpenAI
 from iv_woe_filter import IVWOEFilter
 from credit_risk_fs.feature_metadata.builder import build_feature_metadata
 from credit_risk_fs.preprocessing.missingness import MissingRateFilter
+from credit_risk_fs.selectors.base import SelectedFeaturesMixin, select_feature_frame
 from credit_risk_fs.utils.logging import setup_logging
 
 dotenv.load_dotenv()
@@ -21,7 +22,7 @@ dotenv.load_dotenv()
 logger = setup_logging("llm_selector", level=logging.INFO)
 
 
-class LLMSelector:
+class LLMSelector(SelectedFeaturesMixin):
     """
     Fold-local LLM ranking selector with prompt-aware shared cache keys.
 
@@ -73,8 +74,7 @@ class LLMSelector:
         self.feature_metadata = feature_metadata
 
         self.ranked_features_: list[str] | None = None
-        self.selected_features: list[str] | None = None
-        self.selected_features_: list[str] | None = None
+        self.selected_features_ = None
         self.artifact_dir: Path | None = None
         self.ranking_artifact_dir: Path | None = None
         self.scope: str = "global"
@@ -593,8 +593,7 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             payload["filtered_invalid_features"] = invalid_features
 
         self.ranked_features_ = valid_ranking
-        self.selected_features = valid_ranking[: self.feature_budget]
-        self.selected_features_ = self.selected_features
+        self.selected_features_ = valid_ranking[: self.feature_budget]
         self.selection_payload_ = payload
 
         self._write_artifacts(payload=payload, metadata=metadata, prompt=prompt)
@@ -603,24 +602,18 @@ Keep the response compact. Do not include per-feature explanations unless absolu
         logger.info(
             "Successfully ranked %s features and selected top %s.",
             len(self.ranked_features_),
-            len(self.selected_features),
+            len(self.selected_features_),
         )
         return self
 
     def transform(self, X: pd.DataFrame):
-        if self.selected_features is None:
-            raise ValueError("Selector must be fitted before transform.")
-
         if self.missing_filter_ is not None:
             X = self.missing_filter_.transform(X)
-
-        missing_features = [feature for feature in self.selected_features if feature not in X.columns]
-        if missing_features:
-            raise ValueError(
-                f"Input is missing {len(missing_features)} selected features: {missing_features[:10]}"
-            )
-
-        return X[self.selected_features]
+        return select_feature_frame(
+            X,
+            self.selected_features_,
+            selector_name=self.__class__.__name__,
+        )
 
     def fit_transform(self, X: pd.DataFrame, y: pd.Series = None):
         return self.fit(X, y).transform(X)

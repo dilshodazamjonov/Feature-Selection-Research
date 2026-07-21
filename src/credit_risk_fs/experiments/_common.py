@@ -11,17 +11,21 @@ from credit_risk_fs.experiments.config import (
     resolve_feature_budget,
     resolve_model_kwargs,
 )
+from credit_risk_fs.experiments.result_paths import (
+    build_run_id,
+    create_run_directory,
+    initialize_results_layout,
+)
 from credit_risk_fs.experiments.tracking import build_data_version
 from credit_risk_fs.pipelines.common import (
     ExperimentConfig,
-    create_run_output_dir,
     prepare_modeling_data,
-    write_run_manifest,
 )
 
 
 @dataclass(slots=True)
 class RunLayout:
+    results_root: Path
     run_dir: Path
     experiments_dir: Path
     feature_overlap_dir: Path | None = None
@@ -48,6 +52,12 @@ def add_common_experiment_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--oot-end-day", type=int, default=0)
     parser.add_argument("--cv-gap-groups", type=int, default=1)
     parser.add_argument("--random-seed", type=int, default=42)
+    parser.add_argument(
+        "--repository-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[3],
+        help="Explicit repository root used to resolve configured result paths.",
+    )
 
 
 def add_llm_args(parser: argparse.ArgumentParser) -> None:
@@ -60,22 +70,32 @@ def add_llm_args(parser: argparse.ArgumentParser) -> None:
 
 def create_run_layout(
     *,
-    output_dir: str | Path,
-    run_label: str,
-    manifest_payload: dict[str, Any],
+    repository_root: str | Path,
+    results_root: str | Path,
+    dataset: str,
+    selector: str,
+    model: str,
     include_feature_overlap_dir: bool = False,
 ) -> RunLayout:
-    run_dir = create_run_output_dir(output_dir, run_label)
-    experiments_dir = run_dir / "experiments"
-    experiments_dir.mkdir(parents=True, exist_ok=True)
+    active_results_root = initialize_results_layout(
+        repository_root,
+        results_root=results_root,
+    )
+    run_dir = create_run_directory(
+        active_results_root,
+        dataset=dataset,
+        run_id=build_run_id(selector=selector, model=model),
+        collision_policy="suffix",
+    )
+    experiments_dir = run_dir
 
     feature_overlap_dir: Path | None = None
     if include_feature_overlap_dir:
         feature_overlap_dir = run_dir / "feature_overlap"
         feature_overlap_dir.mkdir(parents=True, exist_ok=True)
 
-    write_run_manifest(run_dir, manifest_payload)
     return RunLayout(
+        results_root=active_results_root,
         run_dir=run_dir,
         experiments_dir=experiments_dir,
         feature_overlap_dir=feature_overlap_dir,

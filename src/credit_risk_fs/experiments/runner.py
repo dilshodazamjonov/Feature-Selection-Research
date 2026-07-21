@@ -22,12 +22,22 @@ from credit_risk_fs.experiments.config import (
     resolve_llm_shared_pool_size,
 )
 from credit_risk_fs.experiments.matrix import MODELS, MatrixRunSpec, iter_matrix, validate_matrix
+from credit_risk_fs.experiments.result_paths import (
+    append_run_index_row,
+    build_run_id,
+    create_run_directory,
+    initialize_results_layout,
+    planned_run_directory,
+    repository_relative_path,
+    sanitize_component,
+    update_run_index_row,
+)
 from credit_risk_fs.experiments.tracking import (
     build_run_manifest,
-    is_completed_run,
     mark_completed,
-    run_id_for_config,
+    materialize_standard_artifacts,
     utc_timestamp,
+    write_json,
     write_run_manifest,
 )
 from credit_risk_fs.pipelines.common import ExperimentConfig, prepare_modeling_data, run_experiment
@@ -100,12 +110,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Rerun completed matrix entries instead of reusing their outputs.",
+        help="Compatibility flag; every execution creates a new isolated run.",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the matrix entries and output folders without training.",
+    )
+    parser.add_argument(
+        "--repository-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[3],
+        help="Explicit repository root used to resolve configured result paths.",
     )
     return parser
 
@@ -150,16 +166,18 @@ def _args_for_config(config: dict[str, Any], model: str) -> SimpleNamespace:
 def _run_dir_for_spec(
     *,
     output_root: Path,
+    dataset: str,
     spec: MatrixRunSpec,
-    config_hash: str,
 ) -> tuple[str, Path]:
-    run_id = run_id_for_config(
+    run_id = build_run_id(
         model=spec.model,
-        experiment_type=spec.experiment_type,
         selector=spec.experiment_name,
-        config_hash=config_hash,
     )
-    return run_id, output_root / spec.model / spec.output_bucket / run_id
+    return run_id, planned_run_directory(
+        output_root,
+        dataset=dataset,
+        run_id=run_id,
+    )
 
 
 def _hybrid_selector_kwargs(
@@ -306,9 +324,16 @@ def _prepare_data_config(project_config: dict[str, Any], model: str, output_root
     )
 
 
-def _write_matrix_status(output_root: Path, rows: list[dict[str, Any]]) -> None:
+def _write_matrix_status(
+    output_root: Path,
+    dataset: str,
+    rows: list[dict[str, Any]],
+) -> None:
     if rows:
-        pd.DataFrame(rows).to_csv(output_root / "matrix_runs.csv", index=False)
+        pd.DataFrame(rows).to_csv(
+            output_root / "comparisons" / f"{dataset}_matrix_runs.csv",
+            index=False,
+        )
 
 
 def _unique_sorted_strings(values: object) -> list[str]:
@@ -433,7 +458,11 @@ def _allowed_run_dirs_from_rows(output_root: Path, matrix_rows: list[dict[str, A
     }
 
 
-def _write_llm_call_summary(output_root: Path, matrix_rows: list[dict[str, Any]] | None = None) -> None:
+def _write_llm_call_summary(
+    output_root: Path,
+    dataset: str,
+    matrix_rows: list[dict[str, Any]] | None = None,
+) -> None:
     records = []
     allowed_dirs = _allowed_run_dirs_from_rows(output_root, matrix_rows)
     for manifest_path in sorted(output_root.rglob("run_manifest.json")):
@@ -490,10 +519,17 @@ def _write_llm_call_summary(output_root: Path, matrix_rows: list[dict[str, Any]]
             sharing_by_hash.update(cache_key_hash_to_runs.get(cache_key_hash, []))
         row["runs_sharing_metadata_signatures"] = ";".join(sorted(sharing))
         row["runs_sharing_cache_key_hashes"] = ";".join(sorted(sharing_by_hash))
-    pd.DataFrame(records, columns=LLM_SUMMARY_COLUMNS).to_csv(output_root / "llm_call_summary.csv", index=False)
+    pd.DataFrame(records, columns=LLM_SUMMARY_COLUMNS).to_csv(
+        output_root / "comparisons" / f"{dataset}_llm_call_summary.csv",
+        index=False,
+    )
 
 
-def _write_failed_runs(output_root: Path, matrix_rows: list[dict[str, Any]] | None = None) -> None:
+def _write_failed_runs(
+    output_root: Path,
+    dataset: str,
+    matrix_rows: list[dict[str, Any]] | None = None,
+) -> None:
     columns = [
         "run_id",
         "model",
@@ -529,12 +565,16 @@ def _write_failed_runs(output_root: Path, matrix_rows: list[dict[str, Any]] | No
                 "output_folder": str(manifest_path.parent),
             }
         )
-    pd.DataFrame(rows, columns=columns).to_csv(output_root / "failed_runs.csv", index=False)
+    pd.DataFrame(rows, columns=columns).to_csv(
+        output_root / "comparisons" / f"{dataset}_failed_runs.csv",
+        index=False,
+    )
 
 
 def main(argv: list[str] | None = None) -> None:
     validate_matrix()
     cli_args = build_parser().parse_args(argv)
+    repository_root = Path(cli_args.repository_root).resolve()
 
     project_config = load_project_config(cli_args.config)
     if cli_args.random_seed is not None:
@@ -542,8 +582,14 @@ def main(argv: list[str] | None = None) -> None:
     if cli_args.output_dir is not None:
         project_config["results_dir"] = cli_args.output_dir
 
-    output_root = Path(project_config.get("results_dir", "results"))
-    output_root.mkdir(parents=True, exist_ok=True)
+    output_root = initialize_results_layout(
+        repository_root,
+        results_root=project_config.get("results_dir", "results"),
+    )
+    dataset = sanitize_component(
+        project_config.get("dataset_name", "homecredit"),
+        field_name="dataset",
+    )
     shared_llm_config = copy.deepcopy(project_config)
     shared_llm_config.pop("model_selector", None)
     shared_llm_config.pop("matrix_run", None)
@@ -562,39 +608,33 @@ def main(argv: list[str] | None = None) -> None:
     specs = [spec for spec in iter_matrix() if spec.model in selected_models]
 
     matrix_rows: list[dict[str, Any]] = []
-    pending: list[tuple[MatrixRunSpec, dict[str, Any], str, Path]] = []
+    pending: list[
+        tuple[MatrixRunSpec, dict[str, Any], str, dict[str, Any]]
+    ] = []
 
     for spec in specs:
         run_config = _matrix_config_for_spec(project_config, spec)
         config_hash = compute_config_hash(run_config)
-        run_id, run_dir = _run_dir_for_spec(
+        proposed_run_id, proposed_run_dir = _run_dir_for_spec(
             output_root=output_root,
+            dataset=dataset,
             spec=spec,
-            config_hash=config_hash,
         )
+        row = {
+            "run_id": proposed_run_id,
+            "model": spec.model,
+            "selector": spec.experiment_name,
+            "experiment_type": spec.experiment_type,
+            "status": "scheduled",
+            "config_hash": config_hash,
+            "output_folder": str(proposed_run_dir),
+        }
+        matrix_rows.append(row)
+        pending.append((spec, run_config, config_hash, row))
 
-        status = "completed" if is_completed_run(run_dir) else "pending"
-        if status == "completed" and not cli_args.force:
-            logger.info("Skipping completed run: %s", run_dir)
-        else:
-            pending.append((spec, run_config, run_id, run_dir))
-            status = "scheduled"
-
-        matrix_rows.append(
-            {
-                "run_id": run_id,
-                "model": spec.model,
-                "selector": spec.experiment_name,
-                "experiment_type": spec.experiment_type,
-                "status": status,
-                "config_hash": config_hash,
-                "output_folder": str(run_dir),
-            }
-        )
-
-    _write_matrix_status(output_root, matrix_rows)
-    _write_llm_call_summary(output_root, matrix_rows)
-    _write_failed_runs(output_root, matrix_rows)
+    _write_matrix_status(output_root, dataset, matrix_rows)
+    _write_llm_call_summary(output_root, dataset, matrix_rows)
+    _write_failed_runs(output_root, dataset, matrix_rows)
 
     if cli_args.dry_run:
         for row in matrix_rows:
@@ -604,21 +644,31 @@ def main(argv: list[str] | None = None) -> None:
             )
         return
 
-    if not pending:
-        _write_llm_call_summary(output_root, matrix_rows)
-        _write_failed_runs(output_root, matrix_rows)
-        logger.info("All matrix entries already completed. Nothing to rerun.")
-        return
-
     first_model = pending[0][0].model
     logger.info("Preparing shared modeling data once for %s pending matrix runs.", len(pending))
     prepared_data = prepare_modeling_data(
         _prepare_data_config(project_config, model=first_model, output_root=output_root)
     )
 
-    completed_rows: list[dict[str, Any]] = []
-    for spec, run_config, run_id, run_dir in pending:
-        run_dir.mkdir(parents=True, exist_ok=True)
+    for spec, run_config, config_hash, matrix_row in pending:
+        run_dir = create_run_directory(
+            output_root,
+            dataset=dataset,
+            run_id=build_run_id(
+                selector=spec.experiment_name,
+                model=spec.model,
+            ),
+            collision_policy="suffix",
+        )
+        run_id = run_dir.name
+        matrix_row.update(
+            {
+                "run_id": run_id,
+                "status": "running",
+                "output_folder": str(run_dir),
+            }
+        )
+        config_path = write_json(run_dir / "config.json", run_config)
         manifest = build_run_manifest(
             run_id=run_id,
             model=spec.model,
@@ -628,9 +678,10 @@ def main(argv: list[str] | None = None) -> None:
             data_dir=run_config["data_dir"],
             random_seed=int(run_config["random_seed"]),
             output_folder=run_dir,
-            project_root=Path.cwd(),
+            project_root=repository_root,
             status="running",
         )
+        manifest["split_protocol"] = "grouped_time_series_cv_with_oot"
         llm_config = run_config.get("llm", {})
         manifest.update(
             {
@@ -647,7 +698,29 @@ def main(argv: list[str] | None = None) -> None:
                 "feature_budget": int(run_config.get("feature_budgets", {}).get(spec.model, 40)),
             }
         )
-        write_run_manifest(run_dir, manifest)
+        manifest_path = write_run_manifest(run_dir, manifest)
+        append_run_index_row(
+            output_root,
+            {
+                "run_id": run_id,
+                "dataset": dataset,
+                "selector": spec.experiment_name,
+                "model": spec.model,
+                "split_protocol": manifest["split_protocol"],
+                "seed": run_config["random_seed"],
+                "status": "running",
+                "started_at_utc": manifest["started_at_utc"],
+                "run_directory": repository_relative_path(
+                    run_dir, repository_root
+                ),
+                "config_path": repository_relative_path(
+                    config_path, repository_root
+                ),
+                "manifest_path": repository_relative_path(
+                    manifest_path, repository_root
+                ),
+            },
+        )
 
         logger.info(
             "Starting matrix run %s | model=%s | type=%s | selector=%s",
@@ -665,42 +738,49 @@ def main(argv: list[str] | None = None) -> None:
                     run_dir=run_dir,
                 )
                 run = run_experiment(experiment_config, prepared_data=prepared_data)
-                manifest["status"] = "completed"
-                manifest["completed_at"] = utc_timestamp()
-                manifest["summary"] = run.summary
-                manifest.update(_llm_ranking_stats(run_dir))
-                write_run_manifest(run_dir, manifest)
-                mark_completed(run_dir)
-                completed_rows.append(
-                    {
-                        "run_id": run_id,
-                        "model": spec.model,
-                        "selector": spec.experiment_name,
-                        "experiment_type": spec.experiment_type,
-                        "status": "completed",
-                        "config_hash": manifest["config_hash"],
-                        "output_folder": str(run_dir),
-                    }
-                )
+            materialize_standard_artifacts(run_dir)
+            resource_usage = json.loads(
+                (run_dir / "resource_usage.json").read_text(encoding="utf-8")
+            )
+            manifest["status"] = "completed"
+            manifest["completed_at_utc"] = utc_timestamp()
+            manifest["completed_at"] = manifest["completed_at_utc"]
+            manifest["summary"] = run.summary
+            manifest.update(_llm_ranking_stats(run_dir))
+            write_run_manifest(run_dir, manifest)
+            mark_completed(run_dir)
+            update_run_index_row(
+                output_root,
+                run_id,
+                {
+                    "status": "completed",
+                    "completed_at_utc": manifest["completed_at_utc"],
+                    "runtime_seconds": resource_usage["timings_seconds"]["total"],
+                    "peak_ram_mb": resource_usage["peak_ram_mb"],
+                    "peak_gpu_mb": resource_usage["peak_gpu_mb"],
+                },
+            )
+            matrix_row["status"] = "completed"
         except Exception as exc:
             manifest["status"] = "failed"
-            manifest["failed_at"] = utc_timestamp()
+            manifest["failed_at_utc"] = utc_timestamp()
+            manifest["failed_at"] = manifest["failed_at_utc"]
             manifest["error"] = repr(exc)
             write_run_manifest(run_dir, manifest)
-            _write_llm_call_summary(output_root, matrix_rows)
-            _write_failed_runs(output_root, matrix_rows)
+            update_run_index_row(
+                output_root,
+                run_id,
+                {"status": "failed", "notes": repr(exc)},
+            )
+            matrix_row["status"] = "failed"
+            _write_llm_call_summary(output_root, dataset, matrix_rows)
+            _write_failed_runs(output_root, dataset, matrix_rows)
             logger.exception("Matrix run failed: %s", run_id)
             raise
 
-    for row in matrix_rows:
-        for completed in completed_rows:
-            if row["run_id"] == completed["run_id"]:
-                row.update(completed)
-                break
-
-    _write_matrix_status(output_root, matrix_rows)
-    _write_llm_call_summary(output_root, matrix_rows)
-    _write_failed_runs(output_root, matrix_rows)
+    _write_matrix_status(output_root, dataset, matrix_rows)
+    _write_llm_call_summary(output_root, dataset, matrix_rows)
+    _write_failed_runs(output_root, dataset, matrix_rows)
     logger.info("Full experiment matrix completed. Output root: %s", output_root)
 
 

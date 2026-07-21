@@ -1,4 +1,9 @@
 boruta:
+  max_iter: 15
+  random_state: 42
+  n_features: 40
+
+boruta_rfe:
   boruta_kwargs:
     max_iter: 15
     random_state: 42
@@ -6,4 +11,5 @@ boruta:
     n_features: 40
     step: 10
     random_state: 42
-  use_rfe: false
+  use_rfe: true
+  n_features: 40

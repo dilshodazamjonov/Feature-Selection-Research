@@ -16,7 +16,9 @@ wheels/
 /data/
 *.pkl
 outputs/
-results*/
+results/*
+!results/README.md
+!results/run_index.csv
 .model
 .pytest_cache/
 .pytest_tmp/
@@ -24,3 +26,5 @@ pytest_tmp/
 tests_runtime/
 .tmp/
 .uv-cache/
+
+results/

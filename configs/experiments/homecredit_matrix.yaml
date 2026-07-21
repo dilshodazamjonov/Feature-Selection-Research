@@ -2,7 +2,7 @@ dataset_name: homecredit
 model_selector: lr
 data_dir: data/homecredit/raw
 description_path: data/homecredit/metadata/columns_description.csv
-results_dir: results/homecredit
+results_dir: results
 random_seed: 42
 feature_budgets:
   lr: 20

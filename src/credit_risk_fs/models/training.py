@@ -605,6 +605,7 @@ def run_kfold_training(
         "preprocessing_time_sec",
         "feature_selection_time_sec",
         "training_time_sec",
+        "prediction_time_sec",
         "evaluation_time_sec",
     ]:
         if metric in results_df.columns:

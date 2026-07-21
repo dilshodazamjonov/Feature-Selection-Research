@@ -3,8 +3,10 @@ import pandas as pd
 import os
 from typing import List
 
+from credit_risk_fs.selectors.base import SelectedFeaturesMixin, validate_feature_frame
 
-class PCASelector:
+
+class PCASelector(SelectedFeaturesMixin):
     def __init__(self, n_components=0.95, save_dir=None, random_state=42):
         """
         PCA based feature reduction.
@@ -25,10 +27,12 @@ class PCASelector:
 
         self.feature_names: List = None
         self.explained_variance: List = None
+        self.selected_features_ = None
 
     def fit(self, X: pd.DataFrame, y=None):
         """Fit PCA model."""
 
+        validate_feature_frame(X)
         self.feature_names = X.columns
         self.effective_n_components = self.n_components
         if isinstance(self.n_components, int):
@@ -38,6 +42,9 @@ class PCASelector:
         self.pca.fit(X)
 
         self.explained_variance = self.pca.explained_variance_ratio_
+        self.selected_features_ = [
+            f"PC{index + 1}" for index in range(len(self.explained_variance))
+        ]
 
         if self.save_dir:
             os.makedirs(self.save_dir, exist_ok=True)
@@ -62,9 +69,7 @@ class PCASelector:
 
         X_pca = self.pca.transform(X)
 
-        columns = [f"PC{i+1}" for i in range(X_pca.shape[1])]
-
-        return pd.DataFrame(X_pca, columns=columns, index=X.index)
+        return pd.DataFrame(X_pca, columns=self.selected_features_, index=X.index)
 
     def fit_transform(self, X: pd.DataFrame, y=None):
         """Fit and transform."""

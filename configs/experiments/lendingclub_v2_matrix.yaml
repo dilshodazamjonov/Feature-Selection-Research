@@ -2,7 +2,7 @@ dataset_name: lendingclub_v2
 model_selector: lr
 data_dir: data/lendingclub_v2/processed
 description_path: data/lendingclub_v2/metadata/columns_description.csv
-results_dir: results/lendingclub_v2
+results_dir: results
 random_seed: 42
 feature_budgets:
   lr: 20

@@ -28,7 +28,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config_path = Path(args.config) if args.config else experiment_config_path(args.dataset, "matrix")
-    cli_args = ["--config", str(config_path)]
+    cli_args = [
+        "--config",
+        str(config_path),
+        "--repository-root",
+        str(PROJECT_ROOT),
+    ]
     if args.models:
         cli_args.extend(["--models", *args.models])
     if args.force:

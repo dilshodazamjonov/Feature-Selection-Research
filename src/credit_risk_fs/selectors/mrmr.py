@@ -1,15 +1,39 @@
+from __future__ import annotations
+
 import logging
 import warnings
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin, MetaEstimatorMixin
+from sklearn.base import BaseEstimator, MetaEstimatorMixin, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier
 
-class MRMR(TransformerMixin, BaseEstimator, MetaEstimatorMixin):
+from credit_risk_fs.selectors.base import (
+    SelectedFeaturesMixin,
+    resolve_feature_budget,
+    select_feature_frame,
+    validate_feature_frame,
+)
+
+
+class RandomForestRelevanceMRMRSelector(
+    SelectedFeaturesMixin,
+    TransformerMixin,
+    BaseEstimator,
+    MetaEstimatorMixin,
+):
+    """Greedy mRMR-like selector with RF relevance and correlation redundancy.
+
+    Relevance is mean random-forest impurity importance. Redundancy is the mean
+    absolute configured correlation with already selected features, floored at
+    0.05. The greedy score is relevance divided by redundancy. This is not the
+    canonical mutual-information definition of mRMR. Fitting must receive only
+    the current training boundary.
     """
-    RF / mRMR feature selector compatible with sklearn pipelines
-    """
+
+    algorithm_name = "rf_relevance_correlation_redundancy"
+    canonical_mrmr = False
+
     def __init__(
         self,
         *,
@@ -18,121 +42,126 @@ class MRMR(TransformerMixin, BaseEstimator, MetaEstimatorMixin):
         n_iter: int = 1,
         correlation: str = "pearson",
         random_state: int = 42,
-    ):
-        self.k = k
-        self.method = method
-        self.n_iter = n_iter
-        self.correlation = correlation
-        self.random_state = random_state
+    ) -> None:
+        self.k = int(k)
+        self.method = str(method)
+        self.n_iter = int(n_iter)
+        self.correlation = str(correlation)
+        self.random_state = int(random_state)
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.selected_features_ = None
 
-    # ======== RF IMPORTANCE ========
-    def get_rf_importances(self, X: pd.DataFrame, y: pd.Series):
+    def get_rf_importances(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Calculate deterministic mean RF impurity relevance scores."""
+
         self.logger.info("[RF] Computing feature importances (%d iterations)", self.n_iter)
-
-        importances = []
-
-        for i in range(self.n_iter):
-            self.logger.info("[RF] Training iteration %d/%d", i + 1, self.n_iter)
-
-            rf = RandomForestClassifier(
+        importances: list[np.ndarray] = []
+        for iteration in range(self.n_iter):
+            estimator = RandomForestClassifier(
                 n_estimators=128,
                 min_samples_split=0.01,
                 max_features=0.15,
                 n_jobs=-1,
-                random_state=self.random_state + i,
+                random_state=self.random_state + iteration,
             )
-            rf.fit(X, y)
-            importances.append(rf.feature_importances_)
+            estimator.fit(X, y)
+            importances.append(estimator.feature_importances_)
 
-        imp_df = pd.DataFrame(importances, columns=X.columns)
-        self.rf_importances_ = imp_df.mean().sort_values(ascending=False)
+        mean_importance = pd.DataFrame(importances, columns=X.columns).mean()
+        ordered = (
+            mean_importance.rename("importance")
+            .rename_axis("feature")
+            .reset_index()
+            .assign(feature=lambda frame: frame["feature"].astype(str))
+            .sort_values(
+                ["importance", "feature"],
+                ascending=[False, True],
+                kind="mergesort",
+            )
+        )
+        self.rf_importances_ = ordered.set_index("feature")["importance"]
         self.k_top_rf_ = self.rf_importances_.head(self.k).index.tolist()
 
-        self.logger.info("[RF] Top 10 features: %s", self.k_top_rf_[:10])
+    def get_mrmr_features(self, X: pd.DataFrame) -> None:
+        """Run greedy RF-relevance/correlation-redundancy selection."""
 
-    # ======== MRMR FEATURE SELECTION ========
-    def get_mrmr_features(self, X: pd.DataFrame):
-        self.logger.info("[MRMR] Starting mRMR feature selection")
-        self.logger.info("[MRMR] Target number of features: %d", self.k)
-
-        selected = [self.rf_importances_.index[0]]
-        self.logger.info("[MRMR] Initial feature selected: %s", selected[0])
-
-        # Use sampling if dataset is large for efficiency
-        max_samples = 10000
+        selected = [str(self.rf_importances_.index[0])]
+        max_samples = 10_000
         if len(X) > max_samples:
-            sample_idx = np.random.RandomState(self.random_state).choice(len(X), max_samples, replace=False)
-            X_sample = X.iloc[sample_idx]
+            sample_indices = np.random.RandomState(self.random_state).choice(
+                len(X),
+                max_samples,
+                replace=False,
+            )
+            X_sample = X.iloc[sample_indices]
         else:
             X_sample = X
 
-        for step in range(1, self.k):
-            remaining = [c for c in self.rf_importances_.index if c not in selected]
-
+        for _ in range(1, self.k):
+            remaining = [
+                str(feature)
+                for feature in self.rf_importances_.index
+                if feature not in selected
+            ]
             if not remaining:
-                self.logger.warning("[MRMR] No remaining features, stopping early")
                 break
 
-            self.logger.info(
-                "[MRMR] Iteration %d/%d | Remaining features: %d",
-                step,
-                self.k,
-                len(remaining),
-            )
-
-            # Compute redundancy efficiently
-            X_sel = X_sample[selected]
-            
-            redundancy = {}
+            redundancy: dict[str, float] = {}
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                
-                if len(selected) == 1:
-                    # Single selected feature - simple case
-                    for c in remaining:
-                        corr = np.abs(X_sel.iloc[:, 0].corr(X_sample[c], method=self.correlation))
-                        redundancy[c] = max(corr, 0.05)
-                else:
-                    # Multiple selected features - compute mean correlation
-                    for c in remaining:
-                        corrs = [X_sel.iloc[:, i].corr(X_sample[c], method=self.correlation) 
-                                 for i in range(len(selected))]
-                        redundancy[c] = max(np.mean(np.abs(corrs)), 0.05)
+                for feature in remaining:
+                    correlations = [
+                        abs(X_sample[chosen].corr(X_sample[feature], method=self.correlation))
+                        for chosen in selected
+                    ]
+                    finite = [value for value in correlations if np.isfinite(value)]
+                    mean_correlation = float(np.mean(finite)) if finite else 0.0
+                    redundancy[feature] = max(mean_correlation, 0.05)
 
-            redundancy = pd.Series(redundancy)
-            scores = self.rf_importances_.loc[remaining] / redundancy
-            
-            next_feature = scores.idxmax()
-
-            selected.append(next_feature)
-
-            self.logger.info(
-                "[MRMR] Selected feature %d: %s",
-                step + 1,
-                next_feature,
+            scores = pd.DataFrame(
+                {
+                    "feature": remaining,
+                    "score": [
+                        float(self.rf_importances_.loc[feature]) / redundancy[feature]
+                        for feature in remaining
+                    ],
+                }
+            ).sort_values(
+                ["score", "feature"],
+                ascending=[False, True],
+                kind="mergesort",
             )
+            selected.append(str(scores.iloc[0]["feature"]))
 
-        # ===== Store selected features =====
         self.mrmr_features_ = selected
-        self.logger.info("[MRMR] Completed mRMR selection")
 
-    # ======== FIT ========
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        self.logger.info("[FIT] Fitting FeatureSelector (%s)", self.method)
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series | None = None,
+    ) -> RandomForestRelevanceMRMRSelector:
+        """Fit the configured RF-top-k or custom mRMR-like mode."""
 
-        if self.k >= X.shape[1]:
-            self.logger.warning("[FIT] k >= number of features, selecting all")
-            self.selected_features_ = X.columns.tolist()
+        names = validate_feature_frame(X)
+        if y is None:
+            raise ValueError(f"{self.__class__.__name__} requires target labels during fit.")
+        budget = resolve_feature_budget(self.k, X.shape[1])
+        if budget == 0:
+            self.selected_features_ = []
+            return self
+        if budget == X.shape[1]:
+            self.selected_features_ = names
             return self
 
-        self.get_rf_importances(X, y)
+        X_named = X.copy()
+        X_named.columns = names
+        self.get_rf_importances(X_named, y)
 
         if self.method == "rf":
-            self.selected_features_ = self.k_top_rf_
+            self.selected_features_ = list(self.k_top_rf_)[:budget]
         elif self.method == "mrmr":
-            self.get_mrmr_features(X)
-            self.selected_features_ = self.mrmr_features_
+            self.get_mrmr_features(X_named)
+            self.selected_features_ = list(self.mrmr_features_)[:budget]
         else:
             raise ValueError(f"Unsupported method: {self.method}")
 
@@ -140,10 +169,19 @@ class MRMR(TransformerMixin, BaseEstimator, MetaEstimatorMixin):
             "[FIT] Feature selection completed (%d features)",
             len(self.selected_features_),
         )
-
         return self
 
-    # ======== TRANSFORM ========
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        self.logger.info("[TRANSFORM] Transforming dataset")
-        return X.loc[:, self.selected_features_]
+        return select_feature_frame(
+            X,
+            self.selected_features_,
+            selector_name=self.__class__.__name__,
+        )
+
+
+# Backward-compatible class name and registry vocabulary. A future canonical
+# mutual-information implementation must use a separate class/registry entry.
+MRMR = RandomForestRelevanceMRMRSelector
+
+
+__all__ = ["RandomForestRelevanceMRMRSelector", "MRMR"]

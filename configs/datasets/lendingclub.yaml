@@ -1,7 +1,7 @@
 dataset_name: lendingclub
 data_dir: data/lendingclub/processed
 description_path: data/lendingclub/metadata/columns_description.csv
-results_dir: results/lendingclub
+results_dir: results
 dev_start_day: -1795
 oot_start_day: -1065
 oot_end_day: -730

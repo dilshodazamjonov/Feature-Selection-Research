@@ -1,7 +1,7 @@
 dataset_name: homecredit
 data_dir: data/homecredit/raw
 description_path: data/homecredit/metadata/columns_description.csv
-results_dir: results/homecredit
+results_dir: results
 excluded_feature_columns:
   - TARGET
   - recent_decision

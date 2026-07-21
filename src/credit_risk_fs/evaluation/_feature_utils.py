@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import os
 
 def _to_df(X, index=None, columns=None):
     """
@@ -15,28 +14,6 @@ def _to_df(X, index=None, columns=None):
 
     cols = columns if columns is not None else [f"feature_{i}" for i in range(X.shape[1])]
     return pd.DataFrame(X, index=index, columns=cols)
-
-
-def _safe_get_selected_features(selector):
-    """
-    Tries to extract selected feature names from a selector if available.
-    """
-    if selector is None:
-        return None
-
-    if hasattr(selector, "selected_features") and selector.selected_features is not None:
-        feats = selector.selected_features
-        if isinstance(feats, pd.Index):
-            return feats.tolist()
-        if isinstance(feats, (list, tuple, np.ndarray)):
-            return list(feats)
-
-    if hasattr(selector, "boruta") and hasattr(selector.boruta, "selected_features"):
-        feats = selector.boruta.selected_features
-        if feats is not None:
-            return list(feats)
-
-    return None
 
 
 def _feature_score_lookup(selector, selected_features):
@@ -74,53 +51,6 @@ def _feature_score_lookup(selector, selected_features):
     return {}
 
 
-def _save_selected_features(
-    path,
-    selected_features,
-    *,
-    fold_id=None,
-    selector_name=None,
-    score_lookup=None,
-):
-    """
-    Saves selected feature names to CSV with research-audit columns.
-    """
-    if selected_features is None:
-        return
-
-    score_lookup = score_lookup or {}
-    rows = []
-    for rank, feature in enumerate(list(selected_features), start=1):
-        feature_name = str(feature)
-        rows.append(
-            {
-                "fold_id": fold_id,
-                "selector": selector_name,
-                "feature_name": feature_name,
-                "feature": feature_name,
-                "rank": rank,
-                "score": score_lookup.get(feature_name, pd.NA),
-            }
-        )
-
-    pd.DataFrame(rows).to_csv(path, index=False)
-
-
-def _save_feature_statistics(path, X_train_f):
-    """
-    Saves per-feature summary statistics for the selected training features.
-    """
-    stats_df = X_train_f.describe(include="all").T
-
-    # Numeric summaries are most useful, but describe(include="all") may create mixed columns.
-    # Add missingness explicitly.
-    stats_df["missing_count"] = X_train_f.isna().sum()
-    stats_df["missing_pct"] = X_train_f.isna().mean() * 100
-    stats_df["n_unique"] = X_train_f.nunique(dropna=True)
-
-    stats_df.to_csv(path, index=True)
-
-
 def _extract_feature_importance(model, feature_names):
     """
     Returns a DataFrame with feature importances if supported.
@@ -151,52 +81,3 @@ def _extract_feature_importance(model, feature_names):
         "feature": feature_names,
         "importance": importances
     }).sort_values("importance", ascending=False)
-
-
-def _save_correlation_matrix(path, X_train_f):
-    """
-    Saves the correlation matrix for selected features.
-
-    Only numeric columns are included. Non-numeric columns are ignored.
-    """
-    numeric_df = X_train_f.select_dtypes(include=[np.number])
-
-    if numeric_df.shape[1] < 2:
-        # Not enough numeric features to compute a correlation matrix
-        pd.DataFrame().to_csv(path, index=True)
-        return
-
-    corr = numeric_df.corr()
-    corr.to_csv(path, index=True)
-
-
-def _save_stagewise_selection(selector, fold_dir):
-    """
-    Saves intermediate stage features if the selector exposes them,
-    e.g. Boruta + RFE pipeline.
-    """
-    if selector is None:
-        return
-
-    boruta_feats = None
-    rfe_feats = None
-
-    if hasattr(selector, "boruta") and hasattr(selector.boruta, "selected_features"):
-        boruta_feats = selector.boruta.selected_features
-
-    if hasattr(selector, "rfe") and hasattr(selector.rfe, "selected_features"):
-        rfe_feats = selector.rfe.selected_features
-
-    if boruta_feats is not None:
-        _save_selected_features(
-            os.path.join(fold_dir, "boruta_features.csv"),
-            boruta_feats,
-            selector_name="boruta",
-        )
-
-    if rfe_feats is not None:
-        _save_selected_features(
-            os.path.join(fold_dir, "rfe_features.csv"),
-            rfe_feats,
-            selector_name="rfe",
-        )

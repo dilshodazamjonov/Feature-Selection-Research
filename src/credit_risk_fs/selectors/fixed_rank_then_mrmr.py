@@ -4,10 +4,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from credit_risk_fs.selectors.base import SelectedFeaturesMixin, select_feature_frame
 from credit_risk_fs.selectors.mrmr import MRMR
 
 
-class FixedRankThenMRMRSelector:
+class FixedRankThenMRMRSelector(SelectedFeaturesMixin):
     """Target-free frozen candidate ranking followed by DEV-only mRMR."""
 
     select_before_preprocessing = True
@@ -34,6 +35,7 @@ class FixedRankThenMRMRSelector:
         self.selector_label = selector_label
         self.rank_column = rank_column
         self.artifact_dir: Path | None = None
+        self.selected_features_ = None
 
     def set_artifact_dir(self, artifact_dir: str | Path) -> None:
         self.artifact_dir = Path(artifact_dir)
@@ -57,7 +59,18 @@ class FixedRankThenMRMRSelector:
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        return X.loc[:, self.screened_features_]
+        return select_feature_frame(
+            X,
+            self.screened_features_,
+            selector_name=f"{self.__class__.__name__} screening stage",
+        )
+
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series | None = None,
+    ) -> pd.DataFrame:
+        return self.fit(X, y).transform(X)
 
     def fit_postprocess(self, X: pd.DataFrame, y: pd.Series):
         self.post_preprocessing_column_count_ = int(X.shape[1])
@@ -68,7 +81,6 @@ class FixedRankThenMRMRSelector:
         )
         selector.fit(X, y)
         self.selected_features_ = list(selector.selected_features_)[: self.feature_budget]
-        self.selected_features = list(self.selected_features_)
         if self.artifact_dir is not None:
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
             frame = self.ranking_.copy()
@@ -128,4 +140,8 @@ class FixedRankThenMRMRSelector:
         return X.loc[:, self.selected_features_]
 
     def transform_postprocess(self, X: pd.DataFrame) -> pd.DataFrame:
-        return X.loc[:, self.selected_features_]
+        return select_feature_frame(
+            X,
+            self.selected_features_,
+            selector_name=self.__class__.__name__,
+        )

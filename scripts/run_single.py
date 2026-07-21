@@ -28,8 +28,10 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     config_path = Path(args.config) if args.config else experiment_config_path(args.dataset, "matrix")
     cli_args = ["--config", str(config_path), "--model", args.model, "--selector", args.selector]
-    output_dir = args.output_dir or str(PROJECT_ROOT / "results" / args.dataset / "single_experiment")
-    cli_args.extend(["--output-dir", output_dir])
+    output_dir = args.output_dir or str(PROJECT_ROOT / "results")
+    cli_args.extend(
+        ["--output-dir", output_dir, "--repository-root", str(PROJECT_ROOT)]
+    )
     single_run_main(cli_args)
     return 0
 

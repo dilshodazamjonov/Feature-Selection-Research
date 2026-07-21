@@ -14,6 +14,7 @@ from credit_risk_fs.evaluation.drift import calculate_psi, feature_psi
 from credit_risk_fs.evaluation.metrics import determine_threshold, evaluate_model_wrapper
 from credit_risk_fs.feature_metadata.semantic_groups import infer_semantic_group
 from credit_risk_fs.models._cv_utils import _to_1d_proba
+from credit_risk_fs.selectors.base import get_selected_features
 from credit_risk_fs.utils.logging import setup_logging
 
 # Setup module logger
@@ -162,6 +163,7 @@ def process_fold(
     preprocessing_time_sec = 0.0
     feature_selection_time_sec = 0.0
     training_time_sec = 0.0
+    prediction_time_sec = 0.0
     evaluation_time_sec = 0.0
 
     selection_features = None
@@ -199,11 +201,7 @@ def process_fold(
                 columns=X_train_selected_raw.columns,
             )
 
-        selection_features = getattr(selector, "llm_selected_features_", None) or getattr(
-            selector,
-            "selected_features",
-            None,
-        )
+        selection_features = getattr(selector, "llm_selected_features_", None) or get_selected_features(selector)
 
         preprocessing_start = time.time()
         X_train_p = preprocessor.fit_transform(X_train_selected_raw)
@@ -219,11 +217,7 @@ def process_fold(
             selection_start = time.time()
             X_train_f = selector.fit_postprocess(X_train_p, y_train)
             X_val_f = selector.transform_postprocess(X_val_p)
-            selection_features = getattr(selector, "selected_features_", None) or getattr(
-                selector,
-                "selected_features",
-                None,
-            )
+            selection_features = get_selected_features(selector)
             feature_selection_time_sec += time.time() - selection_start
         else:
             X_train_f, X_val_f = X_train_p, X_val_p
@@ -281,9 +275,12 @@ def process_fold(
     model = train_model(model, X_train_f, y_train, X_val_f, y_val)
     training_time_sec += time.time() - training_start
 
-    evaluation_start = time.time()
+    prediction_start = time.time()
     val_proba = _to_1d_proba(predict_proba(model, X_val_f))
     train_proba = _to_1d_proba(predict_proba(model, X_train_f))
+    prediction_time_sec += time.time() - prediction_start
+
+    evaluation_start = time.time()
     decision_threshold = determine_threshold(y_train.values, train_proba)
 
     try:
@@ -320,12 +317,13 @@ def process_fold(
         "preprocessing_time_sec": preprocessing_time_sec,
         "feature_selection_time_sec": feature_selection_time_sec,
         "training_time_sec": training_time_sec,
+        "prediction_time_sec": prediction_time_sec,
         "evaluation_time_sec": evaluation_time_sec,
     })
 
     if selector is not None and hasattr(selector, "boruta") and hasattr(selector, "rfe"):
-        boruta_feats = getattr(selector.boruta, "selected_features", None)
-        rfe_feats = getattr(selector.rfe, "selected_features", None)
+        boruta_feats = get_selected_features(selector.boruta)
+        rfe_feats = get_selected_features(selector.rfe)
         fold_metrics["boruta_selected_features"] = len(boruta_feats) if boruta_feats is not None else np.nan
         fold_metrics["rfe_selected_features"] = len(rfe_feats) if rfe_feats is not None else np.nan
 

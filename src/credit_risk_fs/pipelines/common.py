@@ -29,7 +29,12 @@ from credit_risk_fs.experiments.config import (
     apply_random_seed_to_kwargs,
     canonical_config_json,
 )
-from credit_risk_fs.experiments.tracking import build_data_version
+from credit_risk_fs.experiments.result_paths import sanitize_component
+from credit_risk_fs.experiments.tracking import (
+    build_data_version,
+    write_resource_usage,
+    write_run_manifest as write_active_run_manifest,
+)
 from credit_risk_fs.feature_engineering.homecredit.assemble import (
     build_all_features,
     build_application_time_proxy,
@@ -176,22 +181,22 @@ class ExperimentRun:
 
 
 def create_run_output_dir(base_output_dir: str | Path, run_label: str) -> Path:
+    """Compatibility helper for non-active outputs; collisions fail closed."""
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    safe_label = run_label.replace(" ", "_").replace("/", "_").replace("\\", "_")
+    safe_label = sanitize_component(run_label, field_name="run label")
     run_dir = Path(base_output_dir) / f"{safe_label}_{timestamp}"
-    run_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        run_dir.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as exc:
+        raise FileExistsError(f"run output directory already exists: {run_dir}") from exc
     return run_dir
 
 
 def write_run_manifest(run_dir: str | Path, payload: dict[str, Any]) -> Path:
-    run_path = Path(run_dir)
-    run_path.mkdir(parents=True, exist_ok=True)
-    manifest_path = run_path / "run_manifest.json"
-    manifest_path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
-    return manifest_path
+    """Compatibility wrapper around the canonical active manifest writer."""
+
+    return write_active_run_manifest(run_dir, payload)
 
 
 def resolve_time_col(df: pd.DataFrame, preferred: str, extra_candidates: tuple[str, ...] = ()) -> str:
@@ -861,9 +866,12 @@ def run_experiment(
         models_dir / "final_model_bundle.joblib",
     )
 
-    final_evaluation_start = time.time()
+    final_prediction_start = time.time()
     train_proba = predict_proba(final_model, X_train_final)
     oot_proba = predict_proba(final_model, X_oot_final)
+    final_prediction_time_sec = time.time() - final_prediction_start
+
+    final_evaluation_start = time.time()
     oot_threshold = determine_threshold(prepared.y_train.values, train_proba)
     oot_metrics = evaluate_model(prepared.y_oot.values, oot_proba, threshold=oot_threshold)
     oot_metrics["final_selected_feature_count"] = len(final_features)
@@ -1095,19 +1103,23 @@ def run_experiment(
         "cv_preprocessing_time_sec": float(results_df.attrs.get("cv_preprocessing_time_sec", np.nan)),
         "cv_feature_selection_time_sec": float(results_df.attrs.get("cv_feature_selection_time_sec", np.nan)),
         "cv_training_time_sec": float(results_df.attrs.get("cv_training_time_sec", np.nan)),
+        "cv_prediction_time_sec": float(results_df.attrs.get("cv_prediction_time_sec", np.nan)),
         "cv_evaluation_time_sec": float(results_df.attrs.get("cv_evaluation_time_sec", np.nan)),
         "cv_runtime_seconds": float(results_df.attrs.get("cv_runtime_seconds", np.nan)),
         "final_preprocessing_time_sec": float(final_preprocessing_time_sec),
         "final_feature_selection_time_sec": float(final_feature_selection_time_sec),
         "final_training_time_sec": float(final_training_time_sec),
+        "final_prediction_time_sec": float(final_prediction_time_sec),
         "final_evaluation_time_sec": float(final_evaluation_time_sec),
         "preprocessing_time_sec": float(results_df.attrs.get("cv_preprocessing_time_sec", 0.0) + final_preprocessing_time_sec),
         "feature_selection_time_sec": float(results_df.attrs.get("cv_feature_selection_time_sec", 0.0) + final_feature_selection_time_sec),
         "training_time_sec": float(results_df.attrs.get("cv_training_time_sec", 0.0) + final_training_time_sec),
+        "prediction_time_sec": float(results_df.attrs.get("cv_prediction_time_sec", 0.0) + final_prediction_time_sec),
         "evaluation_time_sec": float(results_df.attrs.get("cv_evaluation_time_sec", 0.0) + final_evaluation_time_sec),
         "total_runtime_seconds": float(time.time() - run_start),
     }
     pd.DataFrame([runtime_payload]).to_csv(results_dir / "runtime_summary.csv", index=False)
+    write_resource_usage(exp_dir, runtime_payload)
     summary_row["runtime_seconds"] = runtime_payload["total_runtime_seconds"]
     pd.DataFrame([summary_row]).to_csv(results_dir / "experiment_summary.csv", index=False)
 

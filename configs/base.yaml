@@ -1,6 +1,6 @@
 dataset_name: homecredit
 model_selector: lr
-results_dir: results/homecredit
+results_dir: results
 random_seed: 42
 feature_budgets:
   lr: 20

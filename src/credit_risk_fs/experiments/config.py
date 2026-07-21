@@ -25,7 +25,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "model_selector": "lr",
     "data_dir": "data/homecredit/raw",
     "description_path": "data/homecredit/metadata/columns_description.csv",
-    "results_dir": "results/homecredit",
+    "results_dir": DEFAULT_RESULTS_DIR,
     "random_seed": DEFAULT_RANDOM_SEED,
     "feature_budgets": DEFAULT_FEATURE_BUDGETS,
     "n_splits": 5,
@@ -53,20 +53,20 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "catboost": {},
     },
     "statistical_comparison": {
-        "output_dir": "results/statistical_comparison",
+        "output_dir": "results/comparisons/statistical",
         "selectors": ["mrmr", "boruta", "pca"],
     },
     "llm_vs_statistical": {
-        "output_dir": "results/llm_vs_statistical",
+        "output_dir": "results/comparisons/llm_vs_statistical",
         "stat_selectors": ["mrmr", "boruta"],
     },
     "hybrid_comparison": {
-        "output_dir": "results/hybrid_comparison",
+        "output_dir": "results/comparisons/hybrid",
         "stat_selector": "mrmr",
         "improvement_tolerance": 1e-4,
     },
     "single_experiment": {
-        "output_dir": "results/single_experiment",
+        "output_dir": None,
         "selector": "llm",
     },
 }
@@ -312,7 +312,9 @@ def apply_feature_budget_to_selector_kwargs(
 
     if name == "mrmr":
         updated["k"] = feature_budget
-    elif name in {"boruta", "boruta_rfe"}:
+    elif name == "boruta":
+        updated["n_features"] = feature_budget
+    elif name == "boruta_rfe":
         rfe_kwargs = dict(updated.get("rfe_kwargs", {}))
         rfe_kwargs["n_features"] = feature_budget
         updated["rfe_kwargs"] = rfe_kwargs
