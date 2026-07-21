@@ -32,6 +32,7 @@ def test_boruta_ties_are_ordered_by_feature_name_and_budget_is_clamped(monkeypat
 
     assert selector.random_state == 7
     assert selector.selected_features_ == ["a", "b", "c"]
+    assert selector.feature_ranking_ == ["a", "b", "c"]
 
 
 def test_boruta_zero_feature_outcome_is_not_backfilled(monkeypatch):
@@ -43,6 +44,7 @@ def test_boruta_zero_feature_outcome_is_not_backfilled(monkeypatch):
     selector = BorutaSelector(n_features=2).fit(X, pd.Series([0, 1]))
 
     assert selector.selected_features_ == []
+    assert selector.feature_ranking_ == ["a", "b", "c"]
     assert selector.transform(X).shape == (2, 0)
 
 

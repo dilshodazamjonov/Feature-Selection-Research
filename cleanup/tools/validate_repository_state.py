@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -462,14 +463,40 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     root = args.root.resolve()
     sys.path.insert(0, str(root / "src"))
+    from credit_risk_fs.experiments.result_paths import (  # noqa: PLC0415
+        LEGACY_RESULTS_ENV,
+        configured_legacy_results_root,
+        validate_results_root_separation,
+    )
+
+    configured_legacy = configured_legacy_results_root()
     legacy = (
         validate_legacy_repository(args.legacy_repository_root.resolve())
         if args.legacy_repository_root is not None
+        else {
+            "status": "configured_read_only",
+            "location": str(configured_legacy),
+            "file_count": sum(
+                1 for path in configured_legacy.rglob("*") if path.is_file()
+            ),
+        }
+        if configured_legacy is not None
         else {
             "status": "external_optional",
             "location": "not configured",
         }
     )
+    if configured_legacy is not None:
+        validate_results_root_separation(
+            root / "results",
+            configured_legacy,
+            forbidden_legacy_roots=(
+                root / "data",
+                root / "tests_runtime",
+                Path(os.environ.get("TEMP", root / "tests_runtime")),
+            ),
+        )
+        legacy["configuration"] = LEGACY_RESULTS_ENV
     results = {
         "active_results": validate_active_results(root),
         "historical_results": legacy,

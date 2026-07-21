@@ -32,6 +32,7 @@ class BorutaSelector(SelectedFeaturesMixin):
         self.random_state = int(random_state)
         self.n_features = None if n_features is None else int(n_features)
         self.selected_features_ = None
+        self.feature_ranking_ = None
         self.selector: BorutaPy | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> BorutaSelector:
@@ -42,6 +43,7 @@ class BorutaSelector(SelectedFeaturesMixin):
             raise ValueError("BorutaSelector requires target labels during fit.")
         if X.shape[1] == 0:
             self.selected_features_ = []
+            self.feature_ranking_ = []
             return self
 
         estimator = RandomForestClassifier(
@@ -70,6 +72,10 @@ class BorutaSelector(SelectedFeaturesMixin):
             str(feature): int(rank)
             for feature, rank in zip(X.columns, self.selector.ranking_, strict=True)
         }
+        self.feature_ranking_ = sorted(
+            (str(feature) for feature in X.columns),
+            key=lambda feature: (ranking[feature], feature),
+        )
         confirmed.sort(key=lambda feature: (ranking[feature], feature))
         if self.n_features is not None:
             confirmed = confirmed[

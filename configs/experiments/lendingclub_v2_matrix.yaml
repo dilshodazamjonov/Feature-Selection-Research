@@ -18,5 +18,8 @@ excluded_feature_columns:
   - issue_d
   - loan_status
 time_col: recent_decision
+stable_row_id_column: loan_id
+identity_sidecar_path: data/lendingclub_v2/processed/record_identity_v1.csv
+identity_manifest_path: data/lendingclub_v2/processed/record_identity_v1.manifest.json
 preprocessor_kwargs:
   cat_min_frequency: 50

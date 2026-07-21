@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import os
 import re
 import unicodedata
@@ -56,10 +58,214 @@ files, temporary files, and legacy artifacts do not belong here.
 """
 
 _SAFE_COMPONENT_PATTERN = re.compile(r"[^a-z0-9-]+")
+LEGACY_RESULTS_ENV = "CREDIT_RISK_LEGACY_RESULTS_ROOT"
+LEGACY_EVIDENCE_PROFILE_ENV = "CREDIT_RISK_LEGACY_EVIDENCE_PROFILE"
+LEGACY_EVIDENCE_PROFILE_FILENAME = "legacy_evidence_profile.json"
+CLIP_COMPLETE_PROFILE = "clip_complete_v1"
+CLIP_REQUIRED_ARTIFACT_GROUPS = (
+    "clip_readiness",
+    "clip_text_baseline",
+    "clip_v2_statistical_view",
+    "corrected_homecredit_clip_contrastive",
+    "corrected_homecredit_clip_training",
+)
 
 
 class RunDirectoryCollisionError(FileExistsError):
     """Raised when a requested active run directory already exists."""
+
+
+class LegacyResultsConfigurationError(ValueError):
+    """Raised when the active and historical result roots are unsafe."""
+
+
+class HistoricalResultsWriteError(PermissionError):
+    """Raised before a repository writer can enter the historical bundle."""
+
+
+class LegacyEvidenceProfileError(ValueError):
+    """Raised when a bundle declares evidence that does not validate."""
+
+
+def configured_legacy_results_root(
+    configured_root: str | Path | None = None,
+    *,
+    required: bool = False,
+) -> Path | None:
+    """Resolve the explicit read-only historical root without using the CWD."""
+
+    value = configured_root
+    if value is None:
+        value = os.environ.get(LEGACY_RESULTS_ENV)
+    if value is None or not str(value).strip():
+        if required:
+            raise LegacyResultsConfigurationError(
+                f"historical evidence requires {LEGACY_RESULTS_ENV}"
+            )
+        return None
+    supplied = Path(str(value).strip())
+    if not supplied.is_absolute():
+        raise LegacyResultsConfigurationError(
+            f"{LEGACY_RESULTS_ENV} must be an absolute path: {supplied}"
+        )
+    resolved = supplied.resolve()
+    if not resolved.is_dir():
+        raise LegacyResultsConfigurationError(
+            f"configured historical results root is not a directory: {resolved}"
+        )
+    return resolved
+
+
+def validate_results_root_separation(
+    active_root: str | Path,
+    legacy_root: str | Path,
+    *,
+    forbidden_legacy_roots: tuple[str | Path, ...] = (),
+) -> tuple[Path, Path]:
+    """Require independent, non-overlapping active and historical roots."""
+
+    active = Path(active_root).resolve()
+    legacy = configured_legacy_results_root(legacy_root, required=True)
+    assert legacy is not None
+    if active == legacy or active.is_relative_to(legacy) or legacy.is_relative_to(active):
+        raise LegacyResultsConfigurationError(
+            f"active and historical results roots overlap: active={active}, legacy={legacy}"
+        )
+    for forbidden_root in forbidden_legacy_roots:
+        forbidden = Path(forbidden_root).resolve()
+        if legacy == forbidden or legacy.is_relative_to(forbidden):
+            raise LegacyResultsConfigurationError(
+                f"historical results root resolves inside a forbidden data/test root: {legacy}"
+            )
+    return active, legacy
+
+
+def reject_historical_write(
+    path: str | Path,
+    *,
+    legacy_root: str | Path | None = None,
+) -> Path:
+    """Resolve a prospective write and reject the historical bundle boundary."""
+
+    resolved = Path(path).resolve()
+    legacy = configured_legacy_results_root(legacy_root)
+    if legacy is not None and (resolved == legacy or resolved.is_relative_to(legacy)):
+        raise HistoricalResultsWriteError(
+            f"write rejected inside immutable historical results root {legacy}: {resolved}"
+        )
+    return resolved
+
+
+def resolve_legacy_artifact(
+    former_repository_path: str | Path,
+    *,
+    legacy_root: str | Path | None = None,
+    required: bool = True,
+) -> Path:
+    """Map a former ``results/...`` read to the explicitly configured bundle."""
+
+    root = configured_legacy_results_root(legacy_root, required=True)
+    assert root is not None
+    normalized = str(former_repository_path).replace("\\", "/")
+    former = Path(normalized)
+    if former.is_absolute() or ".." in former.parts:
+        raise LegacyResultsConfigurationError(
+            f"legacy artifact path must be a traversal-free repository path: {former}"
+        )
+    parts = former.parts[1:] if former.parts and former.parts[0].lower() == "results" else former.parts
+    candidate = (root.joinpath(*parts)).resolve()
+    if not candidate.is_relative_to(root):
+        raise LegacyResultsConfigurationError(
+            f"legacy artifact escapes configured root: {candidate}"
+        )
+    if required and not candidate.is_file():
+        raise FileNotFoundError(
+            f"configured historical evidence is missing required artifact: {candidate}"
+        )
+    return candidate
+
+
+def validate_legacy_evidence_profile(
+    legacy_root: str | Path,
+    *,
+    required_profile: str = CLIP_COMPLETE_PROFILE,
+) -> dict[str, Any] | None:
+    """Validate a declared complete legacy evidence bundle, or report absence."""
+
+    root = configured_legacy_results_root(legacy_root, required=True)
+    assert root is not None
+    declared_by_environment = os.environ.get(LEGACY_EVIDENCE_PROFILE_ENV)
+    profile_path = root / LEGACY_EVIDENCE_PROFILE_FILENAME
+    if not profile_path.is_file():
+        if declared_by_environment:
+            raise LegacyEvidenceProfileError(
+                f"{LEGACY_EVIDENCE_PROFILE_ENV} declares {declared_by_environment!r} "
+                f"but {profile_path} is missing"
+            )
+        return None
+    try:
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LegacyEvidenceProfileError(
+            f"legacy evidence profile cannot be parsed: {profile_path}"
+        ) from exc
+    profile_name = payload.get("profile")
+    if declared_by_environment and declared_by_environment != profile_name:
+        raise LegacyEvidenceProfileError(
+            "legacy evidence environment/profile manifest mismatch"
+        )
+    if profile_name != required_profile:
+        return None
+    if payload.get("status") in {"incomplete", "unavailable"}:
+        return None
+    if payload.get("status") != "complete":
+        raise LegacyEvidenceProfileError(
+            f"legacy evidence profile {required_profile} has an invalid status"
+        )
+    groups = payload.get("artifact_groups")
+    if not isinstance(groups, dict):
+        raise LegacyEvidenceProfileError("legacy evidence profile artifact_groups is invalid")
+    missing_groups = set(CLIP_REQUIRED_ARTIFACT_GROUPS) - set(groups)
+    if missing_groups:
+        raise LegacyEvidenceProfileError(
+            f"legacy evidence profile omits required groups: {sorted(missing_groups)}"
+        )
+    verified_artifacts = 0
+    for group in CLIP_REQUIRED_ARTIFACT_GROUPS:
+        artifacts = groups[group]
+        if not isinstance(artifacts, list) or not artifacts:
+            raise LegacyEvidenceProfileError(
+                f"legacy evidence group {group} must declare at least one artifact"
+            )
+        for artifact in artifacts:
+            if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256"}:
+                raise LegacyEvidenceProfileError(
+                    f"legacy evidence group {group} has an invalid artifact declaration"
+                )
+            relative = Path(str(artifact["path"]).replace("\\", "/"))
+            if relative.is_absolute() or ".." in relative.parts:
+                raise LegacyEvidenceProfileError(
+                    f"legacy evidence artifact path is unsafe: {relative}"
+                )
+            candidate = (root / relative).resolve()
+            if not candidate.is_relative_to(root) or not candidate.is_file():
+                raise LegacyEvidenceProfileError(
+                    f"declared legacy evidence artifact is missing: {candidate}"
+                )
+            expected_hash = str(artifact["sha256"]).lower()
+            digest = hashlib.sha256()
+            with candidate.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != expected_hash:
+                raise LegacyEvidenceProfileError(
+                    f"declared legacy evidence artifact hash mismatch: {candidate}"
+                )
+            verified_artifacts += 1
+    result = dict(payload)
+    result["profile_path"] = str(profile_path)
+    result["verified_artifact_count"] = verified_artifacts
+    return result
 
 
 def sanitize_component(value: object, *, field_name: str = "path component") -> str:
@@ -115,7 +321,11 @@ def resolve_results_root(
     repository = Path(repository_root).resolve()
     configured = Path(configured_results_root)
     candidate = configured if configured.is_absolute() else repository / configured
-    return candidate.resolve()
+    resolved = candidate.resolve()
+    legacy = configured_legacy_results_root()
+    if legacy is not None:
+        validate_results_root_separation(resolved, legacy)
+    return reject_historical_write(resolved, legacy_root=legacy)
 
 
 def initialize_results_layout(
@@ -154,7 +364,7 @@ def initialize_results_layout(
 def ensure_within_directory(path: str | Path, directory: str | Path) -> Path:
     """Resolve *path* and reject it unless it stays within *directory*."""
 
-    resolved_directory = Path(directory).resolve()
+    resolved_directory = reject_historical_write(directory)
     candidate = Path(path)
     resolved_path = (
         candidate.resolve()
@@ -167,7 +377,7 @@ def ensure_within_directory(path: str | Path, directory: str | Path) -> Path:
         raise ValueError(
             f"path escapes configured directory {resolved_directory}: {resolved_path}"
         ) from exc
-    return resolved_path
+    return reject_historical_write(resolved_path)
 
 
 def planned_run_directory(
@@ -249,7 +459,9 @@ def append_run_index_row(
 ) -> None:
     """Append one unique active run without changing existing registry rows."""
 
-    index_path = Path(results_root).resolve() / "run_index.csv"
+    index_path = reject_historical_write(
+        Path(results_root).resolve() / "run_index.csv"
+    )
     rows = _read_run_index(index_path)
     run_id = str(row.get("run_id", "")).strip()
     if not run_id:
@@ -281,7 +493,9 @@ def update_run_index_row(
 ) -> None:
     """Update exactly one existing active run row using an atomic replacement."""
 
-    index_path = Path(results_root).resolve() / "run_index.csv"
+    index_path = reject_historical_write(
+        Path(results_root).resolve() / "run_index.csv"
+    )
     rows = _read_run_index(index_path)
     unknown = set(updates) - set(RUN_INDEX_COLUMNS)
     if unknown:
@@ -303,7 +517,9 @@ def update_run_index_row(
                 }
             )
 
-    temporary_path = index_path.with_name(f".{index_path.name}.{os.getpid()}.tmp")
+    temporary_path = reject_historical_write(
+        index_path.with_name(f".{index_path.name}.{os.getpid()}.tmp")
+    )
     try:
         with temporary_path.open("x", encoding="utf-8", newline="") as file:
             writer = csv.DictWriter(

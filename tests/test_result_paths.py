@@ -13,12 +13,19 @@ from credit_risk_fs.experiments.result_paths import (
     RESULT_SUBDIRECTORIES,
     RUN_INDEX_COLUMNS,
     RunDirectoryCollisionError,
+    HistoricalResultsWriteError,
+    LegacyEvidenceProfileError,
+    LegacyResultsConfigurationError,
     append_run_index_row,
     build_run_id,
     create_run_directory,
     ensure_within_directory,
     initialize_results_layout,
+    reject_historical_write,
     repository_relative_path,
+    resolve_legacy_artifact,
+    validate_results_root_separation,
+    validate_legacy_evidence_profile,
 )
 from credit_risk_fs.experiments.tracking import (
     STANDARD_ARTIFACTS,
@@ -126,6 +133,105 @@ def test_paths_cannot_escape_the_configured_results_root(tmp_path):
     assert run_dir.is_relative_to(results_root / "runs")
 
 
+def test_historical_write_barrier_rejects_direct_and_traversal_paths(
+    tmp_path, monkeypatch
+):
+    legacy = tmp_path / "legacy" / "results"
+    legacy.mkdir(parents=True)
+    monkeypatch.setenv("CREDIT_RISK_LEGACY_RESULTS_ROOT", str(legacy))
+
+    with pytest.raises(HistoricalResultsWriteError, match="immutable historical"):
+        reject_historical_write(legacy / "artifact.csv")
+    with pytest.raises(HistoricalResultsWriteError, match="immutable historical"):
+        reject_historical_write(tmp_path / "active" / ".." / "legacy" / "results" / "x.csv")
+
+
+def test_active_and_historical_roots_must_not_overlap(tmp_path):
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    with pytest.raises(LegacyResultsConfigurationError, match="overlap"):
+        validate_results_root_separation(legacy / "active", legacy)
+    nested = legacy / "nested"
+    nested.mkdir()
+    with pytest.raises(LegacyResultsConfigurationError, match="overlap"):
+        validate_results_root_separation(legacy, nested)
+
+
+def test_independent_active_root_and_read_only_legacy_discovery(tmp_path):
+    active = tmp_path / "active"
+    legacy = tmp_path / "historical"
+    active.mkdir()
+    legacy.mkdir()
+    artifact = legacy / "clip" / "manifest.json"
+    artifact.parent.mkdir()
+    artifact.write_text("{}\n", encoding="utf-8")
+
+    assert validate_results_root_separation(active, legacy) == (
+        active.resolve(),
+        legacy.resolve(),
+    )
+    assert resolve_legacy_artifact(
+        "results\\clip/manifest.json", legacy_root=legacy
+    ) == artifact.resolve()
+
+
+def _write_complete_evidence_profile(root: Path) -> Path:
+    groups = {}
+    for index, group in enumerate(
+        (
+            "clip_readiness",
+            "clip_text_baseline",
+            "clip_v2_statistical_view",
+            "corrected_homecredit_clip_contrastive",
+            "corrected_homecredit_clip_training",
+        )
+    ):
+        artifact = root / f"evidence_{index}.json"
+        artifact.write_text(f'{{"group":"{group}"}}\n', encoding="utf-8")
+        import hashlib
+
+        groups[group] = [
+            {"path": artifact.name, "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}
+        ]
+    profile = root / "legacy_evidence_profile.json"
+    profile.write_text(
+        json.dumps(
+            {"profile": "clip_complete_v1", "status": "complete", "artifact_groups": groups}
+        ),
+        encoding="utf-8",
+    )
+    return profile
+
+
+def test_legacy_evidence_profile_absence_is_unavailable(tmp_path):
+    assert validate_legacy_evidence_profile(tmp_path) is None
+
+
+def test_declared_complete_legacy_evidence_profile_is_hash_validated(tmp_path):
+    _write_complete_evidence_profile(tmp_path)
+    validated = validate_legacy_evidence_profile(tmp_path)
+    assert validated is not None
+    assert validated["verified_artifact_count"] == 5
+
+    (tmp_path / "evidence_0.json").write_text("changed\n", encoding="utf-8")
+    with pytest.raises(LegacyEvidenceProfileError, match="hash mismatch"):
+        validate_legacy_evidence_profile(tmp_path)
+
+
+def test_explicitly_incomplete_evidence_profile_is_unavailable(tmp_path):
+    (tmp_path / "legacy_evidence_profile.json").write_text(
+        json.dumps({"profile": "clip_complete_v1", "status": "incomplete"}),
+        encoding="utf-8",
+    )
+    assert validate_legacy_evidence_profile(tmp_path) is None
+
+
+def test_environment_declaration_without_manifest_fails(tmp_path, monkeypatch):
+    monkeypatch.setenv("CREDIT_RISK_LEGACY_EVIDENCE_PROFILE", "clip_complete_v1")
+    with pytest.raises(LegacyEvidenceProfileError, match="profile.*missing"):
+        validate_legacy_evidence_profile(tmp_path)
+
+
 def test_resource_usage_contract_contains_required_measurements(tmp_path):
     payload = write_resource_usage(
         tmp_path,
@@ -229,8 +335,9 @@ def _register_valid_completed_run(repository_root: Path) -> tuple[Path, Path]:
 
 
 def test_validator_accepts_active_layout_without_historical_registry(
-    tmp_path, capsys
+    tmp_path, capsys, monkeypatch
 ):
+    monkeypatch.delenv("CREDIT_RISK_LEGACY_RESULTS_ROOT", raising=False)
     _register_valid_completed_run(tmp_path)
 
     assert validate_active_results(tmp_path.resolve())["registered_runs"] == 1

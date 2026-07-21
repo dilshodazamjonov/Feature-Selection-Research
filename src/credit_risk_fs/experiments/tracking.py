@@ -11,7 +11,10 @@ from pathlib import Path
 from typing import Any
 
 from credit_risk_fs.experiments.config import compute_config_hash
-from credit_risk_fs.experiments.result_paths import sanitize_component
+from credit_risk_fs.experiments.result_paths import (
+    reject_historical_write,
+    sanitize_component,
+)
 
 
 SUCCESS_MARKER = "_SUCCESS"
@@ -155,7 +158,7 @@ def build_run_manifest(
 
 def write_json(path: str | Path, payload: dict[str, Any]) -> Path:
     """Write pretty JSON and return the path."""
-    output_path = Path(path)
+    output_path = reject_historical_write(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False, default=str),
@@ -203,7 +206,7 @@ def materialize_standard_artifacts(run_dir: str | Path) -> dict[str, Path]:
     run_path = Path(run_dir)
     materialized: dict[str, Path] = {}
     for target_name, source_names in _STANDARD_ARTIFACT_SOURCES.items():
-        target = run_path / target_name
+        target = reject_historical_write(run_path / target_name)
         source = next(
             (run_path / name for name in source_names if (run_path / name).is_file()),
             None,
@@ -298,7 +301,7 @@ def write_resource_usage(
 
 def mark_completed(run_dir: str | Path) -> Path:
     """Create the success marker used by resume behavior."""
-    marker = Path(run_dir) / SUCCESS_MARKER
+    marker = reject_historical_write(Path(run_dir) / SUCCESS_MARKER)
     marker.write_text(utc_timestamp(), encoding="utf-8")
     return marker
 

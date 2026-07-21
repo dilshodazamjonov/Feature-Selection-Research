@@ -5,8 +5,12 @@ import pandas as pd
 from credit_risk_fs.utils.io import read_json
 
 
-def test_learned_scores_use_homecredit_anchor_and_keep_lendingclub_external():
-    root = "results/corrected_homecredit_clip/training"
+def test_learned_scores_use_homecredit_anchor_and_keep_lendingclub_external(
+    legacy_artifact_path,
+):
+    root = legacy_artifact_path(
+        "results/corrected_homecredit_clip/training", required=False
+    )
     anchor = read_json(f"{root}/learned_anchor_manifest.json")
     home = pd.read_csv(f"{root}/homecredit_learned_scores.csv")
     lc = pd.read_csv(f"{root}/lendingclub_v2_learned_scores.csv")

@@ -1,0 +1,141 @@
+{
+  "audit": {
+    "name": "foundation_protocol_freeze_prompt_1_1",
+    "date": "2026-07-21",
+    "repository_root": "D:/python projects/Research",
+    "git_commit_before_edits": "393acd911ee0e98f870bf164894326cf8503dd67",
+    "continuation_baseline": "Prompt 1 worktree changes were present and preserved",
+    "gate": "PASS"
+  },
+  "baseline": {
+    "repository_validator": "passed",
+    "focused_prompt_1_tests": {"passed": 19, "failed": 0, "duration_seconds": 17.91},
+    "active_registered_runs": 0,
+    "active_run_directories": 0,
+    "prompt_1_deliverables_present_and_parseable": true
+  },
+  "historical_preservation": {
+    "root": "D:/ResearchFindings/results",
+    "configuration": "CREDIT_RISK_LEGACY_RESULTS_ROOT",
+    "file_count": 359,
+    "total_size_bytes": 110084164,
+    "manifest": "cleanup/audits/foundation_protocol_freeze/legacy_artifact_manifest.csv",
+    "manifest_sha256": "31ca80f026dc9169f14e3c518b49cd4ee0ad71074264daef4cf660263e1f2417",
+    "end_comparison": {"added": 0, "removed": 0, "changed": 0, "status": "unchanged"},
+    "root_separation": "verified_non_overlapping",
+    "permissions_changed": false,
+    "historical_files_written_or_copied": false
+  },
+  "lendingclub_identity": {
+    "status": "verified",
+    "identity_type": "authenticated_original_loan_id",
+    "raw_column": "id",
+    "canonical_column": "loan_id",
+    "raw_source_sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+    "processed_dataset_sha256": "ce9583dcc8ed2394cca3456c1c5528a2b08b659a04a02823b65ddc31d95267ae",
+    "sidecar_sha256": "f634343eb897a92aeb63d7e20ff341bc483c130b3351454031d0f191d83ca6b7",
+    "raw_physical_rows": 2260701,
+    "raw_loan_record_rows": 2260668,
+    "embedded_non_record_footer_rows": 33,
+    "retained_finalized_rows": 1348099,
+    "missing_ids": 0,
+    "unique_ids": 1348099,
+    "dev_oot_overlap": 0,
+    "sidecar_location": "data/lendingclub_v2/processed/record_identity_v1.csv",
+    "sidecar_git_policy": "ignored_data_artifact",
+    "evidence": "cleanup/audits/foundation_protocol_freeze/lendingclub_identity_evidence.json",
+    "resource_usage": {
+      "elapsed_seconds": 265.639053,
+      "peak_rss_bytes": 1116401664,
+      "under_8_gib": true,
+      "process_count": 1,
+      "chunk_size": 100000,
+      "bytes_written": 65832644
+    },
+    "dev": {
+      "rows": 598649,
+      "positives": 116966,
+      "positive_rate": 0.19538327133261726,
+      "equal_timestamp_groups": 24,
+      "maximum_tie_group": 42986,
+      "ordered_id_sha256": "4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e",
+      "ordered_id_target_sha256": "1373baf30fc16b022d1d9059e400df65b5d3bb3f9ae76e3397b3172578f91590"
+    },
+    "oot": {
+      "rows": 293105,
+      "positives": 68252,
+      "positive_rate": 0.23285853192541922,
+      "equal_timestamp_groups": 12,
+      "maximum_tie_group": 48938,
+      "ordered_id_sha256": "86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092",
+      "ordered_id_target_sha256": "9787d44d278d7965b0a966f19717dec1d9718ea8dfb6b96aa531d0f52d0a53e2"
+    },
+    "ordering": "integer recent_decision ascending then NFC-normalized canonical decimal loan_id string ascending"
+  },
+  "forward_voting": {
+    "status": "frozen",
+    "protocol": "cross_dataset_rank_voting_v1",
+    "historical_replication": false,
+    "included_voters": ["rf_corr_mrmr", "boruta"],
+    "excluded_voters": {
+      "corrected_clip": "complete provenance absent",
+      "api_backed_llm": "no verified corresponding LendingClub ranking",
+      "domain_rule": "Home-Credit-specific with no verified common rule",
+      "rfe": "reserved as downstream selector"
+    },
+    "fit_scope": "DEV fold training only",
+    "aggregation": "equal mean of 1-(rank-1)/max(N-1,1); missing rank zero",
+    "ties": ["presence descending", "best rank ascending", "normalized feature name ascending"],
+    "candidate_pools": [100, 200, 300],
+    "primary_pool": 200,
+    "downstream_selector": "CatBoost-backed RFESelector fitted fold-locally",
+    "final_budgets": {"lr": 20, "catboost": 40},
+    "seed": 42,
+    "oot_lock": true
+  },
+  "statistical_inference": {
+    "paired_test": "two-sided DeLong for AUC on identical OOT IDs",
+    "bootstrap": {
+      "type": "paired stratified positives/negatives",
+      "attempts": 2000,
+      "minimum_valid": 1900,
+      "seed": 20260721,
+      "interval": "95 percent percentile",
+      "metrics": ["AUC", "KS", "Lift@10"]
+    },
+    "primary_families": ["homecredit_lr", "homecredit_catboost", "lendingclub_v2_lr", "lendingclub_v2_catboost"],
+    "comparisons_per_family": ["voting_pool_100 vs rf_corr_mrmr", "voting_pool_200 vs rf_corr_mrmr", "voting_pool_300 vs rf_corr_mrmr"],
+    "holm_scope": "within each family of three only",
+    "descriptive_only": ["pool-to-pool contrasts", "score PSI", "feature PSI", "Jaccard", "Kuncheva", "runtime", "RAM", "GPU"]
+  },
+  "legacy_integrations": {
+    "affected_test_count": 31,
+    "required_profile": "clip_complete_v1",
+    "required_groups": ["clip_readiness", "clip_text_baseline", "clip_v2_statistical_view", "corrected_homecredit_clip_contrastive", "corrected_homecredit_clip_training"],
+    "no_root_outcome": "skipped_required_external_evidence_unavailable",
+    "configured_incomplete_root_outcome": "skipped_required_external_evidence_unavailable",
+    "declared_complete_bad_bundle_outcome": "fail",
+    "configured_incomplete_root_results": {"passed_non_evidence": 9, "skipped_evidence": 31, "failed": 0},
+    "scientific_assertions_changed": false
+  },
+  "validation": {
+    "focused": {"passed": 53, "failed": 0, "duration_seconds": 6.60},
+    "full": {"passed": 405, "skipped": 31, "failed": 0, "warnings": 107, "duration_seconds": 149.85},
+    "repository_validator": "passed",
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "protocol_parse": "passed"
+  },
+  "hard_boundary_attestation": {
+    "research_model_or_experiment_fit": false,
+    "feature_selection_experiment_run": false,
+    "predictions_generated": false,
+    "voting_run": false,
+    "shap_clip_embedding_umap_run": false,
+    "external_llm_api_called": false,
+    "experiment_run_directory_created": false,
+    "run_index_row_appended": false,
+    "git_staged_committed_or_pushed": false,
+    "oot_used_for_design_choice": false
+  }
+}

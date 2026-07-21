@@ -9,21 +9,21 @@ from credit_risk_fs.clip.evidence_loader import ClipEvidenceError, load_clip_evi
 from credit_risk_fs.clip.schemas import ClipDatasetRole
 
 
-REAL_HOME = Path("results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv")
-REAL_LC_V2 = Path("results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv")
+REAL_HOME = "results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv"
+REAL_LC_V2 = "results/lendingclub_v2/analysis/clip_readiness/dev_only_clip_training_evidence.csv"
 
 
-def test_dev_only_evidence_files_load():
+def test_dev_only_evidence_files_load(legacy_artifact_path):
     home = load_clip_evidence(
         dataset="homecredit",
         role=ClipDatasetRole.TRAIN,
-        source_path=REAL_HOME,
+        source_path=legacy_artifact_path(REAL_HOME),
         statistical_fields=["missing_rate_dev", "iv_score_if_available"],
     )
     lc = load_clip_evidence(
         dataset="lendingclub_v2",
         role=ClipDatasetRole.EXTERNAL_VALIDATION,
-        source_path=REAL_LC_V2,
+        source_path=legacy_artifact_path(REAL_LC_V2),
         statistical_fields=["missing_rate_dev", "iv_score_if_available"],
     )
 
@@ -55,19 +55,19 @@ def test_legacy_lendingclub_path_is_rejected():
 
 
 @pytest.mark.parametrize("field", ["psi_dev_oot_if_available", "mean_oot_if_available", "TARGET", "member_id"])
-def test_forbidden_fields_cannot_be_statistical_inputs(field: str):
+def test_forbidden_fields_cannot_be_statistical_inputs(field: str, legacy_artifact_path):
     with pytest.raises(ClipEvidenceError, match="forbidden statistical input field"):
         load_clip_evidence(
             dataset="homecredit",
             role=ClipDatasetRole.TRAIN,
-            source_path=REAL_HOME,
+            source_path=legacy_artifact_path(REAL_HOME),
             statistical_fields=[field],
         )
 
 
-def test_unsafe_rows_cannot_enter_allowed_set(tmp_path):
+def test_unsafe_rows_cannot_enter_allowed_set(tmp_path, legacy_artifact_path):
     path = tmp_path / "results" / "homecredit" / "analysis" / "clip_readiness" / "dev_only_clip_training_evidence.csv"
-    frame = pd.read_csv(REAL_HOME).head(2).copy()
+    frame = pd.read_csv(legacy_artifact_path(REAL_HOME)).head(2).copy()
     frame["dataset"] = "homecredit"
     frame["allowed_for_clip_training"] = True
     frame["clip_training_exclusion_reason"] = ""
@@ -84,13 +84,12 @@ def test_unsafe_rows_cannot_enter_allowed_set(tmp_path):
         )
 
 
-def test_blocked_rows_preserve_block_reasons():
+def test_blocked_rows_preserve_block_reasons(legacy_artifact_path):
     home = load_clip_evidence(
         dataset="homecredit",
         role=ClipDatasetRole.TRAIN,
-        source_path=REAL_HOME,
+        source_path=legacy_artifact_path(REAL_HOME),
         statistical_fields=["missing_rate_dev"],
     )
 
     assert home.blocked["clip_training_exclusion_reason"].fillna("").str.len().gt(0).all()
-

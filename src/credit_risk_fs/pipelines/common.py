@@ -29,7 +29,10 @@ from credit_risk_fs.experiments.config import (
     apply_random_seed_to_kwargs,
     canonical_config_json,
 )
-from credit_risk_fs.experiments.result_paths import sanitize_component
+from credit_risk_fs.experiments.result_paths import (
+    reject_historical_write,
+    sanitize_component,
+)
 from credit_risk_fs.experiments.tracking import (
     build_data_version,
     write_resource_usage,
@@ -57,7 +60,7 @@ DEFAULT_DATA_DIR = "data/homecredit/raw"
 DEFAULT_DESCRIPTION_PATH = "data/homecredit/metadata/columns_description.csv"
 DEFAULT_TARGET = "TARGET"
 DEFAULT_TIME_COL = "recent_decision"
-DEFAULT_DROP_ID_COLS = ("SK_ID_CURR", "SK_ID_BUREAU", "SK_ID_PREV")
+DEFAULT_DROP_ID_COLS = ("SK_ID_CURR", "SK_ID_BUREAU", "SK_ID_PREV", "loan_id")
 DEFAULT_OUTPUT_DIR = "outputs"
 DECISION_TIME_CANDIDATES = ("recent_decision", "PREV_recent_decision_MAX", "DAYS_DECISION")
 DEFAULT_EXCLUDED_FEATURE_COLUMNS = (
@@ -110,6 +113,8 @@ class ExperimentConfig:
     external_dataset: str = ""
     pairing_policy_version: str = "not_applicable_non_clip"
     stable_row_id_column: str | None = None
+    identity_sidecar_path: str | None = None
+    identity_manifest_path: str | None = None
     stability_candidate_pool_path: str | None = None
 
 
@@ -185,7 +190,9 @@ def create_run_output_dir(base_output_dir: str | Path, run_label: str) -> Path:
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     safe_label = sanitize_component(run_label, field_name="run label")
-    run_dir = Path(base_output_dir) / f"{safe_label}_{timestamp}"
+    run_dir = reject_historical_write(
+        Path(base_output_dir) / f"{safe_label}_{timestamp}"
+    )
     try:
         run_dir.mkdir(parents=True, exist_ok=False)
     except FileExistsError as exc:
@@ -242,7 +249,47 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
 
     app_train = dfs["application_train"].copy()
     source_identity = None
-    if config.stable_row_id_column:
+    if config.stable_row_id_column and str(config.dataset_name).lower() == "lendingclub_v2":
+        from credit_risk_fs.experiments.lendingclub_identity import (
+            load_lendingclub_identity_sidecar,
+        )
+
+        if not config.identity_sidecar_path or not config.identity_manifest_path:
+            raise ValueError(
+                "lendingclub_v2 stable identity requires identity_sidecar_path and "
+                "identity_manifest_path"
+            )
+        identity_bundle = load_lendingclub_identity_sidecar(
+            sidecar_path=config.identity_sidecar_path,
+            manifest_path=config.identity_manifest_path,
+            processed_frame=app_train,
+        )
+        if config.stable_row_id_column != "loan_id":
+            raise ValueError("lendingclub_v2 authenticated identity must use loan_id")
+        app_train.insert(0, "loan_id", identity_bundle.frame["loan_id"].to_numpy())
+        identity_manifest = dict(identity_bundle.manifest)
+        identity_manifest.update(
+            {
+                "manifest_version": identity_bundle.manifest["schema_version"],
+                "dataset": "lendingclub_v2",
+                "source_artifact": identity_bundle.manifest["raw_source"]["path"],
+                "source_artifact_hash": identity_bundle.manifest["raw_source"]["sha256"],
+                "source_identity_manifest_hash": identity_bundle.manifest["manifest_sha256"],
+            }
+        )
+        canonical_ids = identity_bundle.frame["loan_id"].astype(str)
+        source_identity = SourceIdentityProvenance(
+            manifest=identity_manifest,
+            authenticated_ids=frozenset(canonical_ids),
+            target_by_id=dict(
+                zip(
+                    canonical_ids,
+                    identity_bundle.frame["target"].astype(int).astype(str),
+                    strict=True,
+                )
+            ),
+        )
+    elif config.stable_row_id_column:
         source_identity = build_source_identity_provenance(
             app_train,
             dataset=config.dataset_name,
@@ -1282,6 +1329,37 @@ def validate_source_identity_subset(
 
     if source_identity is None:
         raise ValueError("source identity manifest is missing")
+    if str(dataset).lower() == "lendingclub_v2":
+        manifest = source_identity.manifest
+        if (
+            manifest.get("schema_version")
+            != "lendingclub_original_loan_id_sidecar_v1"
+            or manifest.get("identity_type") != "authenticated_original_loan_id"
+            or manifest.get("stable_row_id_column") != "loan_id"
+            or stable_row_id_column != "loan_id"
+            or manifest.get("stable_id_uniqueness_status") != "unique"
+            or int(manifest.get("stable_id_null_count", -1)) != 0
+            or int(manifest.get("dev_oot_overlap_count", -1)) != 0
+        ):
+            raise ValueError("LendingClub source identity metadata mismatch")
+        missing_columns = {stable_row_id_column, target_column} - set(frame.columns)
+        if missing_columns:
+            raise ValueError(
+                f"current frame lacks authenticated identity columns: {sorted(missing_columns)}"
+            )
+        ids = frame[stable_row_id_column]
+        if ids.isna().any() or ids.astype(str).duplicated().any():
+            raise ValueError("authenticated LendingClub loan IDs are null or duplicated")
+        canonical_ids = ids.astype(str)
+        if set(canonical_ids) - source_identity.authenticated_ids:
+            raise ValueError("current LendingClub IDs are not authenticated raw loan IDs")
+        observed_targets = frame[target_column].map(_canonical_identity_value)
+        if any(
+            source_identity.target_by_id.get(row_id) != target
+            for row_id, target in zip(canonical_ids, observed_targets, strict=True)
+        ):
+            raise ValueError("current LendingClub targets are misaligned with raw loan IDs")
+        return canonical_ids.astype("string")
     manifest = source_identity.manifest
     required_manifest_fields = {
         "manifest_version",

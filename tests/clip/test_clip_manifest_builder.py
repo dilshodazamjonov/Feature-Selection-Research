@@ -9,14 +9,16 @@ from credit_risk_fs.clip.manifest_builder import build_training_manifest, load_t
 from credit_risk_fs.utils.hashing import sha256_file
 
 
-def test_source_hashes_are_deterministic():
-    path = Path("results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv")
+def test_source_hashes_are_deterministic(legacy_artifact_path):
+    path = legacy_artifact_path(
+        "results/homecredit/analysis/clip_readiness/dev_only_clip_training_evidence.csv"
+    )
 
     assert sha256_file(path) == sha256_file(path)
 
 
-def test_build_manifest_outputs_are_deterministic(tmp_path):
-    config = load_training_manifest_config()
+def test_build_manifest_outputs_are_deterministic(tmp_path, legacy_config_paths):
+    config = legacy_config_paths(load_training_manifest_config())
     first_dir = tmp_path / "first"
     second_dir = tmp_path / "second"
 
@@ -33,8 +35,8 @@ def test_build_manifest_outputs_are_deterministic(tmp_path):
     assert first_manifest["external_validation_dataset"] == "lendingclub_v2"
 
 
-def test_manifest_outputs_keep_roles_and_blocked_reasons(tmp_path):
-    config = load_training_manifest_config()
+def test_manifest_outputs_keep_roles_and_blocked_reasons(tmp_path, legacy_config_paths):
+    config = legacy_config_paths(load_training_manifest_config())
     result = build_training_manifest(config=config, output_dir=tmp_path, seed=42, dry_run=True)
 
     training = pd.read_csv(result.output_paths["training_features"])
@@ -55,8 +57,8 @@ def test_manifest_outputs_keep_roles_and_blocked_reasons(tmp_path):
     assert set(train_input_roles["dataset"]) == {"homecredit"}
 
 
-def test_output_ordering_is_deterministic(tmp_path):
-    config = load_training_manifest_config()
+def test_output_ordering_is_deterministic(tmp_path, legacy_config_paths):
+    config = legacy_config_paths(load_training_manifest_config())
     result = build_training_manifest(config=config, output_dir=tmp_path, seed=42, dry_run=True)
     training = pd.read_csv(result.output_paths["training_features"])
     external = pd.read_csv(result.output_paths["external_validation_features"])

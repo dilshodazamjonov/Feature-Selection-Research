@@ -333,7 +333,18 @@ def run_kfold_training(
         if len(stable_row_ids) != len(df):
             raise ValueError("stable row ID count does not match DEV rows")
         df["_stable_row_id_"] = np.asarray(stable_row_ids)
-    df = df.sort_values(time_col).reset_index(drop=True)
+    if stable_row_ids is not None:
+        from credit_risk_fs.experiments.lendingclub_identity import (
+            stable_chronological_order,
+        )
+
+        df = stable_chronological_order(
+            df,
+            time_column=time_col,
+            identity_column="_stable_row_id_",
+        )
+    else:
+        df = df.sort_values(time_col, kind="mergesort").reset_index(drop=True)
 
     y_sorted = df["_target_"].copy()
     X_model = df.drop(

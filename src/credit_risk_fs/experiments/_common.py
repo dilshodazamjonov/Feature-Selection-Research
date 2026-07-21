@@ -147,6 +147,9 @@ def build_experiment_config(
         feature_budget=feature_budget,
         excluded_feature_columns=tuple(excluded_feature_columns),
         preprocessor_kwargs=dict(preprocessor_kwargs),
+        stable_row_id_column=project_config.get("stable_row_id_column"),
+        identity_sidecar_path=project_config.get("identity_sidecar_path"),
+        identity_manifest_path=project_config.get("identity_manifest_path"),
     )
 
 

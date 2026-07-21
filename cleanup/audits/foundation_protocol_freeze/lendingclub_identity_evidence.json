@@ -1,0 +1,109 @@
+{
+  "schema_version": "lendingclub_original_loan_id_sidecar_v1",
+  "identity_type": "authenticated_original_loan_id",
+  "stable_row_id_column": "loan_id",
+  "raw_source": {
+    "path": "D:/python projects/Research/data/lendingclub/raw/accepted_2007_to_2018Q4.csv",
+    "sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+    "size_bytes": 1675133810,
+    "header_sha256": "b451bf467727888f63d7125df729f4304bf5cee11bf399009a408dad6d97fb1d"
+  },
+  "processed_dataset": {
+    "path": "D:/python projects/Research/data/lendingclub_v2/processed/application_train.csv",
+    "sha256": "ce9583dcc8ed2394cca3456c1c5528a2b08b659a04a02823b65ddc31d95267ae",
+    "size_bytes": 4148431851,
+    "header_sha256": "7ada8ea7fa51e884240058f059426da1f9539ca3defa7b813ba71cdb8ee0741d",
+    "alignment_fingerprint": "b7d700d013216d6ae3f86d34a7daac6d63256555778f05fae9084567eff0e142"
+  },
+  "sidecar": {
+    "path": "D:/python projects/Research/data/lendingclub_v2/processed/record_identity_v1.csv",
+    "sha256": "f634343eb897a92aeb63d7e20ff341bc483c130b3351454031d0f191d83ca6b7",
+    "size_bytes": 65832644,
+    "columns": [
+      "loan_id",
+      "split",
+      "time_value",
+      "target",
+      "processed_row_position",
+      "source_row_position",
+      "issue_month"
+    ]
+  },
+  "source_row_count": 2260701,
+  "source_data_row_count": 2260668,
+  "non_record_footer_row_count": 33,
+  "retained_row_count": 1348099,
+  "stable_id_unique_count": 1348099,
+  "stable_id_null_count": 0,
+  "stable_id_uniqueness_status": "unique",
+  "source_stable_id_values_hash": "1bf45d850184d83f965abdfd61d388f7a99471f012e603fb0a9a17e4c8dcf48c",
+  "stable_id_target_alignment_hash": "366373f18e2d75dcc66c1ee5127f1bbb905d4788dacd9fdca07069a9cd27bc75",
+  "dev_oot_overlap_count": 0,
+  "splits": {
+    "DEV": {
+      "hash_version": "credit_risk_ordered_row_alignment_v1",
+      "row_count": 598649,
+      "unique_id_count": 598649,
+      "missing_id_count": 0,
+      "duplicate_id_count": 0,
+      "positive_count": 116966,
+      "positive_rate": 0.19538327133261726,
+      "ordered_row_id_sha256": "4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e",
+      "ordered_row_id_target_sha256": "1373baf30fc16b022d1d9059e400df65b5d3bb3f9ae76e3397b3172578f91590",
+      "equal_timestamp_group_count": 24,
+      "maximum_equal_timestamp_group_size": 42986,
+      "time_min": -1795,
+      "time_max": -1096,
+      "ordering_rule": "time_value_int_days_asc_then_utf8_nfc_loan_id_asc"
+    },
+    "OOT": {
+      "hash_version": "credit_risk_ordered_row_alignment_v1",
+      "row_count": 293105,
+      "unique_id_count": 293105,
+      "missing_id_count": 0,
+      "duplicate_id_count": 0,
+      "positive_count": 68252,
+      "positive_rate": 0.23285853192541922,
+      "ordered_row_id_sha256": "86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092",
+      "ordered_row_id_target_sha256": "9787d44d278d7965b0a966f19717dec1d9718ea8dfb6b96aa531d0f52d0a53e2",
+      "equal_timestamp_group_count": 12,
+      "maximum_equal_timestamp_group_size": 48938,
+      "time_min": -1065,
+      "time_max": -730,
+      "ordering_rule": "time_value_int_days_asc_then_utf8_nfc_loan_id_asc"
+    }
+  },
+  "canonical_serialization_version": "credit_risk_ordered_row_alignment_v1",
+  "canonical_ordering": "time_value_int_days_asc_then_utf8_nfc_loan_id_asc",
+  "split_boundaries": {
+    "dev_start_inclusive": -1795,
+    "oot_start_inclusive": -1065,
+    "oot_end_inclusive": -730
+  },
+  "creation_code_version": "build_lendingclub_identity_sidecar_v1",
+  "regeneration_command": ".\\.venv\\Scripts\\python.exe scripts\\build_lendingclub_identity_sidecar.py",
+  "resource_usage": {
+    "elapsed_seconds": 265.639053,
+    "peak_rss_bytes": 1116401664,
+    "process_count": 1,
+    "chunk_size": 100000,
+    "files_read": [
+      "D:/python projects/Research/data/lendingclub/raw/accepted_2007_to_2018Q4.csv",
+      "D:/python projects/Research/data/lendingclub_v2/processed/application_train.csv"
+    ],
+    "columns_read": {
+      "D:/python projects/Research/data/lendingclub/raw/accepted_2007_to_2018Q4.csv": [
+        "id",
+        "loan_status",
+        "issue_d"
+      ],
+      "D:/python projects/Research/data/lendingclub_v2/processed/application_train.csv": [
+        "TARGET",
+        "recent_decision",
+        "issue_d"
+      ]
+    },
+    "bytes_written": 65832644
+  },
+  "manifest_sha256": "d421fb9cb249b05833948c829c7258c8f7893c5a20ba324d8f1788991918b720"
+}

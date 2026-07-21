@@ -88,8 +88,10 @@ def test_formula_derived_family_resolution_is_deterministic():
     assert first == second
 
 
-def test_real_homecredit_split_has_zero_canonical_family_overlap():
-    split = pd.read_csv("results/clip/text_baseline/homecredit_group_split.csv")
+def test_real_homecredit_split_has_zero_canonical_family_overlap(legacy_artifact_path):
+    split = pd.read_csv(
+        legacy_artifact_path("results/clip/text_baseline/homecredit_group_split.csv")
+    )
 
     train = set(split.loc[split["split"].eq("train"), "canonical_feature_family"].astype(str))
     validation = set(split.loc[split["split"].eq("validation"), "canonical_feature_family"].astype(str))

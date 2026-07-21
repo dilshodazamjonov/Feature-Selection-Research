@@ -1,0 +1,109 @@
+{
+  "contract_version": "1.1.0",
+  "hash_version": "credit_risk_ordered_row_alignment_v1",
+  "serialization": {
+    "implementation": "credit_risk_fs.experiments.row_alignment",
+    "digest": "SHA-256",
+    "stream": "The UTF-8 header credit_risk_ordered_row_alignment_v1 plus LF is followed by one compact JSON array plus LF per row.",
+    "row_id_hash_fields": [
+      "row_id"
+    ],
+    "row_id_target_hash_fields": [
+      "row_id",
+      "target"
+    ],
+    "normalization": "null is distinct; booleans are typed; finite integral and decimal-equivalent numbers share a canonical decimal representation; strings are NFC-normalized and remain distinct from numbers; row order is significant."
+  },
+  "datasets": {
+    "homecredit": {
+      "source_evidence": [
+        "data/homecredit/raw/application_train.csv",
+        "data/homecredit/raw/previous_application.csv",
+        "configs/experiments/homecredit_matrix.yaml",
+        "D:/ResearchFindings/results/lr/statistical/lr_statistical_mrmr_8b6e39d2ee9f/data_split_manifest.json"
+      ],
+      "row_identifier": "SK_ID_CURR",
+      "target": "TARGET",
+      "split_time_column": "recent_decision",
+      "split_time_derivation": "maximum DAYS_DECISION per SK_ID_CURR from previous_application.csv",
+      "ordered_input_rule": "application_train.csv source order preserved through the left ID merge before temporal filtering",
+      "source_row_count": 307511,
+      "missing_split_time_count": 16454,
+      "older_than_dev_count": 71912,
+      "dev": {
+        "interval": "[-600,-240)",
+        "row_count": 99092,
+        "unique_id_count": 99092,
+        "missing_id_count": 0,
+        "duplicate_id_count": 0,
+        "positive_count": 7859,
+        "positive_rate": 0.07931013603519961,
+        "ordered_row_id_sha256": "722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7",
+        "ordered_row_id_target_sha256": "63e9afa9e572745520c96bdefb011ab7547854b7b018d4a5f9a80d5608e6851c"
+      },
+      "oot": {
+        "interval": "[-240,0]",
+        "row_count": 120053,
+        "unique_id_count": 120053,
+        "missing_id_count": 0,
+        "duplicate_id_count": 0,
+        "positive_count": 10688,
+        "positive_rate": 0.08902734625540386,
+        "ordered_row_id_sha256": "3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a",
+        "ordered_row_id_target_sha256": "f384956b737e46a4b7238064ff9ad2942abfc03eea86048e73f34751cde11895"
+      },
+      "dev_oot_id_overlap_count": 0
+    },
+    "lendingclub_v2": {
+      "source_evidence": [
+        "data/lendingclub/raw/accepted_2007_to_2018Q4.csv",
+        "data/lendingclub_v2/processed/application_train.csv",
+        "data/lendingclub_v2/processed/record_identity_v1.csv",
+        "data/lendingclub_v2/processed/record_identity_v1.manifest.json",
+        "configs/experiments/lendingclub_v2_matrix.yaml",
+        "cleanup/audits/foundation_protocol_freeze/lendingclub_identity_evidence.json"
+      ],
+      "identity_type": "authenticated_original_loan_id",
+      "raw_identifier": "id",
+      "row_identifier": "loan_id",
+      "identity_schema_version": "lendingclub_original_loan_id_sidecar_v1",
+      "target": "TARGET",
+      "split_time_column": "recent_decision",
+      "split_time_normalization": "integer calendar-day difference between timezone-free monthly issue_d and maximum finalized issue month 2018-12-01",
+      "canonical_ordering": "time_value integer ascending, then NFC-normalized canonical decimal loan_id string ascending",
+      "raw_source_sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+      "processed_dataset_sha256": "ce9583dcc8ed2394cca3456c1c5528a2b08b659a04a02823b65ddc31d95267ae",
+      "sidecar_sha256": "f634343eb897a92aeb63d7e20ff341bc483c130b3351454031d0f191d83ca6b7",
+      "source_row_count": 1348099,
+      "dev": {
+        "interval": "[-1795,-1065)",
+        "row_count": 598649,
+        "unique_id_count": 598649,
+        "missing_id_count": 0,
+        "duplicate_id_count": 0,
+        "positive_count": 116966,
+        "positive_rate": 0.19538327133261726,
+        "equal_timestamp_group_count": 24,
+        "maximum_equal_timestamp_group_size": 42986,
+        "ordered_row_id_sha256": "4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e",
+        "ordered_row_id_target_sha256": "1373baf30fc16b022d1d9059e400df65b5d3bb3f9ae76e3397b3172578f91590"
+      },
+      "oot": {
+        "interval": "[-1065,-730]",
+        "row_count": 293105,
+        "unique_id_count": 293105,
+        "missing_id_count": 0,
+        "duplicate_id_count": 0,
+        "positive_count": 68252,
+        "positive_rate": 0.23285853192541922,
+        "equal_timestamp_group_count": 12,
+        "maximum_equal_timestamp_group_size": 48938,
+        "ordered_row_id_sha256": "86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092",
+        "ordered_row_id_target_sha256": "9787d44d278d7965b0a966f19717dec1d9718ea8dfb6b96aa531d0f52d0a53e2"
+      },
+      "dev_oot_id_overlap_count": 0,
+      "row_hashes_available": true,
+      "source_evidence_limitation": null
+    }
+  }
+}

@@ -1,0 +1,135 @@
+protocol_name: cross_dataset_rank_voting_v1
+version: 1.0.0
+status: frozen_for_prospective_execution
+decision_date: 2026-07-21
+historical_replication: false
+statement: >-
+  This is a new prospective protocol applied identically to Home Credit and
+  LendingClub. It is not a replication of undocumented historical voting;
+  any later-recovered historical output remains separately labeled.
+
+datasets: [homecredit, lendingclub_v2]
+candidate_universe:
+  rule: leakage-safe application-time candidates frozen by each dataset manifest
+  homecredit_size: 529
+  lendingclub_v2_size: 675
+  reject:
+    - target
+    - identifiers
+    - time-split fields
+    - leakage fields
+    - unknown features
+    - duplicate names
+    - Unicode-NFC/casefold name collisions
+    - NaN or infinite values
+
+voters:
+  rf_corr_mrmr:
+    implementation: credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector
+    scientific_identity: random-forest impurity relevance with correlation redundancy
+    canonical_mutual_information_mrmr: false
+    direction: rank_1_is_best
+    provenance: executable_source_and_locked_seed
+    datasets: [homecredit, lendingclub_v2]
+    fit_boundary: dev_fold_training_only
+    finite_ranking_budget: 300
+  boruta:
+    implementation: credit_risk_fs.selectors.boruta.BorutaSelector.feature_ranking_
+    scientific_identity: Boruta random-forest shadow-feature ranking
+    direction: rank_1_is_best
+    provenance: executable_source_and_locked_seed
+    datasets: [homecredit, lendingclub_v2]
+    fit_boundary: dev_fold_training_only
+    finite_ranking_budget: full_eligible_fold_universe
+
+excluded_voters:
+  corrected_clip:
+    reason: complete corrected-CLIP provenance is absent from the frozen legacy bundle
+    restoration_rule: only in a separately versioned future protocol after full provenance validation
+  api_backed_llm:
+    reason: no corresponding verified LendingClub ranking with matching universe and provenance
+  domain_rule:
+    reason: existing rule is Home-Credit-specific and has no verified cross-dataset conceptual equivalent
+  rfe:
+    reason: reserved as downstream candidate reduction and therefore not duplicated as a vote
+
+aggregation:
+  eligible_voter_count: 2
+  weights: {rf_corr_mrmr: 0.5, boruta: 0.5}
+  normalized_score: "1 - (rank - 1) / max(N - 1, 1)"
+  missing_feature_score: 0
+  aggregate: arithmetic_mean_of_normalized_scores
+  tie_breaks:
+    - voter_presence_count_desc
+    - best_individual_rank_asc
+    - unicode_nfc_casefold_feature_name_asc
+  trace_columns:
+    - raw_rank_per_voter
+    - normalized_score_per_voter
+    - presence_flag_per_voter
+    - aggregate_score
+    - voter_presence_count
+    - best_individual_rank
+
+candidate_pool_budgets: [100, 200, 300]
+primary_candidate_pool: 200
+sensitivity_candidate_pools: [100, 300]
+downstream_selector:
+  implementation: credit_risk_fs.selectors.rfe.RFESelector
+  rule: CatBoost-backed recursive feature elimination
+  fit_boundary: dev_fold_training_only
+  justification: existing cross-dataset supervised reducer distinct from both voters
+final_model_budgets:
+  logistic_regression: 20
+  catboost: 40
+
+seeds:
+  selector_master_seed: 42
+  paired_bootstrap_seed: 20260721
+fold_local_boundary: >-
+  Preprocessing, each supervised voter, aggregation, and downstream RFE are fitted
+  using each DEV training fold only. Validation labels and all OOT labels are excluded.
+oot_lock_rule: >-
+  OOT is used once for locked final evaluation and never to select a voter, pool,
+  final feature budget, selector, metric, threshold, or tie rule.
+expected_artifacts:
+  - voter_rankings_by_fold.csv
+  - aggregate_ranking_by_fold.csv
+  - candidate_pool_by_fold.csv
+  - downstream_selected_features_by_fold.csv
+  - fold_identity_manifest.json
+  - dev_oof_predictions.csv
+  - oot_predictions.csv
+  - paired_inference.json
+
+statistical_inference:
+  positive_class: 1
+  score_direction: higher_means_higher_default_risk
+  primary_metric: roc_auc
+  gini: "2 * AUC - 1; not separately tested"
+  ks: maximum absolute positive/negative empirical-CDF separation; smallest score wins threshold ties
+  lift_at_10: top ceil(0.10*n) by score descending then stable identity ascending
+  paired_auc_test: two_sided_delong_on_identical_oot_rows
+  bootstrap:
+    type: paired_stratified_by_target
+    attempted_repetitions: 2000
+    minimum_valid_repetitions: 1900
+    seed: 20260721
+    confidence_interval: 95_percent_percentile
+    differences: [auc, ks, lift_at_10]
+    failure_policy: count_and_report_without_unlimited_replacement
+  holm_scope: within_each_dataset_model_family_of_three_auc_tests
+  primary_families:
+    - {dataset: homecredit, model: logistic_regression, reference: rf_corr_mrmr, comparisons: [voting_pool_100, voting_pool_200, voting_pool_300]}
+    - {dataset: homecredit, model: catboost, reference: rf_corr_mrmr, comparisons: [voting_pool_100, voting_pool_200, voting_pool_300]}
+    - {dataset: lendingclub_v2, model: logistic_regression, reference: rf_corr_mrmr, comparisons: [voting_pool_100, voting_pool_200, voting_pool_300]}
+    - {dataset: lendingclub_v2, model: catboost, reference: rf_corr_mrmr, comparisons: [voting_pool_100, voting_pool_200, voting_pool_300]}
+  descriptive_only:
+    - voting_pool_budget_pairwise_contrasts
+    - score_psi
+    - feature_psi
+    - fold_jaccard
+    - kuncheva
+    - runtime
+    - peak_ram
+    - peak_gpu

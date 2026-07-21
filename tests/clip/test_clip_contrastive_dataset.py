@@ -8,11 +8,11 @@ import pandas as pd
 from credit_risk_fs.clip.contrastive_dataset import ContrastiveFeatureDataset
 
 
-def test_dataset_returns_aligned_tensors_and_no_forbidden_inputs(tmp_path):
+def test_dataset_returns_aligned_tensors_and_no_forbidden_inputs(tmp_path, legacy_artifact_path):
     dataset = ContrastiveFeatureDataset(
-        pairs_path="results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet",
-        text_embeddings_path="results/clip/text_baseline/homecredit_text_embeddings.parquet",
-        statistical_vectors_path="results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet",
+        pairs_path=legacy_artifact_path("results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet"),
+        text_embeddings_path=legacy_artifact_path("results/clip/text_baseline/homecredit_text_embeddings.parquet"),
+        statistical_vectors_path=legacy_artifact_path("results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet"),
         mode="train",
     )
 
@@ -30,12 +30,12 @@ def test_dataset_returns_aligned_tensors_and_no_forbidden_inputs(tmp_path):
     assert item["metadata"]["split"] == "train"
 
 
-def test_dataset_refuses_lendingclub_v2_training_mode(tmp_path):
+def test_dataset_refuses_lendingclub_v2_training_mode(tmp_path, legacy_artifact_path):
     try:
         ContrastiveFeatureDataset(
-            pairs_path="results/corrected_homecredit_clip/contrastive_data/lendingclub_v2_external_pairs.parquet",
-            text_embeddings_path="results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet",
-            statistical_vectors_path="results/clip_v2/statistical_view/lendingclub_v2_statistical_vectors.parquet",
+            pairs_path=legacy_artifact_path("results/corrected_homecredit_clip/contrastive_data/lendingclub_v2_external_pairs.parquet"),
+            text_embeddings_path=legacy_artifact_path("results/clip/text_baseline/lendingclub_v2_text_embeddings.parquet"),
+            statistical_vectors_path=legacy_artifact_path("results/clip_v2/statistical_view/lendingclub_v2_statistical_vectors.parquet"),
             mode="train",
         )
     except ValueError as exc:
@@ -44,17 +44,17 @@ def test_dataset_refuses_lendingclub_v2_training_mode(tmp_path):
         raise AssertionError("LendingClub v2 must not be accepted as train mode")
 
 
-def test_dataset_hash_verification_fails_on_stale_pair_hash(tmp_path):
+def test_dataset_hash_verification_fails_on_stale_pair_hash(tmp_path, legacy_artifact_path):
     pairs = pd.read_parquet(
-        "results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet"
+        legacy_artifact_path("results/corrected_homecredit_clip/contrastive_data/homecredit_train_positive_pairs.parquet")
     )
     pairs.loc[0, "text_hash"] = "stale"
     stale_path = tmp_path / "stale_pairs.parquet"
     pairs.to_parquet(stale_path, index=False)
     dataset = ContrastiveFeatureDataset(
         pairs_path=stale_path,
-        text_embeddings_path="results/clip/text_baseline/homecredit_text_embeddings.parquet",
-        statistical_vectors_path="results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet",
+        text_embeddings_path=legacy_artifact_path("results/clip/text_baseline/homecredit_text_embeddings.parquet"),
+        statistical_vectors_path=legacy_artifact_path("results/clip_v2/statistical_view/homecredit_statistical_vectors.parquet"),
         mode="train",
     )
 

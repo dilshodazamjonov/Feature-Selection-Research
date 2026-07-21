@@ -1,0 +1,426 @@
+protocol:
+  name: credit_scoring_extension
+  version: 1.1.0
+  frozen_on: '2026-07-21'
+  gate: PASS
+  evidence_precedence:
+    - saved_run_specific_manifest_or_configuration
+    - saved_prediction_or_split_metadata
+    - executable_configuration_used_by_run
+    - repository_default
+    - documentation
+    - evidence_backed_inference
+  prohibited_for_this_freeze:
+    - model_fitting
+    - feature_selection_execution
+    - prediction_generation
+    - voting_execution
+    - shap_clip_embedding_umap_execution
+    - external_llm_api_calls
+    - oot_based_configuration_choice
+
+result_roots:
+  active:
+    path: D:/python projects/Research/results
+    write_policy: central_active_results_system_only
+    status: verified
+  historical:
+    configuration: CREDIT_RISK_LEGACY_RESULTS_ROOT
+    audited_path: D:/ResearchFindings/results
+    write_policy: immutable_read_only_evidence
+    manifest: cleanup/audits/foundation_protocol_freeze/legacy_artifact_manifest.csv
+    status: verified
+  separation:
+    rule: canonical roots must be different, non-overlapping, and outside data and temporary-test roots
+    implementation: credit_risk_fs.experiments.result_paths.validate_results_root_separation
+    write_barrier: credit_risk_fs.experiments.result_paths.reject_historical_write
+    status: verified
+
+datasets:
+  homecredit:
+    status: verified
+    data_root: data/homecredit/raw
+    historical_data_root_label: data/inputs
+    row_identifier: SK_ID_CURR
+    identifier_policy:
+      missing: reject
+      duplicate: reject
+      dev_oot_overlap: reject
+    target:
+      column: TARGET
+      positive_class: 1
+      meaning: client has payment difficulties under the Home Credit definition
+      evidence: data/homecredit/metadata/columns_description.csv
+    split:
+      time_column: recent_decision
+      derivation: maximum DAYS_DECISION per SK_ID_CURR from previous_application.csv
+      broader_application_time_proxy_role: excluded_feature_not_the_configured_split_column
+      dev: {lower_inclusive: -600, upper_exclusive: -240, rows: 99092, positives: 7859, positive_rate: 0.07931013603519961}
+      oot: {lower_inclusive: -240, upper_inclusive: 0, rows: 120053, positives: 10688, positive_rate: 0.08902734625540386}
+      fold_rule:
+        implementation: credit_risk_fs.models._cv_utils.GroupedTimeSeriesSplit
+        n_splits: 5
+        gap_unique_time_groups: 1
+        training_window: expanding
+        identical_time_values_kept_together: true
+      source_order_rule: application_train.csv source order after the left ID/time merge
+      training_sort_rule:
+        implementation: credit_risk_fs.models.training.run_temporal_cv
+        current_rule: pandas sort_values on recent_decision only
+        tie_rule: not_explicitly_stable
+        status: unresolved
+    candidate_universe:
+      count: 529
+      stage: post-feature-engineering and configured exclusion, before selector
+      exclusions: [TARGET, recent_decision, PREV_recent_decision_MAX, DAYS_DECISION, application_time_proxy, SK_ID_CURR, SK_ID_BUREAU, SK_ID_PREV]
+      evidence: D:/ResearchFindings/results/lr/statistical/lr_statistical_mrmr_8b6e39d2ee9f/run_manifest.json
+      status: verified
+    feature_name_policy:
+      rule: preserve application names and deterministic PREFIX_column_AGG names from homecredit assemble.py
+      status: verified
+    preprocessing_boundaries:
+      cv: fit selector and preprocessor on each fold training partition; transform validation unchanged
+      final: fit on DEV only; transform OOT unchanged
+      evidence: src/credit_risk_fs/models/_fold.py
+      status: verified
+    feature_budgets: {lr: 20, catboost: 40, status: verified}
+    seed: 42
+    row_alignment_reference: configs/protocols/row_alignment_contract_v1.json
+
+  lendingclub_v2:
+    status: verified
+    data_root: data/lendingclub_v2/processed
+    raw_source: data/lendingclub/raw/accepted_2007_to_2018Q4.csv
+    raw_source_sha256: 3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a
+    processed_source_sha256: ce9583dcc8ed2394cca3456c1c5528a2b08b659a04a02823b65ddc31d95267ae
+    identity_sidecar: data/lendingclub_v2/processed/record_identity_v1.csv
+    identity_sidecar_sha256: f634343eb897a92aeb63d7e20ff341bc483c130b3351454031d0f191d83ca6b7
+    identity_type: authenticated_original_loan_id
+    raw_identifier: id
+    row_identifier: loan_id
+    row_identifier_status: verified
+    identifier_policy:
+      type: unsigned_decimal_string_from_original_raw_id
+      missing: reject
+      duplicate: reject
+      dev_oot_overlap: reject
+      model_feature_use: forbidden
+    target:
+      column: TARGET
+      positive_class: 1
+      meaning: 'bad outcome (Charged Off, Default, or Does not meet the credit policy. Status: Charged Off); 0 is a fully paid outcome'
+      evidence:
+        - data/lendingclub/metadata/target_definition.md
+        - src/credit_risk_fs/preprocessing/labeling.py
+      status: verified
+    split:
+      time_column: recent_decision
+      date_reference: issue_d
+      dev: {lower_inclusive: -1795, upper_exclusive: -1065, rows: 598649, positives: 116966, positive_rate: 0.19538327133261726}
+      oot: {lower_inclusive: -1065, upper_inclusive: -730, rows: 293105, positives: 68252, positive_rate: 0.23285853192541922}
+      fold_rule:
+        implementation: credit_risk_fs.models._cv_utils.GroupedTimeSeriesSplit
+        n_splits: 5
+        gap_unique_time_groups: 1
+        training_window: expanding
+        identical_time_values_kept_together: true
+      source_order_rule: processed application_train.csv source order before temporal training sort
+      training_sort_rule:
+        current_rule: recent_decision integer ascending then NFC-normalized loan_id string ascending
+        implementation: credit_risk_fs.experiments.lendingclub_identity.stable_chronological_order
+        tie_rule: authenticated_loan_id_ascending
+        status: verified
+    candidate_universe:
+      count: 675
+      stage: processed v2 table after the fixed leakage and feature policy; TARGET, recent_decision, and issue_d are helpers
+      exclusions: [TARGET, recent_decision, issue_d, loan_status]
+      evidence:
+        - data/lendingclub_v2/metadata/preparation_summary.json
+        - data/lendingclub_v2/metadata/feature_inventory.csv
+        - data/lendingclub_v2/metadata/leakage_review.csv
+      status: verified
+    feature_name_policy:
+      rule: preserve processed CSV names; deterministic derived names are registered by scripts/prepare_lendingclub_v2.py
+      status: verified
+    preprocessing_boundaries:
+      cv: fit selector and preprocessor on each fold training partition; transform validation unchanged
+      final: fit on DEV only; transform OOT unchanged
+      evidence: src/credit_risk_fs/models/_fold.py
+      status: verified
+    feature_budgets: {lr: 20, catboost: 40, status: verified}
+    seed: 42
+    row_alignment_reference: configs/protocols/row_alignment_contract_v1.json
+
+candidate_pools:
+  lendingclub_v2_voting:
+    valid_candidate_count: 675
+    pools: [100, 200, 300]
+    decision_basis: Prompt 1 rule retains 100/200/300 when at least 300 valid candidates exist
+    uses_oot_outcomes: false
+    approval_status: verified
+    protocol: cross_dataset_rank_voting_v1
+    historical_replication: false
+    status: frozen_prospectively
+
+selectors:
+  rf_corr_mrmr:
+    executable: credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector
+    registry_key: mrmr
+    historical_labels: [mrmr, MRMR]
+    relevance: mean random-forest impurity importance over n_iter fits; default RF has 128 trees, min_samples_split 0.01, max_features 0.15
+    redundancy: mean absolute Pearson correlation against already selected features on a deterministic sample of at most 10000 rows, floored at 0.05
+    greedy_score: relevance / redundancy; first feature has highest relevance
+    seed: 42
+    tie_rule: descending score then ascending feature name with stable mergesort
+    canonical_mutual_information_mrmr: future_work_not_implemented
+    status: verified
+  boruta:
+    executable: credit_risk_fs.selectors.boruta.BorutaSelector
+    registry_behavior: boruta_only
+    rf_estimators: 500
+    rf_max_depth: 6
+    boruta_estimators: auto
+    max_iter: 15
+    seed: 42
+    output_contract: selected_features_ with selected_features compatibility alias
+    status: verified
+  boruta_rfe:
+    executable: credit_risk_fs.selectors.boruta_then_rfe.BorutaThenRFESelector
+    registry_behavior: sequential_boruta_then_rfe
+    rfe_executable: credit_risk_fs.selectors.rfe.RFESelector
+    output_contract: selected_features_ with selected_features compatibility alias
+    status: verified
+  rfe:
+    executable: credit_risk_fs.selectors.rfe.RFESelector
+    estimator: CatBoost iterations=500 depth=6 learning_rate=0.05 random_seed=42 allow_writing_files=false
+    status: verified
+  llm:
+    executable: credit_risk_fs.selectors.llm_screening.LLMSelector
+    historical_kind: cached_external_api_ranking
+    model_request: gpt-4.1-mini
+    model_response: gpt-4.1-mini-2025-04-14
+    prompt_version: stability_expert_v3
+    rank_orientation: 1_is_best
+    raw_api_metadata_available: true
+    raw_model_text_availability: cached response payload available
+    regeneration_allowed: false
+    status: verified
+  domain_rule_baseline:
+    executable: credit_risk_fs.selectors.domain_rule_baseline.DomainRuleBaselineSelector
+    generator: scripts/generate_homecredit_domain_rule_ranking.py
+    kind: deterministic_domain_rule_not_llm
+    rank_orientation: 1_is_best
+    status: verified
+  corrected_clip:
+    kind: corrected_clip_ranking
+    artifact: null
+    cross_dataset_rank_voting_v1_eligibility: excluded
+    reason: complete corrected-CLIP provenance is absent
+    status: unavailable_historical_evidence_nonblocking
+
+ranking_provenance:
+  homecredit_llm_final_dev:
+    artifact: D:/ResearchFindings/results/_llm_rankings_cache/final_dev_final_dev_7c550aa3f067d40d84d69233451fa689df4eeb765d91e1e64cb3871058dd5a1e.json
+    sha256: 37303d833c762465f1f9b4969b54a31ad0bdc004eaacef372b30f1b33f5e9a7d
+    selected_feature_count: 87
+    downstream_summary_rows_per_model: 600
+    lr_summary_sha256: 7c738db22cc56294a2e6c264f20c8e68a8ed1f92be7a531e403242b7e8cabcc8
+    catboost_summary_sha256: 3b8163108087ce9250b6dd0e3478fded897463f24d3138ba1b722d90f3fbc6a5
+    downstream_use: [llm_matrix_runs, llm_then_mrmr, llm_then_boruta, stable_core_llm_fill]
+    downstream_voting_use: unresolved
+    status: verified
+  homecredit_domain_rule_lr:
+    artifact: D:/ResearchFindings/results/lr/statistical/lr_statistical_domain_rule_baseline_7ab990b2a51c/features/final_selected_features.csv
+    sha256: 29ac547e0b0a10236c440c998fba2c474f2aa71675341727fd2ad0afd0c6f818
+    feature_count: 20
+    downstream_use: standalone_domain_rule_matrix_run
+    downstream_voting_use: unresolved
+    status: verified
+  homecredit_domain_rule_catboost:
+    artifact: D:/ResearchFindings/results/catboost/statistical/catboost_statistical_domain_rule_baseline_75687fb515f9/features/final_selected_features.csv
+    sha256: 8b1b60ba8a46fd30d8d1dd13c4dbfd2df6e14343e9dadee545afd2fd3753515d
+    feature_count: 40
+    downstream_use: standalone_domain_rule_matrix_run
+    downstream_voting_use: unresolved
+    status: verified
+  homecredit_corrected_clip:
+    artifact: null
+    status: unresolved
+
+historical_homecredit_voting:
+  reconstruction_status: unresolved
+  verified_bundle_scope: sixteen non-voting matrix runs (eight LR and eight CatBoost)
+  voters: []
+  aggregation_rule: null
+  normalization: null
+  tie_rule: null
+  candidate_pool_rule: null
+  lr_variant: null
+  catboost_variant: null
+  expected_run_count: null
+  expected_artifacts_per_run: null
+  consequence: historical outputs remain separate; cross_dataset_rank_voting_v1 is a new prospective protocol and is never described as replication
+  evidence:
+    - D:/ResearchFindings/results/matrix_runs.csv
+    - README.md
+  status: unresolved_historical_claim_nonblocking
+
+forward_voting:
+  protocol: configs/protocols/cross_dataset_rank_voting_v1.yaml
+  name: cross_dataset_rank_voting_v1
+  version: 1.0.0
+  historical_replication: false
+  datasets: [homecredit, lendingclub_v2]
+  included_voters: [rf_corr_mrmr, boruta]
+  excluded_voters: [corrected_clip, api_backed_llm, domain_rule, rfe]
+  voter_fit_boundary: dev_fold_training_only
+  normalized_score: 1 - (rank - 1) / max(N - 1, 1)
+  missing_rank_score: 0
+  weights: equal
+  ties: [voter_presence_count_desc, best_individual_rank_asc, normalized_feature_name_asc]
+  pools: [100, 200, 300]
+  primary_pool: 200
+  downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+  final_budgets: {lr: 20, catboost: 40}
+  seed: 42
+  status: verified_and_frozen
+
+models:
+  lr:
+    implementation: credit_risk_fs.models.logistic_regression.LogisticRegressionModel
+    parameters: {solver: liblinear, max_iter: 1000, class_weight: balanced, random_state: 42}
+    feature_budget: 20
+    status: verified
+  catboost:
+    implementation: credit_risk_fs.models.catboost_model.CatBoostModel
+    parameters:
+      depth: 10
+      learning_rate: 0.01
+      l2_leaf_reg: 95
+      min_data_in_leaf: 290
+      colsample_bylevel: 0.9
+      random_strength: 0.125
+      grow_policy: Depthwise
+      one_hot_max_size: 21
+      leaf_estimation_method: Newton
+      bootstrap_type: Bernoulli
+      subsample: 0.55
+      loss_function: Logloss
+      eval_metric: AUC
+      auto_class_weights: Balanced
+      iterations: 1500
+      early_stopping_rounds: 150
+      random_state: 42
+      allow_writing_files: false
+    feature_budget: 40
+    status: verified
+
+evaluation:
+  positive_probability: class_1
+  roc_auc:
+    function: sklearn.metrics.roc_auc_score via credit_risk_fs.evaluation.metrics.calculate_metrics
+    tie_rule: sklearn_rank_tie_handling
+    status: verified
+  gini:
+    formula: 2 * ROC_AUC - 1
+    status: verified
+  ks:
+    function: credit_risk_fs.evaluation.paired_inference.ks_statistic
+    definition: maximum absolute positive/negative empirical-CDF separation
+    tie_rule: smallest score among equal maxima
+    status: verified
+  operational_threshold:
+    rule: maximize KS on the fitting/training partition and apply the resulting threshold unchanged to held-out validation or OOT
+    oot_used_to_choose_threshold: false
+    status: verified
+  lift_at_10:
+    rule: sort class-1 probability descending; top count is ceil(0.10*n); lift is top positive rate divided by overall positive rate
+    tie_rule: authenticated stable row ID ascending
+    function: credit_risk_fs.evaluation.paired_inference.lift_at_fraction
+    edge_cases: reject empty data, duplicate identities, or zero positive rate
+    status: verified
+  feature_psi:
+    function: credit_risk_fs.evaluation.drift.calculate_psi
+    expected_distribution: DEV_or_fold_training
+    actual_distribution: heldout_or_OOT_unchanged
+    bins: 10_expected_quantile_bins_with_unique_edges_and_infinite_outer_edges
+    epsilon: 0.000001
+    edge_cases: nonfinite values dropped; NaN for empty or constant expected distribution
+    status: verified
+  score_psi:
+    historical_scalar: same general PSI implementation saved by the original matrix runs
+    forward_function: credit_risk_fs.pipelines.common strict DEV_OOF quantile PSI v1
+    bins: 10
+    epsilon: 0.000001
+    fit_choice: DEV_OOF defines bins; OOT applied unchanged
+    historical_forward_identity_match: false
+    status: evidence_backed_inference
+  fold_selection_jaccard:
+    historical_fold_metric: consecutive_fold_jaccard
+    forward_summary: mean over all unordered fold pairs
+    function: credit_risk_fs.evaluation.stability
+    empty_set_rule: 1.0 when both sets are empty
+    status: verified
+  kuncheva:
+    function: credit_risk_fs.evaluation.stability
+    formula: mean((r*n-k_i*k_j)/(n*min(k_i,k_j)-k_i*k_j)) over fold pairs
+    zero_denominator_pairs: skipped
+    status: verified
+  confidence_intervals:
+    historical: fold mean plus_or_minus 1.96 * sample_standard_deviation / sqrt(fold_count)
+    canonical_forward: paired stratified bootstrap differences with 95 percent percentile interval
+    status: verified
+  paired_delong:
+    function: credit_risk_fs.evaluation.paired_inference.paired_delong_test
+    alternative: two_sided
+    identity_boundary: identical OOT stable row IDs and targets
+    family: three voting pools versus rf_corr_mrmr within one dataset-model pair
+    status: verified
+  paired_stratified_bootstrap:
+    function: credit_risk_fs.evaluation.paired_inference.paired_stratified_bootstrap
+    seed: 20260721
+    repetitions: 2000
+    minimum_valid_repetitions: 1900
+    confidence_level: 0.95
+    interval: percentile
+    metrics: [auc, ks, lift_at_10]
+    failure_policy: count and report; no unlimited replacements
+    status: verified
+  multiple_testing:
+    families:
+      - homecredit_lr
+      - homecredit_catboost
+      - lendingclub_v2_lr
+      - lendingclub_v2_catboost
+    comparisons_per_family: [voting_pool_100_vs_rf_corr_mrmr, voting_pool_200_vs_rf_corr_mrmr, voting_pool_300_vs_rf_corr_mrmr]
+    pooling_across_families: false
+    status: verified
+  holm_correction:
+    function: credit_risk_fs.evaluation.paired_inference.holm_adjust
+    scope: separately within each three-comparison dataset-model family
+    status: verified
+
+seeds:
+  experiment: 42
+  mrmr: 42
+  boruta: 42
+  rfe_catboost: 42
+  clip_training_historical_config: [11, 22, 33, 44, 55]
+
+prediction_schema:
+  required_columns: [stable_row_id, target, prediction_probability, predicted_class, fold_id, dataset, split, run_id, method, model, source_training_dataset, external_dataset, data_manifest_hash, configuration_hash, pairing_policy_version, source_identity_manifest_hash, stable_row_id_column, source_stable_id_values_hash]
+  probability: finite_class_1_probability_in_closed_interval_0_1
+  order: stable_row_id ascending using stable mergesort
+  dev_oof_fold_id: required
+  oot_fold_id: null
+  authenticated_source_identity:
+    homecredit: verified
+    lendingclub_v2: verified_original_loan_id_sidecar
+  implementation: credit_risk_fs.pipelines.common.export_prediction_artifact
+  status: verified
+
+prompt_2_prerequisites:
+  - preserve the frozen protocol and OOT lock while implementing Prompt 2 resource hardening
+  - require the generated LendingClub identity sidecar and manifest before any LendingClub run
+  - do not restore corrected CLIP without a separately versioned protocol and complete provenance
+  - historical CLIP tests remain optional integrations requiring clip_complete_v1

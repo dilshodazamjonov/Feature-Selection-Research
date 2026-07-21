@@ -9,9 +9,8 @@ from credit_risk_fs.clip.text_baseline import build_text_baseline, load_text_bas
 from credit_risk_fs.clip.text_encoder import MockFrozenTextEncoder
 
 
-def test_dry_run_performs_no_model_loading(tmp_path):
-    config = load_text_baseline_config()
-    config = config.__class__(**{**config.__dict__, "output_dir": tmp_path})
+def test_dry_run_performs_no_model_loading(tmp_path, legacy_config_paths):
+    config = legacy_config_paths(load_text_baseline_config(), output_dir=tmp_path)
 
     result = build_text_baseline(config=config, dry_run=True)
 
@@ -20,24 +19,30 @@ def test_dry_run_performs_no_model_loading(tmp_path):
     assert result.summary["expected_embedding_count"] == {"homecredit": 436, "lendingclub_v2": 576}
 
 
-def test_text_baseline_dry_run_does_not_modify_full_run_artifacts():
-    config = load_text_baseline_config()
+def test_text_baseline_dry_run_does_not_modify_full_run_artifacts(
+    tmp_path, legacy_artifact_path, legacy_config_paths
+):
+    source_config = legacy_config_paths(load_text_baseline_config())
+    historical_output = legacy_artifact_path(
+        "results/clip/text_baseline", required=False
+    )
+    config = source_config.__class__(**{**source_config.__dict__, "output_dir": tmp_path})
     full_run_files = [
-        config.output_dir / "homecredit_feature_text.csv",
-        config.output_dir / "lendingclub_v2_feature_text.csv",
-        config.output_dir / "homecredit_group_split.csv",
-        config.output_dir / "group_split_audit.json",
-        config.output_dir / "feature_family_audit.csv",
-        config.output_dir / "feature_family_audit.json",
-        config.output_dir / "homecredit_text_embeddings.parquet",
-        config.output_dir / "lendingclub_v2_text_embeddings.parquet",
-        config.output_dir / "embedding_cache_manifest.json",
-        config.output_dir / "text_embedding_audit.json",
-        config.output_dir / "homecredit_text_only_ranking.csv",
-        config.output_dir / "lendingclub_v2_text_only_ranking.csv",
-        config.output_dir / "homecredit_anchor_features.csv",
-        config.output_dir / "text_anchor_manifest.json",
-        config.output_dir / "text_baseline_summary.json",
+        historical_output / "homecredit_feature_text.csv",
+        historical_output / "lendingclub_v2_feature_text.csv",
+        historical_output / "homecredit_group_split.csv",
+        historical_output / "group_split_audit.json",
+        historical_output / "feature_family_audit.csv",
+        historical_output / "feature_family_audit.json",
+        historical_output / "homecredit_text_embeddings.parquet",
+        historical_output / "lendingclub_v2_text_embeddings.parquet",
+        historical_output / "embedding_cache_manifest.json",
+        historical_output / "text_embedding_audit.json",
+        historical_output / "homecredit_text_only_ranking.csv",
+        historical_output / "lendingclub_v2_text_only_ranking.csv",
+        historical_output / "homecredit_anchor_features.csv",
+        historical_output / "text_anchor_manifest.json",
+        historical_output / "text_baseline_summary.json",
     ]
     before = {path: _sha256(path) for path in full_run_files if path.exists()}
 
@@ -50,9 +55,10 @@ def test_text_baseline_dry_run_does_not_modify_full_run_artifacts():
     assert (config.output_dir / "dry_run" / "text_dry_run_audit.json").exists()
 
 
-def test_text_baseline_with_mock_encoder_uses_homecredit_anchor_unchanged(tmp_path, monkeypatch):
-    config = load_text_baseline_config()
-    config = config.__class__(**{**config.__dict__, "output_dir": tmp_path})
+def test_text_baseline_with_mock_encoder_uses_homecredit_anchor_unchanged(
+    tmp_path, monkeypatch, legacy_config_paths
+):
+    config = legacy_config_paths(load_text_baseline_config(), output_dir=tmp_path)
 
     def fake_save(frame: pd.DataFrame, path: str | Path) -> Path:
         out = Path(path)
