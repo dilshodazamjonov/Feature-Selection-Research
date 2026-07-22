@@ -25,10 +25,14 @@ class RFESelector(SelectedFeaturesMixin):
         n_features: int = 50,
         step: int = 10,
         random_state: int = 42,
+        thread_count: int = 1,
     ) -> None:
         self.n_features = int(n_features)
         self.step = int(step)
         self.random_state = int(random_state)
+        self.thread_count = int(thread_count)
+        if self.thread_count <= 0:
+            raise ValueError("thread_count must be positive")
         self.selected_features_ = None
         self.selector: RFE | None = None
 
@@ -53,6 +57,7 @@ class RFESelector(SelectedFeaturesMixin):
             verbose=False,
             random_state=self.random_state,
             allow_writing_files=False,
+            thread_count=self.thread_count,
         )
         self.selector = RFE(
             estimator=model,

@@ -7,6 +7,8 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
+from credit_risk_fs.experiments.atomic_io import write_csv_atomic
+
 from credit_risk_fs.evaluation.drift import calculate_psi, jaccard_similarity
 from credit_risk_fs.feature_metadata.semantic_groups import infer_semantic_group
 
@@ -383,9 +385,9 @@ def write_feature_stability_artifacts(
     if any(len(selected) > total_candidate_features for selected in selected_sets):
         raise ValueError("selected set is larger than the candidate universe")
     frequency_df = selection_frequency_frame(tables)
-    frequency_df.to_csv(features_dir / "selection_frequency.csv", index=False)
+    write_csv_atomic(features_dir / "selection_frequency.csv", frequency_df)
     semantic_group_frequency_df = semantic_group_frequency_frame(tables)
-    semantic_group_frequency_df.to_csv(features_dir / "semantic_group_stability.csv", index=False)
+    write_csv_atomic(features_dir / "semantic_group_stability.csv", semantic_group_frequency_df)
 
     stable_count_80 = int((frequency_df["selection_frequency"] >= 0.8).sum()) if not frequency_df.empty else 0
     selected_feature_count = int(np.mean([len(item) for item in selected_sets])) if selected_sets else 0
@@ -454,7 +456,7 @@ def write_feature_stability_artifacts(
             metrics[f"{output_prefix}_mean"] = float(metric_rows.iloc[0].get("mean_value", np.nan))
             metrics[f"{output_prefix}_std"] = float(metric_rows.iloc[0].get("std_value", np.nan))
 
-    pd.DataFrame([metrics]).to_csv(features_dir / "feature_stability_metrics.csv", index=False)
+    write_csv_atomic(features_dir / "feature_stability_metrics.csv", pd.DataFrame([metrics]))
     return metrics
 
 

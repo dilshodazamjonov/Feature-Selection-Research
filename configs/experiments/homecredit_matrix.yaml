@@ -12,6 +12,7 @@ dev_start_day: -600
 oot_start_day: -240
 oot_end_day: 0
 cv_gap_groups: 1
+stable_row_id_column: SK_ID_CURR
 excluded_feature_columns:
   - TARGET
   - recent_decision

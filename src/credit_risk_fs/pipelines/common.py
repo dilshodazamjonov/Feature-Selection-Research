@@ -9,7 +9,6 @@ import json
 import random
 import time
 import hashlib
-import shutil
 
 import joblib
 import numpy as np
@@ -24,6 +23,11 @@ from credit_risk_fs.evaluation.stability import (
     selected_feature_psi_summary,
 )
 from credit_risk_fs.experiments.compare import build_experiment_summary_row
+from credit_risk_fs.experiments.atomic_io import (
+    copy_atomic,
+    write_csv_atomic,
+    write_json_atomic,
+)
 from credit_risk_fs.experiments.config import (
     apply_feature_budget_to_selector_kwargs,
     apply_random_seed_to_kwargs,
@@ -33,6 +37,7 @@ from credit_risk_fs.experiments.result_paths import (
     reject_historical_write,
     sanitize_component,
 )
+from credit_risk_fs.experiments.resource_policy import apply_estimator_parallelism
 from credit_risk_fs.experiments.tracking import (
     build_data_version,
     write_resource_usage,
@@ -116,6 +121,13 @@ class ExperimentConfig:
     identity_sidecar_path: str | None = None
     identity_manifest_path: str | None = None
     stability_candidate_pool_path: str | None = None
+    input_column_projection: dict[str, tuple[str, ...]] | None = None
+    required_feature_columns: tuple[str, ...] = ()
+    require_full_candidate_projection: bool = True
+    csv_chunk_rows: int | None = None
+    estimator_threads: int = 1
+    stage_callback: Any | None = field(default=None, repr=False)
+    cooperative_stop_event: Any | None = field(default=None, repr=False)
 
 
 @dataclass(slots=True)
@@ -131,6 +143,7 @@ class PreparedExperimentData:
     dev_stable_row_ids: pd.Series | None = None
     oot_stable_row_ids: pd.Series | None = None
     source_identity: "SourceIdentityProvenance | None" = None
+    data_load_report: dict[str, dict[str, object]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -183,6 +196,17 @@ class ExperimentRun:
     config: ExperimentConfig
     exp_dir: Path
     summary: dict[str, object]
+
+
+def _report_execution_stage(
+    config: ExperimentConfig,
+    stage: str,
+    fold_id: str | int | None = None,
+) -> None:
+    if config.cooperative_stop_event is not None and config.cooperative_stop_event.is_set():
+        raise RuntimeError(f"cooperative stop requested before stage {stage}")
+    if config.stage_callback is not None:
+        config.stage_callback(stage, fold_id)
 
 
 def create_run_output_dir(base_output_dir: str | Path, run_label: str) -> Path:
@@ -239,15 +263,76 @@ def prepare_time_proxy(df: pd.DataFrame, time_col: str) -> pd.DataFrame:
     return prepared
 
 
+def calculate_required_columns(
+    config: ExperimentConfig,
+    loader: DataLoader,
+) -> dict[str, list[str]]:
+    """Calculate and validate explicit per-table projections before any data load."""
+
+    if config.input_column_projection is not None:
+        projections = {
+            str(table): [str(column) for column in columns]
+            for table, columns in config.input_column_projection.items()
+        }
+        if not projections:
+            raise ValueError("input_column_projection must not be empty")
+        for table, columns in projections.items():
+            if not columns:
+                raise ValueError(f"input projection for {table!r} must not be empty")
+            available = loader.inspect_columns(table)
+            missing = set(columns) - set(available)
+            if missing:
+                raise ValueError(
+                    f"input projection for {table!r} contains unknown columns: {sorted(missing)}"
+                )
+        return projections
+
+    tables = loader.available_tables()
+    if config.require_full_candidate_projection:
+        return {
+            table: loader.inspect_columns(table)
+            for table in tables
+        }
+    if not config.required_feature_columns:
+        raise ValueError(
+            "experiment must calculate required_feature_columns or explicitly request "
+            "the full candidate-universe projection"
+        )
+    if "application_train" not in tables:
+        raise ValueError("application_train table is required")
+    application_columns = loader.inspect_columns("application_train")
+    required = [
+        config.target,
+        config.time_col,
+        *config.drop_id_cols,
+        *config.required_feature_columns,
+    ]
+    projection = []
+    for column in required:
+        if column in application_columns and column not in projection:
+            projection.append(column)
+    missing_features = set(config.required_feature_columns) - set(projection)
+    if missing_features:
+        raise ValueError(
+            f"required feature columns are absent from application_train: {sorted(missing_features)}"
+        )
+    return {"application_train": projection}
+
+
 def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
     logger.info("Loading datasets from %s", config.data_dir)
     loader = DataLoader(config.data_dir)
-    dfs = loader.load_all()
+    projections = calculate_required_columns(config, loader)
+    dfs = loader.load_all(
+        projections,
+        require_projection=True,
+        csv_chunk_rows=config.csv_chunk_rows,
+    )
     dataset_mode = resolve_dataset_mode(config=config, loaded_frames=dfs)
     if "application_train" not in dfs:
         raise ValueError("application_train.csv not found in data directory")
 
-    app_train = dfs["application_train"].copy()
+    app_train = dfs["application_train"]
     source_identity = None
     if config.stable_row_id_column and str(config.dataset_name).lower() == "lendingclub_v2":
         from credit_risk_fs.experiments.lendingclub_identity import (
@@ -321,7 +406,7 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
         logger.info("Merged training shape after feature engineering: %s", merged_train.shape)
     else:
         logger.info("Using single-table dataset mode for %s", config.dataset_name)
-        merged_train = app_train.copy()
+        merged_train = app_train
         if str(config.dataset_name).lower() == "lendingclub":
             logger.info("Applying LendingClub application-time cleanup.")
             merged_train = prepare_lendingclub_application_frame(
@@ -429,6 +514,7 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
         dev_stable_row_ids=dev_stable_row_ids.reset_index(drop=True) if dev_stable_row_ids is not None else None,
         oot_stable_row_ids=oot_stable_row_ids.reset_index(drop=True) if oot_stable_row_ids is not None else None,
         source_identity=source_identity,
+        data_load_report=dict(loader.last_load_report),
     )
 
 
@@ -437,6 +523,12 @@ def _resolve_selector(config: ExperimentConfig) -> tuple[type | None, dict[str, 
         selector_kwargs = apply_random_seed_to_kwargs(
             dict(config.selector_kwargs),
             config.random_state,
+        )
+        _, selector_kwargs = apply_estimator_parallelism(
+            config.model_name,
+            {},
+            selector_kwargs,
+            estimator_threads=config.estimator_threads,
         )
         return config.selector_cls, selector_kwargs
 
@@ -449,6 +541,12 @@ def _resolve_selector(config: ExperimentConfig) -> tuple[type | None, dict[str, 
         config.feature_budget,
     )
     selector_kwargs = apply_random_seed_to_kwargs(selector_kwargs, config.random_state)
+    _, selector_kwargs = apply_estimator_parallelism(
+        config.model_name,
+        {},
+        selector_kwargs,
+        estimator_threads=config.estimator_threads,
+    )
 
     selector_name = config.selector_name.lower()
     metadata_selectors = {
@@ -540,10 +638,7 @@ def write_leakage_report(
         )
 
     report_path = Path(exp_dir) / "leakage_report.json"
-    report_path.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    write_json_atomic(report_path, report)
     return report_path
 
 
@@ -586,12 +681,10 @@ def write_data_split_manifest(
         "dropped_older_row_count": int(prepared.dropped_older_row_count),
         "dropped_missing_time_row_count": int(prepared.dropped_missing_time_row_count),
         "source_row_count": int(prepared.source_row_count),
+        "column_projection": prepared.data_load_report,
     }
     path = Path(exp_dir) / "data_split_manifest.json"
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    write_json_atomic(path, payload)
     return path
 
 
@@ -625,6 +718,7 @@ def run_experiment(
     prepared_data: PreparedExperimentData | None = None,
 ) -> ExperimentRun:
     run_start = time.time()
+    _report_execution_stage(config, "experiment_started")
     random.seed(config.random_state)
     np.random.seed(config.random_state)
     prepared = prepared_data or prepare_modeling_data(config)
@@ -669,13 +763,9 @@ def run_experiment(
             )
         identity_dir = Path(config.experiment_output_dir) / "data"
         identity_dir.mkdir(parents=True, exist_ok=True)
-        (identity_dir / "source_identity_manifest.json").write_text(
-            json.dumps(
-                prepared.source_identity.manifest,
-                indent=2,
-                ensure_ascii=False,
-            ),
-            encoding="utf-8",
+        write_json_atomic(
+            identity_dir / "source_identity_manifest.json",
+            prepared.source_identity.manifest,
         )
 
     selector_cls, selector_kwargs = _resolve_selector(config)
@@ -691,6 +781,7 @@ def run_experiment(
         config.selector_name,
     )
 
+    _report_execution_stage(config, "cross_validation")
     results_df = run_kfold_training(
         X=prepared.X_train.copy(),
         y=prepared.y_train.copy(),
@@ -714,7 +805,11 @@ def run_experiment(
         feature_budget=config.feature_budget,
         stable_row_ids=prepared.dev_stable_row_ids,
         stability_candidate_pool_path=config.stability_candidate_pool_path,
+        stage_callback=(
+            lambda stage, fold_id=None: _report_execution_stage(config, stage, fold_id)
+        ),
     )
+    _report_execution_stage(config, "cross_validation_completed")
 
     exp_dir_attr = results_df.attrs.get("exp_dir")
     if not exp_dir_attr:
@@ -757,6 +852,7 @@ def run_experiment(
         )
 
     saved_final_features: list[str] | None = None
+    _report_execution_stage(config, "final_selection")
     final_preprocessor = Preprocessor(**dict(config.preprocessor_kwargs))
     final_preprocessing_time_sec = 0.0
     final_feature_selection_time_sec = 0.0
@@ -807,7 +903,7 @@ def run_experiment(
 
     final_features = saved_final_features or X_train_final.columns.tolist()
     score_lookup = _feature_score_lookup(final_selector, final_features)
-    pd.DataFrame(
+    final_features_frame = pd.DataFrame(
         [
             {
                 "fold_id": "final_dev",
@@ -820,11 +916,13 @@ def run_experiment(
             }
             for rank, feature in enumerate(final_features, start=1)
         ]
-    ).to_csv(features_dir / "final_selected_features.csv", index=False)
+    )
+    write_csv_atomic(features_dir / "final_selected_features.csv", final_features_frame)
     selected_feature_sets_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(
+    copy_atomic(
         features_dir / "final_selected_features.csv",
         selected_feature_sets_dir / "final_selected_features.csv",
+        overwrite=False,
     )
 
     llm_features = getattr(final_selector, "llm_selected_features_", None)
@@ -847,12 +945,17 @@ def run_experiment(
             trace_df = pd.DataFrame(trace_rows)
             if trace_path.exists():
                 trace_df = pd.concat([pd.read_csv(trace_path), trace_df], ignore_index=True)
-            trace_df.to_csv(trace_path, index=False)
+            write_csv_atomic(trace_path, trace_df)
     ranking_summary_path = features_dir / "llm_rankings_summary.csv"
     if ranking_summary_path.exists():
         feature_rankings_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ranking_summary_path, feature_rankings_dir / "llm_rankings_summary.csv")
+        copy_atomic(
+            ranking_summary_path,
+            feature_rankings_dir / "llm_rankings_summary.csv",
+            overwrite=False,
+        )
 
+    _report_execution_stage(config, "final_model_fit")
     final_model = get_model()
     final_training_start = time.time()
     final_model = train_model(final_model, X_train_final, prepared.y_train, None, None)
@@ -870,9 +973,9 @@ def run_experiment(
     preprocessing_hash = hashlib.sha256(
         canonical_config_json(preprocessing_payload).encode("utf-8")
     ).hexdigest()
-    (models_dir / "final_model_metadata.json").write_text(
-        json.dumps(
-            {
+    write_json_atomic(
+        models_dir / "final_model_metadata.json",
+        {
                 "model": config.model_name,
                 "selector": config.selector_name,
                 "experiment_type": config.experiment_type,
@@ -888,12 +991,7 @@ def run_experiment(
                 "config_hash": config.config_hash,
                 "data_fingerprint": data_fingerprint,
                 "n_training_rows": int(len(X_train_final)),
-            },
-            indent=2,
-            ensure_ascii=False,
-            default=str,
-        ),
-        encoding="utf-8",
+        },
     )
     joblib.dump(
         {
@@ -913,11 +1011,13 @@ def run_experiment(
         models_dir / "final_model_bundle.joblib",
     )
 
+    _report_execution_stage(config, "final_prediction")
     final_prediction_start = time.time()
     train_proba = predict_proba(final_model, X_train_final)
     oot_proba = predict_proba(final_model, X_oot_final)
     final_prediction_time_sec = time.time() - final_prediction_start
 
+    _report_execution_stage(config, "evaluation")
     final_evaluation_start = time.time()
     oot_threshold = determine_threshold(prepared.y_train.values, train_proba)
     oot_metrics = evaluate_model(prepared.y_oot.values, oot_proba, threshold=oot_threshold)
@@ -944,12 +1044,15 @@ def run_experiment(
 
     results_dir = exp_dir / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
-    selected_psi_df.to_csv(results_dir / "selected_feature_psi.csv", index=False)
-    pd.DataFrame([{"model_score_psi": model_score_psi}]).to_csv(
+    write_csv_atomic(results_dir / "selected_feature_psi.csv", selected_psi_df)
+    write_csv_atomic(
         results_dir / "model_score_psi.csv",
-        index=False,
+        pd.DataFrame([{"model_score_psi": model_score_psi}]),
     )
-    pd.DataFrame([utility_metrics]).to_csv(results_dir / "credit_risk_utility.csv", index=False)
+    write_csv_atomic(
+        results_dir / "credit_risk_utility.csv",
+        pd.DataFrame([utility_metrics]),
+    )
     data_manifest_hash = hashlib.sha256(
         canonical_config_json(config.data_fingerprint or data_fingerprint).encode("utf-8")
     ).hexdigest()
@@ -1046,19 +1149,16 @@ def run_experiment(
         prediction_manifests.append(oof_prediction_manifest)
         manifest_dir = exp_dir / "manifests"
         manifest_dir.mkdir(parents=True, exist_ok=True)
-        (manifest_dir / "fold_manifest.json").write_text(
-            json.dumps(
+        write_json_atomic(
+            manifest_dir / "fold_manifest.json",
                 {
                     "folds": fold_manifest,
                     "fold_manifest_hash": oof_prediction_manifest["fold_manifest_hash"],
                 },
-                indent=2,
-            ),
-            encoding="utf-8",
         )
-        (manifest_dir / "prediction_manifest.json").write_text(
-            json.dumps({"predictions": prediction_manifests}, indent=2),
-            encoding="utf-8",
+        write_json_atomic(
+            manifest_dir / "prediction_manifest.json",
+            {"predictions": prediction_manifests},
         )
     else:
         dev_metric_path = results_dir / "dev_predictions.csv"
@@ -1103,9 +1203,7 @@ def run_experiment(
         )
         prediction_metrics["psi_binning_method"] = "DEV_OOF_quantile"
         prediction_metrics["psi_bin_fit_scope"] = "saved_DEV_predictions"
-        prediction_metrics.to_csv(
-            results_dir / "prediction_metrics.csv", index=False
-        )
+        write_csv_atomic(results_dir / "prediction_metrics.csv", prediction_metrics)
     oot_row = prediction_metrics.loc[
         prediction_metrics["split"].eq("oot")
     ].iloc[0]
@@ -1115,7 +1213,7 @@ def run_experiment(
     oot_metrics["prediction_file_hash"] = str(oot_row["prediction_file_hash"])
     oot_metrics["prediction_row_count"] = int(oot_row["row_count"])
     oot_metrics["metric_scope"] = str(oot_row["metric_scope"])
-    pd.DataFrame([oot_metrics]).to_csv(results_dir / "oot_test_results.csv", index=False)
+    write_csv_atomic(results_dir / "oot_test_results.csv", pd.DataFrame([oot_metrics]))
 
     summary_row = build_experiment_summary_row(
         exp_dir=exp_dir,
@@ -1165,10 +1263,10 @@ def run_experiment(
         "evaluation_time_sec": float(results_df.attrs.get("cv_evaluation_time_sec", 0.0) + final_evaluation_time_sec),
         "total_runtime_seconds": float(time.time() - run_start),
     }
-    pd.DataFrame([runtime_payload]).to_csv(results_dir / "runtime_summary.csv", index=False)
+    write_csv_atomic(results_dir / "runtime_summary.csv", pd.DataFrame([runtime_payload]))
     write_resource_usage(exp_dir, runtime_payload)
     summary_row["runtime_seconds"] = runtime_payload["total_runtime_seconds"]
-    pd.DataFrame([summary_row]).to_csv(results_dir / "experiment_summary.csv", index=False)
+    write_csv_atomic(results_dir / "experiment_summary.csv", pd.DataFrame([summary_row]))
 
     logger.info(
         "Finished experiment %s | exp_dir=%s | oot_auc=%.4f",
@@ -1177,10 +1275,13 @@ def run_experiment(
         float(summary_row.get("oot_auc", float("nan"))),
     )
 
+    _report_execution_stage(config, "evaluation_completed")
+
     return ExperimentRun(config=config, exp_dir=exp_dir, summary=summary_row)
 
 
 SOURCE_IDENTITY_VERSION = "homecredit_raw_source_identity_v1"
+GENERIC_SOURCE_IDENTITY_VERSION = "authenticated_raw_source_identity_v1"
 
 
 def _canonical_identity_value(value: Any) -> str:
@@ -1261,12 +1362,11 @@ def build_source_identity_provenance(
 ) -> SourceIdentityProvenance:
     from credit_risk_fs.utils.hashing import sha256_file
 
-    if str(dataset).lower() != "homecredit":
-        raise ValueError("authenticated source identity is Home Credit-only")
+    dataset_name = str(dataset).lower()
     path = Path(source_artifact_path)
     if not path.exists() or not path.is_file():
         raise ValueError("source identity artifact is missing")
-    if stable_row_id_column != "SK_ID_CURR":
+    if dataset_name == "homecredit" and stable_row_id_column != "SK_ID_CURR":
         raise ValueError("authenticated Home Credit identity must be SK_ID_CURR")
     required = {stable_row_id_column, target_column}
     missing = required - set(raw_frame.columns)
@@ -1280,10 +1380,19 @@ def build_source_identity_provenance(
     canonical_ids = ids.map(_canonical_identity_value)
     if canonical_ids.duplicated().any():
         raise ValueError("original raw source stable IDs are duplicated")
-    original_columns = [str(column) for column in raw_frame.columns]
+    if path.suffix.lower() == ".parquet":
+        import pyarrow.parquet as pq
+
+        original_columns = list(map(str, pq.ParquetFile(path).schema_arrow.names))
+    else:
+        original_columns = pd.read_csv(path, nrows=0).columns.astype(str).tolist()
     manifest = {
-        "manifest_version": SOURCE_IDENTITY_VERSION,
-        "dataset": "homecredit",
+        "manifest_version": (
+            SOURCE_IDENTITY_VERSION
+            if dataset_name == "homecredit"
+            else GENERIC_SOURCE_IDENTITY_VERSION
+        ),
+        "dataset": dataset_name,
         "stable_row_id_column": stable_row_id_column,
         "source_artifact": str(path.resolve()).replace("\\", "/"),
         "source_artifact_hash": sha256_file(path),
@@ -1387,10 +1496,17 @@ def validate_source_identity_subset(
         manifest
     ):
         raise ValueError("source identity manifest hash mismatch")
+    dataset_name = str(dataset).lower()
     expected_metadata = {
-        "manifest_version": SOURCE_IDENTITY_VERSION,
-        "dataset": "homecredit",
-        "stable_row_id_column": "SK_ID_CURR",
+        "manifest_version": (
+            SOURCE_IDENTITY_VERSION
+            if dataset_name == "homecredit"
+            else GENERIC_SOURCE_IDENTITY_VERSION
+        ),
+        "dataset": dataset_name,
+        "stable_row_id_column": (
+            "SK_ID_CURR" if dataset_name == "homecredit" else stable_row_id_column
+        ),
         "stable_id_uniqueness_status": "unique",
         "stable_id_null_count": 0,
         "creation_stage": "raw_input",
@@ -1398,7 +1514,7 @@ def validate_source_identity_subset(
     mismatches = [
         key for key, value in expected_metadata.items() if manifest.get(key) != value
     ]
-    if str(dataset).lower() != "homecredit" or mismatches:
+    if mismatches:
         raise ValueError(f"source identity metadata mismatch: {mismatches}")
     original_columns = manifest["original_columns"]
     if stable_row_id_column not in original_columns:
@@ -1587,7 +1703,12 @@ def export_prediction_artifact(
     output = output.sort_values("stable_row_id", kind="mergesort").reset_index(drop=True)
     target_path = Path(path)
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    output.to_csv(target_path, index=False)
+    artifact_integrity = write_csv_atomic(
+        target_path,
+        output,
+        required_columns=required,
+        ordered_row_identity_column="stable_row_id",
+    )
     saved = pd.read_csv(target_path)
     if len(saved) != len(output) or set(saved["stable_row_id"].astype(str)) != set(expected_ids):
         raise ValueError("persisted prediction artifact differs from validated rows")
@@ -1597,6 +1718,8 @@ def export_prediction_artifact(
         "row_count": len(saved),
         "unique_stable_id_count": saved["stable_row_id"].astype(str).nunique(),
         "null_stable_id_count": int(saved["stable_row_id"].isna().sum()),
+        "size_bytes": artifact_integrity.size_bytes,
+        "ordered_row_identity_sha256": artifact_integrity.ordered_row_identity_sha256,
         **asdict(metadata),
         "fold_manifest_hash": fold_manifest_hash,
     }
@@ -1932,8 +2055,8 @@ def generate_metric_provenance_artifacts(
     manifest_target = Path(metric_manifest_path)
     for target in (metrics_target, psi_target, manifest_target):
         target.parent.mkdir(parents=True, exist_ok=True)
-    metrics.to_csv(metrics_target, index=False)
-    psi_details.to_csv(psi_target, index=False)
+    write_csv_atomic(metrics_target, metrics)
+    write_csv_atomic(psi_target, psi_details)
 
     metric_entries = []
     indexed = metrics.set_index("split")
@@ -2027,10 +2150,7 @@ def generate_metric_provenance_artifacts(
             "score_psi": psi_record,
         },
     }
-    manifest_target.write_text(
-        json.dumps(manifest, indent=2),
-        encoding="utf-8",
-    )
+    write_json_atomic(manifest_target, manifest)
     validate_metric_provenance(manifest)
     return metrics, manifest
 

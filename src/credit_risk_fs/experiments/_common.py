@@ -17,6 +17,7 @@ from credit_risk_fs.experiments.result_paths import (
     initialize_results_layout,
 )
 from credit_risk_fs.experiments.tracking import build_data_version
+from credit_risk_fs.experiments.resource_policy import apply_estimator_parallelism
 from credit_risk_fs.pipelines.common import (
     ExperimentConfig,
     prepare_modeling_data,
@@ -52,6 +53,13 @@ def add_common_experiment_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--oot-end-day", type=int, default=0)
     parser.add_argument("--cv-gap-groups", type=int, default=1)
     parser.add_argument("--random-seed", type=int, default=42)
+    parser.add_argument(
+        "--execution-policy",
+        default="configs/execution/local_laptop_safe_v1.yaml",
+    )
+    parser.add_argument("--resume", default=None)
+    parser.add_argument("--accelerator", choices=["cpu", "gpu"], default="cpu")
+    parser.add_argument("--allow-gpu-without-telemetry", action="store_true")
     parser.add_argument(
         "--repository-root",
         type=Path,
@@ -123,6 +131,25 @@ def build_experiment_config(
         dict(selector_kwargs or {}),
         feature_budget,
     )
+    resolved_execution = project_config.get("_resolved_execution_policy", {})
+    estimator_threads = int(
+        resolved_execution.get("parallelism", {}).get("estimator_threads", 1)
+    )
+    model_kwargs, selector_kwargs = apply_estimator_parallelism(
+        args.model,
+        resolve_model_kwargs(project_config, args.model),
+        selector_kwargs,
+        estimator_threads=estimator_threads,
+    )
+    configured_projection = project_config.get("input_column_projection")
+    input_projection = (
+        {
+            str(table): tuple(map(str, columns))
+            for table, columns in configured_projection.items()
+        }
+        if isinstance(configured_projection, dict)
+        else None
+    )
     return ExperimentConfig(
         experiment_name=experiment_name,
         selector_name=selector_name,
@@ -133,7 +160,7 @@ def build_experiment_config(
         config_hash=compute_config_hash(project_config),
         data_fingerprint=build_data_version(args.data_dir),
         model_name=args.model,
-        model_kwargs=resolve_model_kwargs(project_config, args.model),
+        model_kwargs=model_kwargs,
         data_dir=args.data_dir,
         description_path=args.description_path,
         base_output_dir=str(experiments_dir),
@@ -150,6 +177,19 @@ def build_experiment_config(
         stable_row_id_column=project_config.get("stable_row_id_column"),
         identity_sidecar_path=project_config.get("identity_sidecar_path"),
         identity_manifest_path=project_config.get("identity_manifest_path"),
+        input_column_projection=input_projection,
+        required_feature_columns=tuple(
+            map(str, project_config.get("required_feature_columns", ()))
+        ),
+        require_full_candidate_projection=bool(
+            project_config.get("require_full_candidate_projection", True)
+        ),
+        csv_chunk_rows=(
+            int(project_config["csv_chunk_rows"])
+            if project_config.get("csv_chunk_rows") is not None
+            else None
+        ),
+        estimator_threads=estimator_threads,
     )
 
 

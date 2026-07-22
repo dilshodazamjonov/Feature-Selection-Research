@@ -1,7 +1,6 @@
 import time
 import logging
 from pathlib import Path
-import shutil
 
 import numpy as np
 import pandas as pd
@@ -10,6 +9,7 @@ from credit_risk_fs.evaluation._feature_utils import (
     _feature_score_lookup,
     _to_df,
 )
+from credit_risk_fs.experiments.atomic_io import copy_atomic, write_csv_atomic
 from credit_risk_fs.evaluation.drift import calculate_psi, feature_psi
 from credit_risk_fs.evaluation.metrics import determine_threshold, evaluate_model_wrapper
 from credit_risk_fs.feature_metadata.semantic_groups import infer_semantic_group
@@ -264,9 +264,9 @@ def process_fold(
     hybrid_rows = _hybrid_trace_rows(fold, selector_name, selector)
     if selected_rows:
         selected_feature_sets_dir.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(selected_rows).to_csv(
+        write_csv_atomic(
             selected_feature_sets_dir / f"fold_{fold}_selected_features.csv",
-            index=False,
+            pd.DataFrame(selected_rows),
         )
 
     # Train model
@@ -330,6 +330,10 @@ def process_fold(
     ranking_summary_path = Path(features_dir) / "llm_rankings_summary.csv"
     if ranking_summary_path.exists():
         feature_rankings_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ranking_summary_path, feature_rankings_dir / "llm_rankings_summary.csv")
+        copy_atomic(
+            ranking_summary_path,
+            feature_rankings_dir / "llm_rankings_summary.csv",
+            overwrite=True,
+        )
 
     return fold_metrics, val_proba, selected_features, decision_threshold, selected_rows, hybrid_rows

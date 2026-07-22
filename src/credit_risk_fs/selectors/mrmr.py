@@ -42,12 +42,16 @@ class RandomForestRelevanceMRMRSelector(
         n_iter: int = 1,
         correlation: str = "pearson",
         random_state: int = 42,
+        n_jobs: int = 1,
     ) -> None:
         self.k = int(k)
         self.method = str(method)
         self.n_iter = int(n_iter)
         self.correlation = str(correlation)
         self.random_state = int(random_state)
+        self.n_jobs = int(n_jobs)
+        if self.n_jobs <= 0:
+            raise ValueError("n_jobs must be positive")
         self.logger = logging.getLogger(self.__class__.__name__)
         self.selected_features_ = None
 
@@ -61,7 +65,7 @@ class RandomForestRelevanceMRMRSelector(
                 n_estimators=128,
                 min_samples_split=0.01,
                 max_features=0.15,
-                n_jobs=-1,
+                n_jobs=self.n_jobs,
                 random_state=self.random_state + iteration,
             )
             estimator.fit(X, y)

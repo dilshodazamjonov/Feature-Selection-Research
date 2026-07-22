@@ -335,6 +335,19 @@ def validate_active_results(root: Path) -> dict[str, object]:
             raise ValueError(f"active run manifest is unreadable: {manifest_path}") from exc
         if str(manifest.get("run_id", "")) != run_id:
             raise ValueError(f"active run manifest run_id mismatch: {manifest_path}")
+        allowed_statuses = {
+            "running",
+            "completed",
+            "failed",
+            "interrupted",
+            "aborted_resource_limit",
+        }
+        row_status = str(row["status"]).strip().lower()
+        manifest_status = str(manifest.get("status", "")).strip().lower()
+        if row_status not in allowed_statuses or manifest_status not in allowed_statuses:
+            raise ValueError(f"active run has an unsupported terminal status: {run_id}")
+        if row_status != manifest_status:
+            raise ValueError(f"active run index/manifest status mismatch: {run_id}")
         artifacts = manifest.get("artifacts")
         if not isinstance(artifacts, dict):
             raise ValueError(
@@ -346,7 +359,7 @@ def validate_active_results(root: Path) -> dict[str, object]:
                 f"active run manifest omits standard artifact entries: "
                 f"{missing_artifact_entries}"
             )
-        completed = str(row["status"]).strip().lower() == "completed"
+        completed = row_status == "completed"
         for artifact_name, entry in artifacts.items():
             if not isinstance(entry, dict):
                 raise ValueError(
@@ -399,6 +412,33 @@ def validate_active_results(root: Path) -> dict[str, object]:
                     f"{artifact_name}"
                 )
             checked_artifacts += int(present)
+            if present and entry.get("size_bytes") is not None:
+                if resolved_artifact.stat().st_size != int(entry["size_bytes"]):
+                    raise ValueError(
+                        f"active run artifact size mismatch: {artifact_name}"
+                    )
+            if present and entry.get("sha256"):
+                if sha256_file(resolved_artifact) != str(entry["sha256"]):
+                    raise ValueError(
+                        f"active run artifact checksum mismatch: {artifact_name}"
+                    )
+
+        success_marker = run_directory / "_SUCCESS"
+        hardened = isinstance(manifest.get("execution_policy"), dict)
+        if not completed and success_marker.exists():
+            raise ValueError(f"non-completed active run has a success marker: {run_id}")
+        if hardened:
+            if completed and not success_marker.is_file():
+                raise ValueError(f"completed hardened run lacks success marker: {run_id}")
+            checkpoint = run_directory / "checkpoint.json"
+            if not checkpoint.is_file():
+                raise ValueError(f"hardened run lacks checkpoint: {run_id}")
+            checkpoint_payload = json.loads(checkpoint.read_text(encoding="utf-8"))
+            checkpoint_status = str(checkpoint_payload.get("status", "")).lower()
+            if checkpoint_status != row_status:
+                raise ValueError(
+                    f"active run checkpoint status mismatch: {run_id}"
+                )
 
     return {
         "status": "passed",

@@ -9,3 +9,4 @@ excluded_feature_columns:
   - DAYS_DECISION
   - application_time_proxy
 time_col: recent_decision
+stable_row_id_column: SK_ID_CURR

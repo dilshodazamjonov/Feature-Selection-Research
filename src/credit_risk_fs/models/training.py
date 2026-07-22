@@ -18,6 +18,7 @@ from credit_risk_fs.evaluation.stability import (
 )
 from credit_risk_fs.models._cv_utils import GroupedTimeSeriesSplit
 from credit_risk_fs.models._fold import process_fold
+from credit_risk_fs.experiments.atomic_io import write_csv_atomic
 from credit_risk_fs.preprocessing.encoding import Preprocessor
 from credit_risk_fs.utils.logging import setup_logging
 
@@ -233,6 +234,7 @@ def run_kfold_training(
     feature_budget=None,
     stable_row_ids=None,
     stability_candidate_pool_path=None,
+    stage_callback=None,
 ):
     """
     Run a time-series aware K-Fold training pipeline with preprocessing, feature selection, 
@@ -376,6 +378,8 @@ def run_kfold_training(
     start_total = time.time()
 
     for fold, (tr_idx, va_idx) in enumerate(splitter.split(df[time_col].values), 1):
+        if stage_callback is not None:
+            stage_callback("fold_running", fold)
         if stable_row_ids is not None:
             training_ids = df.loc[tr_idx, "_stable_row_id_"].astype(str).tolist()
             validation_ids = df.loc[va_idx, "_stable_row_id_"].astype(str).tolist()
@@ -444,6 +448,8 @@ def run_kfold_training(
             selector_name=selector_name,
             prev_selected_features=prev_selected_features,
         )
+        if stage_callback is not None:
+            stage_callback("fold_completed", fold)
         fold_metrics.update(fold_time_info[-1])
         if stable_row_ids is not None:
             fold_prediction_frames.append(
@@ -524,8 +530,9 @@ def run_kfold_training(
         ) = evaluate_reconciled_oof(
             fold_prediction_frames, fold_identity_manifest
         )
-        oof_reconciliation.to_csv(
-            os.path.join(results_dir, "oof_reconciliation.csv"), index=False
+        write_csv_atomic(
+            os.path.join(results_dir, "oof_reconciliation.csv"),
+            oof_reconciliation,
         )
         oof_metric_true = oof_predictions["target"].to_numpy()
         oof_metric_probability = oof_predictions[
@@ -557,18 +564,18 @@ def run_kfold_training(
     summary_df = summary_df.reindex(columns=results_df.columns)
 
     final_results_df = pd.concat([results_df, summary_df], ignore_index=True)
-    final_results_df.to_csv(os.path.join(results_dir, "cv_results.csv"), index=False)
+    write_csv_atomic(os.path.join(results_dir, "cv_results.csv"), final_results_df)
 
     # Feature stability
     if fold_selected_rows:
-        pd.DataFrame(fold_selected_rows).to_csv(
+        write_csv_atomic(
             os.path.join(features_dir, "fold_selected_features.csv"),
-            index=False,
+            pd.DataFrame(fold_selected_rows),
         )
     if hybrid_trace_rows:
-        pd.DataFrame(hybrid_trace_rows).to_csv(
+        write_csv_atomic(
             os.path.join(features_dir, "llm_hybrid_trace.csv"),
-            index=False,
+            pd.DataFrame(hybrid_trace_rows),
         )
 
     stability_kwargs = (

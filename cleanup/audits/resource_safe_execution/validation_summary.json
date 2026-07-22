@@ -1,0 +1,138 @@
+{
+  "gate": "PASS",
+  "validation_date": "2026-07-22",
+  "prompt_1_1_prerequisite": {
+    "resolved_path": "cleanup/audits/foundation_protocol_freeze/validation_summary.json",
+    "gate": "PASS",
+    "ready_for_prompt_2": true
+  },
+  "repository_baseline": {
+    "git_commit": "b1e0d5236d8d6ceb6aa889eced45d11c9cdc0a8e",
+    "initial_worktree": "clean",
+    "python": "3.13.5",
+    "psutil": "7.2.2",
+    "pandas": "3.0.1",
+    "pyarrow": "24.0.0",
+    "catboost": "1.2.10",
+    "nvidia_ml_py": "13.610.43",
+    "full_suite": {
+      "passed": 405,
+      "failed": 0,
+      "skipped": 31,
+      "warnings": 107,
+      "duration_seconds": 149.85
+    }
+  },
+  "focused_tests": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_result_paths.py tests/test_resource_policy.py tests/test_resource_monitor.py tests/test_checkpointing.py tests/test_atomic_io.py tests/test_projected_loading.py tests/test_execution_dry_run.py tests/test_run_index_atomicity.py tests/test_research_matrix.py -q",
+    "passed": 82,
+    "failed": 0,
+    "duration_seconds": 9.38
+  },
+  "full_suite": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests -q",
+    "passed": 459,
+    "failed": 0,
+    "skipped": 31,
+    "warnings": 107,
+    "duration_seconds": 195.81,
+    "new_regressions": 0,
+    "baseline_delta_passed": 54
+  },
+  "synthetic_proofs": {
+    "successful_registered_dry_run": "passed_in_temporary_root",
+    "projected_loading_and_atomic_artifacts": "passed",
+    "forced_low_memory_abort": {
+      "status": "aborted_resource_limit",
+      "stop_code": "ram_process_limit",
+      "warning_observed": true,
+      "child_process_cleanup": "passed",
+      "incomplete_stage_promoted": false,
+      "resume_recognized_last_valid_checkpoint": true
+    },
+    "interrupted_write_resume": {
+      "partial_not_trusted": true,
+      "partial_quarantined_within_run": true,
+      "valid_restart_published_atomically": true,
+      "config_hash_mismatch_blocked": true
+    },
+    "real_active_results_used": false
+  },
+  "live_preflight": {
+    "command": ".\\.venv\\Scripts\\python.exe scripts/preflight_execution.py --root . --config configs/execution/local_laptop_safe_v1.yaml --output cleanup/audits/resource_safe_execution/hardware_preflight.json",
+    "report": "cleanup/audits/resource_safe_execution/hardware_preflight.json",
+    "status": "pass",
+    "physical_cpu_count": 10,
+    "logical_cpu_count": 16,
+    "total_ram_gb": 39.63307189941406,
+    "available_ram_gb": 24.50466537475586,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_total_vram_gb": 7.99609375,
+    "gpu_free_vram_gb": 6.721027374267578,
+    "gpu_driver": "610.62",
+    "gpu_process_telemetry": true,
+    "results_free_disk_gb": 254.0965347290039,
+    "temp_free_disk_gb": 81.81854629516602,
+    "active_results_writable": true,
+    "legacy_results_write_blocked": true,
+    "peak_preflight_rss_bytes": 111398912,
+    "peak_measurement": "unavailable_windows_fallback_max_start_end_rss"
+  },
+  "resolved_default_policy": {
+    "profile": "local_laptop_safe_v1",
+    "concurrent_experiment_runs": 1,
+    "concurrent_folds": 1,
+    "data_loader_workers": 0,
+    "estimator_threads": 4,
+    "allow_nested_parallelism": false,
+    "reserve_system_ram_gb": 10.0,
+    "warn_process_tree_rss_gb": 24.0,
+    "abort_process_tree_rss_gb": 28.0,
+    "abort_if_system_available_below_gb": 8.0,
+    "reserve_vram_gb": 1.5,
+    "warn_process_vram_gb": 5.5,
+    "abort_process_vram_gb": 6.49609375,
+    "minimum_free_results_gb": 20.0,
+    "minimum_free_temp_gb": 20.0,
+    "gpu_telemetry_required_for_gpu_runs": true
+  },
+  "repository_validator": {
+    "command": ".\\.venv\\Scripts\\python.exe cleanup/tools/validate_repository_state.py --root .",
+    "configuration": "CREDIT_RISK_LEGACY_RESULTS_ROOT=D:\\ResearchFindings\\results; CREDIT_RISK_LEGACY_EVIDENCE_PROFILE=clip_complete_v1",
+    "exit_code": 0,
+    "active_results_status": "passed",
+    "active_registered_runs": 0,
+    "historical_results_status": "configured_read_only",
+    "historical_file_count": 359
+  },
+  "static_checks": {
+    "compileall_src_scripts": "passed",
+    "git_diff_check": "passed"
+  },
+  "active_results_end_state": {
+    "run_index_experiment_rows": 0,
+    "run_directory_entries": 0,
+    "partial_files": 0
+  },
+  "historical_manifest_end_comparison": {
+    "baseline_file_count": 359,
+    "current_file_count": 359,
+    "baseline_total_size_bytes": 110084164,
+    "current_total_size_bytes": 110084164,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "status": "unchanged"
+  },
+  "scientific_execution_attestation": {
+    "homecredit_loaded": false,
+    "lendingclub_loaded": false,
+    "third_research_dataset_loaded": false,
+    "research_model_or_selector_run": false,
+    "research_predictions_generated": false,
+    "voting_shap_embeddings_clip_or_llm_run": false,
+    "external_api_called": false,
+    "prompt_3_started": false
+  },
+  "readiness": "READY_FOR_PROMPT_3_AFTER_USER_HARDWARE_PLAUSIBILITY_CONFIRMATION"
+}

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 import ctypes
@@ -11,6 +10,12 @@ from pathlib import Path
 from typing import Any
 
 from credit_risk_fs.experiments.config import compute_config_hash
+from credit_risk_fs.experiments.atomic_io import (
+    copy_atomic,
+    inspect_artifact,
+    write_json_atomic,
+    write_text_atomic,
+)
 from credit_risk_fs.experiments.result_paths import (
     reject_historical_write,
     sanitize_component,
@@ -29,6 +34,8 @@ STANDARD_ARTIFACTS = {
     "predictions_oot": "predictions_oot.csv",
     "stability": "stability.csv",
     "resource_usage": "resource_usage.json",
+    "preflight": "preflight.json",
+    "checkpoint": "checkpoint.json",
     "run_log": "run.log",
 }
 
@@ -63,6 +70,20 @@ def get_git_commit_hash(project_root: str | Path = ".") -> str:
     except Exception:
         return "unknown"
     return result.stdout.strip() or "unknown"
+
+
+def get_git_dirty_state(project_root: str | Path = ".") -> bool | None:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except Exception:
+        return None
+    return bool(result.stdout.strip())
 
 
 def build_data_version(data_dir: str | Path) -> dict[str, Any]:
@@ -144,6 +165,7 @@ def build_run_manifest(
         "data_version": build_data_version(data_dir),
         "random_seed": int(random_seed),
         "git_commit_hash": get_git_commit_hash(project_root),
+        "git_dirty": get_git_dirty_state(project_root),
         "output_folder": str(Path(output_folder)),
         "artifacts": {
             name: {
@@ -159,11 +181,7 @@ def build_run_manifest(
 def write_json(path: str | Path, payload: dict[str, Any]) -> Path:
     """Write pretty JSON and return the path."""
     output_path = reject_historical_write(path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    write_json_atomic(output_path, payload)
     return output_path
 
 
@@ -197,6 +215,14 @@ def build_artifact_contract(
             "path": relative,
             "present": present,
         }
+        if present and name != "manifest":
+            metadata = inspect_artifact(run_path / relative)
+            contract[name].update(
+                {
+                    "size_bytes": metadata.size_bytes,
+                    "sha256": metadata.sha256,
+                }
+            )
     return contract
 
 
@@ -215,8 +241,7 @@ def materialize_standard_artifacts(run_dir: str | Path) -> dict[str, Path]:
             continue
         if target.exists():
             raise FileExistsError(f"standard run artifact already exists: {target}")
-        with source.open("rb") as source_file, target.open("xb") as target_file:
-            shutil.copyfileobj(source_file, target_file)
+        copy_atomic(source, target, overwrite=False)
         materialized[target_name] = target
     return materialized
 
@@ -295,6 +320,33 @@ def write_resource_usage(
         "peak_ram_measurement": ram_source,
         "peak_gpu_measurement": gpu_source,
     }
+    for key in (
+        "current_process_tree_rss_bytes",
+        "peak_process_tree_rss_bytes",
+        "current_process_gpu_bytes",
+        "peak_process_gpu_bytes",
+        "minimum_system_available_ram_bytes",
+        "minimum_results_free_disk_bytes",
+        "minimum_temp_free_disk_bytes",
+        "worker_exit_code",
+        "stop_code",
+        "status",
+        "samples",
+        "warnings",
+        "resolved_parallelism",
+        "policy_version",
+        "preflight_status",
+        "checkpoint_path",
+        "resumability_status",
+    ):
+        if key in runtime_payload:
+            payload[key] = runtime_payload[key]
+    if payload.get("peak_process_tree_rss_bytes") is not None:
+        payload["peak_ram_mb"] = float(payload["peak_process_tree_rss_bytes"]) / (1024 * 1024)
+        payload["peak_ram_measurement"] = "supervised_process_tree_rss"
+    if payload.get("peak_process_gpu_bytes") is not None:
+        payload["peak_gpu_mb"] = float(payload["peak_process_gpu_bytes"]) / (1024 * 1024)
+        payload["peak_gpu_measurement"] = "nvml_process_tree"
     write_json(Path(run_dir) / "resource_usage.json", payload)
     return payload
 
@@ -302,7 +354,7 @@ def write_resource_usage(
 def mark_completed(run_dir: str | Path) -> Path:
     """Create the success marker used by resume behavior."""
     marker = reject_historical_write(Path(run_dir) / SUCCESS_MARKER)
-    marker.write_text(utc_timestamp(), encoding="utf-8")
+    write_text_atomic(marker, utc_timestamp() + "\n", overwrite=False)
     return marker
 
 

@@ -18,7 +18,7 @@ class RandomForestModel:
         max_features="sqrt",
         class_weight="balanced",
         random_state=42,
-        n_jobs=-1
+        n_jobs=1
     ):
         """
         Initialize Random Forest model with hyperparameters.
@@ -86,4 +86,3 @@ class RandomForestModel:
         self.fitted = True
         return self
 
-    

@@ -22,6 +22,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--output-dir", default=None)
+    parser.add_argument(
+        "--execution-policy",
+        default="configs/execution/local_laptop_safe_v1.yaml",
+    )
+    parser.add_argument("--resume", default=None)
+    parser.add_argument("--accelerator", choices=["cpu", "gpu"], default="cpu")
+    parser.add_argument("--allow-gpu-without-telemetry", action="store_true")
     return parser
 
 
@@ -42,6 +49,11 @@ def main(argv: list[str] | None = None) -> int:
         cli_args.append("--dry-run")
     if args.output_dir:
         cli_args.extend(["--output-dir", args.output_dir])
+    cli_args.extend(["--execution-policy", args.execution_policy, "--accelerator", args.accelerator])
+    if args.resume:
+        cli_args.extend(["--resume", args.resume])
+    if args.allow_gpu_without_telemetry:
+        cli_args.append("--allow-gpu-without-telemetry")
     runner_main(cli_args)
     return 0
 

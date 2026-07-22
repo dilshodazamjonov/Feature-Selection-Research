@@ -8,9 +8,12 @@ import json
 import os
 import re
 import unicodedata
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
+
+from credit_risk_fs.experiments.atomic_io import atomic_publish
 
 
 RESULT_SUBDIRECTORIES = (
@@ -51,14 +54,17 @@ outputs are stored separately and remain immutable.
 - `run_index.csv`: active experiments only.
 
 Runs never overwrite one another. A completed run normally records its config,
-manifest, selected features, fold selections, metrics, DEV/OOT predictions,
+preflight, checkpoint, manifest, selected features, fold selections, metrics, DEV/OOT predictions,
 stability, resource usage, and log; the manifest identifies applicable and
-present artifacts. Raw data, source code, notebooks, model caches, scratch
+present artifacts. Failed, interrupted, and resource-aborted runs remain registered;
+resume is explicit and validates provenance plus artifact integrity. Raw data,
+source code, notebooks, model caches, scratch
 files, temporary files, and legacy artifacts do not belong here.
 """
 
 _SAFE_COMPONENT_PATTERN = re.compile(r"[^a-z0-9-]+")
 LEGACY_RESULTS_ENV = "CREDIT_RISK_LEGACY_RESULTS_ROOT"
+AUDITED_LEGACY_RESULTS_ROOT = Path("D:/ResearchFindings/results")
 LEGACY_EVIDENCE_PROFILE_ENV = "CREDIT_RISK_LEGACY_EVIDENCE_PROFILE"
 LEGACY_EVIDENCE_PROFILE_FILENAME = "legacy_evidence_profile.json"
 CLIP_COMPLETE_PROFILE = "clip_complete_v1"
@@ -148,11 +154,15 @@ def reject_historical_write(
     """Resolve a prospective write and reject the historical bundle boundary."""
 
     resolved = Path(path).resolve()
-    legacy = configured_legacy_results_root(legacy_root)
-    if legacy is not None and (resolved == legacy or resolved.is_relative_to(legacy)):
-        raise HistoricalResultsWriteError(
-            f"write rejected inside immutable historical results root {legacy}: {resolved}"
-        )
+    roots = {AUDITED_LEGACY_RESULTS_ROOT.resolve()}
+    configured = configured_legacy_results_root(legacy_root)
+    if configured is not None:
+        roots.add(configured)
+    for legacy in roots:
+        if resolved == legacy or resolved.is_relative_to(legacy):
+            raise HistoricalResultsWriteError(
+                f"write rejected inside immutable historical results root {legacy}: {resolved}"
+            )
     return resolved
 
 
@@ -323,8 +333,18 @@ def resolve_results_root(
     candidate = configured if configured.is_absolute() else repository / configured
     resolved = candidate.resolve()
     legacy = configured_legacy_results_root()
-    if legacy is not None:
-        validate_results_root_separation(resolved, legacy)
+    for immutable_root in {
+        AUDITED_LEGACY_RESULTS_ROOT.resolve(),
+        *(() if legacy is None else (legacy,)),
+    }:
+        if (
+            resolved == immutable_root
+            or resolved.is_relative_to(immutable_root)
+            or immutable_root.is_relative_to(resolved)
+        ):
+            raise LegacyResultsConfigurationError(
+                f"active and historical results roots overlap: active={resolved}, legacy={immutable_root}"
+            )
     return reject_historical_write(resolved, legacy_root=legacy)
 
 
@@ -453,6 +473,59 @@ def _read_run_index(path: Path) -> list[dict[str, str]]:
         return list(reader)
 
 
+@contextmanager
+def _run_index_lock(index_path: Path):
+    """Hold a small cross-platform registry lock for read-modify-replace."""
+
+    lock_path = reject_historical_write(index_path.with_suffix(index_path.suffix + ".lock"))
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def _write_run_index_atomic(index_path: Path, rows: list[dict[str, Any]]) -> None:
+    def writer(partial_path: Path) -> None:
+        with partial_path.open("x", encoding="utf-8", newline="") as file:
+            csv_writer = csv.DictWriter(
+                file,
+                fieldnames=RUN_INDEX_COLUMNS,
+                lineterminator="\n",
+            )
+            csv_writer.writeheader()
+            csv_writer.writerows(rows)
+            file.flush()
+            os.fsync(file.fileno())
+
+    atomic_publish(
+        index_path,
+        writer,
+        artifact_format="csv",
+        expected_columns=RUN_INDEX_COLUMNS,
+        expected_row_count=len(rows),
+    )
+
+
 def append_run_index_row(
     results_root: str | Path,
     row: Mapping[str, Any],
@@ -462,28 +535,23 @@ def append_run_index_row(
     index_path = reject_historical_write(
         Path(results_root).resolve() / "run_index.csv"
     )
-    rows = _read_run_index(index_path)
-    run_id = str(row.get("run_id", "")).strip()
-    if not run_id:
-        raise ValueError("run index row requires run_id")
-    if any(existing["run_id"] == run_id for existing in rows):
-        raise ValueError(f"run index already contains run_id: {run_id}")
-    unknown = set(row) - set(RUN_INDEX_COLUMNS)
-    if unknown:
-        raise ValueError(f"unknown run index columns: {sorted(unknown)}")
-
-    with index_path.open("a", encoding="utf-8", newline="") as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=RUN_INDEX_COLUMNS,
-            lineterminator="\n",
-        )
-        writer.writerow(
+    with _run_index_lock(index_path):
+        rows = _read_run_index(index_path)
+        run_id = str(row.get("run_id", "")).strip()
+        if not run_id:
+            raise ValueError("run index row requires run_id")
+        if any(existing["run_id"] == run_id for existing in rows):
+            raise ValueError(f"run index already contains run_id: {run_id}")
+        unknown = set(row) - set(RUN_INDEX_COLUMNS)
+        if unknown:
+            raise ValueError(f"unknown run index columns: {sorted(unknown)}")
+        rows.append(
             {
                 column: "" if row.get(column) is None else row.get(column, "")
                 for column in RUN_INDEX_COLUMNS
             }
         )
+        _write_run_index_atomic(index_path, rows)
 
 
 def update_run_index_row(
@@ -496,40 +564,25 @@ def update_run_index_row(
     index_path = reject_historical_write(
         Path(results_root).resolve() / "run_index.csv"
     )
-    rows = _read_run_index(index_path)
-    unknown = set(updates) - set(RUN_INDEX_COLUMNS)
-    if unknown:
-        raise ValueError(f"unknown run index columns: {sorted(unknown)}")
-    if "run_id" in updates and str(updates["run_id"]) != run_id:
-        raise ValueError("run_id cannot be changed")
+    with _run_index_lock(index_path):
+        rows = _read_run_index(index_path)
+        unknown = set(updates) - set(RUN_INDEX_COLUMNS)
+        if unknown:
+            raise ValueError(f"unknown run index columns: {sorted(unknown)}")
+        if "run_id" in updates and str(updates["run_id"]) != run_id:
+            raise ValueError("run_id cannot be changed")
 
-    matches = [row for row in rows if row["run_id"] == run_id]
-    if len(matches) != 1:
-        raise ValueError(
-            f"expected one run index row for {run_id!r}, found {len(matches)}"
-        )
-    for row in rows:
-        if row["run_id"] == run_id:
-            row.update(
-                {
-                    key: "" if value is None else str(value)
-                    for key, value in updates.items()
-                }
+        matches = [row for row in rows if row["run_id"] == run_id]
+        if len(matches) != 1:
+            raise ValueError(
+                f"expected one run index row for {run_id!r}, found {len(matches)}"
             )
-
-    temporary_path = reject_historical_write(
-        index_path.with_name(f".{index_path.name}.{os.getpid()}.tmp")
-    )
-    try:
-        with temporary_path.open("x", encoding="utf-8", newline="") as file:
-            writer = csv.DictWriter(
-                file,
-                fieldnames=RUN_INDEX_COLUMNS,
-                lineterminator="\n",
-            )
-            writer.writeheader()
-            writer.writerows(rows)
-        os.replace(temporary_path, index_path)
-    finally:
-        if temporary_path.exists():
-            temporary_path.unlink()
+        for existing in rows:
+            if existing["run_id"] == run_id:
+                existing.update(
+                    {
+                        key: "" if value is None else str(value)
+                        for key, value in updates.items()
+                    }
+                )
+        _write_run_index_atomic(index_path, rows)

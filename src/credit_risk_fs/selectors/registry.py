@@ -13,14 +13,15 @@ def get_selector(selector_name: str):
             "max_iter": 15,
             "random_state": 42,
             "n_features": 40,
+            "n_jobs": 1,
         }
 
     if name == "boruta_rfe":
         from credit_risk_fs.selectors.boruta_then_rfe import BorutaThenRFESelector
 
         return BorutaThenRFESelector, {
-            "boruta_kwargs": {"max_iter": 15, "random_state": 42},
-            "rfe_kwargs": {"n_features": 40, "step": 10, "random_state": 42},
+            "boruta_kwargs": {"max_iter": 15, "random_state": 42, "n_jobs": 1},
+            "rfe_kwargs": {"n_features": 40, "step": 10, "random_state": 42, "thread_count": 1},
             "use_rfe": True,
             "n_features": 40,
         }
@@ -32,6 +33,7 @@ def get_selector(selector_name: str):
             "k": 50,
             "method": "mrmr",
             "random_state": 42,
+            "n_jobs": 1,
         }
 
     if name == "pca":
@@ -65,7 +67,7 @@ def get_selector(selector_name: str):
         return LLMThenStatSelector, {
             "description_csv_path": None,
             "stat_selector_cls": RandomForestRelevanceMRMRSelector,
-            "stat_selector_kwargs": {"k": 40, "method": "mrmr", "random_state": 42},
+            "stat_selector_kwargs": {"k": 40, "method": "mrmr", "random_state": 42, "n_jobs": 1},
             "cache_dir": "artifacts/llm_cache",
         }
 
@@ -80,6 +82,7 @@ def get_selector(selector_name: str):
                 "max_iter": 15,
                 "random_state": 42,
                 "n_features": 40,
+                "n_jobs": 1,
             },
             "cache_dir": "artifacts/llm_cache",
         }

@@ -4,6 +4,7 @@ import argparse
 import copy
 import json
 import logging
+import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -11,6 +12,7 @@ from typing import Any
 import pandas as pd
 
 from credit_risk_fs.experiments._common import build_experiment_config
+from credit_risk_fs.experiments.atomic_io import write_csv_atomic
 from credit_risk_fs.experiments.config import (
     DEFAULT_CONFIG_PATH,
     apply_feature_budget_to_selector_kwargs,
@@ -22,29 +24,27 @@ from credit_risk_fs.experiments.config import (
     resolve_llm_shared_pool_size,
 )
 from credit_risk_fs.experiments.matrix import MODELS, MatrixRunSpec, iter_matrix, validate_matrix
+from credit_risk_fs.experiments.execution import RegisteredRunRequest, execute_registered_run
+from credit_risk_fs.experiments.checkpointing import resolve_resume_target
+from credit_risk_fs.experiments.resource_policy import (
+    detect_hardware,
+    load_execution_policy,
+    resolve_execution_policy,
+    run_preflight,
+)
 from credit_risk_fs.experiments.result_paths import (
-    append_run_index_row,
     build_run_id,
     create_run_directory,
     initialize_results_layout,
     planned_run_directory,
-    repository_relative_path,
     sanitize_component,
-    update_run_index_row,
 )
-from credit_risk_fs.experiments.tracking import (
-    build_run_manifest,
-    mark_completed,
-    materialize_standard_artifacts,
-    utc_timestamp,
-    write_json,
-    write_run_manifest,
-)
-from credit_risk_fs.pipelines.common import ExperimentConfig, prepare_modeling_data, run_experiment
+from credit_risk_fs.experiments.tracking import write_run_manifest
+from credit_risk_fs.pipelines.common import ExperimentConfig
 from credit_risk_fs.selectors.llm_then_stat import LLMThenStatSelector
 from credit_risk_fs.selectors.registry import get_selector
 from credit_risk_fs.selectors.stable_core_llm_fill import StableCoreLLMFillSelector
-from credit_risk_fs.utils.logging import run_log_context, setup_logging
+from credit_risk_fs.utils.logging import setup_logging
 
 
 logger = setup_logging("experiment_matrix", level=logging.INFO)
@@ -123,6 +123,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path(__file__).resolve().parents[3],
         help="Explicit repository root used to resolve configured result paths.",
     )
+    parser.add_argument(
+        "--execution-policy",
+        default="configs/execution/local_laptop_safe_v1.yaml",
+    )
+    parser.add_argument("--resume", default=None)
+    parser.add_argument("--accelerator", choices=["cpu", "gpu"], default="cpu")
+    parser.add_argument("--allow-gpu-without-telemetry", action="store_true")
     return parser
 
 
@@ -330,9 +337,9 @@ def _write_matrix_status(
     rows: list[dict[str, Any]],
 ) -> None:
     if rows:
-        pd.DataFrame(rows).to_csv(
+        write_csv_atomic(
             output_root / "comparisons" / f"{dataset}_matrix_runs.csv",
-            index=False,
+            pd.DataFrame(rows),
         )
 
 
@@ -519,9 +526,9 @@ def _write_llm_call_summary(
             sharing_by_hash.update(cache_key_hash_to_runs.get(cache_key_hash, []))
         row["runs_sharing_metadata_signatures"] = ";".join(sorted(sharing))
         row["runs_sharing_cache_key_hashes"] = ";".join(sorted(sharing_by_hash))
-    pd.DataFrame(records, columns=LLM_SUMMARY_COLUMNS).to_csv(
+    write_csv_atomic(
         output_root / "comparisons" / f"{dataset}_llm_call_summary.csv",
-        index=False,
+        pd.DataFrame(records, columns=LLM_SUMMARY_COLUMNS),
     )
 
 
@@ -565,9 +572,9 @@ def _write_failed_runs(
                 "output_folder": str(manifest_path.parent),
             }
         )
-    pd.DataFrame(rows, columns=columns).to_csv(
+    write_csv_atomic(
         output_root / "comparisons" / f"{dataset}_failed_runs.csv",
-        index=False,
+        pd.DataFrame(rows, columns=columns),
     )
 
 
@@ -604,8 +611,50 @@ def main(argv: list[str] | None = None) -> None:
     llm_cache_dir = Path(project_config.get("llm", {}).get("cache_dir", "artifacts/llm_cache"))
     project_config.setdefault("llm", {})["cache_dir"] = str(llm_cache_dir)
 
+    resolved_policy = None
+    preflight_report = None
+    resume_directory = None
+    if not cli_args.dry_run:
+        temp_root = Path(tempfile.gettempdir()).resolve()
+        configured_policy = load_execution_policy(
+            repository_root, cli_args.execution_policy
+        )
+        capacity = detect_hardware(output_root, temp_root)
+        resolved_policy = resolve_execution_policy(configured_policy, capacity)
+        project_config["_resolved_execution_policy"] = resolved_policy.to_dict()
+        if cli_args.resume:
+            resume_directory = resolve_resume_target(output_root, cli_args.resume)
+        preflight_report = run_preflight(
+            repository_root=repository_root,
+            config_path=cli_args.execution_policy,
+            results_root=project_config.get("results_dir", "results"),
+            temp_root=temp_root,
+            requested_accelerator=cli_args.accelerator,
+            allow_gpu_without_telemetry=cli_args.allow_gpu_without_telemetry,
+            requested_run_directory=resume_directory,
+            capacity=capacity,
+        )
+        if preflight_report["status"] != "pass":
+            raise RuntimeError(
+                f"preflight_rejected: {preflight_report['blocking_reasons']}"
+            )
+
     selected_models = set(cli_args.models)
     specs = [spec for spec in iter_matrix() if spec.model in selected_models]
+    if resume_directory is not None:
+        resume_manifest = json.loads(
+            (resume_directory / "manifest.json").read_text(encoding="utf-8")
+        )
+        specs = [
+            spec
+            for spec in specs
+            if spec.model == resume_manifest.get("model")
+            and spec.experiment_name == resume_manifest.get("selector")
+        ]
+        if len(specs) != 1:
+            raise ValueError(
+                "--resume must identify exactly one matrix entry matching the current config"
+            )
 
     matrix_rows: list[dict[str, Any]] = []
     pending: list[
@@ -644,22 +693,16 @@ def main(argv: list[str] | None = None) -> None:
             )
         return
 
-    first_model = pending[0][0].model
-    logger.info("Preparing shared modeling data once for %s pending matrix runs.", len(pending))
-    prepared_data = prepare_modeling_data(
-        _prepare_data_config(project_config, model=first_model, output_root=output_root)
-    )
-
     for spec, run_config, config_hash, matrix_row in pending:
-        run_dir = create_run_directory(
-            output_root,
-            dataset=dataset,
-            run_id=build_run_id(
-                selector=spec.experiment_name,
-                model=spec.model,
-            ),
-            collision_policy="suffix",
-        )
+        run_dir = resume_directory or create_run_directory(
+                output_root,
+                dataset=dataset,
+                run_id=build_run_id(
+                    selector=spec.experiment_name,
+                    model=spec.model,
+                ),
+                collision_policy="suffix",
+            )
         run_id = run_dir.name
         matrix_row.update(
             {
@@ -668,60 +711,6 @@ def main(argv: list[str] | None = None) -> None:
                 "output_folder": str(run_dir),
             }
         )
-        config_path = write_json(run_dir / "config.json", run_config)
-        manifest = build_run_manifest(
-            run_id=run_id,
-            model=spec.model,
-            selector=spec.experiment_name,
-            experiment_type=spec.experiment_type,
-            config=run_config,
-            data_dir=run_config["data_dir"],
-            random_seed=int(run_config["random_seed"]),
-            output_folder=run_dir,
-            project_root=repository_root,
-            status="running",
-        )
-        manifest["split_protocol"] = "grouped_time_series_cv_with_oot"
-        llm_config = run_config.get("llm", {})
-        manifest.update(
-            {
-                "llm_shared_ranking_enabled": bool(llm_config.get("shared_ranking_enabled", True)),
-                "llm_ranking_budget": int(resolve_llm_shared_pool_size(llm_config)),
-                "llm_ranking_budget_config": normalize_llm_ranking_budget(llm_config.get("ranking_budget")),
-                "llm_shared_pool_size": int(resolve_llm_shared_pool_size(llm_config)),
-                "llm_candidate_pool_budget": int(
-                    resolve_llm_candidate_pool_budget(llm_config, spec.model)
-                ),
-                "llm_prompt_version": llm_config.get("prompt_version", "stability_expert_v3"),
-                "lr_feature_budget": int(run_config.get("feature_budgets", {}).get("lr", 20)),
-                "catboost_feature_budget": int(run_config.get("feature_budgets", {}).get("catboost", 40)),
-                "feature_budget": int(run_config.get("feature_budgets", {}).get(spec.model, 40)),
-            }
-        )
-        manifest_path = write_run_manifest(run_dir, manifest)
-        append_run_index_row(
-            output_root,
-            {
-                "run_id": run_id,
-                "dataset": dataset,
-                "selector": spec.experiment_name,
-                "model": spec.model,
-                "split_protocol": manifest["split_protocol"],
-                "seed": run_config["random_seed"],
-                "status": "running",
-                "started_at_utc": manifest["started_at_utc"],
-                "run_directory": repository_relative_path(
-                    run_dir, repository_root
-                ),
-                "config_path": repository_relative_path(
-                    config_path, repository_root
-                ),
-                "manifest_path": repository_relative_path(
-                    manifest_path, repository_root
-                ),
-            },
-        )
-
         logger.info(
             "Starting matrix run %s | model=%s | type=%s | selector=%s",
             run_id,
@@ -730,53 +719,42 @@ def main(argv: list[str] | None = None) -> None:
             spec.experiment_name,
         )
 
-        try:
-            with run_log_context(run_dir / "run.log"):
-                experiment_config = _experiment_config_for_spec(
-                    spec=spec,
-                    run_config=run_config,
-                    run_dir=run_dir,
-                )
-                run = run_experiment(experiment_config, prepared_data=prepared_data)
-            materialize_standard_artifacts(run_dir)
-            resource_usage = json.loads(
-                (run_dir / "resource_usage.json").read_text(encoding="utf-8")
+        experiment_config = _experiment_config_for_spec(
+            spec=spec,
+            run_config=run_config,
+            run_dir=run_dir,
+        )
+        if resolved_policy is None or preflight_report is None:
+            raise RuntimeError("execution policy/preflight was not resolved")
+        outcome = execute_registered_run(
+            RegisteredRunRequest(
+                repository_root=repository_root,
+                results_root=output_root,
+                run_directory=run_dir,
+                dataset=dataset,
+                selector=spec.experiment_name,
+                model=spec.model,
+                experiment_type=spec.experiment_type,
+                split_protocol="grouped_time_series_cv_with_oot",
+                seed=int(run_config["random_seed"]),
+                effective_config=run_config,
+                experiment_config=experiment_config,
+                preflight_report=preflight_report,
+                resolved_policy=resolved_policy,
+                resume=resume_directory is not None,
             )
-            manifest["status"] = "completed"
-            manifest["completed_at_utc"] = utc_timestamp()
-            manifest["completed_at"] = manifest["completed_at_utc"]
-            manifest["summary"] = run.summary
-            manifest.update(_llm_ranking_stats(run_dir))
-            write_run_manifest(run_dir, manifest)
-            mark_completed(run_dir)
-            update_run_index_row(
-                output_root,
-                run_id,
-                {
-                    "status": "completed",
-                    "completed_at_utc": manifest["completed_at_utc"],
-                    "runtime_seconds": resource_usage["timings_seconds"]["total"],
-                    "peak_ram_mb": resource_usage["peak_ram_mb"],
-                    "peak_gpu_mb": resource_usage["peak_gpu_mb"],
-                },
-            )
-            matrix_row["status"] = "completed"
-        except Exception as exc:
-            manifest["status"] = "failed"
-            manifest["failed_at_utc"] = utc_timestamp()
-            manifest["failed_at"] = manifest["failed_at_utc"]
-            manifest["error"] = repr(exc)
-            write_run_manifest(run_dir, manifest)
-            update_run_index_row(
-                output_root,
-                run_id,
-                {"status": "failed", "notes": repr(exc)},
-            )
-            matrix_row["status"] = "failed"
+        )
+        matrix_row["status"] = outcome.status
+        if outcome.status == "completed":
+            outcome.manifest.update(_llm_ranking_stats(run_dir))
+            write_run_manifest(run_dir, outcome.manifest)
+        else:
             _write_llm_call_summary(output_root, dataset, matrix_rows)
             _write_failed_runs(output_root, dataset, matrix_rows)
-            logger.exception("Matrix run failed: %s", run_id)
-            raise
+            raise RuntimeError(
+                f"matrix run {run_id} ended with status={outcome.status}, "
+                f"stop_code={outcome.stop_code}"
+            )
 
     _write_matrix_status(output_root, dataset, matrix_rows)
     _write_llm_call_summary(output_root, dataset, matrix_rows)

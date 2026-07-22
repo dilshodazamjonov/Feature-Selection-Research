@@ -27,10 +27,14 @@ class BorutaSelector(SelectedFeaturesMixin):
         max_iter: int = 10,
         random_state: int = 42,
         n_features: int | None = None,
+        n_jobs: int = 1,
     ) -> None:
         self.max_iter = int(max_iter)
         self.random_state = int(random_state)
         self.n_features = None if n_features is None else int(n_features)
+        self.n_jobs = int(n_jobs)
+        if self.n_jobs <= 0:
+            raise ValueError("n_jobs must be positive")
         self.selected_features_ = None
         self.feature_ranking_ = None
         self.selector: BorutaPy | None = None
@@ -49,7 +53,7 @@ class BorutaSelector(SelectedFeaturesMixin):
         estimator = RandomForestClassifier(
             n_estimators=500,
             max_depth=6,
-            n_jobs=-1,
+            n_jobs=self.n_jobs,
             random_state=self.random_state,
         )
         self.selector = BorutaPy(

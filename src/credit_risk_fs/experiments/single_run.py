@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import json
+import tempfile
 from pathlib import Path
 
 from credit_risk_fs.experiments._common import (
     add_common_experiment_args,
     build_experiment_config,
-    create_run_layout,
 )
 from credit_risk_fs.experiments.config import (
     build_parser_defaults,
@@ -15,20 +14,21 @@ from credit_risk_fs.experiments.config import (
     load_project_config,
 )
 from credit_risk_fs.experiments.result_paths import (
-    append_run_index_row,
-    repository_relative_path,
-    update_run_index_row,
+    build_run_id,
+    create_run_directory,
+    initialize_results_layout,
 )
-from credit_risk_fs.experiments.tracking import (
-    build_run_manifest,
-    mark_completed,
-    materialize_standard_artifacts,
-    utc_timestamp,
-    write_json,
-    write_run_manifest,
+from credit_risk_fs.experiments.checkpointing import resolve_resume_target
+from credit_risk_fs.experiments.execution import (
+    RegisteredRunRequest,
+    execute_registered_run,
 )
-from credit_risk_fs.pipelines.common import prepare_modeling_data, run_experiment
-from credit_risk_fs.utils.logging import run_log_context
+from credit_risk_fs.experiments.resource_policy import (
+    detect_hardware,
+    load_execution_policy,
+    resolve_execution_policy,
+    run_preflight,
+)
 
 
 def build_parser(defaults: dict[str, object]) -> argparse.ArgumentParser:
@@ -56,17 +56,18 @@ def build_parser(defaults: dict[str, object]) -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> None:
     repository_root = Path(args.repository_root).resolve()
     dataset = str(args.project_config.get("dataset_name", "homecredit"))
-    layout = create_run_layout(
-        repository_root=repository_root,
+    results_root = initialize_results_layout(
+        repository_root,
         results_root=args.output_dir,
-        dataset=dataset,
-        selector=args.selector,
-        model=args.model,
     )
-    run_id = layout.run_dir.name
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    configured_policy = load_execution_policy(repository_root, args.execution_policy)
+    capacity = detect_hardware(results_root, temp_root)
+    resolved_policy = resolve_execution_policy(configured_policy, capacity)
     effective_config = {
         **args.project_config,
         "model_selector": args.model,
+        "_resolved_execution_policy": resolved_policy.to_dict(),
         "single_run": {
             "selector": args.selector,
             "n_splits": args.n_splits,
@@ -76,85 +77,62 @@ def run(args: argparse.Namespace) -> None:
             "cv_gap_groups": args.cv_gap_groups,
         },
     }
-    config_path = write_json(layout.run_dir / "config.json", effective_config)
-    manifest = build_run_manifest(
-        run_id=run_id,
-        model=args.model,
-        selector=args.selector,
-        experiment_type="single",
-        config=effective_config,
-        data_dir=args.data_dir,
-        random_seed=args.random_seed,
-        output_folder=layout.run_dir,
-        project_root=repository_root,
-        status="running",
+    args.project_config = effective_config
+    resume_directory = (
+        resolve_resume_target(results_root, args.resume) if args.resume else None
     )
-    manifest["split_protocol"] = "grouped_time_series_cv_with_oot"
-    manifest_path = write_run_manifest(layout.run_dir, manifest)
-    append_run_index_row(
-        layout.results_root,
-        {
-            "run_id": run_id,
-            "dataset": dataset,
-            "selector": args.selector,
-            "model": args.model,
-            "split_protocol": manifest["split_protocol"],
-            "seed": args.random_seed,
-            "status": "running",
-            "started_at_utc": manifest["started_at_utc"],
-            "run_directory": repository_relative_path(
-                layout.run_dir, repository_root
-            ),
-            "config_path": repository_relative_path(config_path, repository_root),
-            "manifest_path": repository_relative_path(
-                manifest_path, repository_root
-            ),
-        },
+    preflight = run_preflight(
+        repository_root=repository_root,
+        config_path=args.execution_policy,
+        results_root=args.output_dir,
+        temp_root=temp_root,
+        requested_accelerator=args.accelerator,
+        allow_gpu_without_telemetry=args.allow_gpu_without_telemetry,
+        requested_run_directory=resume_directory,
+        capacity=capacity,
     )
-
+    if preflight["status"] != "pass":
+        raise RuntimeError(f"preflight_rejected: {preflight['blocking_reasons']}")
+    run_dir = (
+        resume_directory
+        if resume_directory is not None
+        else create_run_directory(
+            results_root,
+            dataset=dataset,
+            run_id=build_run_id(selector=args.selector, model=args.model),
+            collision_policy="suffix",
+        )
+    )
     config = build_experiment_config(
         args=args,
-        experiments_dir=layout.experiments_dir,
+        experiments_dir=run_dir,
         experiment_name=args.selector.lower(),
         selector_name=args.selector.lower(),
-        experiment_output_dir=layout.run_dir,
+        experiment_output_dir=run_dir,
     )
-    try:
-        with run_log_context(layout.run_dir / "run.log"):
-            prepared_data = prepare_modeling_data(config)
-            completed_run = run_experiment(config, prepared_data=prepared_data)
-        materialize_standard_artifacts(layout.run_dir)
-        resource_usage = json.loads(
-            (layout.run_dir / "resource_usage.json").read_text(encoding="utf-8")
+    outcome = execute_registered_run(
+        RegisteredRunRequest(
+            repository_root=repository_root,
+            results_root=results_root,
+            run_directory=run_dir,
+            dataset=dataset,
+            selector=args.selector,
+            model=args.model,
+            experiment_type="single",
+            split_protocol="grouped_time_series_cv_with_oot",
+            seed=int(args.random_seed),
+            effective_config=effective_config,
+            experiment_config=config,
+            preflight_report=preflight,
+            resolved_policy=resolved_policy,
+            resume=resume_directory is not None,
         )
-        manifest["status"] = "completed"
-        manifest["completed_at_utc"] = utc_timestamp()
-        manifest["summary"] = completed_run.summary
-        write_run_manifest(layout.run_dir, manifest)
-        mark_completed(layout.run_dir)
-        update_run_index_row(
-            layout.results_root,
-            run_id,
-            {
-                "status": "completed",
-                "completed_at_utc": manifest["completed_at_utc"],
-                "runtime_seconds": resource_usage["timings_seconds"]["total"],
-                "peak_ram_mb": resource_usage["peak_ram_mb"],
-                "peak_gpu_mb": resource_usage["peak_gpu_mb"],
-            },
+    )
+    if outcome.status != "completed":
+        raise RuntimeError(
+            f"run ended with status={outcome.status}, stop_code={outcome.stop_code}"
         )
-    except Exception as exc:
-        manifest["status"] = "failed"
-        manifest["failed_at_utc"] = utc_timestamp()
-        manifest["error"] = repr(exc)
-        write_run_manifest(layout.run_dir, manifest)
-        update_run_index_row(
-            layout.results_root,
-            run_id,
-            {"status": "failed", "notes": repr(exc)},
-        )
-        raise
-    print(f"Run directory: {layout.run_dir}")
+    print(f"Run directory: {outcome.run_directory}")
 
 
 def main(argv: list[str] | None = None) -> None:

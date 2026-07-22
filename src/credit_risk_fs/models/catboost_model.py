@@ -30,6 +30,7 @@ class CatBoostModel:
         verbose=100,
         random_state=42,
         allow_writing_files=False,
+        thread_count=1,
     ):
         """
         Initialize CatBoost model with hyperparameters.
@@ -54,6 +55,7 @@ class CatBoostModel:
             verbose=verbose,
             random_state=random_state,
             allow_writing_files=allow_writing_files,
+            thread_count=thread_count,
         )
         self.feature_names = None
         self.fitted = False
