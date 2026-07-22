@@ -1,0 +1,629 @@
+schema_version: cross_dataset_rank_voting_matrix_v1
+matrix_id: cross_dataset_rank_voting_matrix_v1
+version: 1.0.0
+status: specification_only_not_authorized_for_execution
+historical_replication: false
+
+protocol:
+  path: configs/protocols/cross_dataset_rank_voting_v1.yaml
+  name: cross_dataset_rank_voting_v1
+  version: 1.0.0
+  sha256: 51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49
+row_contract:
+  path: configs/protocols/row_alignment_contract_v1.json
+  version: 1.1.0
+  hash_version: credit_risk_ordered_row_alignment_v1
+  sha256: fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0
+execution_policy:
+  path: configs/execution/local_laptop_safe_v1.yaml
+  profile: local_laptop_safe_v1
+  sha256: 1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012
+
+shared:
+  fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+  voter_fit_boundary: dev_fold_training_only
+  downstream_fit_boundary: dev_fold_training_only
+  full_refit_boundary: full_dev_only
+  oot_policy: locked_single_final_evaluation
+  voter_ids:
+    - rf_corr_mrmr
+    - boruta
+  downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+  master_seed: 42
+  model_seed: 42
+  selector_seed: 42
+  candidate_pool_budgets:
+    - 100
+    - 200
+    - 300
+  primary_candidate_pool: 200
+  reference_method: rf_corr_mrmr
+  reference_reuse_policy: rerun_required_for_all_four_dataset_model_pairs
+  voting_artifact_set: voting_run_v1
+  reference_artifact_set: reference_run_v1
+
+datasets:
+  homecredit:
+    dataset_config: configs/datasets/homecredit.yaml
+    experiment_config: configs/experiments/homecredit_matrix.yaml
+    candidate_universe_size: 529
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    required_input_columns_sha256: f3e8633d79ecb763835b2f5fc3a670a116c87373e1c0b805bbb6d2c5ba0d180d
+    projection_rule: explicit_schema_columns_for_seven_modeling_tables_then_frozen_pipeline_derivation
+    row_identity: SK_ID_CURR
+    target: TARGET
+    positive_class: 1
+    split_time: recent_decision
+    dev_rows: 99092
+    oot_rows: 120053
+    expected_dev_ordered_row_id_sha256: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_dev_ordered_row_id_target_sha256: 63e9afa9e572745520c96bdefb011ab7547854b7b018d4a5f9a80d5608e6851c
+    expected_oot_ordered_row_id_sha256: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    expected_oot_ordered_row_id_target_sha256: f384956b737e46a4b7238064ff9ad2942abfc03eea86048e73f34751cde11895
+  lendingclub_v2:
+    dataset_config: configs/datasets/lendingclub_v2.yaml
+    experiment_config: configs/experiments/lendingclub_v2_matrix.yaml
+    candidate_universe_size: 675
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    required_input_columns_sha256: 507d4bdfc5b83ecc5002312b25bdc9b5d89446f10d49a41848d1131cf34adae1
+    projection_rule: feature_inventory_feature_column_plus_target_time_and_issue_helpers
+    row_identity: loan_id
+    target: TARGET
+    positive_class: 1
+    split_time: recent_decision
+    dev_rows: 598649
+    oot_rows: 293105
+    expected_dev_ordered_row_id_sha256: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_dev_ordered_row_id_target_sha256: 1373baf30fc16b022d1d9059e400df65b5d3bb3f9ae76e3397b3172578f91590
+    expected_oot_ordered_row_id_sha256: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    expected_oot_ordered_row_id_target_sha256: 9787d44d278d7965b0a966f19717dec1d9718ea8dfb6b96aa531d0f52d0a53e2
+
+models:
+  lr:
+    implementation: credit_risk_fs.models.logistic_regression.LogisticRegressionModel
+    config_ref: configs/base.yaml
+    final_feature_budget: 20
+    expected_gpu_use: false
+  catboost:
+    implementation: credit_risk_fs.models.catboost_model.CatBoostModel
+    config_ref: configs/base.yaml
+    final_feature_budget: 40
+    expected_gpu_use: false
+
+expected_counts:
+  voting_runs: 12
+  reference_reruns: 4
+  total_registered_runs: 16
+  dev_folds_per_run: 5
+  voting_dev_fold_executions: 60
+  reference_dev_fold_executions: 20
+  total_dev_fold_executions: 80
+  final_full_dev_oot_fits: 16
+  primary_voting_runs: 4
+  sensitivity_voting_runs: 8
+  primary_comparisons: 4
+  sensitivity_comparisons: 8
+
+run_order:
+  - cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42
+  - cdv1-002-homecredit-voting-k100-lr-s42
+  - cdv1-003-homecredit-voting-k200-lr-s42
+  - cdv1-004-homecredit-voting-k300-lr-s42
+  - cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42
+  - cdv1-006-homecredit-voting-k100-catboost-s42
+  - cdv1-007-homecredit-voting-k200-catboost-s42
+  - cdv1-008-homecredit-voting-k300-catboost-s42
+  - cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42
+  - cdv1-010-lendingclub-v2-voting-k100-lr-s42
+  - cdv1-011-lendingclub-v2-voting-k200-lr-s42
+  - cdv1-012-lendingclub-v2-voting-k300-lr-s42
+  - cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42
+  - cdv1-014-lendingclub-v2-voting-k100-catboost-s42
+  - cdv1-015-lendingclub-v2-voting-k200-catboost-s42
+  - cdv1-016-lendingclub-v2-voting-k300-catboost-s42
+
+runs:
+  cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42:
+    execution_order: 1
+    proposed_run_id: cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rf_corr_mrmr
+    voter_ids:
+      - rf_corr_mrmr
+    candidate_pool_budget: null
+    designation: reference
+    downstream_selector: none
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: self
+    comparison_family: homecredit_lr
+    expected_artifact_set: reference_run_v1
+    dependencies:
+      - gap_p4_04_matrix_wiring
+      - gap_p4_07_prediction_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-002-homecredit-voting-k100-lr-s42:
+    execution_order: 2
+    proposed_run_id: cdv1-002-homecredit-voting-k100-lr-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 100
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-003-homecredit-voting-k200-lr-s42:
+    execution_order: 3
+    proposed_run_id: cdv1-003-homecredit-voting-k200-lr-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 200
+    designation: primary
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-004-homecredit-voting-k300-lr-s42:
+    execution_order: 4
+    proposed_run_id: cdv1-004-homecredit-voting-k300-lr-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 300
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42:
+    execution_order: 5
+    proposed_run_id: cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rf_corr_mrmr
+    voter_ids:
+      - rf_corr_mrmr
+    candidate_pool_budget: null
+    designation: reference
+    downstream_selector: none
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: self
+    comparison_family: homecredit_catboost
+    expected_artifact_set: reference_run_v1
+    dependencies:
+      - gap_p4_04_matrix_wiring
+      - gap_p4_07_prediction_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-006-homecredit-voting-k100-catboost-s42:
+    execution_order: 6
+    proposed_run_id: cdv1-006-homecredit-voting-k100-catboost-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 100
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-007-homecredit-voting-k200-catboost-s42:
+    execution_order: 7
+    proposed_run_id: cdv1-007-homecredit-voting-k200-catboost-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 200
+    designation: primary
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-008-homecredit-voting-k300-catboost-s42:
+    execution_order: 8
+    proposed_run_id: cdv1-008-homecredit-voting-k300-catboost-s42
+    dataset: homecredit
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 300
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/homecredit/metadata/raw_schema_snapshot.json
+    expected_dev_row_hash: 722f897d531415852d00904b3c9b34f664831126b8d7afe066f2536e0a25c9b7
+    expected_oot_row_hash: 3e90101f56774b7e44086b3bccfa91bd5be35f3afd60a8bce0e5a53313acda7a
+    reference_method: rf_corr_mrmr
+    comparison_family: homecredit_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42:
+    execution_order: 9
+    proposed_run_id: cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rf_corr_mrmr
+    voter_ids:
+      - rf_corr_mrmr
+    candidate_pool_budget: null
+    designation: reference
+    downstream_selector: none
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: self
+    comparison_family: lendingclub_v2_lr
+    expected_artifact_set: reference_run_v1
+    dependencies:
+      - gap_p4_04_matrix_wiring
+      - gap_p4_07_prediction_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-010-lendingclub-v2-voting-k100-lr-s42:
+    execution_order: 10
+    proposed_run_id: cdv1-010-lendingclub-v2-voting-k100-lr-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 100
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-011-lendingclub-v2-voting-k200-lr-s42:
+    execution_order: 11
+    proposed_run_id: cdv1-011-lendingclub-v2-voting-k200-lr-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 200
+    designation: primary
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-012-lendingclub-v2-voting-k300-lr-s42:
+    execution_order: 12
+    proposed_run_id: cdv1-012-lendingclub-v2-voting-k300-lr-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 300
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: lr
+    final_feature_budget: 20
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_lr
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42:
+    execution_order: 13
+    proposed_run_id: cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rf_corr_mrmr
+    voter_ids:
+      - rf_corr_mrmr
+    candidate_pool_budget: null
+    designation: reference
+    downstream_selector: none
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: self
+    comparison_family: lendingclub_v2_catboost
+    expected_artifact_set: reference_run_v1
+    dependencies:
+      - gap_p4_04_matrix_wiring
+      - gap_p4_07_prediction_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-014-lendingclub-v2-voting-k100-catboost-s42:
+    execution_order: 14
+    proposed_run_id: cdv1-014-lendingclub-v2-voting-k100-catboost-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 100
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-015-lendingclub-v2-voting-k200-catboost-s42:
+    execution_order: 15
+    proposed_run_id: cdv1-015-lendingclub-v2-voting-k200-catboost-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 200
+    designation: primary
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null
+  cdv1-016-lendingclub-v2-voting-k300-catboost-s42:
+    execution_order: 16
+    proposed_run_id: cdv1-016-lendingclub-v2-voting-k300-catboost-s42
+    dataset: lendingclub_v2
+    protocol_ref: cross_dataset_rank_voting_v1
+    row_contract_ref: row_alignment_contract_v1_1_0
+    method_id: rank_voting_v1
+    voter_ids:
+      - rf_corr_mrmr
+      - boruta
+    candidate_pool_budget: 300
+    designation: sensitivity
+    downstream_selector: credit_risk_fs.selectors.rfe.RFESelector
+    model: catboost
+    final_feature_budget: 40
+    fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+    master_seed: 42
+    model_seed: 42
+    selector_seed: 42
+    execution_policy: configs/execution/local_laptop_safe_v1.yaml
+    required_input_columns_ref: data/lendingclub_v2/metadata/feature_inventory.csv
+    expected_dev_row_hash: 4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e
+    expected_oot_row_hash: 86840e88a94f78f328d62e36754f14377c1765a31fb3bc73cbb3f7b2d45f8092
+    reference_method: rf_corr_mrmr
+    comparison_family: lendingclub_v2_catboost
+    expected_artifact_set: voting_run_v1
+    dependencies:
+      - gap_p4_01_rank_voting_adapter
+      - gap_p4_02_voter_schema_adapter
+      - gap_p4_03_downstream_rfe_contract
+    enabled: true
+    blocked_reason: null

@@ -13,6 +13,7 @@ wheels/
 # files 
 *.csv
 !cleanup/audits/foundation_protocol_freeze/*.csv
+!cleanup/audits/cross_dataset_voting_execution_spec/*.csv
 *.parquet
 /data/
 *.pkl

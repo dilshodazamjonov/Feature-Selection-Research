@@ -1,0 +1,262 @@
+{
+  "schema_version": "cross_dataset_voting_preflight_request_specs_v1",
+  "created_on": "2026-07-22",
+  "evidence_policy": {
+    "matrix_load_permitted": false,
+    "evidence_sources": [
+      "frozen schema and feature-inventory metadata",
+      "filesystem file sizes",
+      "frozen row-contract counts",
+      "Prompt 2 live hardware preflight"
+    ],
+    "columns_none_permitted": false,
+    "ram_estimate_rule": "Do not convert the known dense-byte lower bound into a peak-RAM estimate until Prompt 4 measures selector and model amplification in the monitored pilot.",
+    "pilot_admission_rule": "A shape may proceed only as one sequential monitored pilot after static policy validation, explicit projection validation, and live preflight approval. A missing measured multiplier never permits a raised limit.",
+    "execution_concurrency": {
+      "runs": 1,
+      "folds": 1,
+      "loader_workers": 0,
+      "estimator_threads": 4
+    },
+    "hardware_confirmation": {
+      "physical_logical_cpu": "10/16",
+      "total_available_ram_gib": "39.63/24.50",
+      "gpu_total_free_vram_gib": "8.00/6.72",
+      "results_temp_free_disk_gib": "254.10/81.82",
+      "confirmed_plausible_by_user": true,
+      "limits_raised": false
+    }
+  },
+  "dataset_projection_contracts": {
+    "homecredit": {
+      "row_counts": {
+        "dev": 99092,
+        "oot": 120053,
+        "retained_total": 219145
+      },
+      "candidate_feature_count": 529,
+      "metadata_columns": [
+        "SK_ID_CURR",
+        "TARGET",
+        "recent_decision"
+      ],
+      "forbidden_selectable_columns": [
+        "SK_ID_CURR",
+        "TARGET",
+        "recent_decision",
+        "PREV_recent_decision_MAX",
+        "DAYS_DECISION",
+        "application_time_proxy"
+      ],
+      "candidate_list_reference": "the deterministic 529-feature output of the frozen Home Credit builder, validated against configs/protocols/row_alignment_contract_v1.json",
+      "source_projection_reference": "data/homecredit/metadata/raw_schema_snapshot.json",
+      "source_projection_sha256": "f3e8633d79ecb763835b2f5fc3a670a116c87373e1c0b805bbb6d2c5ba0d180d",
+      "projected_raw_sources": [
+        {"file": "application_train.csv", "projected_column_count": 122},
+        {"file": "bureau.csv", "projected_column_count": 17},
+        {"file": "bureau_balance.csv", "projected_column_count": 3},
+        {"file": "credit_card_balance.csv", "projected_column_count": 23},
+        {"file": "installments_payments.csv", "projected_column_count": 8},
+        {"file": "POS_CASH_balance.csv", "projected_column_count": 8},
+        {"file": "previous_application.csv", "projected_column_count": 37}
+      ],
+      "excluded_raw_sources": [
+        "application_test.csv",
+        "sample_submission.csv"
+      ],
+      "projected_raw_input_bytes": 2657120381,
+      "retained_dense_float32_lower_bound_bytes": 463710820,
+      "lower_bound_formula": "219145 rows * 529 candidates * 4 bytes",
+      "dtype_evidence": "Raw schema names are frozen, but a complete post-engineering physical-dtype inventory is not frozen; float32 is only a dense lower bound, not a peak estimate."
+    },
+    "lendingclub_v2": {
+      "row_counts": {
+        "dev": 598649,
+        "oot": 293105,
+        "retained_total": 891754
+      },
+      "candidate_feature_count": 675,
+      "metadata_columns": [
+        "loan_id",
+        "TARGET",
+        "recent_decision"
+      ],
+      "forbidden_selectable_columns": [
+        "loan_id",
+        "TARGET",
+        "recent_decision",
+        "issue_d",
+        "loan_status"
+      ],
+      "candidate_list_reference": "data/lendingclub_v2/metadata/feature_inventory.csv#feature",
+      "candidate_list_sha256": "507d4bdfc5b83ecc5002312b25bdc9b5d89446f10d49a41848d1131cf34adae1",
+      "source_projection_reference": "data/lendingclub_v2/metadata/feature_inventory.csv plus data/lendingclub_v2/processed/record_identity_v1.manifest.json",
+      "projected_processed_sources": [
+        {"role": "application_features", "projected_column_count": 678},
+        {"role": "authenticated_identity_sidecar", "projected_column_count": 7}
+      ],
+      "projected_source_input_bytes": 4214264495,
+      "retained_dense_float32_lower_bound_bytes": 2407735800,
+      "lower_bound_formula": "891754 rows * 675 candidates * 4 bytes",
+      "known_candidate_dtypes": {
+        "float64": 85,
+        "int8": 268,
+        "float32": 274,
+        "category": 39,
+        "str": 9
+      },
+      "known_candidate_dtype_total": 675,
+      "full_source_physical_lower_bound_bytes": 3639867300,
+      "dtype_evidence": "The frozen feature inventory supplies all 675 candidate dtypes; categorical encoding and selector copies remain data-dependent."
+    }
+  },
+  "stage_projections": [
+    {
+      "stage": "row_validation",
+      "required_columns": ["stable identity", "TARGET", "recent_decision"],
+      "candidate_columns_required": false,
+      "projection_constructor": "credit_risk_fs.pipelines.common.calculate_required_columns",
+      "projection_consumer": "credit_risk_fs.data.loaders.DataLoader",
+      "fit_scope": "none"
+    },
+    {
+      "stage": "voter_generation",
+      "required_columns": ["all frozen candidate features", "stable identity", "TARGET", "recent_decision/fold assignment"],
+      "candidate_columns_required": true,
+      "why_full_universe_is_required": "Both included supervised voters must rank the same complete eligible universe; rf_corr_mrmr emits its top 300 and Boruta emits a full ranking.",
+      "projection_constructor": "credit_risk_fs.pipelines.common.calculate_required_columns plus the Prompt 4 candidate-universe manifest adapter",
+      "projection_consumer": "credit_risk_fs.data.loaders.DataLoader",
+      "fit_scope": "current DEV training fold only, or full DEV for the locked final refit"
+    },
+    {
+      "stage": "aggregation",
+      "required_columns": ["validated voter ranking artifacts only"],
+      "candidate_columns_required": false,
+      "projection_constructor": "not applicable to dataset matrices",
+      "projection_consumer": "credit_risk_fs.experiments.rank_voting.aggregate_cross_dataset_rank_voting",
+      "fit_scope": "none"
+    },
+    {
+      "stage": "downstream_selection",
+      "required_columns": ["top-K candidate-pool features", "stable identity", "TARGET", "fold assignment"],
+      "candidate_columns_required": "K only (100, 200, or 300), never all candidates after aggregation",
+      "projection_constructor": "Prompt 4 adapter must pass the validated candidate_features artifact into calculate_required_columns",
+      "projection_consumer": "credit_risk_fs.data.loaders.DataLoader and credit_risk_fs.selectors.rfe.RFESelector",
+      "fit_scope": "current DEV training fold only, or full DEV for the locked final refit"
+    },
+    {
+      "stage": "model_fit_predict",
+      "required_columns": ["final selected features", "stable identity", "TARGET", "fold assignment"],
+      "candidate_columns_required": "20 for LR or 40 for CatBoost",
+      "projection_constructor": "credit_risk_fs.pipelines.common.calculate_required_columns with the validated selected_features artifact",
+      "projection_consumer": "credit_risk_fs.data.loaders.DataLoader and the existing final-model preprocessor",
+      "fit_scope": "preprocessing/model fit on current DEV training fold or full DEV; held-out DEV/OOT is transform and predict only"
+    },
+    {
+      "stage": "evaluation",
+      "required_columns": ["stable identity", "TARGET", "prediction probability", "split/fold", "row position/order key"],
+      "candidate_columns_required": false,
+      "projection_constructor": "validated prediction artifact schema",
+      "projection_consumer": "credit_risk_fs.evaluation metrics, stability, and paired_inference",
+      "fit_scope": "none"
+    }
+  ],
+  "execution_shapes": [
+    {
+      "shape_id": "homecredit_lr_voting_or_reference_v1",
+      "dataset": "homecredit",
+      "model": "lr",
+      "row_counts": {"dev": 99092, "oot": 120053},
+      "maximum_projected_candidate_columns": 529,
+      "final_model_feature_columns": 20,
+      "projected_input_bytes": 2657120381,
+      "dense_float32_lower_bound_bytes": 463710820,
+      "expected_dense_copies": "At least one fold-local selection encoding and one estimator-facing array may coexist; voter, Boruta shadow-feature, RFE, sparse/dense preprocessing, and library-internal copies make the exact peak unknown.",
+      "selector_model_peak_multiplier": null,
+      "multiplier_evidence_status": "unmeasured",
+      "prediction_artifact_estimate_bytes": 28050560,
+      "ranking_artifact_estimate_bytes": 4062720,
+      "known_artifact_estimate_bytes": 32113280,
+      "atomic_write_temporary_space_estimate_bytes": 32113280,
+      "disk_safety_factor": 2.5,
+      "required_free_disk_bytes": 160566400,
+      "expected_gpu_use": false,
+      "status": "pilot_required",
+      "reason": "RF/Boruta shadow features, RFE, preprocessing, and estimator copies have no measured peak multiplier for this new workflow."
+    },
+    {
+      "shape_id": "homecredit_catboost_voting_or_reference_v1",
+      "dataset": "homecredit",
+      "model": "catboost",
+      "row_counts": {"dev": 99092, "oot": 120053},
+      "maximum_projected_candidate_columns": 529,
+      "final_model_feature_columns": 40,
+      "projected_input_bytes": 2657120381,
+      "dense_float32_lower_bound_bytes": 463710820,
+      "expected_dense_copies": "At least one fold-local selection encoding and one estimator-facing array may coexist; voter, Boruta shadow-feature, RFE, categorical preprocessing, CatBoost pool, and library-internal copies make the exact peak unknown.",
+      "selector_model_peak_multiplier": null,
+      "multiplier_evidence_status": "unmeasured",
+      "prediction_artifact_estimate_bytes": 28050560,
+      "ranking_artifact_estimate_bytes": 4062720,
+      "known_artifact_estimate_bytes": 32113280,
+      "atomic_write_temporary_space_estimate_bytes": 32113280,
+      "disk_safety_factor": 2.5,
+      "required_free_disk_bytes": 160566400,
+      "expected_gpu_use": false,
+      "status": "pilot_required",
+      "reason": "RF/Boruta shadow features, RFE, categorical preprocessing, and CatBoost copies have no measured peak multiplier for this new workflow."
+    },
+    {
+      "shape_id": "lendingclub_v2_lr_voting_or_reference_v1",
+      "dataset": "lendingclub_v2",
+      "model": "lr",
+      "row_counts": {"dev": 598649, "oot": 293105},
+      "maximum_projected_candidate_columns": 675,
+      "final_model_feature_columns": 20,
+      "projected_input_bytes": 4214264495,
+      "dense_float32_lower_bound_bytes": 2407735800,
+      "expected_dense_copies": "At least one fold-local selection encoding and one estimator-facing array may coexist; mixed dtypes, categorical encoding, Boruta shadow features, RFE, and library-internal copies make the exact peak unknown.",
+      "selector_model_peak_multiplier": null,
+      "multiplier_evidence_status": "unmeasured",
+      "prediction_artifact_estimate_bytes": 114144512,
+      "ranking_artifact_estimate_bytes": 5184000,
+      "known_artifact_estimate_bytes": 119328512,
+      "atomic_write_temporary_space_estimate_bytes": 119328512,
+      "disk_safety_factor": 2.5,
+      "required_free_disk_bytes": 596642560,
+      "expected_gpu_use": false,
+      "status": "pilot_required",
+      "reason": "The mixed-dtype 675-feature input and multi-stage supervised selectors have no measured peak multiplier."
+    },
+    {
+      "shape_id": "lendingclub_v2_catboost_voting_or_reference_v1",
+      "dataset": "lendingclub_v2",
+      "model": "catboost",
+      "row_counts": {"dev": 598649, "oot": 293105},
+      "maximum_projected_candidate_columns": 675,
+      "final_model_feature_columns": 40,
+      "projected_input_bytes": 4214264495,
+      "dense_float32_lower_bound_bytes": 2407735800,
+      "expected_dense_copies": "At least one fold-local selection encoding and one estimator-facing array may coexist; mixed dtypes, categorical encoding, Boruta shadow features, RFE, CatBoost pool, and library-internal copies make the exact peak unknown.",
+      "selector_model_peak_multiplier": null,
+      "multiplier_evidence_status": "unmeasured",
+      "prediction_artifact_estimate_bytes": 114144512,
+      "ranking_artifact_estimate_bytes": 5184000,
+      "known_artifact_estimate_bytes": 119328512,
+      "atomic_write_temporary_space_estimate_bytes": 119328512,
+      "disk_safety_factor": 2.5,
+      "required_free_disk_bytes": 596642560,
+      "expected_gpu_use": false,
+      "status": "pilot_required",
+      "reason": "The mixed-dtype 675-feature input, supervised selectors, preprocessing, and CatBoost copies have no measured peak multiplier."
+    }
+  ],
+  "operational_requirements": [
+    "Never hold full DEV and OOT candidate matrices simultaneously.",
+    "Release each fold's voter, selection, preprocessing, and model intermediates before advancing.",
+    "Validate the projection against the candidate-universe manifest before reading data.",
+    "Reject columns=None and any projection containing a forbidden selectable field.",
+    "Use CPU execution; no configured run requests GPU resources.",
+    "Prompt 4 must measure peak RSS, child RSS, disk use, and wall time and feed the observation back into later preflights."
+  ]
+}

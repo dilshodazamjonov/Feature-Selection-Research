@@ -1,0 +1,569 @@
+{
+  "schema_version": "cross_dataset_voting_implementation_map_v1",
+  "created_on": "2026-07-22",
+  "repository_commit": "cbb049109ba8dc5c74cf9aaf6b39f2f070658da5",
+  "hardware_confirmation": {
+    "confirmed_by_user": true,
+    "physical_logical_cpu": "10/16",
+    "total_available_ram_gib": "39.63/24.50",
+    "gpu": "NVIDIA RTX 4060 Laptop GPU",
+    "total_free_vram_gib": "8.00/6.72",
+    "results_temp_free_disk_gib": "254.10/81.82",
+    "concurrent_runs_folds": "1/1",
+    "estimator_threads": 4,
+    "limits_raised": false
+  },
+  "frozen_inputs": {
+    "scientific_protocol": {
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "version": "1.1.0",
+      "sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0"
+    },
+    "row_alignment_contract": {
+      "path": "configs/protocols/row_alignment_contract_v1.json",
+      "version": "1.1.0",
+      "hash_version": "credit_risk_ordered_row_alignment_v1",
+      "sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0"
+    },
+    "voting_protocol": {
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "version": "1.0.0",
+      "sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49"
+    },
+    "execution_policy": {
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "profile": "local_laptop_safe_v1",
+      "sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012"
+    },
+    "resolved_lendingclub_dataset_config": "configs/datasets/lendingclub_v2.yaml",
+    "resolved_lendingclub_experiment_config": "configs/experiments/lendingclub_v2_matrix.yaml"
+  },
+  "canonical_owners": {
+    "run_paths_and_registry": "credit_risk_fs.experiments.result_paths",
+    "run_status_manifest_and_resources": "credit_risk_fs.experiments.tracking",
+    "common_registered_lifecycle": "credit_risk_fs.experiments.execution.execute_registered_run",
+    "matrix_entry_point": "credit_risk_fs.experiments.runner",
+    "single_entry_point": "credit_risk_fs.experiments.single_run",
+    "resource_policy_and_preflight": "credit_risk_fs.experiments.resource_policy",
+    "resource_supervisor": "credit_risk_fs.experiments.resource_monitor",
+    "atomic_io": "credit_risk_fs.experiments.atomic_io",
+    "checkpoints": "credit_risk_fs.experiments.checkpointing.CheckpointManager",
+    "rank_aggregation": "credit_risk_fs.experiments.rank_voting.aggregate_cross_dataset_rank_voting",
+    "selector_registry": "credit_risk_fs.selectors.registry.get_selector",
+    "data_projection": "credit_risk_fs.pipelines.common.calculate_required_columns",
+    "data_loader": "credit_risk_fs.data.loaders.DataLoader",
+    "fold_execution": "credit_risk_fs.models.training.run_kfold_training",
+    "fold_fit_boundary": "credit_risk_fs.models._fold.process_fold",
+    "paired_inference": "credit_risk_fs.evaluation.paired_inference",
+    "repository_validation": "cleanup/tools/validate_repository_state.py"
+  },
+  "voters": [
+    {
+      "voter_id": "rf_corr_mrmr",
+      "scientific_label": "random-forest impurity relevance with correlation redundancy",
+      "included": true,
+      "implementation": "credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector",
+      "configuration_key": "mrmr",
+      "source_sha256": "30fabf22c3dad4e67b42d2723a8189200aa9b9035e7bacb3a81277682db099c7",
+      "data_dependence": "supervised",
+      "input_universe": "the fold's complete frozen eligible dataset candidate universe",
+      "rank_orientation": "rank_1_is_best",
+      "ranking_output": "selected_features_ order with k=300; features beyond 300 are missing",
+      "raw_score": "rf_importances_ is available for relevance but full greedy per-step scores are not persisted",
+      "missing_feature_behavior": "normalized score 0 during aggregation",
+      "alias_rule": "rank_voting.VOTER_ALIASES canonicalizes mrmr class aliases and rejects a second alias vote",
+      "homecredit_availability": "available_from_executable_source",
+      "lendingclub_availability": "available_from_executable_source",
+      "fit_boundary": "DEV training fold only; full DEV only for final refit",
+      "oot_or_future_inputs": false,
+      "prompt_4_adapter_required": true,
+      "accuracy_note": "This is explicitly not canonical mutual-information mRMR."
+    },
+    {
+      "voter_id": "boruta",
+      "scientific_label": "Boruta random-forest shadow-feature ranking",
+      "included": true,
+      "implementation": "credit_risk_fs.selectors.boruta.BorutaSelector.feature_ranking_",
+      "configuration_key": "boruta",
+      "source_sha256": "e96271f1b23c80a41fa64f90b2420ac6da96427d91bf66c86354adbe8ad84e25",
+      "data_dependence": "supervised",
+      "input_universe": "the fold's complete frozen eligible dataset candidate universe",
+      "rank_orientation": "rank_1_is_best",
+      "ranking_output": "all eligible features ordered by BorutaPy ranking then feature name",
+      "raw_score": "not exposed by the current selector; raw_score_if_available is null",
+      "missing_feature_behavior": "not expected for a valid full-universe Boruta ranking; if missing, normalized score 0",
+      "alias_rule": "rank_voting.VOTER_ALIASES canonicalizes class aliases and rejects a second alias vote",
+      "homecredit_availability": "available_from_executable_source",
+      "lendingclub_availability": "available_from_executable_source",
+      "fit_boundary": "DEV training fold only; full DEV only for final refit",
+      "oot_or_future_inputs": false,
+      "prompt_4_adapter_required": true
+    },
+    {
+      "voter_id": "corrected_clip",
+      "included": false,
+      "status": "excluded",
+      "reason": "complete corrected-CLIP provenance is absent; restoration requires a new protocol version"
+    },
+    {
+      "voter_id": "api_backed_llm",
+      "included": false,
+      "status": "excluded",
+      "reason": "no verified LendingClub ranking with matching universe and provenance; generation is forbidden"
+    },
+    {
+      "voter_id": "domain_rule",
+      "included": false,
+      "status": "excluded",
+      "reason": "the deterministic Home Credit domain-rule voter has no verified cross-dataset conceptual equivalent",
+      "accuracy_note": "The existing domain-rule voter is deterministic and is not LLM-generated."
+    },
+    {
+      "voter_id": "rfe",
+      "included": false,
+      "status": "excluded_as_voter",
+      "reason": "reserved for downstream supervised candidate reduction, preventing a duplicate conceptual vote"
+    }
+  ],
+  "aggregation": {
+    "implementation": "credit_risk_fs.experiments.rank_voting.aggregate_cross_dataset_rank_voting",
+    "source_sha256": "94b393cefe7266c6b7508613ca9d4e9d0f22608bf67bddf25ade8c75e4f5d0f6",
+    "eligible_voters": [
+      "rf_corr_mrmr",
+      "boruta"
+    ],
+    "eligible_universe_size_symbol": "N",
+    "normalized_score": "1 - (rank - 1) / max(N - 1, 1)",
+    "weights": {
+      "rf_corr_mrmr": 0.5,
+      "boruta": 0.5
+    },
+    "missing_rank_score": 0.0,
+    "aggregate": "arithmetic mean of both normalized scores",
+    "rejections": [
+      "unknown feature",
+      "target, identity, time, or leakage feature",
+      "duplicate feature",
+      "Unicode NFC/casefold name collision",
+      "duplicate voter alias",
+      "non-finite score",
+      "wrong fit scope"
+    ],
+    "tie_breaks": [
+      "aggregate_score descending",
+      "voter_presence_count descending",
+      "best_individual_rank ascending",
+      "NFC/casefold normalized feature name ascending"
+    ],
+    "candidate_truncation": "take aggregate ranks 1 through K inclusive for K in 100, 200, 300",
+    "hand_check_n4": [
+      {
+        "feature": "B",
+        "ranks": "2,1",
+        "scores": "2/3,1",
+        "aggregate": "5/6",
+        "presence": 2,
+        "final_rank": 1
+      },
+      {
+        "feature": "C",
+        "ranks": "3,2",
+        "scores": "1/3,2/3",
+        "aggregate": "1/2",
+        "presence": 2,
+        "final_rank": 2
+      },
+      {
+        "feature": "A",
+        "ranks": "1,missing",
+        "scores": "1,0",
+        "aggregate": "1/2",
+        "presence": 1,
+        "final_rank": 3,
+        "tie_explanation": "C beats A on presence count."
+      },
+      {
+        "feature": "D",
+        "ranks": "missing,3",
+        "scores": "0,1/3",
+        "aggregate": "1/6",
+        "presence": 1,
+        "final_rank": 4
+      }
+    ],
+    "name_tie_check": "With equal score, presence, and best rank, canonical name 'a' sorts before 'z'.",
+    "prompt_4_gap": "The current wide aggregate result needs a canonical long voter/aggregate artifact adapter and candidate membership columns; the formula itself must not be duplicated."
+  },
+  "downstream_selector": {
+    "selector_id": "catboost_rfe",
+    "implementation": "credit_risk_fs.selectors.rfe.RFESelector",
+    "source_sha256": "149b1ecc3084f52b139cd2b2f1de210392f3d0ca109e19ade8c12c51ff1d322c",
+    "registry_status": "implementation exists but no direct rfe registry key is wired",
+    "fitting_data": "only candidate-pool columns from the current DEV training fold",
+    "target": "current DEV training-fold TARGET",
+    "fit_boundary": "DEV training fold only; full DEV only for final refit",
+    "seed": 42,
+    "estimator": {
+      "type": "CatBoostClassifier",
+      "iterations": 500,
+      "depth": 6,
+      "learning_rate": 0.05,
+      "step": 10,
+      "allow_writing_files": false,
+      "thread_count": "resolved execution-policy estimator_threads"
+    },
+    "preprocessing": "Prompt 4 must fit a selection-only numeric encoding on the training boundary, preserve one-to-one original feature provenance, run RFE, then fit the final model preprocessor on only the selected original columns.",
+    "tie_handling": "candidate columns enter in aggregate-rank order; the pinned sklearn RFE implementation and that input order are the deterministic fallback for equal estimator importances",
+    "output_order": "selected features are emitted in candidate aggregate-rank order",
+    "smaller_pool_behavior": "fail before fit if K is below the model's exact final budget; never silently reduce the requested final feature count",
+    "conceptual_duplicate_of_voter": false,
+    "final_budgets": {
+      "lr": 20,
+      "catboost": 40
+    }
+  },
+  "fit_sequences": {
+    "dev_fold": [
+      "split DEV chronologically with grouped timestamps and one-group gap",
+      "fit voter-local numeric encoding on training rows only where required",
+      "fit rf_corr_mrmr and Boruta on training rows/labels only",
+      "map rankings to original frozen candidate names",
+      "aggregate ranks and truncate to K",
+      "fit downstream RFE and its selection-only encoding on training rows/labels only",
+      "fit final model preprocessing on selected training columns only",
+      "fit the model on selected training rows/labels only",
+      "predict the held-out DEV fold and reconcile stable identities"
+    ],
+    "final": [
+      "after configuration lock, repeat all supervised fitting on full DEV only",
+      "transform locked OOT without fitting",
+      "predict locked OOT exactly once",
+      "perform paired inference only after identity/target reconciliation"
+    ],
+    "data_independent_rankings_reused_across_folds": [],
+    "dev_comparison_predictions": "complete out-of-fold predictions only"
+  },
+  "artifact_schemas": {
+    "voter_and_aggregate_ranking": [
+      "dataset",
+      "run_id",
+      "fold",
+      "voter_id",
+      "normalized_feature_name",
+      "raw_rank",
+      "raw_score_if_available",
+      "normalized_score",
+      "present",
+      "aggregate_score",
+      "presence_count",
+      "best_individual_rank",
+      "aggregate_rank",
+      "candidate_pool_membership"
+    ],
+    "fold_selection": [
+      "dataset",
+      "run_id",
+      "fold",
+      "model",
+      "candidate_budget",
+      "feature",
+      "selected",
+      "selection_rank",
+      "selection_score_if_available"
+    ],
+    "dev_prediction_roles": {
+      "record_identity": "stable_row_id",
+      "target": "target",
+      "probability_default": "prediction_probability",
+      "fold": "fold_id",
+      "row_position_or_order_key": "row_position_or_order_key"
+    },
+    "oot_prediction_roles": {
+      "record_identity": "stable_row_id",
+      "target": "target",
+      "probability_default": "prediction_probability",
+      "row_position_or_order_key": "row_position_or_order_key",
+      "fold_id": "null"
+    },
+    "prediction_metadata": [
+      "ordered_row_identity_sha256",
+      "ordered_row_identity_target_sha256",
+      "source_contract_ordered_row_identity_sha256",
+      "source_contract_ordered_row_identity_target_sha256",
+      "probability_orientation=class_1_default_risk",
+      "row_count",
+      "positive_target_count",
+      "artifact_sha256",
+      "artifact_size_bytes"
+    ],
+    "hash_domain_note": "Source-contract row hashes validate the frozen source order. Prediction ordered hashes validate the independently frozen stable-ID artifact order; identity sets and identity-target mappings must reconcile exactly between the two domains."
+  },
+  "checkpoint_contract": [
+    {
+      "stage": "initialized",
+      "inputs": [
+        "resolved config",
+        "protocol/row/policy hashes",
+        "preflight"
+      ],
+      "outputs": [
+        "config.json",
+        "preflight.json",
+        "checkpoint.json",
+        "manifest.json"
+      ],
+      "integrity": "size and SHA-256; identity fields match",
+      "reusable": true,
+      "restart_after_interrupt": "preflight/registration"
+    },
+    {
+      "stage": "data_validated",
+      "inputs": [
+        "explicit projections",
+        "source schemas/manifests",
+        "row contract"
+      ],
+      "outputs": [
+        "data_split_manifest.json",
+        "candidate_universe_manifest.json",
+        "load_report.json"
+      ],
+      "integrity": "schema, candidate count/hash, row counts, ordered source hashes",
+      "reusable": true,
+      "restart_after_interrupt": "data validation"
+    },
+    {
+      "stage": "selection_completed",
+      "inputs": [
+        "validated fold data",
+        "voter and RFE configuration"
+      ],
+      "outputs": [
+        "voter_rankings.csv",
+        "aggregate_ranking.csv",
+        "candidate_features.csv",
+        "fold_selections.csv",
+        "selected_features.csv"
+      ],
+      "integrity": "schemas, row counts, canonical names, K/final budgets, fold provenance, hashes",
+      "reusable": "validated completed folds and final full-DEV selection only",
+      "restart_after_interrupt": "the interrupted fold or final selection from its beginning"
+    },
+    {
+      "stage": "model_fit_completed",
+      "inputs": [
+        "validated selected features",
+        "training-boundary-only preprocessing"
+      ],
+      "outputs": [
+        "model artifact",
+        "preprocessor artifact",
+        "model metadata"
+      ],
+      "integrity": "model/config/feature/preprocessing hashes and exact training scope",
+      "reusable": true,
+      "restart_after_interrupt": "current model fit"
+    },
+    {
+      "stage": "dev_prediction_completed",
+      "inputs": [
+        "all validated fold predictions"
+      ],
+      "outputs": [
+        "predictions_dev.csv or parquet",
+        "OOF reconciliation"
+      ],
+      "integrity": "one finite prediction per eligible DEV row, fold provenance, ordered hashes",
+      "reusable": true,
+      "restart_after_interrupt": "incomplete fold prediction or OOF publication"
+    },
+    {
+      "stage": "oot_prediction_completed",
+      "inputs": [
+        "validated full-DEV fit",
+        "locked OOT projection"
+      ],
+      "outputs": [
+        "predictions_oot.csv or parquet"
+      ],
+      "integrity": "one finite prediction per OOT row, no fit on OOT, ordered hashes",
+      "reusable": true,
+      "restart_after_interrupt": "OOT prediction publication"
+    },
+    {
+      "stage": "evaluation_completed",
+      "inputs": [
+        "validated DEV OOF and OOT predictions",
+        "family reference predictions"
+      ],
+      "outputs": [
+        "metrics",
+        "stability",
+        "paired inference when family inputs are complete"
+      ],
+      "integrity": "identity-aligned inputs, metric schema, fixed bootstrap/Holm configuration",
+      "reusable": true,
+      "restart_after_interrupt": "evaluation"
+    },
+    {
+      "stage": "completed",
+      "inputs": [
+        "all applicable validated artifacts",
+        "resource usage"
+      ],
+      "outputs": [
+        "final manifest",
+        "resource_usage.json",
+        "_SUCCESS",
+        "terminal run-index row"
+      ],
+      "integrity": "manifest/checkpoint/index/artifact agreement",
+      "reusable": false,
+      "restart_after_interrupt": "completed runs are immutable"
+    }
+  ],
+  "prompt_4_gaps": [
+    {
+      "gap_id": "gap_p4_01_rank_voting_adapter",
+      "required_behaviour": "Fit both voters inside each existing fold boundary and on full DEV, call the existing aggregator, apply K, then call downstream RFE without exposing validation or OOT labels.",
+      "existing_owner_to_extend": "credit_risk_fs.pipelines.common plus credit_risk_fs.models._fold",
+      "files_likely_affected": [
+        "src/credit_risk_fs/pipelines/common.py",
+        "src/credit_risk_fs/models/_fold.py",
+        "src/credit_risk_fs/experiments/rank_voting.py"
+      ],
+      "tests_required": "fold spies prove all supervised fits see training IDs only; final fit sees full DEV only; OOT is transform/predict only",
+      "scientific_risk": "high if fold boundaries leak",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_02_voter_schema_adapter",
+      "required_behaviour": "Capture mRMR top-300 and complete Boruta ranks in the shared long schema, preserve original candidate-name provenance through training-only numeric encoding, and emit null rather than invented raw scores.",
+      "existing_owner_to_extend": "credit_risk_fs.selectors.mrmr, credit_risk_fs.selectors.boruta, and credit_risk_fs.experiments.rank_voting",
+      "files_likely_affected": [
+        "src/credit_risk_fs/selectors/mrmr.py",
+        "src/credit_risk_fs/selectors/boruta.py",
+        "src/credit_risk_fs/experiments/rank_voting.py"
+      ],
+      "tests_required": "orientation, full/missing ranks, name mapping, alias deduplication, raw-score nullability, determinism",
+      "scientific_risk": "high if transformed columns become extra votes",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_03_downstream_rfe_contract",
+      "required_behaviour": "Wire the existing RFE implementation as the distinct downstream selector, propagate thread limits, enforce exact final budgets, and save a complete fold selection trace.",
+      "existing_owner_to_extend": "credit_risk_fs.selectors.registry and credit_risk_fs.experiments.config",
+      "files_likely_affected": [
+        "src/credit_risk_fs/selectors/registry.py",
+        "src/credit_risk_fs/experiments/config.py",
+        "src/credit_risk_fs/selectors/rfe.py"
+      ],
+      "tests_required": "registry identity, budget 20/40, K below budget fails, input-order tie fallback, thread propagation",
+      "scientific_risk": "medium",
+      "implementation_risk": "low",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_04_matrix_wiring",
+      "required_behaviour": "Expand the new matrix configuration in its exact run_order and submit each entry sequentially through execute_registered_run; never mutate the existing legacy matrix semantics.",
+      "existing_owner_to_extend": "credit_risk_fs.experiments.matrix and credit_risk_fs.experiments.runner",
+      "files_likely_affected": [
+        "src/credit_risk_fs/experiments/matrix.py",
+        "src/credit_risk_fs/experiments/runner.py"
+      ],
+      "tests_required": "exact 16-run expansion, stable IDs/order, sequential dispatch, config hash identity, no active writes in dry-run",
+      "scientific_risk": "low",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_05_candidate_projection_manifest",
+      "required_behaviour": "Build explicit source projections from the frozen schema/inventory references, validate the derived 529/675 original candidate names, and freeze candidate-list hashes before voter fitting.",
+      "existing_owner_to_extend": "credit_risk_fs.pipelines.common.calculate_required_columns and credit_risk_fs.data.loaders.DataLoader",
+      "files_likely_affected": [
+        "src/credit_risk_fs/pipelines/common.py",
+        "src/credit_risk_fs/data/loaders.py"
+      ],
+      "tests_required": "header-only projections, exact candidate counts, no columns=None, helpers excluded from selectable universe, hash mismatch fails",
+      "scientific_risk": "high if the universe drifts",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_06_voting_artifact_checkpoint_validation",
+      "required_behaviour": "Publish all voting artifacts atomically, attach integrity metadata, checkpoint validated folds/stages, and extend repository validation for complete and interrupted voting runs.",
+      "existing_owner_to_extend": "atomic_io, checkpointing, tracking, execution, and cleanup/tools/validate_repository_state.py",
+      "files_likely_affected": [
+        "src/credit_risk_fs/experiments/atomic_io.py",
+        "src/credit_risk_fs/experiments/checkpointing.py",
+        "src/credit_risk_fs/experiments/execution.py",
+        "src/credit_risk_fs/experiments/tracking.py",
+        "cleanup/tools/validate_repository_state.py"
+      ],
+      "tests_required": "schema/hash/row-count validation, fold resume, interrupted publication, inconsistent completion rejection",
+      "scientific_risk": "medium",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_07_prediction_contract",
+      "required_behaviour": "Emit complete DEV OOF and OOT predictions with stable identity, target, probability, fold/order key, source-contract hashes, artifact-order hashes, and class-1 orientation.",
+      "existing_owner_to_extend": "credit_risk_fs.pipelines.common.export_prediction_artifact and row_alignment",
+      "files_likely_affected": [
+        "src/credit_risk_fs/pipelines/common.py",
+        "src/credit_risk_fs/experiments/row_alignment.py"
+      ],
+      "tests_required": "OOF one-to-one reconciliation, source-vs-artifact hash domains, finite probabilities, target alignment, row-order determinism",
+      "scientific_risk": "high for paired inference",
+      "implementation_risk": "medium",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    },
+    {
+      "gap_id": "gap_p4_08_reference_and_family_inference",
+      "required_behaviour": "Run four new references and, only after each four-run family is complete, execute paired DeLong/bootstrap and within-family Holm correction using identical OOT identities and targets.",
+      "existing_owner_to_extend": "credit_risk_fs.experiments.compare and credit_risk_fs.evaluation.paired_inference",
+      "files_likely_affected": [
+        "src/credit_risk_fs/experiments/compare.py",
+        "src/credit_risk_fs/evaluation/paired_inference.py"
+      ],
+      "tests_required": "family membership, identical-ID requirement, three-test Holm scope, fixed bootstrap attempts/seed/minimum valid",
+      "scientific_risk": "high if comparisons misalign",
+      "implementation_risk": "low",
+      "blocks_lr_pilot": false,
+      "blocks_catboost_pilot": false
+    },
+    {
+      "gap_id": "gap_p4_09_model_config_pin",
+      "required_behaviour": "Resolve model parameters from configs/base.yaml and assert the frozen LR and CatBoost parameter sets, including CatBoost iterations=1500 rather than relying on the class constructor default.",
+      "existing_owner_to_extend": "credit_risk_fs.experiments.config and existing run config validation",
+      "files_likely_affected": [
+        "src/credit_risk_fs/experiments/config.py",
+        "src/credit_risk_fs/experiments/runner.py"
+      ],
+      "tests_required": "effective parameter equality, config hash drift, estimator thread injection without scientific-parameter drift",
+      "scientific_risk": "medium",
+      "implementation_risk": "low",
+      "blocks_lr_pilot": true,
+      "blocks_catboost_pilot": true
+    }
+  ],
+  "forbidden_designs": [
+    "second runner, registry, aggregator, results tree, tracking layer, monitor, or checkpoint system",
+    "dataset-specific aggregation copies",
+    "parallel runs or folds",
+    "columns=None fallback",
+    "semantic/LLM/CLIP regeneration",
+    "OOT-informed choices",
+    "silent feature-count or budget changes"
+  ],
+  "readiness": "bounded_prompt_4_extensions_assigned_to_existing_owners"
+}

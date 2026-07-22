@@ -1,0 +1,209 @@
+{
+  "schema_version": "cross_dataset_voting_execution_spec_validation_v1",
+  "gate": "READY_FOR_PROMPT_4",
+  "validation_date": "2026-07-22",
+  "scope": "low-memory audit and implementation specification; no Prompt 4 execution",
+  "prerequisite_gates": {
+    "prompt_1_1": {
+      "path": "cleanup/audits/foundation_protocol_freeze/validation_summary.json",
+      "gate": "PASS"
+    },
+    "prompt_2": {
+      "path": "cleanup/audits/resource_safe_execution/validation_summary.json",
+      "gate": "PASS",
+      "prior_readiness": "READY_FOR_PROMPT_3_AFTER_USER_HARDWARE_PLAUSIBILITY_CONFIRMATION",
+      "approved_for_prompt_3": true
+    }
+  },
+  "hardware_confirmation": {
+    "confirmed_plausible_by_user": true,
+    "physical_logical_cpu": "10/16",
+    "total_available_ram_gib": "39.63/24.50",
+    "gpu": "NVIDIA RTX 4060 Laptop GPU",
+    "total_free_vram_gib": "8.00/6.72",
+    "results_temp_free_disk_gib": "254.10/81.82",
+    "concurrent_runs_folds": "1/1",
+    "estimator_threads": 4,
+    "limits_raised": false
+  },
+  "repository_baseline": {
+    "git_commit": "cbb049109ba8dc5c74cf9aaf6b39f2f070658da5",
+    "initial_worktree": "clean",
+    "repository_instructions_file": "not_present",
+    "baseline_validator": "passed",
+    "baseline_active_registered_runs": 0,
+    "baseline_active_run_directories": 0,
+    "baseline_full_suite": {
+      "passed": 459,
+      "failed": 0,
+      "skipped": 31,
+      "warnings": 107,
+      "duration_seconds": 172.05
+    },
+    "difference_from_prompt_2_final_report": "Prompt 3 starts at the committed Prompt 2 end state. No unexplained pre-existing change was present. The final suite gains six Prompt 3 specification tests and has no regression."
+  },
+  "frozen_inputs": {
+    "scientific_protocol": {
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "version": "1.1.0",
+      "sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "modified": false
+    },
+    "row_alignment_contract": {
+      "path": "configs/protocols/row_alignment_contract_v1.json",
+      "version": "1.1.0",
+      "hash_version": "credit_risk_ordered_row_alignment_v1",
+      "sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "modified": false
+    },
+    "voting_protocol": {
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "version": "1.0.0",
+      "sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "modified": false
+    },
+    "execution_policy": {
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "profile": "local_laptop_safe_v1",
+      "sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "modified": false
+    }
+  },
+  "row_contract_verification": {
+    "homecredit": {
+      "contract_version": "row_alignment_contract_v1 1.1.0",
+      "identity": "SK_ID_CURR",
+      "target": "TARGET",
+      "positive_class": 1,
+      "dev_rows": 99092,
+      "oot_rows": 120053,
+      "candidate_features": 529,
+      "status": "verified"
+    },
+    "lendingclub_v2": {
+      "contract_version": "row_alignment_contract_v1 1.1.0 / lendingclub_original_loan_id_sidecar_v1",
+      "identity": "loan_id",
+      "target": "TARGET",
+      "positive_class": 1,
+      "dev_rows": 598649,
+      "oot_rows": 293105,
+      "candidate_features": 675,
+      "status": "verified"
+    }
+  },
+  "protocol_executability": {
+    "eligible_non_duplicate_voters": [
+      "rf_corr_mrmr",
+      "boruta"
+    ],
+    "eligible_voter_count": 2,
+    "both_datasets_supported": true,
+    "canonical_aggregator_exists": true,
+    "downstream_selector_exists": true,
+    "fold_boundary_unambiguous": true,
+    "critical_forward_parity_mismatches": 0,
+    "reference_reruns_scheduled": 4,
+    "bounded_prompt_4_gaps": 9,
+    "status": "executable_after_bounded_prompt_4_integration"
+  },
+  "matrix": {
+    "path": "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml",
+    "status": "specification_only_not_authorized_for_execution",
+    "deterministic_expansion_verified": true,
+    "voting_runs": 12,
+    "reference_reruns": 4,
+    "total_future_registered_runs": 16,
+    "dev_folds_per_run": 5,
+    "total_dev_fold_executions": 80,
+    "final_full_dev_oot_fits": 16,
+    "primary_comparisons": 4,
+    "sensitivity_comparisons": 8,
+    "executed_in_prompt_3": 0
+  },
+  "focused_tests": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests/test_cross_dataset_voting_spec.py tests/test_rank_voting_protocol.py tests/test_row_alignment_contract.py tests/test_resource_policy.py tests/test_projected_loading.py tests/test_execution_dry_run.py tests/test_result_paths.py tests/selectors/test_registry.py tests/selectors/test_mrmr.py tests/selectors/test_boruta.py -q",
+    "passed": 76,
+    "failed": 0,
+    "duration_seconds": 6.03,
+    "coverage_note": "Frozen hashes, deterministic matrix expansion, aggregation examples, voter aliases, row alignment, projections, registry identity, path safety, and execution-policy wiring."
+  },
+  "full_suite": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests -q",
+    "passed": 465,
+    "failed": 0,
+    "skipped": 31,
+    "warnings": 107,
+    "duration_seconds": 183.18,
+    "new_regressions": 0,
+    "prompt_3_test_delta": 6,
+    "skip_classification": "The 31 explicitly skipped missing-evidence legacy-CLIP integrations are unchanged and are not new regressions."
+  },
+  "repository_validator": {
+    "command": ".\\.venv\\Scripts\\python.exe cleanup/tools/validate_repository_state.py --root .",
+    "configuration": "CREDIT_RISK_LEGACY_RESULTS_ROOT=D:\\ResearchFindings\\results; CREDIT_RISK_LEGACY_EVIDENCE_PROFILE=clip_complete_v1",
+    "exit_code": 0,
+    "active_results_status": "passed",
+    "active_registered_runs": 0,
+    "active_artifacts_verified": 0,
+    "historical_results_status": "configured_read_only",
+    "historical_file_count": 359,
+    "shared_prompt_2_lifecycle_status": "canonical_and_unchanged"
+  },
+  "static_checks": {
+    "compileall_src_scripts": "passed",
+    "git_diff_check": "passed",
+    "json_csv_contract_parsing": "passed_by_focused_tests",
+    "staged_files": 0
+  },
+  "active_results_end_state": {
+    "run_index_experiment_rows": 0,
+    "run_directory_entries": 0,
+    "partial_experiment_artifacts": 0,
+    "status": "empty_and_unchanged"
+  },
+  "historical_manifest_end_comparison": {
+    "baseline_file_count": 359,
+    "current_file_count": 359,
+    "baseline_total_size_bytes": 110084164,
+    "current_total_size_bytes": 110084164,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "status": "unchanged"
+  },
+  "scientific_execution_attestation": {
+    "full_homecredit_feature_matrix_loaded": false,
+    "full_lendingclub_feature_matrix_loaded": false,
+    "research_voter_run": false,
+    "research_selector_run": false,
+    "research_model_run": false,
+    "research_prediction_pipeline_run": false,
+    "oot_outcome_informed_decision": false,
+    "clip_embedding_shap_semantic_or_llm_generation_run": false,
+    "external_api_called": false,
+    "active_run_directory_created": false,
+    "run_index_row_appended": false,
+    "legacy_artifact_copied_or_modified": false,
+    "git_commit_stage_push_or_amend": false,
+    "prompt_4_started": false
+  },
+  "deliverables": [
+    ".gitignore",
+    "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml",
+    "docs/research_extension/cross_dataset_voting_execution_spec_v1.md",
+    "cleanup/audits/cross_dataset_voting_execution_spec/implementation_map.json",
+    "cleanup/audits/cross_dataset_voting_execution_spec/forward_parity_table.csv",
+    "cleanup/audits/cross_dataset_voting_execution_spec/reference_reuse_audit.csv",
+    "cleanup/audits/cross_dataset_voting_execution_spec/preflight_request_specs.json",
+    "cleanup/audits/cross_dataset_voting_execution_spec/validation_summary.json",
+    "tests/test_cross_dataset_voting_spec.py"
+  ],
+  "limitations": [
+    "No historical Home Credit voting replication is claimed because its procedure cannot be authenticated from the frozen bundle.",
+    "Corrected CLIP remains excluded because complete provenance is absent.",
+    "Peak selector/model memory amplification is unmeasured; all four preflight shapes remain pilot_required and limits remain unchanged.",
+    "Prompt 4 must implement the nine assigned integration gaps before running the two-model pilot."
+  ],
+  "remaining_blockers_for_prompt_4": [],
+  "readiness": "READY_FOR_PROMPT_4"
+}
