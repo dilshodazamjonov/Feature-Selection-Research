@@ -24,7 +24,8 @@ from credit_risk_fs.experiments.matrix import (
 )
 
 
-EXPECTED_TAG = "cross-dataset-voting-pre-execution-v1"
+EXPECTED_TAG = "cross-dataset-voting-resume-safety-v1"
+ORIGINAL_TAG = "cross-dataset-voting-pre-execution-v1"
 MATRIX_PATH = "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml"
 POLICY_PATH = "configs/execution/local_laptop_safe_v1.yaml"
 REFINEMENT_PATH = "configs/execution/lendingclub_memory_safe_refinement_v1.yaml"
@@ -111,6 +112,7 @@ class ReleaseProvenance:
 
 class WorkflowBackend(Protocol):
     def preflight(self, plan: ManualResearchPlan, provenance: ReleaseProvenance) -> None: ...
+    def ensure_ready(self, previous_run_id: str, next_run_id: str, phase: str) -> None: ...
     def run_state(self, spec: CrossDatasetVotingRunSpec) -> str: ...
     def execute_dev(self, spec: CrossDatasetVotingRunSpec) -> str: ...
     def validate_dev(self, spec: CrossDatasetVotingRunSpec) -> None: ...
@@ -219,7 +221,9 @@ def execute_manual_workflow(
     """Run every DEV configuration, close the global gate, then permit OOT."""
 
     backend.preflight(plan, provenance)
-    for spec in plan.run_specs:
+    for index, spec in enumerate(plan.run_specs):
+        if index:
+            backend.ensure_ready(plan.run_specs[index - 1].run_id, spec.run_id, "dev")
         state = backend.run_state(spec)
         if state == "completed":
             backend.validate_dev(spec)
@@ -240,7 +244,9 @@ def execute_manual_workflow(
             "validated DEV configuration set differs from the frozen plan",
         )
 
-    for spec in plan.run_specs:
+    for index, spec in enumerate(plan.run_specs):
+        previous = plan.run_specs[index - 1].run_id if index else plan.run_specs[-1].run_id
+        backend.ensure_ready(previous, spec.run_id, "oot")
         state = backend.run_state(spec)
         if state == "completed":
             backend.validate_oot(spec)
@@ -274,7 +280,32 @@ class CanonicalWorkflowBackend:
         return runner
 
     def preflight(self, plan: ManualResearchPlan, provenance: ReleaseProvenance) -> None:
+        from credit_risk_fs.experiments.provenance_bridge import (
+            ProvenanceBridgeError,
+            authenticate_compatibility_bridge,
+        )
+
+        try:
+            authenticate_compatibility_bridge(
+                self.root,
+                current_commit=provenance.git_commit,
+                current_tag=provenance.git_tag,
+                validate_inventory=True,
+            )
+        except ProvenanceBridgeError as exc:
+            raise ManualResearchStop(exc.code, str(exc)) from exc
         self._runner().preflight_cross_dataset_research(self.root, plan, provenance)
+
+    def ensure_ready(self, previous_run_id: str, next_run_id: str, phase: str) -> None:
+        readiness = self._runner().ensure_cross_dataset_inter_run_readiness(self.root)
+        if not readiness.ready:
+            raise ManualResearchStop(
+                readiness.stop_code or "INTER_RUN_RESOURCE_NOT_READY",
+                (
+                    f"between-run readiness failed after {previous_run_id} before "
+                    f"{phase.upper()} {next_run_id}: {readiness.to_dict()}"
+                ),
+            )
 
     def run_state(self, spec: CrossDatasetVotingRunSpec) -> str:
         return self._runner().cross_dataset_research_run_state(self.root, spec)
@@ -354,6 +385,7 @@ __all__ = [
     "MANUAL_COMMAND",
     "ManualResearchPlan",
     "ManualResearchStop",
+    "ORIGINAL_TAG",
     "ReleaseProvenance",
     "REQUIRED_PARALLELISM",
     "authenticate_release",

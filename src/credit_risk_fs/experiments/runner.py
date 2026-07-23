@@ -44,6 +44,7 @@ from credit_risk_fs.experiments.resource_policy import (
     resolve_execution_policy,
     run_preflight,
 )
+from credit_risk_fs.experiments.resource_monitor import wait_for_inter_run_readiness
 from credit_risk_fs.experiments.result_paths import (
     build_run_id,
     create_run_directory,
@@ -1334,6 +1335,25 @@ def preflight_cross_dataset_research(root: str | Path, plan: Any, provenance: An
         raise RuntimeError("live preflight Git provenance differs from the release tag")
 
 
+def ensure_cross_dataset_inter_run_readiness(root: str | Path) -> Any:
+    """Confirm cleanup and unchanged resource floors before another research run."""
+
+    repository = Path(root).resolve()
+    results_root = initialize_results_layout(repository, results_root="results")
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    configured = load_execution_policy(
+        repository, "configs/execution/local_laptop_safe_v1.yaml"
+    )
+    resolved = resolve_execution_policy(
+        configured, detect_hardware(results_root, temp_root)
+    )
+    return wait_for_inter_run_readiness(
+        policy=resolved,
+        results_root=results_root,
+        temp_root=temp_root,
+    )
+
+
 def cross_dataset_research_run_state(root: str | Path, spec: Any) -> str:
     run_dir = _research_run_directory(Path(root).resolve(), spec)
     if not run_dir.is_dir():
@@ -1438,6 +1458,25 @@ def execute_cross_dataset_research_phase(
         stable_row_id_column=("SK_ID_CURR" if spec.dataset == "homecredit" else "loan_id"),
     )
     effective_config = _research_effective_config(repository, spec, provenance)
+    checkpoint_identity_override = None
+    resume_metadata = None
+    if resume:
+        from credit_risk_fs.experiments.provenance_bridge import (
+            compatible_resume_identity,
+        )
+
+        compatible = compatible_resume_identity(
+            repository,
+            run_dir,
+            current_commit=provenance.git_commit,
+            current_tag=provenance.git_tag,
+        )
+        if compatible is not None:
+            (
+                checkpoint_identity_override,
+                effective_config,
+                resume_metadata,
+            ) = compatible
     outcome = execute_registered_run(
         RegisteredRunRequest(
             repository_root=repository,
@@ -1496,6 +1535,8 @@ def execute_cross_dataset_research_phase(
             row_contract_path="configs/protocols/row_alignment_contract_v1.json",
             defer_terminal_success=phase == "dev",
             deferred_success_status="dev_complete",
+            checkpoint_identity_override=checkpoint_identity_override,
+            resume_metadata=resume_metadata,
         )
     )
     return outcome.status

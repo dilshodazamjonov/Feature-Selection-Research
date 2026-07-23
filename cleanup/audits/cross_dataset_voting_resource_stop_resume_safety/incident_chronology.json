@@ -1,0 +1,78 @@
+{
+  "authenticated_findings": {
+    "run_010_reserve_warning": {
+      "abort_floor_bytes": 8589934592,
+      "abort_floor_crossed": false,
+      "code": "ram_system_headroom",
+      "first_sample_elapsed_seconds": 8440.522920999967,
+      "first_sample_timestamp_utc": "2026-07-23T16:21:07.522921+00:00",
+      "kind": "warning_only",
+      "minimum_available_ram_bytes": 10431221760,
+      "run_terminal_state": "dev_complete"
+    },
+    "run_011": {
+      "abort_floor_bytes": 8589934592,
+      "attempt_started_at_utc": "2026-07-23T16:55:27+00:00",
+      "dev_phase_complete": false,
+      "last_observed_fold_id": 3,
+      "last_observed_sample_timestamp_utc": "2026-07-23T18:11:09.642640+00:00",
+      "last_observed_stage": "voter_boruta",
+      "last_valid_completed_fold_ids": [
+        "1",
+        "2"
+      ],
+      "minimum_available_ram_bytes": 17601703936,
+      "parent_terminal_state_written_at_utc": "2026-07-23T18:11:11+00:00",
+      "resource_abort_code": "manual_interrupt",
+      "resource_warning_codes": [],
+      "stage_entries_first_observed_utc": {
+        "fold_1:dev_data_loading": "2026-07-23T16:55:32.094448+00:00",
+        "fold_1:final_model_fit": "2026-07-23T17:08:30.872658+00:00",
+        "fold_1:rfe": "2026-07-23T17:05:05.480055+00:00",
+        "fold_1:selected_projection_reload": "2026-07-23T17:07:57.327512+00:00",
+        "fold_1:selection_encoding": "2026-07-23T16:56:45.356158+00:00",
+        "fold_1:voter_boruta": "2026-07-23T16:58:00.613929+00:00",
+        "fold_1:voter_rf_corr_mrmr": "2026-07-23T16:56:48.392347+00:00",
+        "fold_2:dev_data_loading": "2026-07-23T17:08:33.924295+00:00",
+        "fold_2:final_model_fit": "2026-07-23T17:38:49.575552+00:00",
+        "fold_2:rfe": "2026-07-23T17:31:51.662241+00:00",
+        "fold_2:selected_projection_reload": "2026-07-23T17:38:04.778376+00:00",
+        "fold_2:selection_encoding": "2026-07-23T17:09:47.257252+00:00",
+        "fold_2:voter_boruta": "2026-07-23T17:11:38.091828+00:00",
+        "fold_2:voter_rf_corr_mrmr": "2026-07-23T17:09:53.342700+00:00",
+        "fold_3:dev_data_loading": "2026-07-23T17:38:56.697210+00:00",
+        "fold_3:selection_encoding": "2026-07-23T17:40:39.521319+00:00",
+        "fold_3:voter_boruta": "2026-07-23T17:44:59.532165+00:00",
+        "fold_3:voter_rf_corr_mrmr": "2026-07-23T17:40:56.814737+00:00",
+        "fold_None:initialized": "2026-07-23T16:55:27.008809+00:00"
+      },
+      "terminal_run_state": "interrupted",
+      "user_interrupt_recorded": true,
+      "worker_exit_code": 1
+    }
+  },
+  "reconciliation": {
+    "dev_phase_complete": false,
+    "explanation": "The sole structured ram_system_headroom warning is in run 010, where the 10 GiB reserve was crossed but the 8 GiB abort floor was not. Run 011 has no warning sample and no resource abort latch.",
+    "graceful_stop_completed": "not_applicable_no_resource_stop_latched",
+    "primary_resource_trigger": "not_authenticated_for_run_011",
+    "primary_terminal_event": "user_keyboard_interrupt",
+    "reported_vs_structured_evidence_contradiction": true,
+    "resource_stop_latched": false,
+    "secondary_termination_event": null,
+    "terminal_run_state": "interrupted"
+  },
+  "reported_incident": {
+    "reported_primary_resource_trigger": "ram_system_headroom",
+    "reported_secondary_event": "user_keyboard_interrupt"
+  },
+  "safe_resume_boundary": {
+    "discarded_in_memory_stage": "voter_boruta",
+    "first_expensive_stage": "voter_rf_corr_mrmr",
+    "first_selection_stage": "selection_encoding",
+    "fold_id": 3,
+    "phase": "DEV",
+    "stage": "dev_data_loading"
+  },
+  "schema_version": "cdv1_run_011_incident_chronology_v1"
+}

@@ -1,0 +1,177 @@
+{
+    "schema_version":  "cdv1_resource_stop_resume_safety_artifact_manifest_v1",
+    "manifest_excludes_itself":  true,
+    "artifact_count":  34,
+    "artifacts":  [
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/completed_run_integrity.csv",
+                          "bytes":  2813,
+                          "sha256":  "0c7a2553f6c91dfe20c4e704b75cfb822dd8219b33f7e4565163ec5a428e01af"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/evidence_build_summary.json",
+                          "bytes":  733,
+                          "sha256":  "5e189009a3c8ea6b6fe5f13bd84dbb1ac9ef431da46d6183910f90978cc0b6b6"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/final_implementation_report.md",
+                          "bytes":  3678,
+                          "sha256":  "92b3711522735e1e3d09ca5fe6c02faf4bed8a7ea2b480c5034ce33853b0579b"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/immutable_baseline_artifact_manifest.csv",
+                          "bytes":  232754,
+                          "sha256":  "bd42e5e64d704070f894c926eb4e2caf5172a8c30ae4b18c6f6ebf655bae9827"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/immutable_incident_baseline.json",
+                          "bytes":  1801,
+                          "sha256":  "eca8db7f2edce47a88568ba3c950b8e5565f8c93d9e63c50ba01efdc9948412d"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/incident_chronology.json",
+                          "bytes":  3736,
+                          "sha256":  "720c1c5d23dded64e04530db9081f9d03a0cdc9425de4057e27625f3b56ec426"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/inter_run_cleanup_evidence.json",
+                          "bytes":  1038,
+                          "sha256":  "d86f5d47d2aa590610e7dbf02825102534f39c5e83f50a4364b3c170a3cb1780"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/root_cause_assessment.json",
+                          "bytes":  4789,
+                          "sha256":  "46223663463de126c70add6d4d91547af957634cb731700de094704c9e5a2c82"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/run_011_checkpoint_inventory.csv",
+                          "bytes":  756,
+                          "sha256":  "209222f35d8e9fd64b617e0330238aa22e865e33add1ea3b51f86150d8a199b6"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/run_boundary_resource_timeline.csv",
+                          "bytes":  3785,
+                          "sha256":  "055b88f10d33b48e59c8f13947721f86d8eb117ed6a22837f07b390673eccdf7"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/scientific_equivalence.json",
+                          "bytes":  1435,
+                          "sha256":  "9be1be78d8054e6e2ce47223d603723cb2b1858a08ee8c087c2a74cb421a2916"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/synthetic_stop_validation.json",
+                          "bytes":  3252,
+                          "sha256":  "9cf46e235bea084c54274b5ba036abe622c225eecdb4665a3b446260017a3a56"
+                      },
+                      {
+                          "path":  "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/validation_summary.json",
+                          "bytes":  2087,
+                          "sha256":  "41639a48c9f5fe5b8602a2b3d84caf355930cb39214621b5b68f69a366d2fe58"
+                      },
+                      {
+                          "path":  "cleanup/tools/build_cdv1_resume_safety_audit.py",
+                          "bytes":  22225,
+                          "sha256":  "1f86f76aa6a3f908027fec243786de6a80ed9cf9958700fe8811c9d1eaf4d2f3"
+                      },
+                      {
+                          "path":  "cleanup/tools/run_cdv1_stop_synthetic_validation.py",
+                          "bytes":  7508,
+                          "sha256":  "225ac50c59773d2d92e0b7bd0cb5f4b32de6a2d26da205d19dacc8d98a87d6a0"
+                      },
+                      {
+                          "path":  "cleanup/tools/validate_repository_state.py",
+                          "bytes":  22279,
+                          "sha256":  "3a245d050b770a96021be4132b035fcf1b9967c623f54faa884446d36f590fc0"
+                      },
+                      {
+                          "path":  "configs/execution/cdv1_resume_compatibility_bridge_v1.json",
+                          "bytes":  107350,
+                          "sha256":  "bb96f42875ad17ecae419e8216ac323f0d81f0d10d2704960f79fc1f943be2c8"
+                      },
+                      {
+                          "path":  "docs/research_extension/cross_dataset_voting_research_runbook_v1.md",
+                          "bytes":  3578,
+                          "sha256":  "e2ffc658fecb63700e61c658c5b453f7693ee98c0ade0cd2c34b41b132f18fc0"
+                      },
+                      {
+                          "path":  "docs/research_extension/cross_dataset_voting_resume_after_run_011_v1.md",
+                          "bytes":  4002,
+                          "sha256":  "a566f09233f868d13165b31042e66d6745e8fe6b4e8f2d7e73571b4bfce5c45b"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/checkpointing.py",
+                          "bytes":  16953,
+                          "sha256":  "df7b8308f51c347d5a894be9074f76168e5d60b75a5722f453e06c3fd88017e0"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/execution.py",
+                          "bytes":  21812,
+                          "sha256":  "483ce8823ef3d81836af01036ecd9fbba4dceca4911227fab4ffade76b94df8a"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/manual_research.py",
+                          "bytes":  14901,
+                          "sha256":  "47c50f754330a0ca56decce7c1ef6b4df97eea46b6b3538aa0f83ae6de932bf1"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/provenance_bridge.py",
+                          "bytes":  12427,
+                          "sha256":  "32d202cd912c4d4bd22800cd5f53c1d9f24d99d57f9591271a5a1a18f32e02e4"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/resource_monitor.py",
+                          "bytes":  39668,
+                          "sha256":  "d991cee28c58d45f7c62506736336cc31cb282ed02058fd6d7deb9459c546faf"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/runner.py",
+                          "bytes":  83224,
+                          "sha256":  "5f71cea7298f3680068bcebffc8136152339e1f74b0d36b92d37cd52279b5528"
+                      },
+                      {
+                          "path":  "src/credit_risk_fs/experiments/synthetic_execution.py",
+                          "bytes":  4148,
+                          "sha256":  "853e5efaa904dc5e8f9fb3fcf7a43ed6dd81ae5654cd0c55dd5e8e6f7480178e"
+                      },
+                      {
+                          "path":  "tests/fixtures/cdv1_scientific_equivalence_golden.json",
+                          "bytes":  2204,
+                          "sha256":  "f393e8e3e731e6a721727d951c81f02195b55ede1ca83f8f20a059b107f9bd66"
+                      },
+                      {
+                          "path":  "tests/support/cdv1_scientific_equivalence_probe.py",
+                          "bytes":  3769,
+                          "sha256":  "e32d50aa1260cfb89bd0a4c5a185f72d8976d5ee86ecc96cce08dbd6145900d6"
+                      },
+                      {
+                          "path":  "tests/test_cdv1_scientific_equivalence.py",
+                          "bytes":  464,
+                          "sha256":  "a5c9dfa0040266c714f9ea21d066064b9a2c549c43991ab626a7b48d8c5ba261"
+                      },
+                      {
+                          "path":  "tests/test_checkpointing.py",
+                          "bytes":  6404,
+                          "sha256":  "fbe96466dfa3697302535920934d23a89aaf33fdd23e1a54e1f90384707377bf"
+                      },
+                      {
+                          "path":  "tests/test_execution_dry_run.py",
+                          "bytes":  11290,
+                          "sha256":  "cdd80d858308b5082136de25edab171c02792792a3e99dfc497fe913c5ca1f62"
+                      },
+                      {
+                          "path":  "tests/test_manual_research_orchestration.py",
+                          "bytes":  9290,
+                          "sha256":  "760957698a09968e8b1a4efd98380f027a822683583db5bca09fadde06810396"
+                      },
+                      {
+                          "path":  "tests/test_provenance_bridge.py",
+                          "bytes":  5313,
+                          "sha256":  "c9c91c2864f8a18beaee9689c56236fb12d201f829ec525f5bdb9e3877220019"
+                      },
+                      {
+                          "path":  "tests/test_resource_monitor.py",
+                          "bytes":  14540,
+                          "sha256":  "e12db7865cf38ebce402fdf72184b33e2655584215b5c0aa57d658935c607e92"
+                      }
+                  ]
+}

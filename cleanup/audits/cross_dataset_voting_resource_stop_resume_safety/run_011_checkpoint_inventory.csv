@@ -1,0 +1,6 @@
+run_id,phase,fold_id,classification,checkpoint_claims_complete,tracked_artifact_count,tracked_artifacts_integrity_valid,fold_directory_present,resume_action
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,DEV,1,valid_complete,True,8,True,True,reuse_all_finalized_artifacts
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,DEV,2,valid_complete,True,8,True,True,reuse_all_finalized_artifacts
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,DEV,3,incomplete,False,0,not_applicable,False,recompute_from_dev_data_loading
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,DEV,4,not_started,False,0,not_applicable,False,execute_after_prior_fold_completes
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,DEV,5,not_started,False,0,not_applicable,False,execute_after_prior_fold_completes

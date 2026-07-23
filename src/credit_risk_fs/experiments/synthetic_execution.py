@@ -13,6 +13,11 @@ def _child_wait(stop_event: Any) -> None:
         stop_event.wait(0.02)
 
 
+def _child_ignore_stop() -> None:
+    while True:
+        time.sleep(0.02)
+
+
 def bounded_memory_worker(
     *,
     stop_event: Any,
@@ -86,3 +91,58 @@ def immediate_success_worker(
     stage_queue.put({"stage": "completed", "fold_id": None})
     time.sleep(0.03)
     return {"ok": True}
+
+
+def uncooperative_wait_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    spawn_stubborn_child: bool = False,
+) -> None:
+    """Ignore cooperative cancellation so the supervisor must escalate."""
+
+    del stop_event
+    child = None
+    if spawn_stubborn_child:
+        context = multiprocessing.get_context("spawn")
+        child = context.Process(target=_child_ignore_stop, daemon=False)
+        child.start()
+    stage_queue.put({"stage": "uncooperative_wait", "fold_id": None})
+    while True:
+        time.sleep(0.02)
+
+
+def saturated_stage_queue_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+) -> dict[str, bool]:
+    """Over-publish stage updates; the worker-side publisher must never block."""
+
+    for index in range(20_000):
+        stage_queue.put({"stage": "queue_saturation", "fold_id": index})
+    if stop_event.is_set():
+        return {"queue_saturation_completed": True}
+    return {"queue_saturation_completed": True}
+
+
+def oversized_result_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+) -> dict[str, bytes]:
+    del stop_event
+    stage_queue.put({"stage": "oversized_result", "fold_id": None})
+    return {"forbidden_large_payload": b"x" * (2 * 1024 * 1024)}
+
+
+def near_limit_result_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+) -> dict[str, bytes]:
+    """Publish enough compact data to require concurrent result-queue draining."""
+
+    del stop_event
+    stage_queue.put({"stage": "near_limit_result", "fold_id": None})
+    return {"bounded_metadata": b"x" * (512 * 1024)}

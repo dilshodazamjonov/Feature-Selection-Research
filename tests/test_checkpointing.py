@@ -139,3 +139,24 @@ def test_artifact_provenance_mismatch_blocks_resume(tmp_path):
     with pytest.raises(ResumeValidationError) as exc:
         manager.validate_resume(identity)
     assert exc.value.code == "artifact_provenance_mismatch_data_hash"
+
+
+def test_resume_attempt_archives_primary_and_secondary_stop_evidence(tmp_path):
+    _, manager, _ = _initialized(tmp_path)
+    manager.transition(
+        "aborted_resource_limit",
+        stop_code="ram_system_headroom",
+        termination_metadata={
+            "primary_stop_code": "ram_system_headroom",
+            "secondary_events": [{"code": "manual_interrupt"}],
+            "stop_lifecycle": [{"state": "RESOURCE_STOP_LATCHED"}],
+            "termination_condition": None,
+            "cleanup_evidence": {"child_cleanup_confirmed": True},
+        },
+    )
+    payload = manager.begin_resume_attempt()
+    prior = payload["attempt_history"][0]
+    assert prior["primary_stop_code"] == "ram_system_headroom"
+    assert prior["secondary_events"] == [{"code": "manual_interrupt"}]
+    assert prior["stop_lifecycle"] == [{"state": "RESOURCE_STOP_LATCHED"}]
+    assert payload["primary_stop_code"] is None

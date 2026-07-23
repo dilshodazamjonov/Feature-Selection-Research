@@ -1,0 +1,87 @@
+{
+  "schema_version": "cdv1_run_011_root_cause_assessment_v1",
+  "confirmed": [
+    {
+      "factor": "warning_was_not_an_abort",
+      "assessment": "supported",
+      "evidence": "The only structured ram_system_headroom warning is run 010 fold 5. Available RAM crossed the 10 GiB reserve for 18 samples, reached 9.71 GiB, never crossed the unchanged 8 GiB abort floor, recovered to 24.84 GiB, and the run completed."
+    },
+    {
+      "factor": "run_011_manual_interrupt",
+      "assessment": "supported",
+      "evidence": "Run 011 resource_usage.json has no warnings and minimum available RAM 16.39 GiB. Its manifest/checkpoint/index record manual_interrupt/interrupted while the worker was in fold 3 voter_boruta."
+    },
+    {
+      "factor": "historical_resource_shutdown_not_invoked",
+      "assessment": "supported",
+      "evidence": "No run-011 sample crossed an abort threshold, so the original supervisor never entered its resource-stop join/terminate path. The blocking estimator continued until the user interrupt."
+    },
+    {
+      "factor": "latent_signal_precedence_defect",
+      "assessment": "supported",
+      "evidence": "In the pre-patch supervisor, KeyboardInterrupt around the resource-triggered join unconditionally assigned manual_interrupt and could erase an already assigned resource code."
+    },
+    {
+      "factor": "latent_queue_and_tree_finalization_gaps",
+      "assessment": "supported",
+      "evidence": "The pre-patch supervisor did not persist lifecycle transitions/owned PID identities, used unbounded queue draining, and did not cancel queue feeder joins explicitly."
+    },
+    {
+      "factor": "ordinary_lendingclub_workload_amplification",
+      "assessment": "supported",
+      "evidence": "Observed worker peaks rose from about 2.3 GiB on Home Credit to 7.85, 12.50, and 8.86 GiB on LendingClub runs 009-011, consistent with the larger frozen workload and prior isolated capacity evidence."
+    }
+  ],
+  "plausible_but_unproven": [
+    {
+      "factor": "unobserved_external_memory_consumers",
+      "assessment": "plausible_but_unproven",
+      "evidence": "The historical sampler recorded total available RAM but no system-wide per-process memory snapshot."
+    },
+    {
+      "factor": "python_allocator_or_parent_cache_retention",
+      "assessment": "plausible_but_unproven",
+      "evidence": "The original release did not record parent PID/RSS before and after each run, so small parent retention cannot be quantified."
+    }
+  ],
+  "not_supported": [
+    {
+      "factor": "cumulative_parent_memory_leak_as_incident_cause",
+      "assessment": "not_supported",
+      "evidence": "Run 010 ended at 24.84 GiB available and run 011 began at 25.41 GiB, higher than the 24.06 GiB start of run 001."
+    },
+    {
+      "factor": "unreleased_workers_or_process_tree_leakage",
+      "assessment": "not_supported",
+      "evidence": "Each run used a distinct worker PID, historical samples observed no descendants for runs 001-011, and the immutable baseline found no repository Python process after the incident. Exact disappearance latency was not recorded."
+    },
+    {
+      "factor": "large_return_value_or_result_queue_retention",
+      "assessment": "not_supported",
+      "evidence": "The research worker contract returns a compact summary/additional-artifact mapping. Run 011 never returned a scientific payload because it was interrupted inside selection."
+    },
+    {
+      "factor": "queue_backlog_caused_the_historical_wait",
+      "assessment": "not_supported",
+      "evidence": "Run 011 remained inside RandomForest/joblib according to the traceback; no result publication or queue-flush stage had been reached."
+    }
+  ],
+  "contradicted": [
+    {
+      "factor": "run_011_ram_system_headroom_abort_latched",
+      "assessment": "contradicted",
+      "evidence": "Run 011 has zero reserve-warning samples, zero abort-floor samples, stop_code manual_interrupt, and minimum available RAM more than twice the abort floor."
+    },
+    {
+      "factor": "isolated_capacity_failure",
+      "assessment": "contradicted",
+      "evidence": "The preserved Prompt 5.1 largest-fold and full-DEV scenarios completed under clean isolated conditions with exact mechanics equivalence."
+    }
+  ],
+  "unknown": [
+    "Historical parent RSS before/after each run.",
+    "Historical worker-exit-to-process-disappearance latency.",
+    "A per-process snapshot of unrelated system consumers at the run-010 reserve warning."
+  ],
+  "conclusion": "Run 011 was not a failed resource-stop execution; it was a long blocking fold-3 Boruta computation ended by a manual interrupt. The patch nevertheless repairs the confirmed latent precedence, ownership, escalation, queue-finalization, compact-payload, and inter-run-readiness weaknesses."
+}

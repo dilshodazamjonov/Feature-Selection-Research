@@ -1,8 +1,8 @@
 # Cross-Dataset Voting Research Runbook v1
 
-This is the sole manual launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access.
+This records the original full-launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access. After the run-011 interruption, the supported continuation procedure moved to [cross_dataset_voting_resume_after_run_011_v1.md](cross_dataset_voting_resume_after_run_011_v1.md) and the annotated mechanics tag `cross-dataset-voting-resume-safety-v1`.
 
-The command must be run from `D:\python projects\Research` with a clean working tree at the annotated tag `cross-dataset-voting-pre-execution-v1`. Do not edit code or configuration after DEV begins. The command authenticates the Git commit/tag, frozen hashes, Python environment, and dependency lock before any data access.
+Historically, the first launch was run from `D:\python projects\Research` at the annotated tag `cross-dataset-voting-pre-execution-v1`. That tag remains the immutable provenance of runs 001–011 and must not be moved. Do not use the old tag to resume; use the authenticated continuation handoff linked above.
 
 ## One-command manual execution
 

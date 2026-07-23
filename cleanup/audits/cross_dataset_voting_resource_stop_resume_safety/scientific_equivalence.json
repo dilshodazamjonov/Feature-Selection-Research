@@ -1,0 +1,28 @@
+{
+  "schema_version": "cdv1_mechanics_scientific_equivalence_v1",
+  "baseline_release": {
+    "tag": "cross-dataset-voting-pre-execution-v1",
+    "commit": "f00f474b6f263ee2619a178524c7c0fdf806024f"
+  },
+  "patched_release_binding": "cross-dataset-voting-resume-safety-v1 annotated tag peels to current HEAD",
+  "probe": {
+    "kind": "deterministic_small_synthetic_no_project_data",
+    "rows": 320,
+    "features": 30,
+    "seed": 42,
+    "ranking_sha256_before": "f1819c430506cd5177d2c9cc8fe9579244210bb94c8c8b00b3b6b5de793e5d55",
+    "ranking_sha256_after": "f1819c430506cd5177d2c9cc8fe9579244210bb94c8c8b00b3b6b5de793e5d55",
+    "selected_features_sha256_before": "40ab445bb24214e10ce89b2f204bf8e6dbab69b57c8b9295cfa04019bd1c517d",
+    "selected_features_sha256_after": "40ab445bb24214e10ce89b2f204bf8e6dbab69b57c8b9295cfa04019bd1c517d",
+    "class_1_probability_sha256_before": "3ad0b48394e363650af64435c33fae67cb826c4e0c42332120da72282e0b1880",
+    "class_1_probability_sha256_after": "3ad0b48394e363650af64435c33fae67cb826c4e0c42332120da72282e0b1880",
+    "metrics_sha256_before": "99820a9ea5df13c92b0a579669b6282849e8d943614ac8396f672edb8bdedaed",
+    "metrics_sha256_after": "99820a9ea5df13c92b0a579669b6282849e8d943614ac8396f672edb8bdedaed",
+    "exact_match": true
+  },
+  "scientific_modules_modified": [],
+  "frozen_input_hashes_changed": false,
+  "real_dataset_opened": false,
+  "oot_opened": false,
+  "result": "pass"
+}

@@ -139,6 +139,11 @@ class CheckpointManager:
             "latest_resource_peaks": {},
             "last_successful_stage": "initialized",
             "stop_code": None,
+            "primary_stop_code": None,
+            "secondary_events": [],
+            "stop_lifecycle": [],
+            "termination_condition": None,
+            "cleanup_evidence": {},
             "error": None,
             "created_at_utc": now,
             "updated_at_utc": now,
@@ -197,6 +202,7 @@ class CheckpointManager:
         resource_peaks: Mapping[str, Any] | None = None,
         stop_code: str | None = None,
         error: str | None = None,
+        termination_metadata: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         if stage not in CHECKPOINT_STAGES:
             raise ValueError(f"unknown checkpoint stage: {stage}")
@@ -238,6 +244,17 @@ class CheckpointManager:
                 "updated_at_utc": _utc_now(),
             }
         )
+        if termination_metadata is not None:
+            metadata = dict(termination_metadata)
+            payload.update(
+                {
+                    "primary_stop_code": metadata.get("primary_stop_code"),
+                    "secondary_events": list(metadata.get("secondary_events", [])),
+                    "stop_lifecycle": list(metadata.get("stop_lifecycle", [])),
+                    "termination_condition": metadata.get("termination_condition"),
+                    "cleanup_evidence": dict(metadata.get("cleanup_evidence", {})),
+                }
+            )
         write_json_atomic(self.path, payload)
         return payload
 
@@ -353,6 +370,13 @@ class CheckpointManager:
             {
                 "status": prior_status,
                 "stop_code": payload.get("stop_code"),
+                "primary_stop_code": payload.get(
+                    "primary_stop_code", payload.get("stop_code")
+                ),
+                "secondary_events": list(payload.get("secondary_events", [])),
+                "stop_lifecycle": list(payload.get("stop_lifecycle", [])),
+                "termination_condition": payload.get("termination_condition"),
+                "cleanup_evidence": dict(payload.get("cleanup_evidence", {})),
                 "error": payload.get("error"),
                 "ended_at_utc": payload.get("updated_at_utc"),
                 "resource_metadata": resource,
@@ -365,6 +389,11 @@ class CheckpointManager:
                 "finalized_artifacts": finalized,
                 "status": "running",
                 "stop_code": None,
+                "primary_stop_code": None,
+                "secondary_events": [],
+                "stop_lifecycle": [],
+                "termination_condition": None,
+                "cleanup_evidence": {},
                 "error": None,
                 "updated_at_utc": _utc_now(),
             }

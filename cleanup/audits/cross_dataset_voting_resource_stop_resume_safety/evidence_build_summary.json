@@ -1,0 +1,22 @@
+{
+  "bridge_path": "configs/execution/cdv1_resume_compatibility_bridge_v1.json",
+  "completed_runs_authenticated": 10,
+  "completed_runs_expected": 10,
+  "generated_at_utc": "2026-07-23T19:25:53.379943+00:00",
+  "research_or_oot_executed": false,
+  "run_010_warning_reconciled": true,
+  "run_011_completed_fold_ids": [
+    1,
+    2
+  ],
+  "run_011_resource_trigger_authenticated": false,
+  "run_011_safe_resume_boundary": {
+    "discarded_in_memory_stage": "voter_boruta",
+    "first_expensive_stage": "voter_rf_corr_mrmr",
+    "first_selection_stage": "selection_encoding",
+    "fold_id": 3,
+    "phase": "DEV",
+    "stage": "dev_data_loading"
+  },
+  "schema_version": "cdv1_resume_safety_evidence_build_v1"
+}

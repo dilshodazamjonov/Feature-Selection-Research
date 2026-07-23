@@ -1,0 +1,2422 @@
+{
+  "allowed_change_categories": [
+    "process_lifecycle",
+    "resource_cleanup",
+    "stop_state_tracking",
+    "strict_resume_provenance",
+    "synthetic_tests",
+    "documentation_and_audit"
+  ],
+  "configuration_set_sha256": "172f6f3bc24daa525aa14b997d5f7e355a8ba41c1bd7c1755140172ec248eb5e",
+  "focused_test_files": {
+    "tests/fixtures/cdv1_scientific_equivalence_golden.json": "f393e8e3e731e6a721727d951c81f02195b55ede1ca83f8f20a059b107f9bd66",
+    "tests/support/cdv1_scientific_equivalence_probe.py": "e32d50aa1260cfb89bd0a4c5a185f72d8976d5ee86ecc96cce08dbd6145900d6",
+    "tests/test_cdv1_scientific_equivalence.py": "a5c9dfa0040266c714f9ea21d066064b9a2c549c43991ab626a7b48d8c5ba261",
+    "tests/test_checkpointing.py": "fbe96466dfa3697302535920934d23a89aaf33fdd23e1a54e1f90384707377bf",
+    "tests/test_execution_dry_run.py": "cdd80d858308b5082136de25edab171c02792792a3e99dfc497fe913c5ca1f62",
+    "tests/test_manual_research_orchestration.py": "760957698a09968e8b1a4efd98380f027a822683583db5bca09fadde06810396",
+    "tests/test_provenance_bridge.py": "c9c91c2864f8a18beaee9689c56236fb12d201f829ec525f5bdb9e3877220019",
+    "tests/test_resource_monitor.py": "e12db7865cf38ebce402fdf72184b33e2655584215b5c0aa57d658935c607e92"
+  },
+  "forbidden_change_categories": [
+    "datasets_or_row_membership",
+    "dev_oot_boundary",
+    "folds",
+    "selectors_or_voter_semantics",
+    "feature_budgets",
+    "preprocessing",
+    "model_hyperparameters",
+    "seeds",
+    "predictions_metrics_or_inference",
+    "resource_thresholds"
+  ],
+  "frozen_files": {
+    "configs/execution/lendingclub_memory_safe_refinement_v1.yaml": {
+      "sha256": "4e2a17b93a751bbcb7443d8e82b15781f8a0467a07aa0037a3c298abff4132d7",
+      "size_bytes": 5203
+    },
+    "configs/execution/local_laptop_safe_v1.yaml": {
+      "sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "size_bytes": 756
+    },
+    "configs/protocols/credit_scoring_extension_v1.yaml": {
+      "sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "size_bytes": 18481
+    },
+    "configs/protocols/cross_dataset_rank_voting_v1.yaml": {
+      "sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "size_bytes": 5342
+    },
+    "configs/protocols/row_alignment_contract_v1.json": {
+      "sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "size_bytes": 5090
+    }
+  },
+  "interrupted_run": {
+    "run_id": "cdv1-011-lendingclub-v2-voting-k200-lr-s42",
+    "safe_resume_boundary": {
+      "discarded_in_memory_stage": "voter_boruta",
+      "first_expensive_stage": "voter_rf_corr_mrmr",
+      "first_selection_stage": "selection_encoding",
+      "fold_id": 3,
+      "phase": "DEV",
+      "stage": "dev_data_loading"
+    }
+  },
+  "matrix_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
+  "mechanics_release": {
+    "commit_binding": "annotated_tag_peels_to_current_head",
+    "tag": "cross-dataset-voting-resume-safety-v1"
+  },
+  "original_release": {
+    "commit": "f00f474b6f263ee2619a178524c7c0fdf806024f",
+    "tag": "cross-dataset-voting-pre-execution-v1"
+  },
+  "research_family": "cdv1",
+  "reusable_run_ids": [
+    "cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42",
+    "cdv1-002-homecredit-voting-k100-lr-s42",
+    "cdv1-003-homecredit-voting-k200-lr-s42",
+    "cdv1-004-homecredit-voting-k300-lr-s42",
+    "cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42",
+    "cdv1-006-homecredit-voting-k100-catboost-s42",
+    "cdv1-007-homecredit-voting-k200-catboost-s42",
+    "cdv1-008-homecredit-voting-k300-catboost-s42",
+    "cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42",
+    "cdv1-010-lendingclub-v2-voting-k100-lr-s42"
+  ],
+  "runs": {
+    "cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "790afc83b30ad1cfd2b7d351060f79091fdebd41b8d932afd3b44f776e31c800",
+          "size_bytes": 1734
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "eaebe157c444f6bf196e5e15e52e1781f4168b522ca7f74f33d3af4650652b76",
+          "size_bytes": 126
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "7140c03e9ce233d1d719cc5fa4d03c3f877214eb1dca42c93537dae6d3591309",
+          "size_bytes": 2612
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "21af7fc4d0a545031ad4b0bafa32427e96ca1d1cf3d48f080e319f3ad906d084",
+          "size_bytes": 35355
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "aa76938316cc62844d64cdbf1a80dfdc48edb996996494543fab85f60b583ab9",
+          "size_bytes": 489
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "dd24f560824b4e7a61b926b8aa9bba257b319537d657448933ffe6d17d567eb5",
+          "size_bytes": 1258
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "b52dcd2631087b4fe473f9bd77b58d1a2bc4b500e21cfb9d00b7a15a2a21ecfd",
+          "size_bytes": 1958
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "3565930ec5a880cb4bee283ab4b5e2c3c0c984ec438b8ce1f7531c43878cb6c3",
+          "size_bytes": 3087075
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "0f05146f65d2988e1ef019c4fdb64c5aab03f039f5a6d25b1bbdfbf87bc6cbf9",
+          "size_bytes": 598
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "f0f74c16ffd12df7c9856a3de20e364cb79f76c59cdd76bee98d489998ebcea0",
+          "size_bytes": 537
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "33e5d6679229cd8ed8efb65501ba5c734b40e0de63a27a3a8aa51e8897c683b0",
+          "size_bytes": 71661
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "4d6e2f088eb7974613109726cea485aa0a95eea8f9997b3f329e5afaade75c3c",
+          "size_bytes": 35539
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "1eb41a2d9729b8ffddcc000a5b5ddef07c7686afcb6943dc019b2bee18a0bb48",
+          "size_bytes": 509
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "dd24f560824b4e7a61b926b8aa9bba257b319537d657448933ffe6d17d567eb5",
+          "size_bytes": 1258
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "cb6241f2b964746e817c1c17f5ee29598a0006d32f8c698da5c58732802ffcc3",
+          "size_bytes": 1958
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "006fa2175f2b06aab43107a2b012b8cd23935c02067512bb70b4f87ecd9fccf6",
+          "size_bytes": 3071599
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "b875e39af0c8892a0310503c5b0368cb0c3641e0b70f3ffafc97849eaee78418",
+          "size_bytes": 618
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "f82eee30a61adf4390add1d9ab3b5a026d2f03a4323d4171b070e63e8100a529",
+          "size_bytes": 557
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "ad0e9b1ffed4cc0d1fac0aaf0b61abfc36f8d844e4ee64691e52348217082e01",
+          "size_bytes": 71845
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "1ef7fc55f028e2c764bb2827f4150d6e846079a440f92d8d48c547b5322b80c9",
+          "size_bytes": 35554
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "2475fccd2b37ae7672a52c48608dd89cee7f2805eac7771b8dd1ed8a3e48e741",
+          "size_bytes": 497
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "dd24f560824b4e7a61b926b8aa9bba257b319537d657448933ffe6d17d567eb5",
+          "size_bytes": 1258
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "3fc02737b2aa519f6a0e7f22ae82b0d5e7b811fd5ef7c156441d607984347f79",
+          "size_bytes": 1958
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "2bab6ab370e72abb827cc0bdacf8eeeb5216d103a1b9395ee18cb60692186e84",
+          "size_bytes": 3027737
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "0df385af742653f0018957002f6b8dd66bff86bc2d591f7b7cfe37a3e767e492",
+          "size_bytes": 606
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "74750c3e6fbee1d8c0166eaa6cf061c485269216788c87899f0bae8a6f894408",
+          "size_bytes": 545
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "bfbc324fb5755bf61b9f97ccea642b72ae26f63a94d6066a8caaacf1a38e3124",
+          "size_bytes": 71860
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "98b730d13f58449422c6dfb0a556adf242d35d10de367f9f57de83c50b3c518b",
+          "size_bytes": 35595
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "d06f066a2ce066c6732ef8fd6ac25ed24d81a0f1c78a3f7693e64f70b28faff9",
+          "size_bytes": 505
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "dd24f560824b4e7a61b926b8aa9bba257b319537d657448933ffe6d17d567eb5",
+          "size_bytes": 1258
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "df8769221283adf6aca4f07bf1033ced60c36c0cd0043d4a0546ca2cd359105d",
+          "size_bytes": 1958
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "a8da5844f241686f0d0ecaa876a58bdd21cdd7759c3ecd0fe480a2d4d3fcc374",
+          "size_bytes": 3069277
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "8191395e7ee2477e7aed03beb4f709580366ac8ed4306435884877a4e65db785",
+          "size_bytes": 614
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "952242d03c6259eef8dff5b189ca10023a090b563dbf6d674d8fe4e5037bdf9f",
+          "size_bytes": 553
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "425e34658186268b18a23fdf55177b2deb635d346875eb6e82b5f3182623348b",
+          "size_bytes": 71901
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "df84e508c4537d32dbd110609049c67aa8b3f5dddb7a550776a6f76934a85579",
+          "size_bytes": 35559
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "b619cab19c3b7d6571f93258ecf031ff0a4344a5cd29843ff40bd06d7294b5ba",
+          "size_bytes": 500
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "dd24f560824b4e7a61b926b8aa9bba257b319537d657448933ffe6d17d567eb5",
+          "size_bytes": 1258
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "df66562f1bce6a7504c3782f61d4ca220a2fe739eea931e7267ff8d6822ba0d4",
+          "size_bytes": 1958
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "71aa6efe11990edc261c5005deec9cb6ae0fb4ebb20ebd0e3d99b3037735df66",
+          "size_bytes": 3002199
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "d61de6fe88b6ecd8cfa32564c41c2b23c3b4eec881b41421c98499d34c09e0aa",
+          "size_bytes": 609
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "6204303dd20154642395599630207df9db2550735421aa7bf05481a17fe25179",
+          "size_bytes": 548
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "db455fd66b13b063615e0ef5406465d8c62b6108448f60355a04980ce5ca24da",
+          "size_bytes": 71865
+        },
+        "preflight.json": {
+          "sha256": "0ab71cce202b21c84a4e8ef0e4ad0ceda7aa293358ecdd85ebf680f93e041712",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "29c865e93146dcdd0c5faefd86e9f04839731419194ed2108a0cc1adeb1aa1f8",
+          "size_bytes": 1496
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "fb159b627516ed8074c10b8e00da5b53b71eb9e2d35cb21c4df5173636d40627",
+          "size_bytes": 2068
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "9d1566dbf3c5665e30ac6c81e41cce1799135b9c526c0172bade05c93defa927",
+          "size_bytes": 15472547
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "cb28ff95481c5ed983c9318a3efafa5f69cb2d5e1d3456283e98cca9c618bb94",
+          "size_bytes": 55739
+        },
+        "manifest.json": {
+          "sha256": "5fdaebb73d0aba97480b57d78141658015910513fced4d1db13f06516abcf5af",
+          "size_bytes": 9486
+        },
+        "resource_usage.json": {
+          "sha256": "cb28096a23e5b52f5a6a2f599cc0a156a607944acddbb8a34b10e6d0098b2373",
+          "size_bytes": 747497
+        },
+        "run.log": {
+          "sha256": "c69284bc649caf1960dcbd34738837f775757db9184b0f6e1a49cdedd84d8705",
+          "size_bytes": 3330
+        },
+        "run_manifest.json": {
+          "sha256": "5fdaebb73d0aba97480b57d78141658015910513fced4d1db13f06516abcf5af",
+          "size_bytes": 9486
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42"
+    },
+    "cdv1-002-homecredit-voting-k100-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "433595fbc52493485fd2f5323df3dbc77b536fb025056c5bdfe88fe9e9e3102d",
+          "size_bytes": 1734
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "67756f7ed8eb42b8f65be366a89ea0d0bea8a73dc284e29089efd6673db280c2",
+          "size_bytes": 113
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "6683e16f4f3f02bed2f2548065a68f5d384a57c8ad662c0fde55c01fe4937d59",
+          "size_bytes": 2726
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "58f0a5fff3ab765c89d47c9f567b9efe0921d44d20730ad9a136a59753e8c91e",
+          "size_bytes": 93519
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "71d41af9cd36cda0bb035c8355a3784a34954d23ac6eb005d6fb5956abbf9f69",
+          "size_bytes": 2879
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "4435bd7abdc7a187a5c675f66238b34e500b02d0dd9c912083f31f3a755822ed",
+          "size_bytes": 1938
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "dd9c939794a5bee0cb30da883d3bf9483c3f98e6002ff4dcdcf6c4dd9ee6985c",
+          "size_bytes": 2936564
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "225f605aa27874858d118c893d8a9b11fe6bc0437c3ee0ec26085bd079c8cb44",
+          "size_bytes": 3979
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "64325da0764b652c2e2af950a2e638dbc5b9659de2550c6930b7b70ecc06e036",
+          "size_bytes": 602
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "b9f0eeb938bfa748c7301c93cf1fc2ccdd62624f095a21a3ccbfccf42b7e7f1d",
+          "size_bytes": 93461
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "76a2eaf73b4c4fd44e183d42fa912375f3b67c62966f9225d1c3325a8ee018cc",
+          "size_bytes": 2843
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "ab01b44f9a2851503b99b12e5e42274f4d2d78814ccffa58c78e1e8989a87c4e",
+          "size_bytes": 1938
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "718572cda9ed7c21ec7d92ee2fb944d35401f28f32a059ff589db0330a448edd",
+          "size_bytes": 2922141
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "9b25cb302eaf170a2f53cbcc68b0e8a7255d686754a9fae0c3813e6b578ea8bd",
+          "size_bytes": 3943
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "d66c5a9b4b0d441d18db1b6490a9913618d88921df7e8ba15a64858542a39280",
+          "size_bytes": 564
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "ae643cd432958fc2d4cc21faba0faabc7848b3b83425ef513a04a77cb5f370b5",
+          "size_bytes": 93396
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "d87a1cdd8076f3b56f7a1a9a82af468370d7bb2cd84dc2206f8d1423cdbe3a6d",
+          "size_bytes": 2841
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "81322c10234d9aa6471f47c91d92cedc437b6732c02a9dfa84a1753f6a8a365b",
+          "size_bytes": 1938
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "faeaa5f1c1b6735a86ac4e391aa143e0845f9ed8c1e724547f9027335927a9b1",
+          "size_bytes": 2880159
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "c644ed9aa8bac87b3548f528593993ee4d45d3b6aa20e54efbe74de18945bf65",
+          "size_bytes": 3941
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "c21958c638bf996469ba5282c77f1586feb4e11212de4287a92333946608488c",
+          "size_bytes": 562
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "bc91e0691525bd7342050df4f0978bf95ca361032bb301925ba64e743054dda1",
+          "size_bytes": 93506
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "b02ccca17316441dc559f17e9f8ac8488b41375437a6dc357f5e1a73a534bae6",
+          "size_bytes": 2859
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "9c699857cae90684a31b78a6ea85ef87739985b4c70d95f61406214b94263d85",
+          "size_bytes": 1938
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "86d4c96ca950dc414c917e95cf81fc69f534d55bc0f65b22ddcebdcbd193bb41",
+          "size_bytes": 2919488
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "7b6a6304a1eba7ba476f697b1205e57b7e386840374a8adb34aed008c2ce6aba",
+          "size_bytes": 3959
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "d7232d6375909b537c3d7428d7f91eec0cfec1edd5cfd9e50ff5935d0432c09c",
+          "size_bytes": 575
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "f93e44678cb2b24c1df23544372edb5b7b62dd16ee9ef7dd200545b1d0895eb1",
+          "size_bytes": 93484
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "94744e9c6c841c5402da14a2dbad94172ac7f47f50be70d9364175bae8f46878",
+          "size_bytes": 2838
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "549c1e8e9d4009441ff2633ccea3e7573473553bd292fb3b01b7967d501c75cf",
+          "size_bytes": 1568
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "32a426cccffcbd9d852cf15ae2fb5a58a54cea1e849dc114ac563febe24202f6",
+          "size_bytes": 1938
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "9797c1e887fac87df739e059e2e6ee8fb31faaee94049469e17c28cf8217b3b4",
+          "size_bytes": 2855866
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "657f90031fba99a6a33606200fd03629de4bbd667aead7f21145ad40ffea5dfa",
+          "size_bytes": 3938
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "b84b3a80a4411c100c11121c6bd96076957208882752e7156e881646dcd59b58",
+          "size_bytes": 551
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "1e99308a69679af64d52003b4ec112eff20f407a279eccd242eeab3d5ab0c5e6",
+          "size_bytes": 4808
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "be2bb2ce0e31fae10e0b2bc56deee5123c21e8d8d485b433decdc3d9abd07009",
+          "size_bytes": 1500
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "f0d6b9f1f2737fa2e4f3fc6c8e1b444d80e5b6c2926d03ccbc982c3306b8312e",
+          "size_bytes": 2048
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "4944809077fca72fd70386a7ce6faf5afbeab72650d847da5af7d6f3f3992a65",
+          "size_bytes": 14729088
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "b34db5a3330a726070f829e22f9ba83bff8b4b0eb0818a0e4ae7bc6e9364f905",
+          "size_bytes": 59105
+        },
+        "manifest.json": {
+          "sha256": "33347f77bd6ff8714a8edaab3cce90ddd057e500af2bde3a397ea011c163b2e7",
+          "size_bytes": 9319
+        },
+        "resource_usage.json": {
+          "sha256": "f8b8322f42415fb4e135d88423d11a855d49ceb43f6d4b6a61b39b86df9faaa3",
+          "size_bytes": 2093571
+        },
+        "run.log": {
+          "sha256": "da4c1f6978514138bdd6d5ac999acb6842aedfe9d4465cb76ed3ac4715a86b60",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "33347f77bd6ff8714a8edaab3cce90ddd057e500af2bde3a397ea011c163b2e7",
+          "size_bytes": 9319
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-002-homecredit-voting-k100-lr-s42"
+    },
+    "cdv1-003-homecredit-voting-k200-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "66e0a485f04ed999dc9cb72625d4efc9645f102a45b185af211eca51c769aebb",
+          "size_bytes": 1730
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "5d434179ad82fb9f7e9b4892fe7702c2235cf7fd9e294be53114bec5531e3d78",
+          "size_bytes": 112
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "767562722bf08a6af8e3c627f325ed6e13f9dda22b24355f473327c3bfbe2bd6",
+          "size_bytes": 2633
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "221387c1a1c9e71a3a4933e016884c33ef5af3ae40ecfb6dd31d5995f60553f7",
+          "size_bytes": 93419
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "6612ca97ff305c70a16d5d17aca5eaa33a050eac7112b21c7d3b3d78e5a6ff30",
+          "size_bytes": 5938
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "3c2bf0b9b990fd059ded37fc973d5146ad5a6612e7242883f53a64f3491e2d3c",
+          "size_bytes": 1938
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "3b8a680b799763733b08cbe02c0676b0531a4666e79718d49388aebb88ec21d3",
+          "size_bytes": 2936808
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "e4848fd9ca091b3dc7556afd0aae0daad9dd7713ae9da804c0cb3a069dfb0f84",
+          "size_bytes": 8238
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "807106c2814b61b79429ca909969256fe502606180b814ea37162a4b77390a6b",
+          "size_bytes": 569
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "9d27b0341d73a480950d31f33d2262fbb65d33050a3b0551519d4f6b011e26cf",
+          "size_bytes": 93361
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "fd0f5798fde2f2d3fd38cdffeb1718ab7c4a35f60728be7463b005e10f8b61b8",
+          "size_bytes": 5888
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "2324c70e16dbb68cf81401af3e8436c73d7fac757d464dc8e3641987d5695225",
+          "size_bytes": 1938
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "f1e4d11ae0485666d4ef23caec6d29d5986ea961444e5d226df4d768ee17621d",
+          "size_bytes": 2922203
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "b45e2541d02c4fb46295babb44d2921275b9090ec3382aadfdf557c9f1fb2a67",
+          "size_bytes": 8188
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "1bf977e88f4abac96277ca83a0beb2ca2edc5ad9af0b8a5d97aaedccba0031ed",
+          "size_bytes": 549
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "6e5c8f0fafb50c7b08999fc6144aa7673fcd470b4e8afc22f5304c3ebe700c47",
+          "size_bytes": 93296
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "52ec4ca1e948cb71dedd4c81da84e927f30576725eb055b9167a8afbf9eaae5e",
+          "size_bytes": 5927
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "87b74325310afad2af7505b38d24effaa869ba6763df84769b2165f3b3a6c73b",
+          "size_bytes": 1938
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "928e2c51a48c52554b36af9877b7ceaffebcd3a738fbb8234848ff5874c41a41",
+          "size_bytes": 2879998
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "7d8f0cb98a822dc973f32177dc1f07898a9c92dfffbef4b2cfa56b0c857411c2",
+          "size_bytes": 8227
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "c9c2ff66092161fe7b0da87d3931fc6ab4564e07a1b7539ba73ee6a79c1ca295",
+          "size_bytes": 552
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "77dc1901588ce56743f78dcaf7c1eed32fe2ef7b1ec9967474779f1957f9df30",
+          "size_bytes": 93406
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "9b5925d7f6d8861928c6c9ca25cfbd3ba50fd7beb9270973ba98e09f50ec8891",
+          "size_bytes": 5910
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "4aa1d3cc892e38d1f1b4ffb177e7e5c94384f0dde5fe0bed088cf212cce448a7",
+          "size_bytes": 1938
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "6f28b9ff5fdff27a50a808827dcdf39e7365224989020df36dba379e030628c1",
+          "size_bytes": 2919495
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "648aebd355ea20f3f555f8423e34057bb2bb5b97708c54f95babfcb10ebdc413",
+          "size_bytes": 8210
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "1b9cf358fd12c5be2591f664595169f9e3a6f56572a88b5528d232941b08aca6",
+          "size_bytes": 556
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "f924af63119e1217888457403d487069ca48f1d2f5f9be2a9d48174630946105",
+          "size_bytes": 93384
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "32cca4c30f94654a27ad00584fd980acc7c7b6d76fa3c1fb0267c73e6c0411b0",
+          "size_bytes": 5960
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "549c1e8e9d4009441ff2633ccea3e7573473553bd292fb3b01b7967d501c75cf",
+          "size_bytes": 1568
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "8a1b7be244de88026d83ca93948126eb4287c0587cf506dc842c2eb396abf126",
+          "size_bytes": 1938
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "adfe158cc358de21569ad0190604ae715282e84a416a6bddced55e8f388874e0",
+          "size_bytes": 2855747
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "092bb5d52d89dc7d213876f06a350edafcc4735248e65876f47a86c38bb9f52a",
+          "size_bytes": 8260
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "ada805cbc354e775c018da5b34a0736a0743de38a142be953fd5687a76bf4edb",
+          "size_bytes": 535
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "04a6532e566f22cdaa2215c08477015d4e67e9d463855dc1af678763c0830340",
+          "size_bytes": 4805
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "b8d3dc76f251f8b1049f3dd88cd436cec012344680c8496633a9094460d04028",
+          "size_bytes": 1493
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "d39f5d950f9bf1647c32e60e330d376f1ef8588fc3712b2edc69ee5028489247",
+          "size_bytes": 2048
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "1d9abfcea99efe2ba566b0ed909e6da5952eb281151fb7c70eeb046e7513a372",
+          "size_bytes": 14728950
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "aa4a29440f8f5d7068974f62cd024f701214fc057ee48437df9ce3d98a969e7c",
+          "size_bytes": 59105
+        },
+        "manifest.json": {
+          "sha256": "0deddc543b32c8e305f82bef9e3f69640bcd4282ffd51af09371630a023fe8ed",
+          "size_bytes": 9315
+        },
+        "resource_usage.json": {
+          "sha256": "47f8c7a7716b0b75eb3e95c4a0496d5bed024078a0900aef7762bc7fa36b3a24",
+          "size_bytes": 1961498
+        },
+        "run.log": {
+          "sha256": "928852fcfa0299dd35a236e52ab274825fbcefa6d3c340bab5e6047eba959999",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "0deddc543b32c8e305f82bef9e3f69640bcd4282ffd51af09371630a023fe8ed",
+          "size_bytes": 9315
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-003-homecredit-voting-k200-lr-s42"
+    },
+    "cdv1-004-homecredit-voting-k300-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "0ed577062a9b67e915200ad0c6768a1a32c8ec81c77b744107edac323cdddc35",
+          "size_bytes": 1734
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "b3644c53b4162bdef5b15b56a38e742a7338750a3bee7c13071f0660b7c7f596",
+          "size_bytes": 127
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "65669b821910865e1d7fbc1747c30535b5b587f21e73d4c2943890b2eb021fb3",
+          "size_bytes": 2641
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "0d8661587e17ed91e6e55fd1bdae42b03f8472053ea17da9a4aca2df59b09f62",
+          "size_bytes": 93319
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "4f2ca6c70fbf792d7ddb125c8086cb28c911a1d935d77bb4a533c4c202b51eaa",
+          "size_bytes": 8950
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "368070c597620fe145e8b2185daf3b923373536bbee49e60d9c5a106395cd6e3",
+          "size_bytes": 1938
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "63eaf02ee1cd6859e4ca8ba39d9cbebd9c4cabb09e97d4a9de337deac3af45bb",
+          "size_bytes": 2936795
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "f709b4a3d8492710ca2e50103a71073f255ed056e0f90ccd4708857c748ac6ff",
+          "size_bytes": 12450
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "02f173e32349c9edba5732848a250bcfba356b18adc62d29ed04fc5ab8bec18d",
+          "size_bytes": 569
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "f67ae3e65b5bc595e33f9ab31a47085d0e90e34a1d4cc3964524b0a8d2a57042",
+          "size_bytes": 93261
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "86ef818e54d43df6cb444c9031bdac3739304e475f82337f8277ca5dff04d466",
+          "size_bytes": 8946
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "768fc1866bd847d64dd11a11ca2598cd403e074d2806d7a765fe2dea69a63cf9",
+          "size_bytes": 1938
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "7071bb6b7155e86b3fae8841b9d3d6b85b010ae6df58456b050b2af328d3d26f",
+          "size_bytes": 2922176
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "bc166107c65446372e039d476fe69e9057f54ab30b7994751320c2fd41ad5d52",
+          "size_bytes": 12446
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "72eb837d81b6e99226f3c56337fde6d26699cbba9d41cb96f992fc8051dd1486",
+          "size_bytes": 538
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "971231a30e3f9b360b864c8e362354312d30e93b1542df16b56932efa6788913",
+          "size_bytes": 93196
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "269cb4208578326902baf648448e67f8c9fa0efe6b92e21f5da5fca086a3ca80",
+          "size_bytes": 8940
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "8839325bc0304c97c41ee49bdf9be182971813e036231513fcca416e2ab480ba",
+          "size_bytes": 1938
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "8404005bef319c09c98fc092d0bc369087e36b479d17efc1e77793d2aebb8bf8",
+          "size_bytes": 2880137
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "45bb00269f30e64a702e989ba339b9d7130944bf99d5ab82ac4406e5c6721293",
+          "size_bytes": 12440
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "8bf13e750da48bbec509a41c269f80cf56257b6f741b7aae10192c1bbaafe39d",
+          "size_bytes": 556
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "465673db0fb2df7c2c9579f4fb398163fc793a0b1ab62b7a15886707f9614e73",
+          "size_bytes": 93306
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "170e4abcbc753da6e561eb8fe36c77ebb273c821cdaf7201008358c118911552",
+          "size_bytes": 8996
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "32fe4325a7523e0ddcd3d7cc04d9458ff86bbff91815ff1b4b5bf4881645839f",
+          "size_bytes": 1938
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "20ae3ebb6e0662faa47b1b2c43df965efaf68156ba9e91459ed99c4417afb546",
+          "size_bytes": 2919474
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "943814ae73143a6a8acfe514746f74950d65ef8744476eaeb05ff0df122793cd",
+          "size_bytes": 12496
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "a67ec0dbbc5e813dd48523c19a0b98eb59e04ecd943d61f27f209b85f0b6e309",
+          "size_bytes": 563
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "8bff91df0d0913d0966c017c0aeb736a5ddf4fe8a0bdd950f76d4036e6b10615",
+          "size_bytes": 93284
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "6993848737073ff7f0b13322c556e7db87c0d4ff26a36b31c1229890177fcc5f",
+          "size_bytes": 9001
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "43fb73f4227b6db7113faab6fad0392a6af6a9eeb68bca24b20f08d611540c52",
+          "size_bytes": 1568
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "49799b09dfb7669e32789fe757223c2c95cac6b56f4be94976346f5f11d3e5ee",
+          "size_bytes": 1938
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "b35dfa6a1061ce7a6e0557bc99b766df8486682caf3a3bd1997199ebf7bf200a",
+          "size_bytes": 2855761
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "bd0091a3c6081eb91ff5f0571a685f7fcc6577b6061bd5d7c7906781e219cc56",
+          "size_bytes": 12501
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "dc6a63c074505e4564579de67bca77c3972f0df234a5ed587d0dbcb85b5e729a",
+          "size_bytes": 543
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "f9a88d14447969ae37cf70deef6c7e63c065c2e9f72941dd4afcc2b3460aa63a",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "34af37b26202d8f4ceb537d9f49bf76e42233fdeb5514b7669dc9c03703cc001",
+          "size_bytes": 1500
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "24bc937eb95f57309efd1055155c1f34166350aa40b1a8acea8a9dc991a41410",
+          "size_bytes": 2048
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "26a5770dd45bb7b0fb4590c3b4393b2f2b2a56bb6297287d8f5b74671fae503f",
+          "size_bytes": 14728959
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "ca10ee9bce3a5d4906fb4281d353f7c7cb53e1634d9414cf4ad43b07a654c4db",
+          "size_bytes": 59110
+        },
+        "manifest.json": {
+          "sha256": "0dd4ae9409880a582c709cddc14adeabccf82ee78397d671cf0ca89af8fd65b8",
+          "size_bytes": 9319
+        },
+        "resource_usage.json": {
+          "sha256": "f233f7731dc0b9f12f41b3c06688ad07f6d32e6aa21aef567ed6c3fae2808325",
+          "size_bytes": 2082938
+        },
+        "run.log": {
+          "sha256": "cc1a0bb81261ac621cef230b320dbc8a0f6ad8aaf14a4489db0b3cfdd83ff652",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "0dd4ae9409880a582c709cddc14adeabccf82ee78397d671cf0ca89af8fd65b8",
+          "size_bytes": 9319
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-004-homecredit-voting-k300-lr-s42"
+    },
+    "cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "52ce8e07590bdbe4ab53de16462b7ca76358a4a56ad1661e6d8fe8ce3a6a9d6f",
+          "size_bytes": 1758
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "61f4bc0f79ae254f98206931054ef77c8b5ea4ac4af60dca4258ad567166a9e8",
+          "size_bytes": 126
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "1ec8075905bc911e0b72d7acb8487f08860463864d7cf21d62b57dd0804eabe1",
+          "size_bytes": 5608
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "8e5e9b6323e8592f5bc646936986e30a2ea868fd327062f1ea39b2ccfcb1ecfa",
+          "size_bytes": 35435
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "c6609cbfc37753961e7f1fb696e1485264f95f48422633cb14fe5c39336ab698",
+          "size_bytes": 1049
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "60eef649e17656ae974c984165cf25317082560565be14878ecfd007fad858bb",
+          "size_bytes": 1958
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "3930971a757d02d30b0e5d3a733c9d678aa94744c71fac2894638c7ccdee5f7c",
+          "size_bytes": 1976
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "b3eeee787dc9bdba2d9b29486372cca7b222642b0928852c9f9e7f428af2e52f",
+          "size_bytes": 3292690
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "5aeb69fb737ed5d98a5e3eadf4a8b2d566015503410220c0fe46baa48706077a",
+          "size_bytes": 1258
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "87fec82122bb0ca7f52c0f1e06bf54a0e7a4b8815d7759ce04c4cfb5ccfb0c45",
+          "size_bytes": 1137
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "912e53a482408bd6c7fcd4432abcfdb3e716321975361c3d419adba7dc67d3f0",
+          "size_bytes": 71967
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "461526614d1b3724810d387315952187b9d0c8788f3ff5181530f636c24e2f53",
+          "size_bytes": 35619
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "8ec5f59cc0ce785edbf223a99e9029905d5d07650531daf7954c066e9406476f",
+          "size_bytes": 1063
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "60eef649e17656ae974c984165cf25317082560565be14878ecfd007fad858bb",
+          "size_bytes": 1958
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "14d2853d3023ca5f6e1302a62b2f5794f12859261c1f0fe54cdf4ea61f27b077",
+          "size_bytes": 1976
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "48c0c10636229979ba657d2a8eb5ddf77eacebf52a250a4442c65b3fc0eaf391",
+          "size_bytes": 3275455
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "dfa6dbabea1ea47bbd8edac86588695fca549ef5bee79b922b425eb70a2f28a4",
+          "size_bytes": 1272
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "ede616323f692deca3a6be37b38b3a28b731b0adf802343c0bc7147b0bc7a07b",
+          "size_bytes": 1151
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "839da5f470981a3ee65a7e7432d3f24fecacb4ed46c2a8b0e58a2d34e228c6e4",
+          "size_bytes": 72151
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "ec667589a82cd335fd526e457857c4ae68ea7a3169905b04b24c5c2970aaf199",
+          "size_bytes": 35634
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "704d92dee3da530d76743077a1d94a2a01ce833e72280ee3734523b425e9fa61",
+          "size_bytes": 1051
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "60eef649e17656ae974c984165cf25317082560565be14878ecfd007fad858bb",
+          "size_bytes": 1958
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "b68c70268e5e345ca4d6aa2e37870821a67a01dcd458146b99906143ce73b5cc",
+          "size_bytes": 1976
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "7fe0e3c95386495ef77918539fe54747ac5560c0cbaa1b3a726e636c954e47c5",
+          "size_bytes": 3228104
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "f21fde5a1940ec133fb2c9136e87a89b6c150b1147c872dabe387e07e48df4c2",
+          "size_bytes": 1260
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "ca4a12ed8636e36427d0f11f744a83ee004dccf224507e64814a6c9ed5408c30",
+          "size_bytes": 1139
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "03d91f349d045fdc5de0d983ef91c67b1b9725a257f58c836b64dc57a0761a5f",
+          "size_bytes": 72166
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "1fd17298c6376f247e0531b3eaaae4fb0f19627845262750a86551dff6777cee",
+          "size_bytes": 35675
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "ad8f18c24b9b9e5b52e33e9b36d79f7a9f4ee63ef957a0f4d40ada52a9649825",
+          "size_bytes": 1067
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "60eef649e17656ae974c984165cf25317082560565be14878ecfd007fad858bb",
+          "size_bytes": 1958
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "eded84b4a24cbef6e32e5af5e742b717bb4d97d9474fc916900efc84f797578c",
+          "size_bytes": 1976
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "a1ec4e4d78a344c1fddc4bf6db477d86e618dddb4adf9f062c481e4c96c4e4fc",
+          "size_bytes": 3271642
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "2d8a82f89c2c647d34d7edb711c9b96a330afd84fd6c59a097c5c07cbc39ae41",
+          "size_bytes": 1276
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "032bc17069c435bc875e8c58e51e4077689f3f61ee3dd338627a008c283cd7a4",
+          "size_bytes": 1155
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "f503e1a4a99ab672fdc49229e744ae731f1d88ffacbb7add9d2201e892ed760d",
+          "size_bytes": 72207
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "81a70de56105c47c807d09fd72a458bd89dcdd2eac4d5d0e1c74be19d0d431d2",
+          "size_bytes": 35639
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "d659f94566e8680dd987643fb2615ab1dd8a639973ff6324157dd99dd03f5e94",
+          "size_bytes": 1066
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "60eef649e17656ae974c984165cf25317082560565be14878ecfd007fad858bb",
+          "size_bytes": 1958
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "9e73801fc3476ff2ef000f81e5921626b95dc8fc3a777225d4d366c3df948dcd",
+          "size_bytes": 1976
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "77961fc8fc32623374b47ba11d3de3009405ec9c050d2f58819fcc0357cb2334",
+          "size_bytes": 3200233
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "f3c3f7dbc53fcbcf9f421198c0bc3b34360793a60a51020e10385e48f9c65554",
+          "size_bytes": 1275
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "d3293284b71ce88f78fddd3591f6bb7182064485c03ed1eac71ce7c159e299e8",
+          "size_bytes": 1154
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "9fc85a34a3c748f4dffd993b80c66e6552fb455d19041352a5a2e05ad09c7bf3",
+          "size_bytes": 72171
+        },
+        "preflight.json": {
+          "sha256": "cce77e7f0dbfd030880fb768f1461199e45ff6434dd1a4843f21bbf1a22879b0",
+          "size_bytes": 4806
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "ac7d851be5f478446cc26cef184b00f625a577520ed320043b102de116a75485",
+          "size_bytes": 1505
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "526369cd3061a4f0d609f76b88585aae8aa4f2721da51145f6b602a410713a32",
+          "size_bytes": 2086
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "240ca63a289e1fc4d587f7f02e343721135b59defd2f90b612d76ee8f35a68f0",
+          "size_bytes": 16464615
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "723e962c1034388908caa165fec184d2b5f7673b2c39d021bd4c8780d58f2d57",
+          "size_bytes": 54620
+        },
+        "manifest.json": {
+          "sha256": "03dfec39b67129c1cbb9683841bf07071e5ef57d1d4c2cf110c185a5558abe5f",
+          "size_bytes": 9398
+        },
+        "resource_usage.json": {
+          "sha256": "7c37990231c14d4a699136f16345fae58fb93f5c3f4fad06cfce62562fed5872",
+          "size_bytes": 761672
+        },
+        "run.log": {
+          "sha256": "835cae1c61cb8323b4b7a68836249c38d476934df1ddd83f05a6ba10085a0396",
+          "size_bytes": 3330
+        },
+        "run_manifest.json": {
+          "sha256": "03dfec39b67129c1cbb9683841bf07071e5ef57d1d4c2cf110c185a5558abe5f",
+          "size_bytes": 9398
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42"
+    },
+    "cdv1-006-homecredit-voting-k100-catboost-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "f323de42a8d76a67bb2d6f40f78b5bcaee2cc279a695e22ed40735dc88f577f8",
+          "size_bytes": 1758
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "7f47f30fc89805746da2f0adfe6fd1d0a950bcaaab67775a6414742f952d3b66",
+          "size_bytes": 128
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "d533ed899ec14b61483b97612cb8e1fe46df9ae259eead12ae164c9a61d9b571",
+          "size_bytes": 5738
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "58f0a5fff3ab765c89d47c9f567b9efe0921d44d20730ad9a136a59753e8c91e",
+          "size_bytes": 93519
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "71d41af9cd36cda0bb035c8355a3784a34954d23ac6eb005d6fb5956abbf9f69",
+          "size_bytes": 2879
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "a5497c38be87784d907ac3b563defb495fe3ed60b3befaa80a3315db7d904c01",
+          "size_bytes": 2268
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "8af09075336d87c95e7eee8e776fd54ac40d383b1d5201835b1ac90f3b7aa956",
+          "size_bytes": 1956
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "c4f2877d9c44b10c80a03fc979ad3a5a209307680acba5fd158fa02035569411",
+          "size_bytes": 3141930
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "a61ad7e4c85d5357fed575cc044af448d11ab153dc821443abeabbaeff3a0820",
+          "size_bytes": 3959
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "2812cbdc8727cdb7f20c9bb69bad1083d6c5945790d561395fbc7a2413422cab",
+          "size_bytes": 1202
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "b9f0eeb938bfa748c7301c93cf1fc2ccdd62624f095a21a3ccbfccf42b7e7f1d",
+          "size_bytes": 93461
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "76a2eaf73b4c4fd44e183d42fa912375f3b67c62966f9225d1c3325a8ee018cc",
+          "size_bytes": 2843
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "8804aafc3c5980f8e1c52dc6bd9f1bfc5e90c06864a03b836f2c5c9db497ae37",
+          "size_bytes": 2268
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "5be9f90cacdf57dc5bcbeada1e0dcc3828076629a1bcbd0fc7cb56adbaebce25",
+          "size_bytes": 1956
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "f6e0a774527ceab2af21a1c0dbd09dcb83d01833330de6ad144158aaa5a77c50",
+          "size_bytes": 3125817
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "cf5abbcda692eba5bdbcd9caac1af2509dae95991b42a9622a676335ba3b5312",
+          "size_bytes": 3923
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "81c44a18df068c1320c29fd0cc31de06eba7656395839899ae357c434c835e54",
+          "size_bytes": 1180
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "ae643cd432958fc2d4cc21faba0faabc7848b3b83425ef513a04a77cb5f370b5",
+          "size_bytes": 93396
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "d87a1cdd8076f3b56f7a1a9a82af468370d7bb2cd84dc2206f8d1423cdbe3a6d",
+          "size_bytes": 2841
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "66cb0bb68b7af43fb523904ee325cea305a87fbff95e25ec3676aa00719cdbee",
+          "size_bytes": 1956
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "79bd6d4c5b8bed067d4a7f51affb326149f413a40f8d594b35bbb8dc62ec06e8",
+          "size_bytes": 3081067
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "360e4ee80aecc3b32915ae992eff719ec1a0b91c51dd408614d0f9956b1cc3a2",
+          "size_bytes": 3921
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "c18a68577854e3475963349858969e2201da914fed056fa2539c6b9c9bc6eac7",
+          "size_bytes": 1185
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "bc91e0691525bd7342050df4f0978bf95ca361032bb301925ba64e743054dda1",
+          "size_bytes": 93506
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "b02ccca17316441dc559f17e9f8ac8488b41375437a6dc357f5e1a73a534bae6",
+          "size_bytes": 2859
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "8222189b78b1a796c6ca9600f86d1bfd20b0eb85768b3fbc0658daf13523c2b5",
+          "size_bytes": 1956
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "bb0f02fedaf17a70f406906ffe235a91e5e1897c7c9e0a0ce153e64e48044978",
+          "size_bytes": 3122586
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "4d09dcdaace089d0203f9bb0baf31551f283d6ddb94a04ffe7e99294c0f2dfe0",
+          "size_bytes": 3939
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "06b3d6988484995fe75d5aa42d4dc6273d84171a0910f811876d587ebd2ca3d6",
+          "size_bytes": 1165
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "f93e44678cb2b24c1df23544372edb5b7b62dd16ee9ef7dd200545b1d0895eb1",
+          "size_bytes": 93484
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "94744e9c6c841c5402da14a2dbad94172ac7f47f50be70d9364175bae8f46878",
+          "size_bytes": 2838
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "414abab04a4428468a32fa53d042de4fd94fb361d31896a8a797a87fb50daff3",
+          "size_bytes": 2268
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "5162cadcdd5b42b85e00ffda7c13f292ce465ec7d75fd4177e5ce006ce21a877",
+          "size_bytes": 1956
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "20c1cfc565787f34ad8fed76013ec33e183a5c36d6b2be93b38d3d0f84457695",
+          "size_bytes": 3054317
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "f0594653475b31a83e62b9a8f4e62d6895383a7a1ec2841981d67f10713ffc89",
+          "size_bytes": 3918
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "6883244b2c454ebd57263d6d19c8c9f622a130d9a060db708611e27555723894",
+          "size_bytes": 1134
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "09e8b8f319bb29cab9f9e17c3493f351aa996de66f026900a052c8de801cb4a3",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "ac4eb3fd45047f4bdef81a7b70f49cff33ea109c2624a92a9b3cee27a8c664ec",
+          "size_bytes": 1500
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "34c86072fe559274ce4013614c1fafdc8f0269deaa7192b5b66cfa096a4fe205",
+          "size_bytes": 2066
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "069bb0fc1964f6a6670055d8c76bfbe48478a6947363948a58505972dbe12609",
+          "size_bytes": 15720886
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "c30448b447ee9a71a0efa4923323028e84b928958036a0cbd675f39e913ccc02",
+          "size_bytes": 59140
+        },
+        "manifest.json": {
+          "sha256": "8a79d3504a94bf9ec112e55ab2f4a16029d6abb9deaa3ee81612e1d3fe3c825b",
+          "size_bytes": 9367
+        },
+        "resource_usage.json": {
+          "sha256": "033c6d2a8d0ce14b5d6d611a5384d07d9d6e7ec8867c9815f6760695f032fed5",
+          "size_bytes": 1544604
+        },
+        "run.log": {
+          "sha256": "795d1c89bc059b53d96dd0a6e45b51e975b0231def543e99385242eee1b18833",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "8a79d3504a94bf9ec112e55ab2f4a16029d6abb9deaa3ee81612e1d3fe3c825b",
+          "size_bytes": 9367
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-006-homecredit-voting-k100-catboost-s42"
+    },
+    "cdv1-007-homecredit-voting-k200-catboost-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "3fca6e7f0eaed607765785efc74a47a5465d1629e31d2265b6a6869b16416a22",
+          "size_bytes": 1754
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "a68e979fb804acbf9871be6c45d0a88446e3be35c9dd7508174b8d33689add35",
+          "size_bytes": 128
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "6e8ef98545d864b60fcb8b69cedfb744cc2fef4b47a9804fe0f02d2fdc9bf426",
+          "size_bytes": 5548
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "221387c1a1c9e71a3a4933e016884c33ef5af3ae40ecfb6dd31d5995f60553f7",
+          "size_bytes": 93419
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "6612ca97ff305c70a16d5d17aca5eaa33a050eac7112b21c7d3b3d78e5a6ff30",
+          "size_bytes": 5938
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "f539f14d4f09858b8512191cbc4aec243890a763bfb660df869fd4e16dd560ff",
+          "size_bytes": 2268
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "c0d53448b249323f012107ef2c0063b91d14c482aa0e56c3d9a1f5245c5681ac",
+          "size_bytes": 1956
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "09c721544bc6a34ea502568062e917b217a7f8603704a2156e606f86e288d69a",
+          "size_bytes": 3142771
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "23001f2ff2e3f3670e2f868f006c7edf93d15127922704a8330581aa6a2f64aa",
+          "size_bytes": 8198
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "715f69ec4c2608c71719195217b3010f54c38f42d96957d10212927c177f63ad",
+          "size_bytes": 1144
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "9d27b0341d73a480950d31f33d2262fbb65d33050a3b0551519d4f6b011e26cf",
+          "size_bytes": 93361
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "fd0f5798fde2f2d3fd38cdffeb1718ab7c4a35f60728be7463b005e10f8b61b8",
+          "size_bytes": 5888
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "a4956503688ebea33a8095b92a1e64ce54bbc9f01324774ef8e6135908ffc706",
+          "size_bytes": 1956
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "612368f001f0adedefa116531d13ade6ece5ab38268e217920b4b83c2c9d94dd",
+          "size_bytes": 3126643
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "d7bc6be58c2b679a25a5d8e0c339937194b43ebf34db6548bdb04f1541a9e484",
+          "size_bytes": 8148
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "f7832effa37030d25d208cf71433e7fceae6487dd0fa39835d5d554c1881428d",
+          "size_bytes": 1127
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "6e5c8f0fafb50c7b08999fc6144aa7673fcd470b4e8afc22f5304c3ebe700c47",
+          "size_bytes": 93296
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "52ec4ca1e948cb71dedd4c81da84e927f30576725eb055b9167a8afbf9eaae5e",
+          "size_bytes": 5927
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "ef2b54cecdc973f52b39c9dbf21d7db54467275089780652973b1541fe1f44a9",
+          "size_bytes": 1956
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "d5ad34fb36d84421a6241c955fc7af0e4a6ffddf80b203e7aa75c2321f0bed04",
+          "size_bytes": 3081234
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "e0a9e82b2a0cc272f33a2173480f43b3889120b80f33f14813692220bb2a176e",
+          "size_bytes": 8187
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "afce7aa606b403201cdd69213af2b6d2e8a8439af4238d61fbbab4585cf985b2",
+          "size_bytes": 1128
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "77dc1901588ce56743f78dcaf7c1eed32fe2ef7b1ec9967474779f1957f9df30",
+          "size_bytes": 93406
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "9b5925d7f6d8861928c6c9ca25cfbd3ba50fd7beb9270973ba98e09f50ec8891",
+          "size_bytes": 5910
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "e083c3c9f0cb5246e7b93d6ba67673926945935b2c4c240ed7fab48b8e2aad69",
+          "size_bytes": 1956
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "2afc339f99fa010e57d0399e399593e7229e337e62682f334ffa760ebfe6775c",
+          "size_bytes": 3122840
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "bbacfde1ac33d99019a569889318e63ff74207f63fa153eaf83320b7aa418f1b",
+          "size_bytes": 8170
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "5811d235d0935971761e70d19ed2f131087e5145df6369cedea62d729c15a108",
+          "size_bytes": 1156
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "f924af63119e1217888457403d487069ca48f1d2f5f9be2a9d48174630946105",
+          "size_bytes": 93384
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "32cca4c30f94654a27ad00584fd980acc7c7b6d76fa3c1fb0267c73e6c0411b0",
+          "size_bytes": 5960
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "261838d19ae3f62858a8864cd7c9091ab515a8ed2dcf0149ecff4d91ee044b98",
+          "size_bytes": 2268
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "8145ac8f3c1f953d61898a6f2e56734b8c1e87c44f483d7e1447c6f24bf9b2a8",
+          "size_bytes": 1956
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "36026b27fa02e1120eb94fa14f9ed072dfa2960fff4c302fb65782534e61a628",
+          "size_bytes": 3054364
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "c656e86aad0a9dffd205423599493dc145d76dc7bb2520d0c1dacad2974c5526",
+          "size_bytes": 8220
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "3768b478a025a1a29dcfbf4129770bc05544aba8edd577ed0c70b4d33f180e2e",
+          "size_bytes": 1121
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "0973ee6c86a1e540fe8532203865a4f2266aff73d221bee3043bbf8aa8ae7bf7",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "96995a9f4bb32788e0ca05dd50f5b69f5656e647cca97851f21a711fd5c3afa1",
+          "size_bytes": 1502
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "cf254f2f1f2a3809093cb89294f86ada2db0b3b289734b9ff6ec8c6b074163fb",
+          "size_bytes": 2066
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "9f1219e351ae85fab55bafacfffd8fb0757b0447493aed300977fa7c3dd80cbe",
+          "size_bytes": 15720953
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "c4383b51cc7752a41282e1991ae08357bfeec2a5faa8f93a466d5e7d3b054d4b",
+          "size_bytes": 59140
+        },
+        "manifest.json": {
+          "sha256": "e94a666e1105aad2ec015bde2de5e172d04537882b643b22db555a51083b88ce",
+          "size_bytes": 9363
+        },
+        "resource_usage.json": {
+          "sha256": "52a9b0cbb4dcb185a559ee52fc99d3f43d51b26140fedac8946583715603b4bf",
+          "size_bytes": 1779881
+        },
+        "run.log": {
+          "sha256": "4d8a6de5f16cbe89acafadbeefdfc018e4ef4de14907c3a8002cae67113794c8",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "e94a666e1105aad2ec015bde2de5e172d04537882b643b22db555a51083b88ce",
+          "size_bytes": 9363
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-007-homecredit-voting-k200-catboost-s42"
+    },
+    "cdv1-008-homecredit-voting-k300-catboost-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "de26c601765ec70b338b1a0f0e86fb88b986be00cb8874462361cbb3d056afbd",
+          "size_bytes": 1758
+        },
+        "data_access_dev.json": {
+          "sha256": "6bc03e5485eccb76e15d3d57d7bf558073fdd9deec487afae9062d8ba74366d9",
+          "size_bytes": 9866
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "6450417feae6c14ca8f18e84d75682db91701a15b978a372414c86160f855b66",
+          "size_bytes": 127
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "8d3039a44d2f1215edc3e0a62eca1d9e2083d160ab5b9be7b8643a87b4e44a3a",
+          "size_bytes": 5533
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "0d8661587e17ed91e6e55fd1bdae42b03f8472053ea17da9a4aca2df59b09f62",
+          "size_bytes": 93319
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "4f2ca6c70fbf792d7ddb125c8086cb28c911a1d935d77bb4a533c4c202b51eaa",
+          "size_bytes": 8950
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "f539f14d4f09858b8512191cbc4aec243890a763bfb660df869fd4e16dd560ff",
+          "size_bytes": 2268
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "ed73cdba3b7afda710932450d699a97fed8310a655fd1b82f4d4b4bf9a79370e",
+          "size_bytes": 1956
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "bd8510ae6f272c1e1e0cdc8bb816a201ea61741e4a37c609e2b1a2ee2257c659",
+          "size_bytes": 3142729
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "8d95d45ad0303d803e1d0dba471249559751857d3df27ac5179ea1c0c60113d5",
+          "size_bytes": 12410
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "ff5cd2af1d0b9911aa4491ada3f48cb3c13f0f60bfcae76f3f4fcfd0c6586a96",
+          "size_bytes": 1133
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d",
+          "size_bytes": 736095
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "f67ae3e65b5bc595e33f9ab31a47085d0e90e34a1d4cc3964524b0a8d2a57042",
+          "size_bytes": 93261
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "86ef818e54d43df6cb444c9031bdac3739304e475f82337f8277ca5dff04d466",
+          "size_bytes": 8946
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "e128cece7428aff0819ed1cf16405cac3273c676f36164a60402c9384a68e1e2",
+          "size_bytes": 1956
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "5408ec9416a91c6a7e276f64a6df35cad5c8e7b5a60e4060e2e678b09eb01307",
+          "size_bytes": 3125942
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "e64fc2f0931db0659cf9fd3ba8f503abe9a5c99f84e29e08cd2d0146ae41c2f1",
+          "size_bytes": 12406
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "71aaa86d96fa06935f6fc5095a814b1ab4da7341781affef66274698f175da62",
+          "size_bytes": 1124
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "a7517a010ff34fa99acf5ebd950543eb089e493cbe7d06cdb744e6447fb18763",
+          "size_bytes": 736279
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "971231a30e3f9b360b864c8e362354312d30e93b1542df16b56932efa6788913",
+          "size_bytes": 93196
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "269cb4208578326902baf648448e67f8c9fa0efe6b92e21f5da5fca086a3ca80",
+          "size_bytes": 8940
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "d27d7571295f480722b8405c01118607ec4bb01de4168f004360a644992b2549",
+          "size_bytes": 1956
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "30650480ab70ca8f949a52d2d4a66ffbe559cf17ed9b0c34b0c8499179a6a13f",
+          "size_bytes": 3081283
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "225efbf4aacae4dd2ed973ccafa7a737299a6c2ebf595ce1afc0311ace5534f5",
+          "size_bytes": 12400
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "1f84c07bfdce30f6acb5f8a0015915d7e551e9b3e5487beec5facba931c91d45",
+          "size_bytes": 1129
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "2076d98046e292cc614007535aa73816f8e397019a3c2f3d502c5d0809825058",
+          "size_bytes": 736294
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "465673db0fb2df7c2c9579f4fb398163fc793a0b1ab62b7a15886707f9614e73",
+          "size_bytes": 93306
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "170e4abcbc753da6e561eb8fe36c77ebb273c821cdaf7201008358c118911552",
+          "size_bytes": 8996
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "2f7817760e10fd7c68a08d9ca52dc603e34b622394b94601d674169b48264eb0",
+          "size_bytes": 2268
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "8213a3a996b4cd25b25b848eecec2f04acd33a0853b24681458484f270ad1f39",
+          "size_bytes": 1956
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "7fc4e3890edce99f761a4065312679f4a4ab806225f6c2767855707fb641b1f6",
+          "size_bytes": 3122930
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "e21de23f9f536ac51bbebea6a91137f811f161749692e6cc3cfd6f9bb555505c",
+          "size_bytes": 12456
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "416f4926d7663600bce670d227b1fca5a46c7c514416da7e7c767a6eddefb697",
+          "size_bytes": 1145
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "237d5b9289769249422a3f943451a72f5fed5a8d6f948dda6498b5a1b4322f73",
+          "size_bytes": 736335
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "8bff91df0d0913d0966c017c0aeb736a5ddf4fe8a0bdd950f76d4036e6b10615",
+          "size_bytes": 93284
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "6993848737073ff7f0b13322c556e7db87c0d4ff26a36b31c1229890177fcc5f",
+          "size_bytes": 9001
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "414abab04a4428468a32fa53d042de4fd94fb361d31896a8a797a87fb50daff3",
+          "size_bytes": 2268
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "ed039883844114a66b5bbe52e0b1222ac59245538c2b78949722f10f604072ca",
+          "size_bytes": 1956
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "4129c1dc0adf872f52c5cc44bfa6b3c9f8273dadf568178eb0ec443d685c1b9c",
+          "size_bytes": 3054347
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "4b4f4bb5bd760a0bcd6576915eb73382c03c9ea3fb672a737608ea6b29f1768c",
+          "size_bytes": 12461
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "d8b3db600a66469188071c1d82b937c2b7758fbe1c23acba1f605e525e9fcbcb",
+          "size_bytes": 1130
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "7f18ce5f0a9ec2973abd8228f1e07e7f8fc671323467535623c24a7ce85d9f7f",
+          "size_bytes": 736299
+        },
+        "preflight.json": {
+          "sha256": "976c934a3dcfe8a10af0a55980ae53addfeb759a04e9d9e44ca6fe8df0ce7359",
+          "size_bytes": 4807
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "7dd3fa7daee6bd33160b053c0eced722331ebd079cef3b0c4f0f3bbbfc572808",
+          "size_bytes": 1505
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "ba2456b6d17317e361eb094364e22a901ca8540e4cf872459f625cde39e96f4f",
+          "size_bytes": 2066
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "ff919aefaea4bd100385af54ddc148558d98f9a6958521154b9b6797af8ee350",
+          "size_bytes": 15721010
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "506e3e4e786eb5a781d3181af2cb4eeeca2816044348d1264ba473c8b61947b4",
+          "size_bytes": 59145
+        },
+        "manifest.json": {
+          "sha256": "726e6f6d7e7a7520ae69c79cc9d6691b2a0d36e74133dba2bc7348cb2c51fc92",
+          "size_bytes": 9367
+        },
+        "resource_usage.json": {
+          "sha256": "75d65a2777676e97a96a077f38adbcd77aee0acaed74fbae92660fc04fba9a5c",
+          "size_bytes": 2128918
+        },
+        "run.log": {
+          "sha256": "f528b8510c473ba7666769ba865d482f7a191074fcb47a65a3cce71a1e1145f5",
+          "size_bytes": 5377
+        },
+        "run_manifest.json": {
+          "sha256": "726e6f6d7e7a7520ae69c79cc9d6691b2a0d36e74133dba2bc7348cb2c51fc92",
+          "size_bytes": 9367
+        }
+      },
+      "run_directory": "results/runs/homecredit/cdv1-008-homecredit-voting-k300-catboost-s42"
+    },
+    "cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "f22347d0fd399aac94b29c667c19e5489e7cecd5d497e54364d225232dcb3dfb",
+          "size_bytes": 1746
+        },
+        "data_access_dev.json": {
+          "sha256": "69bbf24496308093d1f8332fb4eb84a11a3e2cc4d1213f6cca409d3f28850485",
+          "size_bytes": 27710
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "88e2515148b2eff2ef87fe1e7c32d8b764b5e6a5e9466ae14fda487e6aca0578",
+          "size_bytes": 126
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "8828936303ad703190483453ac37a413b1b4301c34bbf4cac0c02731e962ce34",
+          "size_bytes": 2669
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "7e9c430cfada1a121f93b602e5d2685c264b53259b996ef0f9dab00a6e73a07e",
+          "size_bytes": 43831
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "b8cd4af050eaa745f2091e3ffad54f460d6907743015de369b4fc93b4a4fd187",
+          "size_bytes": 545
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "68b25c0291faf3f6e2ac13a92c3d89f8d136d43bedd079d5e208bcb5a2ba092e",
+          "size_bytes": 1295
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "54f206da005a4f00d3746b7a7c749ad40c85c291cf2953d9347ec8156099b0ee",
+          "size_bytes": 1979
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "8b479bce550572efe96c3c9ed1e272b8f38758dc6392e0a74243a89881871978",
+          "size_bytes": 22308513
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "e10b12b4fd32b717e5272ba5a8e2f840593c6ccdb9ece9040ef848d4c8e6c0d1",
+          "size_bytes": 654
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "aa5c89bcc5c6dea238898c5604ca31b5a1a08f1cac06b3227acec586bfd27596",
+          "size_bytes": 593
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "3835fd2f76ba59a969765d084939c20ac737eadfc1b0ddc0f51c8f3f0de58ebd",
+          "size_bytes": 90351
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "fa1555197cb3d657d628bda4468292a68621d38a2557a1eb70146e6c8a5e6e77",
+          "size_bytes": 43606
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "efd6bc1a338a8360d392cd7d10b1c19e582343beeb4d4d642c02df4439227bba",
+          "size_bytes": 521
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "912329fcb2f9a540f66dcd7b8007357faa078699bfc51024210116d699f7d9d1",
+          "size_bytes": 1295
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "095f868c40c762be87aabad4595bb93cac5ad2495c8818444b55b8fce1344113",
+          "size_bytes": 1976
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "b08f2660c3eb7edba6226f20137413bf15aac2776983e5ed0d109013735628e4",
+          "size_bytes": 16810202
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "286a15de8038418eb06db2293a88d1026fe59b5d6f39c3ec0b5644c474a435bc",
+          "size_bytes": 630
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "39123e79ad430e201588c55754ac1e42cb1ea8928b8328012d1526fd50b02238",
+          "size_bytes": 569
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "427273399a813f14804878d5da63a664ca46e4064bb079a967e8fee8795faa9a",
+          "size_bytes": 90126
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "2a48c4f6e0b4e3b3ce58b717c7077734d4c0f0e59d984bb35a10e3fcbe307ab0",
+          "size_bytes": 43515
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "0a057e307b0b147606398491ae46f85a80eb2dbbba44d21e0551b02549e5a5d7",
+          "size_bytes": 488
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "4b13771030b69feb5a681e45574e6305365d59c5632e7fa978a0894cbcc818e2",
+          "size_bytes": 1295
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "75b826ac47f74a99ad2b2009493d06d155a8635ad74a416b8e6cb40ea98518b6",
+          "size_bytes": 1979
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "e1239c380cc1a70e9b803776ce00b48d6408e5b16698180e1db24950d00284b9",
+          "size_bytes": 24806836
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "36bbce42354303fcc3fd6bd5a1f266ea25858a6939ebd8b67a86b579261105f4",
+          "size_bytes": 597
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "af67949b2fd6cee29fd42167a30ab776b1cd7fdb78e74d44f0c53eab29eca428",
+          "size_bytes": 536
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "0d2ed65464d0a7a9573be4306ababbcd9697b77c58beb607ccd93871515b4c16",
+          "size_bytes": 90035
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "81d8fe42777eebcfcd5988eacbf54e8c9ab16f3bb244b0254a875a3723a694ab",
+          "size_bytes": 43231
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "7036fb19f8be47b5872b9c97f3e66f33bfd46ebcc5dd6cdf004ffc07f1dc53c0",
+          "size_bytes": 512
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "4b13771030b69feb5a681e45574e6305365d59c5632e7fa978a0894cbcc818e2",
+          "size_bytes": 1295
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "0fc6d8eae21446fc11aaef127412b9e7392385f1999049ecad75eb34c3169f98",
+          "size_bytes": 1976
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "143d0119142c564efd8bd4164bb32c327f2fe96a6afdf9381ce7bd575c36094d",
+          "size_bytes": 19480069
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "679d269cf582f34350b60119d0e2da8d7547fc2f07adca89cc7fa0c5028050ae",
+          "size_bytes": 621
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "3d16624f7326d3b3a0ab707ca336c14a6d0febe3863816b09e5c5045e46fa0c0",
+          "size_bytes": 560
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "c7d051059f281e6f9833c7ef453afbec474073e72aa52d6bfb3e2ee81662f275",
+          "size_bytes": 89751
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "5389ec3df6cff41e8ef0103b92db423ec414cdf81ba6e7bb04af542246171637",
+          "size_bytes": 43245
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "7e6021b87eb005078badf44037d168c1f8cf914d058ee5ab92f31e975b697835",
+          "size_bytes": 491
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "4b13771030b69feb5a681e45574e6305365d59c5632e7fa978a0894cbcc818e2",
+          "size_bytes": 1295
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "caac1999f040ba6096508428ab835a539702c7324dbb9e1836a86057f550e52f",
+          "size_bytes": 1976
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "f86b8717401600e3d5db792d7db80b30bc7106734834a22d4108ee1af8ceed18",
+          "size_bytes": 14028160
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "aa15047ea4776d389cd5968169f5cb02b1ef80dc00304afadd84ca059f10affb",
+          "size_bytes": 600
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "f165e580846af2681843b98f10a393519d9784c7ebaa8863d8e7a5719c14ae7d",
+          "size_bytes": 539
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "21bdd739801fe6d9371ae75325d31dab61a5d5af0fa81861be0d70408e150a49",
+          "size_bytes": 89765
+        },
+        "preflight.json": {
+          "sha256": "a36a73a1e664dc69436e25b58567bc19a5937fc8929f371240b8f4cb2807a232",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "a061c630cbf107f34c499fa2a56f1ae420109b3e355ced27fba61a58bd411921",
+          "size_bytes": 1519
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "1f3ce0619ad2f859b99d867f0827aa2c14a9358e2313337980da43a6e280cb1e",
+          "size_bytes": 2088
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "0d092874a37e38d71ef880042862189d9eb14f094b9cb6529b4e73ccbba40dae",
+          "size_bytes": 98764262
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "3eff70b0b68358b47419c81dce3607dafb4f7ba1fb9732762863fa2a381d5fe1",
+          "size_bytes": 54604
+        },
+        "manifest.json": {
+          "sha256": "bbde2a472b66f1192439049a50eed0571c3eee8b1ed1e75ee1acf6b41e32f4bc",
+          "size_bytes": 8375
+        },
+        "resource_usage.json": {
+          "sha256": "24657ba51f01e277dbd2a46137a00a452c09fd7b0d87edf88eff84688a797781",
+          "size_bytes": 642603
+        },
+        "run.log": {
+          "sha256": "7d8ce693f1bca1632482f9b8a29f6eed8a094ab5aaa6c3a7d1cad41c2889c530",
+          "size_bytes": 1190
+        },
+        "run_manifest.json": {
+          "sha256": "bbde2a472b66f1192439049a50eed0571c3eee8b1ed1e75ee1acf6b41e32f4bc",
+          "size_bytes": 8375
+        }
+      },
+      "run_directory": "results/runs/lendingclub_v2/cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42"
+    },
+    "cdv1-010-lendingclub-v2-voting-k100-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "4bd706e64dffb895cbb100336f28ae363f0160034766e8da1c51887f0eeee5b7",
+          "size_bytes": 1747
+        },
+        "data_access_dev.json": {
+          "sha256": "69bbf24496308093d1f8332fb4eb84a11a3e2cc4d1213f6cca409d3f28850485",
+          "size_bytes": 27710
+        },
+        "features/feature_stability_metrics.csv": {
+          "sha256": "b64fa7ae49b104209d8fbdd9d3e9923b6c8dc13f966e58b2aea88cfe6ac4f72b",
+          "size_bytes": 128
+        },
+        "features/fold_selected_features.csv": {
+          "sha256": "e49ecf39c882f1889500cb41084a911be8b0336e92fa75b04f3d429726c34ba8",
+          "size_bytes": 2818
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "01dca1127a8ecb3157a06603cb199b8183bf3ef796cf0729de1cf063b5a05e03",
+          "size_bytes": 121649
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "6e3c70c4fdb8e4e5f21417dbcafe45abb5f5f4fd0f950962e381a56c8545c786",
+          "size_bytes": 2802
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "b8bf299971e9a8e6f9c3ba9960b0e981cad3f829dd344b5ef6a071b109a00e7f",
+          "size_bytes": 1605
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "0cef3a457d383d27bb16232b2148e021a4cbffc190a17a8564180a2006e65539",
+          "size_bytes": 1959
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "0c3bebc52880ab3773c44dee27385967f82e3dfe860c34f3d12dfee30d1eaed0",
+          "size_bytes": 21280346
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "3e93ba5b4a5bde9d6031b636ee94379a769b990c7c17ab0a6691dcd2b9cee7d8",
+          "size_bytes": 3902
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "68bdcd5d0aa3379a5f31ebcc11086c2a1b279201bcdacefb0fad33e93a0f0376",
+          "size_bytes": 616
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "f272e5e3b557ebf9ab44df069ed44777cc955490efb39b8b2ede8f8c8d9a6dcf",
+          "size_bytes": 940532
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "077cd9734de5900ac8412e4ce6177af5d6b3b67db1c572507ee5153390021ad2",
+          "size_bytes": 121639
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "3a16a3923361f1663028895b2b5cc3246d8775485f325887debe1c1dbda83312",
+          "size_bytes": 2728
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "3061913cdbc559ca5d9f3e038c5c9baa667b20afc08ec2c6e2d9a2f402836545",
+          "size_bytes": 1605
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "6d6a620f67c13fc45234d2d44d37985ba7a89528260c8dd123c542671aa28094",
+          "size_bytes": 1956
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "53677c68530409dfac2ebdb0c143deecd5f5b34fd10d0059c7cb9279b3657a25",
+          "size_bytes": 16035210
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "3356bff8c70bc1b38e334dd7b24c3c30e00c7e2ea17e1f81a36f29012723ddb4",
+          "size_bytes": 3828
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "2fb85bc2df6a9d7b52a1ed6146eb150999280b3201f7c2b85c1c164f95050505",
+          "size_bytes": 607
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "b700eb64935f42f7d6ed295c9bb18ef43b670d15796c85db9a77a2c29472f7a0",
+          "size_bytes": 940307
+        },
+        "folds/fold_3/aggregate_ranking.csv": {
+          "sha256": "8e4258fa16e10dc31964e652ae1e0bb14400143451d29c8fd6b05368eed9c520",
+          "size_bytes": 121632
+        },
+        "folds/fold_3/candidate_features.csv": {
+          "sha256": "5b0d3241d10c266779ee0763fd63b08d7e5c4862392bcf2c1c711fa613a33087",
+          "size_bytes": 2653
+        },
+        "folds/fold_3/effective_model_config.json": {
+          "sha256": "3061913cdbc559ca5d9f3e038c5c9baa667b20afc08ec2c6e2d9a2f402836545",
+          "size_bytes": 1605
+        },
+        "folds/fold_3/prediction_metadata.json": {
+          "sha256": "c05adfa5a659e2c62109eed6189ff00bf6e750f274799df075833d95dfd1f4d2",
+          "size_bytes": 1959
+        },
+        "folds/fold_3/predictions_dev.csv": {
+          "sha256": "4039fefa96e53be0e0744b980b2bb1b8b376d17da447684875dfc9402fea049c",
+          "size_bytes": 23665163
+        },
+        "folds/fold_3/rfe_selection_trace.csv": {
+          "sha256": "80768a9868bd2a66785f6143e3207399f46a472818a123ffd3b9069c4aa9869b",
+          "size_bytes": 3753
+        },
+        "folds/fold_3/selected_features.csv": {
+          "sha256": "5326d53aaaf5fea62f185038256cd5ed1ed885c7ba54ab6fccf5a2c0ad9de817",
+          "size_bytes": 564
+        },
+        "folds/fold_3/voter_rankings.csv": {
+          "sha256": "f98fd2cffcb84670d6b1006e29983463b35f72d5223196f938a1318b10aa3cbc",
+          "size_bytes": 940216
+        },
+        "folds/fold_4/aggregate_ranking.csv": {
+          "sha256": "961b60315200334e133b331e5a03eab7fdc281232226b3101432eddf3b3cd719",
+          "size_bytes": 121662
+        },
+        "folds/fold_4/candidate_features.csv": {
+          "sha256": "ce9d77bd080ae53068ba5b36be0e4b28751517f1b045a0442e26fd6bdb3eb894",
+          "size_bytes": 2639
+        },
+        "folds/fold_4/effective_model_config.json": {
+          "sha256": "9f3ffed776796951812f48d3b72a0432ba4b364fcbca972d70cfb4b953797553",
+          "size_bytes": 1605
+        },
+        "folds/fold_4/prediction_metadata.json": {
+          "sha256": "88cd44d17bc0bca385639f4c913bd585b2e2796c319971d3f522f8b7c9c36e0e",
+          "size_bytes": 1956
+        },
+        "folds/fold_4/predictions_dev.csv": {
+          "sha256": "b8f9fddbcc8dd46c432bd482db9aa89998839ba213d07ec9fecd183adb077912",
+          "size_bytes": 18582655
+        },
+        "folds/fold_4/rfe_selection_trace.csv": {
+          "sha256": "8b57983079a7c8a9591023e85ab03d2633ca559098d40034708bb4cde1ea6641",
+          "size_bytes": 3739
+        },
+        "folds/fold_4/selected_features.csv": {
+          "sha256": "6def8935d6f5b4e4f502d3740df8ffe17dec0ba2dd4c90bd1e079b9fe73dba70",
+          "size_bytes": 561
+        },
+        "folds/fold_4/voter_rankings.csv": {
+          "sha256": "9beae4ad00f65fb4961cbfe529c545e10b57e5e0dc6754943f8dab111039be48",
+          "size_bytes": 939932
+        },
+        "folds/fold_5/aggregate_ranking.csv": {
+          "sha256": "a11500f8692594b9edb8e90fbff6bdc55c7806cb219902c7e56386c4cdd7ed58",
+          "size_bytes": 121632
+        },
+        "folds/fold_5/candidate_features.csv": {
+          "sha256": "82f57d11cecb3323b784ba18d72695ee647c6e133092402faf901978d3d6ee0a",
+          "size_bytes": 2623
+        },
+        "folds/fold_5/effective_model_config.json": {
+          "sha256": "9f3ffed776796951812f48d3b72a0432ba4b364fcbca972d70cfb4b953797553",
+          "size_bytes": 1605
+        },
+        "folds/fold_5/prediction_metadata.json": {
+          "sha256": "fe9052cd73e1f7b9c132ebefaabd7bf599230b5a2953d0aaa66377f9e9318a85",
+          "size_bytes": 1956
+        },
+        "folds/fold_5/predictions_dev.csv": {
+          "sha256": "7433da3d333b15320234c27ae0fc5f9b3c7f104450fc8873d5dccffa03ca082e",
+          "size_bytes": 13381681
+        },
+        "folds/fold_5/rfe_selection_trace.csv": {
+          "sha256": "8c01672ba2e01e0cc9c4b27f2dcb74db7b1b9f751adb74a60ecda05c848bf6bd",
+          "size_bytes": 3723
+        },
+        "folds/fold_5/selected_features.csv": {
+          "sha256": "7a324ecbb90fc32d8b1ad65df28bb05b7698be9b1d9af10d67ddb31ed3647b03",
+          "size_bytes": 598
+        },
+        "folds/fold_5/voter_rankings.csv": {
+          "sha256": "fa7868c3a98b2404a9ca4736ac267a75365d1c7f56d532d4e17a51f3bba672c7",
+          "size_bytes": 939946
+        },
+        "preflight.json": {
+          "sha256": "7c52e1aca145f0201fbc64b8624d5ec95dc2c323486002ae72a9330f5dfc2570",
+          "size_bytes": 4809
+        },
+        "results/dev_fold_metrics.csv": {
+          "sha256": "bacbaa2a3278e16ef447e4e4378a867f6799538bd98be5524fd666e1ef98b70c",
+          "size_bytes": 1511
+        },
+        "results/dev_prediction_metadata.json": {
+          "sha256": "8e9ff4b4e7d70404410b067406c7dc1e6f6519b20aeb70640a838511f6507b3f",
+          "size_bytes": 2068
+        },
+        "results/dev_predictions.csv": {
+          "sha256": "ef118c05023eb4a3e57d3f0ba7c8715c3cfe09815e95624c5113948bd2cb8289",
+          "size_bytes": 94271735
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "01a22b31d72bbb71434aa57c810abe20a060ce358601c3ecc9006434d08c02f4",
+          "size_bytes": 59140
+        },
+        "manifest.json": {
+          "sha256": "c3b711dfd6c2ae1d4f5967fc9abc1c8031382e4c9b3c2498dad07aa32cb3aa95",
+          "size_bytes": 8346
+        },
+        "resource_usage.json": {
+          "sha256": "78d4b3f40573ee420f8ba35ef6420488e01c503e697afc61ed48a05b7813a240",
+          "size_bytes": 4883019
+        },
+        "run.log": {
+          "sha256": "585283cc991564c430752828281a7ff14af75a12a8058e5371cb0e477a653ebc",
+          "size_bytes": 3240
+        },
+        "run_manifest.json": {
+          "sha256": "c3b711dfd6c2ae1d4f5967fc9abc1c8031382e4c9b3c2498dad07aa32cb3aa95",
+          "size_bytes": 8346
+        }
+      },
+      "run_directory": "results/runs/lendingclub_v2/cdv1-010-lendingclub-v2-voting-k100-lr-s42"
+    },
+    "cdv1-011-lendingclub-v2-voting-k200-lr-s42": {
+      "immutable_artifacts": {
+        "config.json": {
+          "sha256": "4a53623ddd3ee00b58f1c8135133bef2b5d186a5030d692345b9d9ef6b90ed82",
+          "size_bytes": 1743
+        },
+        "data_access_dev.json": {
+          "sha256": "69bbf24496308093d1f8332fb4eb84a11a3e2cc4d1213f6cca409d3f28850485",
+          "size_bytes": 27710
+        },
+        "folds/fold_1/aggregate_ranking.csv": {
+          "sha256": "fb66c0ce0c5e15d567d5676a183fab2657c72a1600358e3cd6f3fad53bb2ccd8",
+          "size_bytes": 121549
+        },
+        "folds/fold_1/candidate_features.csv": {
+          "sha256": "0cf7e644a6ac5e24885811b323cd7ad35c26a724f4cf5383d3c8314a25868cad",
+          "size_bytes": 5713
+        },
+        "folds/fold_1/effective_model_config.json": {
+          "sha256": "cf6409718f00fb822ba6ca9bf5cc648304fe40ca4b8433bff6258c36ec03418b",
+          "size_bytes": 1605
+        },
+        "folds/fold_1/prediction_metadata.json": {
+          "sha256": "3ebef5b751b82fe72845c0bf0c7ecb2a6df3c5b61f6dd15cc5f41c384ea26532",
+          "size_bytes": 1959
+        },
+        "folds/fold_1/predictions_dev.csv": {
+          "sha256": "7ddd474e0e95c3d2e839ee1ba48ee267a4b765112d4f38a317d3cd51a109b908",
+          "size_bytes": 21280226
+        },
+        "folds/fold_1/rfe_selection_trace.csv": {
+          "sha256": "eba7f0fb48ac13bea5ee7847dac041740c31dbafcac8badce35f8d38af82c049",
+          "size_bytes": 8013
+        },
+        "folds/fold_1/selected_features.csv": {
+          "sha256": "2ea7b07bff86f9a47531dae158fb453ede15eed01b86a997ed5d0d6c1d683584",
+          "size_bytes": 590
+        },
+        "folds/fold_1/voter_rankings.csv": {
+          "sha256": "f272e5e3b557ebf9ab44df069ed44777cc955490efb39b8b2ede8f8c8d9a6dcf",
+          "size_bytes": 940532
+        },
+        "folds/fold_2/aggregate_ranking.csv": {
+          "sha256": "395110ed1247a601e012513694e1b7228a5aaca051ddacac9946041910a8a08d",
+          "size_bytes": 121539
+        },
+        "folds/fold_2/candidate_features.csv": {
+          "sha256": "63887bd293aea89d1139d65225e417c590b1ef605144c44fe0230518366f7e8b",
+          "size_bytes": 5685
+        },
+        "folds/fold_2/effective_model_config.json": {
+          "sha256": "5a539e1f9298a962b18a4bed1ed9ee3e7b53aaf7f96cd42b697f9524d14c11ff",
+          "size_bytes": 1606
+        },
+        "folds/fold_2/prediction_metadata.json": {
+          "sha256": "d8948564d4bc7d739381df8a11b6b7f1e3c9d0dc713567a8099ea540bcf64444",
+          "size_bytes": 1956
+        },
+        "folds/fold_2/predictions_dev.csv": {
+          "sha256": "fdf344c6d4dc13f9332f95ce50e5ef4fef2f254c639e7e7ce2565cea08c4ea19",
+          "size_bytes": 16035801
+        },
+        "folds/fold_2/rfe_selection_trace.csv": {
+          "sha256": "2c0bf52eb9ab5cc544d9f0399018a2742e25576a5b31431b87d6f5117d74632d",
+          "size_bytes": 7985
+        },
+        "folds/fold_2/selected_features.csv": {
+          "sha256": "92800598c7745ac65d09afb33d792087f1b205fee5250d6dd5ffe32132fff831",
+          "size_bytes": 579
+        },
+        "folds/fold_2/voter_rankings.csv": {
+          "sha256": "b700eb64935f42f7d6ed295c9bb18ef43b670d15796c85db9a77a2c29472f7a0",
+          "size_bytes": 940307
+        },
+        "preflight.json": {
+          "sha256": "73ea5bfe44174d02c807b76bd711e6bb101b9e457ac247b4b49d5fb38a6e53a0",
+          "size_bytes": 4809
+        }
+      },
+      "initial_control_artifacts": {
+        "checkpoint.json": {
+          "sha256": "1e3972e357736f5b48453fad9a204795ff8857b1d636c4a673277eae4fae1309",
+          "size_bytes": 25219
+        },
+        "manifest.json": {
+          "sha256": "a1c780b0e390ce49ab3054ac4f49a5412e90f216ec3d21b77c0e64f4c7d43186",
+          "size_bytes": 7690
+        },
+        "resource_usage.json": {
+          "sha256": "857a81b96b3873e68f1b0675f853825a4e8c90266c9cff001540dda901460592",
+          "size_bytes": 2100925
+        },
+        "run.log": {
+          "sha256": "245989895dff8df26f773c0832d7c72566e40a005a2d6128df659b2844f7ba18",
+          "size_bytes": 1637
+        },
+        "run_manifest.json": {
+          "sha256": "a1c780b0e390ce49ab3054ac4f49a5412e90f216ec3d21b77c0e64f4c7d43186",
+          "size_bytes": 7690
+        }
+      },
+      "run_directory": "results/runs/lendingclub_v2/cdv1-011-lendingclub-v2-voting-k200-lr-s42"
+    }
+  },
+  "runtime_files": {
+    "src/credit_risk_fs/experiments/checkpointing.py": {
+      "new_sha256": "df7b8308f51c347d5a894be9074f76168e5d60b75a5722f453e06c3fd88017e0",
+      "new_size_bytes": 16953,
+      "old_sha256": "b0334b7348506aad7194a6dcd24c1a88c35c88078806cf3cab0e4284cac1632a"
+    },
+    "src/credit_risk_fs/experiments/execution.py": {
+      "new_sha256": "483ce8823ef3d81836af01036ecd9fbba4dceca4911227fab4ffade76b94df8a",
+      "new_size_bytes": 21812,
+      "old_sha256": "42ddfb50958c70c74eadbe3ea8278f7c5783444d871bf2dedf667081b99a6a4f"
+    },
+    "src/credit_risk_fs/experiments/manual_research.py": {
+      "new_sha256": "47c50f754330a0ca56decce7c1ef6b4df97eea46b6b3538aa0f83ae6de932bf1",
+      "new_size_bytes": 14901,
+      "old_sha256": "a44ecb6a83fd1b257749d381382b4783203773bef9cabab60e34462eedbd4726"
+    },
+    "src/credit_risk_fs/experiments/provenance_bridge.py": {
+      "new_sha256": "32d202cd912c4d4bd22800cd5f53c1d9f24d99d57f9591271a5a1a18f32e02e4",
+      "new_size_bytes": 12427,
+      "old_sha256": "absent"
+    },
+    "src/credit_risk_fs/experiments/resource_monitor.py": {
+      "new_sha256": "d991cee28c58d45f7c62506736336cc31cb282ed02058fd6d7deb9459c546faf",
+      "new_size_bytes": 39668,
+      "old_sha256": "61919dccc1e09c5a9c8deda674a9530c1c24a88b2911c114689afd829365b80a"
+    },
+    "src/credit_risk_fs/experiments/runner.py": {
+      "new_sha256": "5f71cea7298f3680068bcebffc8136152339e1f74b0d36b92d37cd52279b5528",
+      "new_size_bytes": 83224,
+      "old_sha256": "e3aaa8a711c7132359394b74828f574b361073f813ae5280998fcb47eced7337"
+    },
+    "src/credit_risk_fs/experiments/synthetic_execution.py": {
+      "new_sha256": "853e5efaa904dc5e8f9fb3fcf7a43ed6dd81ae5654cd0c55dd5e8e6f7480178e",
+      "new_size_bytes": 4148,
+      "old_sha256": "47b4ec6a6f2d36e37c7d096ec9e018936058fc4cc9a55bed7ddef537995fadbe"
+    }
+  },
+  "schema_version": "cdv1_resume_compatibility_bridge_v1",
+  "scope_rule": "Applies only to the exact original annotated release, the exact current mechanics annotated release, cdv1, and this run inventory."
+}

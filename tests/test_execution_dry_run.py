@@ -176,13 +176,22 @@ def test_forced_low_memory_registered_run_aborts_and_remains_resumable(tmp_path,
     outcome = execute_registered_run(request)
     assert outcome.status == "aborted_resource_limit"
     assert outcome.stop_code == RAM_PROCESS_LIMIT
+    assert outcome.supervisor.primary_stop_code == RAM_PROCESS_LIMIT
     assert outcome.supervisor.child_cleanup_confirmed
+    assert outcome.supervisor.queue_cleanup_confirmed
+    assert not outcome.supervisor.survivor_processes
+    assert any(
+        event["state"] == "RESOURCE_STOP_LATCHED"
+        for event in outcome.supervisor.stop_lifecycle
+    )
     assert not (request.run_directory / "_SUCCESS").exists()
     assert outcome.manifest["status"] != "completed"
     checkpoint = CheckpointManager(request.run_directory)
     payload = checkpoint.load()
     assert payload["last_successful_stage"] == "initialized"
     assert payload["status"] == "aborted_resource_limit"
+    assert payload["primary_stop_code"] == RAM_PROCESS_LIMIT
+    assert payload["cleanup_evidence"]["child_cleanup_confirmed"] is True
     assert checkpoint.validate_resume(payload["identity"]).resumable
     assert validate_active_results(tmp_path)["registered_runs"] == 1
 

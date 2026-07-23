@@ -1,0 +1,54 @@
+{
+  "schema_version": "cdv1_resource_stop_resume_safety_immutable_baseline_v1",
+  "captured_before_edits": true,
+  "branch": "main",
+  "head_commit": "f00f474b6f263ee2619a178524c7c0fdf806024f",
+  "origin_main_commit": "f00f474b6f263ee2619a178524c7c0fdf806024f",
+  "working_tree_clean": true,
+  "original_release": {
+    "annotated_tag": "cross-dataset-voting-pre-execution-v1",
+    "tag_object": "b21ae6c389ee1cac1e46131c7ec76c4bc3bb6fa6",
+    "peeled_commit": "f00f474b6f263ee2619a178524c7c0fdf806024f"
+  },
+  "frozen_hashes": {
+    "scientific_config": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "row_identity": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "voting_config": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+    "execution_policy": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012"
+  },
+  "repository_python_process_count": 0,
+  "available_ram_gib": 24.23,
+  "free_disk_bytes": {
+    "C": 83622486016,
+    "D": 177424912384
+  },
+  "result_tree": {
+    "run_roots": 15,
+    "pilot_runs": 4,
+    "research_runs": 11,
+    "completed_research_runs": 10,
+    "interrupted_research_runs": 1,
+    "partial_markers": 0,
+    "active_execution_locks": 0,
+    "oot_named_artifacts": 0
+  },
+  "artifact_groups": {
+    "canonical_results": {
+      "files": 654,
+      "bytes": 780905980
+    },
+    "capacity_evidence": {
+      "files": 93,
+      "bytes": 95768727
+    },
+    "legacy_evidence": {
+      "files": 359,
+      "bytes": 110084164
+    }
+  },
+  "artifact_manifest": {
+    "path": "cleanup/audits/cross_dataset_voting_resource_stop_resume_safety/immutable_baseline_artifact_manifest.csv",
+    "entries": 1106,
+    "sha256": "bd42e5e64d704070f894c926eb4e2caf5172a8c30ae4b18c6f6ebf655bae9827"
+  }
+}

@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import importlib
+import gc
 import logging
 import multiprocessing
 import os
+import pickle
 import queue
 import shutil
 import traceback
+import uuid
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any, Mapping
 
 from credit_risk_fs.experiments.resource_policy import (
@@ -31,6 +35,9 @@ DISK_TEMP_LIMIT = "disk_temp_limit"
 MANUAL_INTERRUPT = "manual_interrupt"
 PREFLIGHT_REJECTED = "preflight_rejected"
 WORKER_CRASH = "worker_crash"
+WORKER_TREE_TERMINATION_FAILED = "worker_tree_termination_failed"
+RESULT_PAYLOAD_LIMIT_BYTES = 1024 * 1024
+MAX_QUEUE_DRAIN_MESSAGES = 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,11 +73,80 @@ class SupervisorResult:
     child_cleanup_confirmed: bool
     final_stage: str | None
     final_fold_id: str | int | None
+    primary_stop_code: str | None = None
+    secondary_events: tuple[dict[str, Any], ...] = ()
+    stop_lifecycle: tuple[dict[str, Any], ...] = ()
+    owned_processes: tuple[dict[str, Any], ...] = ()
+    survivor_processes: tuple[dict[str, Any], ...] = ()
+    termination_condition: str | None = None
+    graceful_stop_completed: bool | None = None
+    shutdown_elapsed_seconds: float | None = None
+    parent_rss_before_bytes: int | None = None
+    parent_rss_after_bytes: int | None = None
+    system_available_ram_after_bytes: int | None = None
+    queue_cleanup_confirmed: bool = True
+    run_association: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["samples"] = [asdict(item) for item in self.samples]
         return payload
+
+
+@dataclass(frozen=True, slots=True)
+class InterRunReadiness:
+    ready: bool
+    stop_code: str | None
+    elapsed_seconds: float
+    sample_count: int
+    parent_pid: int
+    parent_rss_bytes: int
+    system_available_ram_bytes: int
+    results_free_disk_bytes: int
+    temp_free_disk_bytes: int
+    active_child_pids: tuple[int, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class _StopCauseRecorder:
+    """Latch the first stop cause and retain every later termination event."""
+
+    def __init__(self) -> None:
+        self.primary: str | None = None
+        self.primary_elapsed_seconds: float | None = None
+        self.secondary: list[dict[str, Any]] = []
+
+    def observe(self, code: str, *, elapsed_seconds: float, detail: str) -> None:
+        event = {
+            "code": str(code),
+            "elapsed_seconds": float(elapsed_seconds),
+            "timestamp_utc": _utc_now(),
+            "detail": str(detail),
+        }
+        if self.primary is None:
+            self.primary = str(code)
+            self.primary_elapsed_seconds = float(elapsed_seconds)
+        else:
+            self.secondary.append(event)
+
+
+class _NonBlockingPublisher:
+    """Worker-side stage publisher that cannot block on a full parent queue."""
+
+    def __init__(self, target_queue: Any) -> None:
+        self._queue = target_queue
+
+    def put(self, value: Any, *_args: Any, **_kwargs: Any) -> None:
+        try:
+            self._queue.put_nowait(value)
+        except (queue.Full, BrokenPipeError, EOFError, OSError, ValueError):
+            return
 
 
 class NvmlProcessTelemetry:
@@ -216,34 +292,63 @@ def _worker_entry(
     stop_event: Any,
     result_queue: Any,
     stage_queue: Any,
+    run_association: str,
 ) -> None:
+    publisher = _NonBlockingPublisher(stage_queue)
     try:
         function = _load_worker_target(target)
-        value = function(stop_event=stop_event, stage_queue=stage_queue, **kwargs)
-        result_queue.put({"kind": "result", "value": value})
-    except KeyboardInterrupt:
-        result_queue.put({"kind": "interrupt", "error": MANUAL_INTERRUPT})
-        raise
-    except Exception as exc:
-        result_queue.put(
+        value = function(stop_event=stop_event, stage_queue=publisher, **kwargs)
+        encoded = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+        if len(encoded) > RESULT_PAYLOAD_LIMIT_BYTES:
+            raise ValueError(
+                "worker result payload exceeded the compact-metadata limit "
+                f"({len(encoded)} > {RESULT_PAYLOAD_LIMIT_BYTES} bytes)"
+            )
+        result_queue.put_nowait(
             {
-                "kind": "error",
-                "error": f"{type(exc).__name__}: {exc}",
-                "traceback": traceback.format_exc(),
+                "kind": "result",
+                "value": value,
+                "serialized_size_bytes": len(encoded),
+                "run_association": run_association,
             }
         )
+    except KeyboardInterrupt:
+        try:
+            result_queue.put_nowait(
+                {
+                    "kind": "interrupt",
+                    "error": MANUAL_INTERRUPT,
+                    "run_association": run_association,
+                }
+            )
+        except (queue.Full, BrokenPipeError, EOFError, OSError, ValueError):
+            pass
+        raise
+    except Exception as exc:
+        try:
+            result_queue.put_nowait(
+                {
+                    "kind": "error",
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "traceback": traceback.format_exc(),
+                    "run_association": run_association,
+                }
+            )
+        except (queue.Full, BrokenPipeError, EOFError, OSError, ValueError):
+            pass
         raise
 
 
 def _drain_stage_queue(stage_queue: Any, stage: str | None, fold_id: Any) -> tuple[str | None, Any]:
-    while True:
+    for _ in range(MAX_QUEUE_DRAIN_MESSAGES):
         try:
             update = stage_queue.get_nowait()
-        except queue.Empty:
+        except (queue.Empty, EOFError, OSError, ValueError):
             return stage, fold_id
         if isinstance(update, Mapping):
             stage = str(update.get("stage")) if update.get("stage") is not None else stage
             fold_id = update.get("fold_id", fold_id)
+    return stage, fold_id
 
 
 def _classify_threshold(sample: ResourceSample, policy: ResolvedExecutionPolicy) -> str | None:
@@ -303,30 +408,403 @@ def _new_warnings(
     return messages
 
 
-def terminate_process_tree(pid: int, *, timeout_seconds: float = 10.0) -> bool:
-    """Terminate one exact worker tree and confirm no collected child remains."""
+class _OwnedProcessRegistry:
+    """Track only the exact spawned worker and descendants observed by parentage."""
 
-    import psutil
+    def __init__(
+        self,
+        root_pid: int,
+        *,
+        association: str,
+        psutil_module: Any | None = None,
+    ) -> None:
+        if psutil_module is None:
+            import psutil as psutil_module
+        self.psutil = psutil_module
+        self.root_pid = int(root_pid)
+        self.association = str(association)
+        self._records: dict[int, dict[str, Any]] = {}
+        self._unverified_pids: set[int] = set()
+        try:
+            root = self.psutil.Process(self.root_pid)
+            self._remember(root, parent_pid=os.getpid(), relationship="spawned_worker")
+        except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+            pass
 
+    def _remember(self, process: Any, *, parent_pid: int, relationship: str) -> None:
+        pid = int(process.pid)
+        if pid in self._records:
+            return
+        try:
+            created = float(process.create_time())
+        except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+            return
+        self._records[pid] = {
+            "pid": pid,
+            "parent_pid_at_discovery": int(parent_pid),
+            "create_time": created,
+            "relationship": relationship,
+            "run_association": self.association,
+        }
+
+    def _matching_process(self, record: Mapping[str, Any]) -> Any | None:
+        pid = int(record["pid"])
+        try:
+            process = self.psutil.Process(pid)
+            if abs(float(process.create_time()) - float(record["create_time"])) > 1e-3:
+                self._unverified_pids.discard(pid)
+                return None
+            self._unverified_pids.discard(pid)
+            return process
+        except self.psutil.NoSuchProcess:
+            self._unverified_pids.discard(pid)
+            return None
+        except self.psutil.AccessDenied:
+            self._unverified_pids.add(pid)
+            return None
+
+    def refresh(self) -> None:
+        for record in list(self._records.values()):
+            parent = self._matching_process(record)
+            if parent is None:
+                continue
+            try:
+                children = parent.children(recursive=True)
+            except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                continue
+            for child in children:
+                try:
+                    parent_pid = int(child.ppid())
+                except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                    parent_pid = int(parent.pid)
+                if parent_pid not in self._records and int(parent.pid) not in self._records:
+                    continue
+                self._remember(
+                    child,
+                    parent_pid=parent_pid,
+                    relationship="observed_descendant",
+                )
+
+    def records(self) -> tuple[dict[str, Any], ...]:
+        return tuple(dict(item) for _, item in sorted(self._records.items()))
+
+    def alive(self) -> list[Any]:
+        self.refresh()
+        alive = []
+        for record in self._records.values():
+            process = self._matching_process(record)
+            if process is not None:
+                try:
+                    if process.is_running():
+                        alive.append(process)
+                except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                    continue
+        return alive
+
+    def _ordered(self, processes: list[Any]) -> list[Any]:
+        return sorted(processes, key=lambda item: int(item.pid) == self.root_pid)
+
+    def terminate_phase(self, *, timeout_seconds: float) -> list[Any]:
+        processes = self._ordered(self.alive())
+        for process in processes:
+            try:
+                process.terminate()
+            except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                continue
+        if not processes:
+            return []
+        _, alive = self.psutil.wait_procs(
+            processes, timeout=max(0.0, float(timeout_seconds))
+        )
+        return [process for process in alive if self._matching_process(
+            self._records.get(int(process.pid), {})
+        ) is not None]
+
+    def kill_phase(self, *, timeout_seconds: float) -> list[Any]:
+        processes = self._ordered(self.alive())
+        for process in processes:
+            try:
+                process.kill()
+            except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                continue
+        if not processes:
+            return []
+        _, alive = self.psutil.wait_procs(
+            processes, timeout=max(0.0, float(timeout_seconds))
+        )
+        return [process for process in alive if self._matching_process(
+            self._records.get(int(process.pid), {})
+        ) is not None]
+
+    def survivor_records(self) -> tuple[dict[str, Any], ...]:
+        alive_pids = {int(process.pid) for process in self.alive()} | set(
+            self._unverified_pids
+        )
+        return tuple(
+            dict(record)
+            for pid, record in sorted(self._records.items())
+            if pid in alive_pids
+        )
+
+
+def _lifecycle_event(
+    lifecycle: list[dict[str, Any]],
+    state: str,
+    *,
+    supervisor_started: float,
+    detail: str,
+    pids: tuple[int, ...] = (),
+) -> None:
+    lifecycle.append(
+        {
+            "state": str(state),
+            "timestamp_utc": _utc_now(),
+            "elapsed_seconds": monotonic() - supervisor_started,
+            "detail": str(detail),
+            "pids": list(map(int, pids)),
+        }
+    )
+
+
+def _bounded_join(
+    process: Any,
+    *,
+    timeout_seconds: float,
+    recorder: _StopCauseRecorder,
+    lifecycle: list[dict[str, Any]],
+    supervisor_started: float,
+) -> None:
     try:
-        root = psutil.Process(pid)
-        descendants = root.children(recursive=True)
-    except psutil.NoSuchProcess:
-        return True
-    processes = [*descendants, root]
-    for process in processes:
+        process.join(timeout=max(0.0, float(timeout_seconds)))
+    except KeyboardInterrupt:
+        recorder.observe(
+            MANUAL_INTERRUPT,
+            elapsed_seconds=monotonic() - supervisor_started,
+            detail="user KeyboardInterrupt during bounded worker join",
+        )
+        _lifecycle_event(
+            lifecycle,
+            "SECONDARY_TERMINATION_EVENT",
+            supervisor_started=supervisor_started,
+            detail="user_keyboard_interrupt",
+        )
+
+
+def _shutdown_owned_worker(
+    *,
+    process: Any,
+    stop_event: Any,
+    ownership: _OwnedProcessRegistry,
+    policy: ResolvedExecutionPolicy,
+    recorder: _StopCauseRecorder,
+    lifecycle: list[dict[str, Any]],
+    supervisor_started: float,
+) -> tuple[bool, tuple[dict[str, Any], ...], str | None, float, bool]:
+    """Run finite cooperative, terminate, and force-kill phases."""
+
+    shutdown_started = monotonic()
+    stop_event.set()
+    _lifecycle_event(
+        lifecycle,
+        "COOPERATIVE_STOP_REQUESTED",
+        supervisor_started=supervisor_started,
+        detail=f"primary_stop_code={recorder.primary}",
+    )
+    _lifecycle_event(
+        lifecycle,
+        "GRACE_PERIOD",
+        supervisor_started=supervisor_started,
+        detail=(
+            f"timeout_seconds={policy.monitoring.graceful_stop_timeout_seconds}"
+        ),
+    )
+    _bounded_join(
+        process,
+        timeout_seconds=policy.monitoring.graceful_stop_timeout_seconds,
+        recorder=recorder,
+        lifecycle=lifecycle,
+        supervisor_started=supervisor_started,
+    )
+    alive = ownership.alive()
+    graceful_completed = not alive and not process.is_alive()
+    if alive or process.is_alive():
+        pids = tuple(sorted({int(item.pid) for item in alive} | {int(process.pid)}))
+        _lifecycle_event(
+            lifecycle,
+            "TERMINATE_PROCESS_TREE",
+            supervisor_started=supervisor_started,
+            detail=(
+                f"timeout_seconds={policy.monitoring.forced_stop_timeout_seconds}"
+            ),
+            pids=pids,
+        )
         try:
-            process.terminate()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-    _, alive = psutil.wait_procs(processes, timeout=max(0.1, timeout_seconds))
-    for process in alive:
+            alive = ownership.terminate_phase(
+                timeout_seconds=policy.monitoring.forced_stop_timeout_seconds
+            )
+        except KeyboardInterrupt:
+            recorder.observe(
+                MANUAL_INTERRUPT,
+                elapsed_seconds=monotonic() - supervisor_started,
+                detail="user KeyboardInterrupt during terminate wait",
+            )
+            alive = ownership.alive()
+        _bounded_join(
+            process,
+            timeout_seconds=0.0,
+            recorder=recorder,
+            lifecycle=lifecycle,
+            supervisor_started=supervisor_started,
+        )
+    if alive or process.is_alive():
+        pids = tuple(sorted({int(item.pid) for item in alive} | {int(process.pid)}))
+        _lifecycle_event(
+            lifecycle,
+            "FORCE_KILL_REMAINDERS",
+            supervisor_started=supervisor_started,
+            detail=(
+                f"timeout_seconds={policy.monitoring.forced_stop_timeout_seconds}"
+            ),
+            pids=pids,
+        )
         try:
-            process.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-    _, alive = psutil.wait_procs(alive, timeout=max(0.1, timeout_seconds))
-    return not alive
+            alive = ownership.kill_phase(
+                timeout_seconds=policy.monitoring.forced_stop_timeout_seconds
+            )
+        except KeyboardInterrupt:
+            recorder.observe(
+                MANUAL_INTERRUPT,
+                elapsed_seconds=monotonic() - supervisor_started,
+                detail="user KeyboardInterrupt during force-kill wait",
+            )
+            alive = ownership.alive()
+        _bounded_join(
+            process,
+            timeout_seconds=0.0,
+            recorder=recorder,
+            lifecycle=lifecycle,
+            supervisor_started=supervisor_started,
+        )
+    survivors = ownership.survivor_records()
+    if survivors or process.is_alive():
+        condition = WORKER_TREE_TERMINATION_FAILED
+        _lifecycle_event(
+            lifecycle,
+            "WORKER_TREE_TERMINATION_FAILED",
+            supervisor_started=supervisor_started,
+            detail="owned process identities remain alive after force-kill wait",
+            pids=tuple(int(item["pid"]) for item in survivors),
+        )
+    else:
+        condition = None
+        _lifecycle_event(
+            lifecycle,
+            "EXIT_CONFIRMED",
+            supervisor_started=supervisor_started,
+            detail="owned worker process tree is absent",
+        )
+    return (
+        condition is None,
+        survivors,
+        condition,
+        monotonic() - shutdown_started,
+        graceful_completed,
+    )
+
+
+def _close_queue_nonblocking(target_queue: Any) -> bool:
+    """Release one multiprocessing queue without joining its feeder thread."""
+
+    ok = True
+    try:
+        target_queue.cancel_join_thread()
+    except (AttributeError, OSError, ValueError):
+        ok = False
+    try:
+        target_queue.close()
+    except (AttributeError, OSError, ValueError):
+        ok = False
+    return ok
+
+
+def terminate_process_tree(pid: int, *, timeout_seconds: float = 10.0) -> bool:
+    """Terminate one exact PID/create-time tree with separate terminate/kill waits."""
+
+    registry = _OwnedProcessRegistry(
+        int(pid), association=f"direct-tree-termination:{int(pid)}"
+    )
+    registry.refresh()
+    registry.terminate_phase(timeout_seconds=max(0.0, float(timeout_seconds)))
+    registry.kill_phase(timeout_seconds=max(0.0, float(timeout_seconds)))
+    return not registry.survivor_records()
+
+
+def wait_for_inter_run_readiness(
+    *,
+    policy: ResolvedExecutionPolicy,
+    results_root: str | Path,
+    temp_root: str | Path,
+    timeout_seconds: float | None = None,
+    psutil_module: Any | None = None,
+) -> InterRunReadiness:
+    """Bounded readiness barrier using the existing, unchanged abort floors."""
+
+    if psutil_module is None:
+        import psutil as psutil_module
+    started = monotonic()
+    timeout = (
+        min(5.0, float(policy.monitoring.graceful_stop_timeout_seconds))
+        if timeout_seconds is None
+        else max(0.0, float(timeout_seconds))
+    )
+    samples = 0
+    last_code: str | None = None
+    while True:
+        samples += 1
+        active_children = tuple(
+            sorted(
+                int(child.pid)
+                for child in multiprocessing.active_children()
+                if child.is_alive()
+            )
+        )
+        parent = psutil_module.Process(os.getpid())
+        parent_rss = int(parent.memory_info().rss)
+        available = int(psutil_module.virtual_memory().available)
+        results_free = int(shutil.disk_usage(results_root).free)
+        temp_free = int(shutil.disk_usage(temp_root).free)
+        if active_children:
+            last_code = WORKER_TREE_TERMINATION_FAILED
+        elif available <= int(
+            policy.memory.abort_if_system_available_below_gb * GIB
+        ):
+            last_code = RAM_SYSTEM_HEADROOM
+        elif results_free <= int(policy.disk.minimum_free_results_gb * GIB):
+            last_code = DISK_RESULTS_LIMIT
+        elif temp_free <= int(policy.disk.minimum_free_temp_gb * GIB):
+            last_code = DISK_TEMP_LIMIT
+        else:
+            last_code = None
+        elapsed = monotonic() - started
+        if last_code is None or elapsed >= timeout or active_children:
+            return InterRunReadiness(
+                ready=last_code is None,
+                stop_code=last_code,
+                elapsed_seconds=elapsed,
+                sample_count=samples,
+                parent_pid=os.getpid(),
+                parent_rss_bytes=parent_rss,
+                system_available_ram_bytes=available,
+                results_free_disk_bytes=results_free,
+                temp_free_disk_bytes=temp_free,
+                active_child_pids=active_children,
+            )
+        sleep(
+            min(
+                float(policy.monitoring.sample_interval_seconds),
+                max(0.0, timeout - elapsed),
+            )
+        )
 
 
 def supervise_worker(
@@ -337,82 +815,219 @@ def supervise_worker(
     results_root: str | Path,
     temp_root: str | Path,
     sampler_factory: Any = ProcessTreeSampler,
+    run_association: str | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
 
     apply_thread_environment(policy.parallelism.estimator_threads)
+    supervisor_started = monotonic()
+    association = run_association or f"supervised-worker:{uuid.uuid4()}"
+    import psutil
+
+    parent_rss_before = int(psutil.Process(os.getpid()).memory_info().rss)
     context = multiprocessing.get_context("spawn")
     stop_event = context.Event()
-    result_queue = context.Queue()
-    stage_queue = context.Queue()
+    result_queue = context.Queue(maxsize=1)
+    stage_queue = context.Queue(maxsize=256)
     process = context.Process(
         target=_worker_entry,
-        args=(worker_target, dict(worker_kwargs or {}), stop_event, result_queue, stage_queue),
+        args=(
+            worker_target,
+            dict(worker_kwargs or {}),
+            stop_event,
+            result_queue,
+            stage_queue,
+            association,
+        ),
         daemon=False,
     )
     process.start()
+    ownership = _OwnedProcessRegistry(process.pid, association=association)
     sampler = sampler_factory(results_root=results_root, temp_root=temp_root)
     samples: list[ResourceSample] = []
     warnings: list[str] = []
     emitted_warnings: set[str] = set()
     stage: str | None = "initialized"
     fold_id: str | int | None = None
-    stop_code: str | None = None
+    recorder = _StopCauseRecorder()
+    lifecycle: list[dict[str, Any]] = []
+    _lifecycle_event(
+        lifecycle,
+        "RUNNING",
+        supervisor_started=supervisor_started,
+        detail=f"run_association={association}",
+        pids=(int(process.pid),),
+    )
     child_cleanup_confirmed = True
+    queue_cleanup_confirmed = True
+    survivors: tuple[dict[str, Any], ...] = ()
+    termination_condition: str | None = None
+    shutdown_elapsed: float | None = None
+    graceful_stop_completed: bool | None = None
+    message: Mapping[str, Any] | None = None
 
     try:
         while process.is_alive():
+            ownership.refresh()
             stage, fold_id = _drain_stage_queue(stage_queue, stage, fold_id)
+            if message is None:
+                try:
+                    candidate = result_queue.get_nowait()
+                    if isinstance(candidate, Mapping):
+                        message = candidate
+                except (queue.Empty, EOFError, OSError, ValueError):
+                    pass
             sample = sampler.sample(process.pid, stage=stage, fold_id=fold_id)
             samples.append(sample)
-            for message in _new_warnings(sample, policy, emitted_warnings):
-                warnings.append(message)
-                logger.warning(message)
-            stop_code = _classify_threshold(sample, policy)
-            if stop_code is not None:
-                stop_event.set()
-                process.join(timeout=policy.monitoring.graceful_stop_timeout_seconds)
-                if process.is_alive():
-                    child_cleanup_confirmed = terminate_process_tree(
-                        process.pid,
-                        timeout_seconds=policy.monitoring.forced_stop_timeout_seconds,
-                    )
-                    process.join(timeout=policy.monitoring.forced_stop_timeout_seconds)
+            for warning_message in _new_warnings(sample, policy, emitted_warnings):
+                warnings.append(warning_message)
+                logger.warning("RESOURCE_WARNING %s", warning_message)
+            threshold = _classify_threshold(sample, policy)
+            if threshold is not None:
+                recorder.observe(
+                    threshold,
+                    elapsed_seconds=monotonic() - supervisor_started,
+                    detail="resource abort threshold crossed",
+                )
+                _lifecycle_event(
+                    lifecycle,
+                    "RESOURCE_STOP_LATCHED",
+                    supervisor_started=supervisor_started,
+                    detail=f"primary_stop_code={threshold}",
+                    pids=tuple(
+                        sorted({sample.worker_pid, *sample.child_pids})
+                    ),
+                )
+                (
+                    child_cleanup_confirmed,
+                    survivors,
+                    termination_condition,
+                    shutdown_elapsed,
+                    graceful_stop_completed,
+                ) = _shutdown_owned_worker(
+                    process=process,
+                    stop_event=stop_event,
+                    ownership=ownership,
+                    policy=policy,
+                    recorder=recorder,
+                    lifecycle=lifecycle,
+                    supervisor_started=supervisor_started,
+                )
                 break
             stop_event.wait(policy.monitoring.sample_interval_seconds)
     except KeyboardInterrupt:
-        stop_code = MANUAL_INTERRUPT
-        stop_event.set()
-        process.join(timeout=policy.monitoring.graceful_stop_timeout_seconds)
-        if process.is_alive():
-            child_cleanup_confirmed = terminate_process_tree(
-                process.pid,
-                timeout_seconds=policy.monitoring.forced_stop_timeout_seconds,
-            )
-            process.join(timeout=policy.monitoring.forced_stop_timeout_seconds)
+        recorder.observe(
+            MANUAL_INTERRUPT,
+            elapsed_seconds=monotonic() - supervisor_started,
+            detail="user KeyboardInterrupt in supervisor",
+        )
+        (
+            child_cleanup_confirmed,
+            survivors,
+            termination_condition,
+            shutdown_elapsed,
+            graceful_stop_completed,
+        ) = _shutdown_owned_worker(
+            process=process,
+            stop_event=stop_event,
+            ownership=ownership,
+            policy=policy,
+            recorder=recorder,
+            lifecycle=lifecycle,
+            supervisor_started=supervisor_started,
+        )
     finally:
-        if process.is_alive():
-            child_cleanup_confirmed = terminate_process_tree(
-                process.pid,
-                timeout_seconds=policy.monitoring.forced_stop_timeout_seconds,
-            ) and child_cleanup_confirmed
-            process.join(timeout=policy.monitoring.forced_stop_timeout_seconds)
-        sampler.gpu.close()
+        ownership.refresh()
+        if shutdown_elapsed is None and (process.is_alive() or ownership.alive()):
+            if recorder.primary is None:
+                recorder.observe(
+                    WORKER_CRASH,
+                    elapsed_seconds=monotonic() - supervisor_started,
+                    detail="supervisor finalizer found a live owned process tree",
+                )
+            (
+                cleanup_ok,
+                survivors,
+                termination_condition,
+                final_shutdown_elapsed,
+                final_graceful,
+            ) = _shutdown_owned_worker(
+                process=process,
+                stop_event=stop_event,
+                ownership=ownership,
+                policy=policy,
+                recorder=recorder,
+                lifecycle=lifecycle,
+                supervisor_started=supervisor_started,
+            )
+            child_cleanup_confirmed = child_cleanup_confirmed and cleanup_ok
+            shutdown_elapsed = (
+                final_shutdown_elapsed
+                if shutdown_elapsed is None
+                else shutdown_elapsed + final_shutdown_elapsed
+            )
+            if graceful_stop_completed is None:
+                graceful_stop_completed = final_graceful
+        gpu = getattr(sampler, "gpu", None)
+        if gpu is not None:
+            gpu.close()
 
     stage, fold_id = _drain_stage_queue(stage_queue, stage, fold_id)
-    message = None
     try:
-        message = result_queue.get(timeout=0.5)
-        while True:
-            message = result_queue.get_nowait()
-    except queue.Empty:
+        if message is None:
+            candidate = result_queue.get(timeout=0.5)
+            if isinstance(candidate, Mapping):
+                message = candidate
+        for _ in range(15):
+            try:
+                candidate = result_queue.get_nowait()
+                if isinstance(candidate, Mapping):
+                    message = candidate
+            except queue.Empty:
+                break
+    except (queue.Empty, EOFError, OSError, ValueError):
         pass
+    queue_cleanup_confirmed = _close_queue_nonblocking(stage_queue)
+    queue_cleanup_confirmed = (
+        _close_queue_nonblocking(result_queue) and queue_cleanup_confirmed
+    )
     return_value = message.get("value") if message and message.get("kind") == "result" else None
     worker_error = None
     if message and message.get("kind") in {"error", "interrupt"}:
         worker_error = str(message.get("error"))
+    if message and message.get("run_association") != association:
+        worker_error = "worker result run association mismatch"
+        return_value = None
+        recorder.observe(
+            WORKER_CRASH,
+            elapsed_seconds=monotonic() - supervisor_started,
+            detail=worker_error,
+        )
+    if message and message.get("kind") == "interrupt":
+        recorder.observe(
+            MANUAL_INTERRUPT,
+            elapsed_seconds=monotonic() - supervisor_started,
+            detail="worker reported KeyboardInterrupt",
+        )
+    elif message and message.get("kind") == "error":
+        recorder.observe(
+            WORKER_CRASH,
+            elapsed_seconds=monotonic() - supervisor_started,
+            detail=worker_error or "worker exception",
+        )
 
-    if stop_code in {
+    try:
+        process.join(timeout=0.0)
+    except (AssertionError, ValueError):
+        pass
+    worker_exit_code = process.exitcode
+
+    stop_code = recorder.primary
+    if termination_condition is not None:
+        status = "failed"
+        stop_code = stop_code or WORKER_TREE_TERMINATION_FAILED
+        worker_error = worker_error or WORKER_TREE_TERMINATION_FAILED
+    elif stop_code in {
         RAM_PROCESS_LIMIT,
         RAM_SYSTEM_HEADROOM,
         GPU_PROCESS_LIMIT,
@@ -426,19 +1041,46 @@ def supervise_worker(
         status = "completed"
     else:
         status = "failed"
-        stop_code = stop_code or WORKER_CRASH
+        if stop_code is None:
+            recorder.observe(
+                WORKER_CRASH,
+                elapsed_seconds=monotonic() - supervisor_started,
+                detail="worker exited without a valid compact result",
+            )
+            stop_code = recorder.primary
         if worker_error is None:
-            worker_error = f"worker exited with code {process.exitcode} without a result"
+            worker_error = f"worker exited with code {worker_exit_code} without a result"
 
     rss_values = [item.process_tree_rss_bytes for item in samples]
     gpu_values = [item.process_gpu_bytes for item in samples if item.process_gpu_bytes is not None]
     available_values = [item.system_available_ram_bytes for item in samples]
     result_disk_values = [item.results_free_disk_bytes for item in samples]
     temp_disk_values = [item.temp_free_disk_bytes for item in samples]
+    _lifecycle_event(
+        lifecycle,
+        "ARTIFACT_AND_STATE_FINALIZATION",
+        supervisor_started=supervisor_started,
+        detail=f"status={status}; stop_code={stop_code}",
+    )
+    del message
+    gc.collect(0)
+    parent = psutil.Process(os.getpid())
+    parent_rss_after = int(parent.memory_info().rss)
+    system_available_after = int(psutil.virtual_memory().available)
+    owned_records = ownership.records()
+    survivors = ownership.survivor_records()
+    final_child_cleanup_confirmed = (
+        child_cleanup_confirmed and not survivors and not process.is_alive()
+    )
+    if not process.is_alive():
+        try:
+            process.close()
+        except (OSError, ValueError):
+            pass
     return SupervisorResult(
         status=status,
         stop_code=stop_code,
-        worker_exit_code=process.exitcode,
+        worker_exit_code=worker_exit_code,
         return_value=return_value,
         worker_error=worker_error,
         samples=tuple(samples),
@@ -448,7 +1090,20 @@ def supervise_worker(
         minimum_system_available_ram_bytes=min(available_values) if available_values else None,
         minimum_results_free_disk_bytes=min(result_disk_values) if result_disk_values else None,
         minimum_temp_free_disk_bytes=min(temp_disk_values) if temp_disk_values else None,
-        child_cleanup_confirmed=child_cleanup_confirmed and not process.is_alive(),
+        child_cleanup_confirmed=final_child_cleanup_confirmed,
         final_stage=stage,
         final_fold_id=fold_id,
+        primary_stop_code=recorder.primary,
+        secondary_events=tuple(recorder.secondary),
+        stop_lifecycle=tuple(lifecycle),
+        owned_processes=owned_records,
+        survivor_processes=survivors,
+        termination_condition=termination_condition,
+        graceful_stop_completed=graceful_stop_completed,
+        shutdown_elapsed_seconds=shutdown_elapsed,
+        parent_rss_before_bytes=parent_rss_before,
+        parent_rss_after_bytes=parent_rss_after,
+        system_available_ram_after_bytes=system_available_after,
+        queue_cleanup_confirmed=queue_cleanup_confirmed,
+        run_association=association,
     )

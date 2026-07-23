@@ -36,6 +36,9 @@ class _Backend:
     def preflight(self, plan, provenance):
         self.events.append(("preflight", None))
 
+    def ensure_ready(self, previous_run_id, next_run_id, phase):
+        self.events.append((f"ready_{phase}", f"{previous_run_id}->{next_run_id}"))
+
     def run_state(self, spec):
         self.events.append(("state", spec.run_id))
         return self.states.get(spec.run_id, "missing")
@@ -102,6 +105,7 @@ def test_all_dev_validation_precedes_first_oot_and_configuration_is_frozen():
     first_oot = next(index for index, event in enumerate(backend.events) if event[0] == "oot")
     dev_validations = [event for event in backend.events[:first_oot] if event[0] == "validate_dev"]
     assert len(dev_validations) == 16
+    assert backend.events[first_oot - 2][0] == "ready_oot"
     assert backend.events[first_oot - 1] == ("state", plan.run_specs[0].run_id)
     assert ("freeze", None) in backend.events[:first_oot]
     assert backend.events[-2:] == [("finalize", None), ("validate_complete", None)]
@@ -194,15 +198,26 @@ def test_runbook_has_exactly_one_supported_manual_launch_command():
     assert "Prompt 6 did **not** execute the command" in runbook
 
 
+def test_resume_handoff_has_one_supported_command_and_exact_run_011_boundary():
+    handoff = (
+        ROOT
+        / "docs/research_extension/cross_dataset_voting_resume_after_run_011_v1.md"
+    ).read_text(encoding="utf-8")
+    assert "## One-command manual resume" in handoff
+    assert handoff.count(manual_research.MANUAL_COMMAND) == 1
+    assert manual_research.EXPECTED_TAG in handoff
+    assert "DEV fold 3 at `dev_data_loading`" in handoff
+    assert "Prompt 6.1 did not execute the resume command" in handoff
+
+
 def test_existing_pilots_and_isolated_capacity_evidence_remain_unchanged():
     rows = (ROOT / "results/run_index.csv").read_text(encoding="utf-8").splitlines()[1:]
-    assert len(rows) == 4
-    assert all(row.startswith("cdv1-pilot-") for row in rows)
-    run_dirs = sorted((ROOT / "results/runs").glob("*/cdv1-*"))
-    assert len(run_dirs) == 4
-    assert all(path.name.startswith("cdv1-pilot-") for path in run_dirs)
+    pilot_rows = [row for row in rows if row.startswith("cdv1-pilot-")]
+    assert len(pilot_rows) == 4
+    pilot_dirs = sorted((ROOT / "results/runs").glob("*/cdv1-pilot-*"))
+    assert len(pilot_dirs) == 4
     capacity = ROOT / "cleanup/audits/lendingclub_memory_refinement_capacity_gate"
     validation = json.loads((capacity / "validation_summary.json").read_text(encoding="utf-8"))
     assert validation["final_gate"] == "PASS"
     assert len(list((capacity / "capacity_execution/runs/lendingclub_v2").glob("*"))) == 3
-    assert not list((ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*"))
+    assert len(list((ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*"))) == 11

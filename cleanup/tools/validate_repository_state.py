@@ -341,6 +341,7 @@ def validate_active_results(root: Path) -> dict[str, object]:
             "failed",
             "interrupted",
             "aborted_resource_limit",
+            "dev_complete",
         }
         row_status = str(row["status"]).strip().lower()
         manifest_status = str(manifest.get("status", "")).strip().lower()
@@ -435,10 +436,28 @@ def validate_active_results(root: Path) -> dict[str, object]:
                 raise ValueError(f"hardened run lacks checkpoint: {run_id}")
             checkpoint_payload = json.loads(checkpoint.read_text(encoding="utf-8"))
             checkpoint_status = str(checkpoint_payload.get("status", "")).lower()
-            if checkpoint_status != row_status:
+            expected_checkpoint_status = (
+                "running" if row_status == "dev_complete" else row_status
+            )
+            if checkpoint_status != expected_checkpoint_status:
                 raise ValueError(
                     f"active run checkpoint status mismatch: {run_id}"
                 )
+            if row_status == "dev_complete":
+                if set(map(str, checkpoint_payload.get("completed_fold_ids", []))) != {
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                }:
+                    raise ValueError(f"DEV-complete run lacks five folds: {run_id}")
+                if not (run_directory / "results/dev_predictions.csv").is_file():
+                    raise ValueError(f"DEV-complete run lacks OOF predictions: {run_id}")
+                if (run_directory / "results/oot_predictions.csv").exists() or (
+                    run_directory / "data_access_oot.json"
+                ).exists():
+                    raise ValueError(f"DEV-complete run opened OOT early: {run_id}")
 
     return {
         "status": "passed",

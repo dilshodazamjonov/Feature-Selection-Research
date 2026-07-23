@@ -1,0 +1,106 @@
+{
+  "after_child_pids": [],
+  "before_child_pids": [],
+  "cooperative_stop": {
+    "child_cleanup_confirmed": true,
+    "graceful_stop_completed": true,
+    "lifecycle_states": [
+      "RUNNING",
+      "RESOURCE_STOP_LATCHED",
+      "COOPERATIVE_STOP_REQUESTED",
+      "GRACE_PERIOD",
+      "EXIT_CONFIRMED",
+      "ARTIFACT_AND_STATE_FINALIZATION"
+    ],
+    "owned_process_count": 1,
+    "primary_stop_code": "ram_process_limit",
+    "queue_cleanup_confirmed": true,
+    "shutdown_elapsed_seconds": 0.3474378000246361,
+    "status": "aborted_resource_limit",
+    "survivor_process_count": 0,
+    "wall_elapsed_seconds": 0.4120406999718398
+  },
+  "force_kill_unit_path": {
+    "force_kill_called": true,
+    "graceful_stop_completed": false,
+    "lifecycle_states": [
+      "COOPERATIVE_STOP_REQUESTED",
+      "GRACE_PERIOD",
+      "TERMINATE_PROCESS_TREE",
+      "FORCE_KILL_REMAINDERS",
+      "EXIT_CONFIRMED"
+    ],
+    "shutdown_elapsed_seconds": 2.340000355616212e-05,
+    "status": "passed",
+    "survivor_process_count": 0,
+    "termination_condition": null,
+    "wall_elapsed_seconds": 3.759999526664615e-05
+  },
+  "multiprocessing_active_child_pids": [],
+  "nested_tree_terminate": {
+    "child_cleanup_confirmed": true,
+    "graceful_stop_completed": false,
+    "lifecycle_states": [
+      "RUNNING",
+      "RESOURCE_STOP_LATCHED",
+      "COOPERATIVE_STOP_REQUESTED",
+      "GRACE_PERIOD",
+      "TERMINATE_PROCESS_TREE",
+      "EXIT_CONFIRMED",
+      "ARTIFACT_AND_STATE_FINALIZATION"
+    ],
+    "owned_process_count": 2,
+    "primary_stop_code": "ram_process_limit",
+    "queue_cleanup_confirmed": true,
+    "shutdown_elapsed_seconds": 1.0568759000161663,
+    "status": "aborted_resource_limit",
+    "survivor_process_count": 0,
+    "wall_elapsed_seconds": 2.00375819997862
+  },
+  "no_orphans": true,
+  "oot_opened": false,
+  "policy_seconds": {
+    "force_kill_wait": 0.2,
+    "grace": 1.0,
+    "terminate_wait": 0.2,
+    "tested_supervisor_bound": 3.0
+  },
+  "real_dataset_opened": false,
+  "result": "pass",
+  "saturated_queue": {
+    "child_cleanup_confirmed": true,
+    "graceful_stop_completed": null,
+    "lifecycle_states": [
+      "RUNNING",
+      "ARTIFACT_AND_STATE_FINALIZATION"
+    ],
+    "owned_process_count": 1,
+    "primary_stop_code": null,
+    "queue_cleanup_confirmed": true,
+    "shutdown_elapsed_seconds": null,
+    "status": "completed",
+    "survivor_process_count": 0,
+    "wall_elapsed_seconds": 0.462901100050658
+  },
+  "schema_version": "cdv1_synthetic_stop_validation_v1",
+  "uncooperative_terminate": {
+    "child_cleanup_confirmed": true,
+    "graceful_stop_completed": false,
+    "lifecycle_states": [
+      "RUNNING",
+      "RESOURCE_STOP_LATCHED",
+      "COOPERATIVE_STOP_REQUESTED",
+      "GRACE_PERIOD",
+      "TERMINATE_PROCESS_TREE",
+      "EXIT_CONFIRMED",
+      "ARTIFACT_AND_STATE_FINALIZATION"
+    ],
+    "owned_process_count": 1,
+    "primary_stop_code": "ram_process_limit",
+    "queue_cleanup_confirmed": true,
+    "shutdown_elapsed_seconds": 1.0359057000023313,
+    "status": "aborted_resource_limit",
+    "survivor_process_count": 0,
+    "wall_elapsed_seconds": 1.580359200015664
+  }
+}

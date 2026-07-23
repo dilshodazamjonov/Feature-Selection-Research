@@ -1,0 +1,58 @@
+{
+  "schema_version": "cdv1_resource_stop_resume_safety_validation_summary_v1",
+  "research_or_resume_executed": false,
+  "real_dataset_opened_by_new_validation": false,
+  "oot_opened": false,
+  "historical_artifact_integrity": {
+    "baseline_entries": 1106,
+    "mismatches": 0,
+    "runs_001_through_010_reusable": 10,
+    "runs_001_through_010_failed_validation": 0,
+    "run_011_reusable_completed_folds": [
+      1,
+      2
+    ],
+    "run_011_resume_fold": 3,
+    "run_011_resume_stage": "dev_data_loading"
+  },
+  "scientific_equivalence": {
+    "result": "pass",
+    "old_commit": "f00f474b6f263ee2619a178524c7c0fdf806024f",
+    "comparison": "exact synthetic old-tag versus repaired-tree outputs",
+    "ranking_hash_equal": true,
+    "selected_features_hash_equal": true,
+    "class_1_probabilities_hash_equal": true,
+    "metrics_hash_equal": true
+  },
+  "synthetic_resource_stop_validation": {
+    "result": "pass",
+    "tested_bound_seconds": 3.0,
+    "cooperative_stop_wall_seconds": 0.4120406999718398,
+    "uncooperative_terminate_wall_seconds": 1.580359200015664,
+    "nested_tree_terminate_wall_seconds": 2.00375819997862,
+    "saturated_queue_wall_seconds": 0.462901100050658,
+    "force_kill_path_exercised": true,
+    "survivors": 0,
+    "orphans": 0
+  },
+  "test_results": {
+    "focused": "52 passed in 21.22s; final resource-lifecycle subset 15 passed in 7.32s",
+    "full": "519 passed, 31 skipped, 107 warnings in 166.24s",
+    "repository_validator": "passed: 15 registered run roots and 170 registered artifacts",
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "planning_cli_only": "passed: 16 configurations and 80 DEV folds; execution not started"
+  },
+  "post_validation_state": {
+    "repository_python_process_count": 0,
+    "available_ram_gib": 26.79,
+    "result_files": 654,
+    "result_bytes": 780905980,
+    "research_run_roots": 11,
+    "pilot_run_roots": 4,
+    "partial_markers": 0,
+    "active_execution_locks": 0,
+    "oot_named_artifacts": 0
+  },
+  "release_gate": "ready_after_exact_commit_tag_push_and_remote_verification"
+}

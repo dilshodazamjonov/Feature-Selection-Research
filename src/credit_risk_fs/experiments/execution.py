@@ -55,6 +55,8 @@ class RegisteredRunRequest:
     merge_default_worker_kwargs: bool = False
     defer_terminal_success: bool = False
     deferred_success_status: str = "dev_complete"
+    checkpoint_identity_override: dict[str, Any] | None = None
+    resume_metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +83,7 @@ def _checkpoint_identity(request: RegisteredRunRequest) -> dict[str, Any]:
                 protocol_version = line.split(":", 1)[1].strip().strip("'\"")
                 break
     data_fingerprint = build_data_version(request.experiment_config.data_dir)
-    return {
+    identity = {
         "run_id": request.run_directory.name,
         "dataset": request.dataset,
         "selector": request.selector,
@@ -97,6 +99,20 @@ def _checkpoint_identity(request: RegisteredRunRequest) -> dict[str, Any]:
         "git_commit": request.preflight_report.get("git_commit", "unknown"),
         "git_dirty": request.preflight_report.get("git_dirty"),
     }
+    if request.checkpoint_identity_override is None:
+        return identity
+    if not request.resume:
+        raise ValueError("checkpoint identity overrides are resume-only")
+    override = dict(request.checkpoint_identity_override)
+    for field, observed in identity.items():
+        if field == "git_commit":
+            continue
+        if override.get(field) != observed:
+            raise ResumeValidationError(
+                f"compatibility_override_mismatch_{field}",
+                f"compatibility identity differs from live resume input: {field}",
+            )
+    return override
 
 
 def _checkpoint_artifacts(run_directory: Path, stage: str) -> list[Any]:
@@ -200,9 +216,35 @@ def _resource_payload(
         "minimum_temp_free_disk_bytes": supervisor.minimum_temp_free_disk_bytes,
         "worker_exit_code": supervisor.worker_exit_code,
         "stop_code": supervisor.stop_code,
+        "primary_stop_code": supervisor.primary_stop_code,
+        "secondary_events": list(supervisor.secondary_events),
+        "stop_lifecycle": list(supervisor.stop_lifecycle),
+        "termination_condition": supervisor.termination_condition,
+        "graceful_stop_completed": supervisor.graceful_stop_completed,
+        "shutdown_elapsed_seconds": supervisor.shutdown_elapsed_seconds,
+        "configured_shutdown_upper_bound_seconds": (
+            request.resolved_policy.monitoring.graceful_stop_timeout_seconds
+            + 2 * request.resolved_policy.monitoring.forced_stop_timeout_seconds
+            + 1.0
+        ),
         "status": supervisor.status,
         "samples": samples,
         "warnings": list(supervisor.warnings),
+        "process_ownership": {
+            "run_association": supervisor.run_association,
+            "owned_processes": list(supervisor.owned_processes),
+            "survivor_processes": list(supervisor.survivor_processes),
+        },
+        "cleanup_evidence": {
+            "child_cleanup_confirmed": supervisor.child_cleanup_confirmed,
+            "queue_cleanup_confirmed": supervisor.queue_cleanup_confirmed,
+            "parent_rss_before_bytes": supervisor.parent_rss_before_bytes,
+            "parent_rss_after_bytes": supervisor.parent_rss_after_bytes,
+            "system_available_ram_after_bytes": (
+                supervisor.system_available_ram_after_bytes
+            ),
+            "compact_result_payload_limit_bytes": 1024 * 1024,
+        },
         "resolved_parallelism": request.resolved_policy.to_dict()["parallelism"],
         "policy_version": request.resolved_policy.profile_name,
         "preflight_status": request.preflight_report.get("status"),
@@ -241,6 +283,8 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             raise ResumeValidationError("completed_run_immutable", "completed runs cannot be resumed")
         manifest["status"] = "running"
         manifest["resumed_at_utc"] = utc_timestamp()
+        if request.resume_metadata:
+            manifest["resume_mechanics_provenance"] = dict(request.resume_metadata)
         write_run_manifest(run_dir, manifest)
         update_run_index_row(
             request.results_root,
@@ -330,6 +374,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             policy=request.resolved_policy,
             results_root=request.results_root,
             temp_root=request.preflight_report["temporary_root"],
+            run_association=f"{run_id}:{utc_timestamp()}",
         )
     finally:
         if lock_path.exists():
@@ -341,6 +386,10 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     now = utc_timestamp()
     manifest["status"] = supervisor.status
     manifest["stop_code"] = supervisor.stop_code
+    manifest["primary_stop_code"] = supervisor.primary_stop_code
+    manifest["secondary_events"] = list(supervisor.secondary_events)
+    manifest["stop_lifecycle"] = list(supervisor.stop_lifecycle)
+    manifest["termination_condition"] = supervisor.termination_condition
     manifest["worker_exit_code"] = supervisor.worker_exit_code
     manifest["resource_usage"] = "resource_usage.json"
     manifest["resource_peaks"] = {
@@ -412,6 +461,22 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             resource_peaks=manifest["resource_peaks"],
             stop_code=supervisor.stop_code,
             error=supervisor.worker_error,
+            termination_metadata={
+                "primary_stop_code": supervisor.primary_stop_code,
+                "secondary_events": supervisor.secondary_events,
+                "stop_lifecycle": supervisor.stop_lifecycle,
+                "termination_condition": supervisor.termination_condition,
+                "cleanup_evidence": {
+                    "child_cleanup_confirmed": supervisor.child_cleanup_confirmed,
+                    "queue_cleanup_confirmed": supervisor.queue_cleanup_confirmed,
+                    "parent_rss_before_bytes": supervisor.parent_rss_before_bytes,
+                    "parent_rss_after_bytes": supervisor.parent_rss_after_bytes,
+                    "system_available_ram_after_bytes": (
+                        supervisor.system_available_ram_after_bytes
+                    ),
+                    "survivor_processes": supervisor.survivor_processes,
+                },
+            },
         )
         write_run_manifest(run_dir, manifest)
 

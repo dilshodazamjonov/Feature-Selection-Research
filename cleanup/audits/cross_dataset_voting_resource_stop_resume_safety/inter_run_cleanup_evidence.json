@@ -1,0 +1,26 @@
+{
+  "schema_version": "cdv1_inter_run_cleanup_evidence_v1",
+  "historical_evidence": {
+    "distinct_worker_pids_runs_001_011": true,
+    "observed_child_pid_count": 0,
+    "run_010_last_available_ram_gib": 24.84,
+    "run_011_first_available_ram_gib": 25.41,
+    "post_incident_baseline_available_ram_gib": 24.23,
+    "parent_rss_historically_recorded": false,
+    "parent_leak_claimed_fixed": false
+  },
+  "patched_mechanics": {
+    "worker_results_limited_to_serialized_bytes": 1048576,
+    "stage_queue_nonblocking_and_bounded": true,
+    "result_queue_capacity": 1,
+    "queue_feeder_join_cancelled": true,
+    "owned_pid_create_time_parentage_and_run_association_recorded": true,
+    "post_cleanup_parent_rss_recorded": true,
+    "post_cleanup_system_available_ram_recorded": true,
+    "zero_owned_children_required": true,
+    "bounded_readiness_uses_original_ram_and_disk_abort_floors": true,
+    "default_readiness_window_max_seconds": 5.0
+  },
+  "synthetic_evidence_path": "synthetic_stop_validation.json",
+  "result": "pass"
+}
