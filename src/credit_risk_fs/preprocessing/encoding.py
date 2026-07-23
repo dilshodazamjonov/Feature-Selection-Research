@@ -6,6 +6,92 @@ from typing import List, Optional
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 
 
+class OriginalFeatureNumericEncoder:
+    """Training-only numeric encoding with one output per original feature.
+
+    This encoder is intentionally limited to supervised feature-selection
+    stages.  Unlike the final-model preprocessor it never expands categorical
+    columns, so rankings and RFE selections retain a one-to-one relationship
+    with the frozen original candidate names.
+    """
+
+    missing_token = "<MISSING>"
+
+    def __init__(self) -> None:
+        self.feature_names_: list[str] | None = None
+        self.numeric_columns_: list[str] = []
+        self.categorical_columns_: list[str] = []
+        self.fill_values_: dict[str, float] = {}
+        self.category_maps_: dict[str, dict[str, int]] = {}
+
+    def fit(self, X: pd.DataFrame):
+        if not isinstance(X, pd.DataFrame) or X.shape[1] == 0:
+            raise ValueError("OriginalFeatureNumericEncoder requires a non-empty DataFrame")
+        names = [str(column) for column in X.columns]
+        if len(names) != len(set(names)):
+            raise ValueError("selection encoding requires unique original feature names")
+        self.feature_names_ = names
+        self.numeric_columns_ = [
+            name for name in names if pd.api.types.is_numeric_dtype(X[name])
+        ]
+        self.categorical_columns_ = [
+            name for name in names if name not in self.numeric_columns_
+        ]
+        self.fill_values_ = {}
+        for name in self.numeric_columns_:
+            values = pd.to_numeric(X[name], errors="coerce").replace(
+                [np.inf, -np.inf], np.nan
+            )
+            median = values.median()
+            self.fill_values_[name] = 0.0 if pd.isna(median) else float(median)
+        self.category_maps_ = {}
+        for name in self.categorical_columns_:
+            values = X[name].astype("string").fillna(self.missing_token).astype(str)
+            categories = sorted(set(values), key=lambda value: value.casefold())
+            self.category_maps_[name] = {
+                value: index for index, value in enumerate(categories)
+            }
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.feature_names_ is None:
+            raise ValueError("OriginalFeatureNumericEncoder has not been fitted")
+        observed = [str(column) for column in X.columns]
+        if observed != self.feature_names_:
+            raise ValueError(
+                "selection encoding column order mismatch: "
+                f"expected={self.feature_names_}, observed={observed}"
+            )
+        # A single C-contiguous float32 owner preserves the existing effective
+        # dtype while avoiding a simultaneously-live dictionary of 675 encoded
+        # Series plus the consolidated DataFrame block.  Each column is still
+        # produced by the exact same pandas conversion/mapping expression.
+        output = np.empty((len(X), len(self.feature_names_)), dtype=np.float32)
+        for position, name in enumerate(self.feature_names_):
+            if name in self.numeric_columns_:
+                encoded = (
+                    pd.to_numeric(X[name], errors="coerce")
+                    .replace([np.inf, -np.inf], np.nan)
+                    .fillna(self.fill_values_[name])
+                    .astype("float32")
+                )
+            else:
+                values = X[name].astype("string").fillna(self.missing_token).astype(str)
+                encoded = (
+                    values.map(self.category_maps_[name]).fillna(-1).astype("float32")
+                )
+            output[:, position] = encoded.to_numpy(dtype=np.float32, copy=False)
+        return pd.DataFrame(
+            output,
+            index=X.index,
+            columns=self.feature_names_,
+            copy=False,
+        )
+
+    def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        return self.fit(X).transform(X)
+
+
 class NumericalScaler:
     """
     Preprocess numerical features: missing value filling and scaling.

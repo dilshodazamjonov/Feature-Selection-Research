@@ -48,6 +48,13 @@ class RegisteredRunRequest:
     resume: bool = False
     worker_target: str = "credit_risk_fs.experiments.execution:experiment_worker"
     worker_kwargs: dict[str, Any] | None = None
+    manifest_metadata: dict[str, Any] | None = None
+    artifact_applicability: dict[str, bool] | None = None
+    protocol_path: str | None = None
+    row_contract_path: str | None = None
+    merge_default_worker_kwargs: bool = False
+    defer_terminal_success: bool = False
+    deferred_success_status: str = "dev_complete"
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,8 +68,12 @@ class ExecutionOutcome:
 
 
 def _checkpoint_identity(request: RegisteredRunRequest) -> dict[str, Any]:
-    protocol_path = request.repository_root / "configs/protocols/credit_scoring_extension_v1.yaml"
-    row_contract = request.repository_root / "configs/protocols/row_alignment_contract_v1.json"
+    protocol_path = request.repository_root / (
+        request.protocol_path or "configs/protocols/credit_scoring_extension_v1.yaml"
+    )
+    row_contract = request.repository_root / (
+        request.row_contract_path or "configs/protocols/row_alignment_contract_v1.json"
+    )
     protocol_version = "unknown"
     if protocol_path.is_file():
         for line in protocol_path.read_text(encoding="utf-8").splitlines():
@@ -196,9 +207,13 @@ def _resource_payload(
         "policy_version": request.resolved_policy.profile_name,
         "preflight_status": request.preflight_report.get("status"),
         "checkpoint_path": "checkpoint.json",
-        "resumability_status": "completed_immutable"
-        if supervisor.status == "completed"
-        else "explicit_resume_validation_required",
+        "resumability_status": (
+            "phase_complete_explicit_resume_required"
+            if supervisor.status == "completed" and request.defer_terminal_success
+            else "completed_immutable"
+            if supervisor.status == "completed"
+            else "explicit_resume_validation_required"
+        ),
     }
 
 
@@ -251,6 +266,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             output_folder=run_dir,
             project_root=request.repository_root,
             status="running",
+            artifact_applicability=request.artifact_applicability,
         )
         manifest.update(
             {
@@ -266,6 +282,8 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
                 "row_alignment_hash": identity["row_alignment_hash"],
             }
         )
+        if request.manifest_metadata:
+            manifest.update(dict(request.manifest_metadata))
         write_run_manifest(run_dir, manifest)
         append_run_index_row(
             request.results_root,
@@ -299,13 +317,16 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             "checkpoint_identity": identity,
             "run_directory": str(run_dir),
         }
+        resolved_worker_kwargs = (
+            dict(request.worker_kwargs)
+            if request.worker_kwargs is not None
+            else default_worker_kwargs
+        )
+        if request.worker_kwargs is not None and request.merge_default_worker_kwargs:
+            resolved_worker_kwargs = {**default_worker_kwargs, **request.worker_kwargs}
         supervisor = supervise_worker(
             worker_target=request.worker_target,
-            worker_kwargs=(
-                request.worker_kwargs
-                if request.worker_kwargs is not None
-                else default_worker_kwargs
-            ),
+            worker_kwargs=resolved_worker_kwargs,
             policy=request.resolved_policy,
             results_root=request.results_root,
             temp_root=request.preflight_report["temporary_root"],
@@ -332,18 +353,49 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     if supervisor.worker_error:
         manifest["error"] = supervisor.worker_error
 
+    published_status = supervisor.status
     if supervisor.status == "completed":
-        materialize_standard_artifacts(run_dir)
-        manifest["completed_at_utc"] = now
         manifest["summary"] = (supervisor.return_value or {}).get("summary", {})
-        manifest["resumability_status"] = "completed_immutable"
-        checkpoint.transition(
-            "completed",
-            artifacts=(resource_artifact,),
-            resource_peaks=manifest["resource_peaks"],
+        additional_artifacts = (supervisor.return_value or {}).get(
+            "additional_artifacts", {}
         )
-        write_run_manifest(run_dir, manifest)
-        mark_completed(run_dir)
+        if additional_artifacts:
+            if not isinstance(additional_artifacts, Mapping):
+                raise ValueError("worker additional_artifacts must be a mapping")
+            manifest.setdefault("artifacts", {}).update(
+                {
+                    str(name): {
+                        "applicable": True,
+                        "path": str(relative),
+                        "present": True,
+                    }
+                    for name, relative in additional_artifacts.items()
+                }
+            )
+        if request.defer_terminal_success:
+            if not request.deferred_success_status.strip():
+                raise ValueError("deferred success status must not be empty")
+            published_status = request.deferred_success_status
+            manifest["status"] = published_status
+            manifest["dev_phase_completed_at_utc"] = now
+            manifest["resumability_status"] = "phase_complete_explicit_resume_required"
+            checkpoint.transition(
+                "dev_prediction_completed",
+                artifacts=(resource_artifact,),
+                resource_peaks=manifest["resource_peaks"],
+            )
+            write_run_manifest(run_dir, manifest)
+        else:
+            materialize_standard_artifacts(run_dir)
+            manifest["completed_at_utc"] = now
+            manifest["resumability_status"] = "completed_immutable"
+            checkpoint.transition(
+                "completed",
+                artifacts=(resource_artifact,),
+                resource_peaks=manifest["resource_peaks"],
+            )
+            write_run_manifest(run_dir, manifest)
+            mark_completed(run_dir)
     else:
         terminal = (
             "aborted_resource_limit"
@@ -367,8 +419,8 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         request.results_root,
         run_id,
         {
-            "status": supervisor.status,
-            "completed_at_utc": now,
+            "status": published_status,
+            "completed_at_utc": "" if request.defer_terminal_success else now,
             "runtime_seconds": resource_usage["timings_seconds"]["total"],
             "peak_ram_mb": resource_usage["peak_ram_mb"],
             "peak_gpu_mb": resource_usage["peak_gpu_mb"],
@@ -378,7 +430,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     return ExecutionOutcome(
         run_id=run_id,
         run_directory=run_dir,
-        status=supervisor.status,
+        status=published_status,
         stop_code=supervisor.stop_code,
         supervisor=supervisor,
         manifest=manifest,

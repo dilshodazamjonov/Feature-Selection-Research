@@ -80,6 +80,54 @@ def align_paired_predictions(
     )
 
 
+def validate_paired_comparison_contract(
+    method_a: pd.DataFrame,
+    metadata_a: Mapping[str, Any],
+    method_b: pd.DataFrame,
+    metadata_b: Mapping[str, Any],
+) -> pd.DataFrame:
+    """Validate future research eligibility and paired scientific provenance.
+
+    The function deliberately stops at alignment.  It never calculates a test
+    statistic or p-value, which keeps specification validation separate from a
+    later authorized inference run.
+    """
+
+    required = {
+        "dataset",
+        "model",
+        "split",
+        "fold_definition",
+        "probability_orientation",
+        "research_eligible",
+        "comparison_eligible",
+        "identity_target_sha256",
+    }
+    for label, metadata in (("method_a", metadata_a), ("method_b", metadata_b)):
+        missing = required - set(metadata)
+        if missing:
+            raise ValueError(f"{label} comparison metadata missing: {sorted(missing)}")
+        if metadata.get("research_eligible") is not True or metadata.get(
+            "comparison_eligible"
+        ) is not True:
+            raise ValueError(f"{label} is not eligible for research comparison")
+        if metadata.get("probability_orientation") != "class_1_higher_default_risk":
+            raise ValueError(f"{label} probability orientation is invalid")
+        if metadata.get("split") not in {"DEV_OOF", "OOT"}:
+            raise ValueError(f"{label} split is not a complete research prediction split")
+    for field in (
+        "dataset",
+        "model",
+        "split",
+        "fold_definition",
+        "probability_orientation",
+        "identity_target_sha256",
+    ):
+        if metadata_a.get(field) != metadata_b.get(field):
+            raise ValueError(f"paired comparison metadata mismatch for {field}")
+    return align_paired_predictions(method_a, method_b)
+
+
 def ks_statistic(target: Iterable[int], score: Iterable[float]) -> tuple[float, float]:
     """Return absolute empirical-CDF KS and the smallest maximizing score."""
 
@@ -390,4 +438,5 @@ __all__ = [
     "lift_at_fraction",
     "paired_delong_test",
     "paired_stratified_bootstrap",
+    "validate_paired_comparison_contract",
 ]

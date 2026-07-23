@@ -1,0 +1,38 @@
+{
+  "schema_version": "lendingclub_memory_refinement_capacity_gate_artifact_manifest_v1",
+  "status": "passed",
+  "hash_rule": "SHA-256 and byte size are recorded for every listed artifact. This manifest is excluded from its own entries to avoid self-reference.",
+  "audit_root": "cleanup/audits/lendingclub_memory_refinement_capacity_gate",
+  "capacity_execution_root": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution",
+  "artifacts": {
+    "baseline_state.json": {"path": "baseline_state.json", "size_bytes": 6086, "sha256": "5e811987d8400505c62330ca762f0647660f9465d17a06425a53eff7267e0341"},
+    "before_memory_ownership_map.csv": {"path": "before_memory_ownership_map.csv", "size_bytes": 4727, "sha256": "2fee49bec996f3ef035993fe56b8852a3d3476d7815fb6657a724574c101c1aa"},
+    "implementation_validation.json": {"path": "implementation_validation.json", "size_bytes": 2865, "sha256": "1be545f75f2c5bae6f990cc29a80bcae88b02764e57246b5d575d74720f12280"},
+    "equivalence_validation.json": {"path": "equivalence_validation.json", "size_bytes": 4614, "sha256": "0af015aaa5af012c76d4dc2c1eaaa741d250e00d6494581822ce6a9baba1e94c"},
+    "capacity_scenario_manifest.json": {"path": "capacity_scenario_manifest.json", "size_bytes": 4215, "sha256": "ec335039a4717a3f18991cd3e68d0fc2c90a5c63452a5d3f9f4beb98e42b48be"},
+    "largest_fold_resource_summary.json": {"path": "largest_fold_resource_summary.json", "size_bytes": 3241, "sha256": "f88977384dedbed53b4c939f8aebb776866adef49036a32cc43171f3aca2c5c5"},
+    "full_dev_resource_summary.json": {"path": "full_dev_resource_summary.json", "size_bytes": 2859, "sha256": "592291a4dd642f96ced094ea35559e4428346f0349d5b890ead5bda973edc49e"},
+    "stage_resource_trace.csv": {"path": "stage_resource_trace.csv", "size_bytes": 5895, "sha256": "a9b975739585af5baa76219fa9b0c495b8439dc1d6bcf38b444b3b2a395f7078"},
+    "post_refinement_capacity_projection.csv": {"path": "post_refinement_capacity_projection.csv", "size_bytes": 5081, "sha256": "73649b73463a3d0894591d66f552e94c1a9a3727198b04f4bd7f67548539f186"},
+    "validation_summary.json": {"path": "validation_summary.json", "size_bytes": 2703, "sha256": "b09d27c0ddc3bf56577947b083841c53bbf62a05e4b1c81f1ae37205ddbff9a8"},
+    "implementation_report.md": {"path": "../../../docs/research_extension/lendingclub_memory_refinement_capacity_gate_v1.md", "size_bytes": 5377, "sha256": "7a7e1abfa300c4f4978e44a7d739c7bf940d52a046444b1c0656e6acf7e83308"},
+    "research_runbook.md": {"path": "../../../docs/research_extension/cross_dataset_voting_research_runbook_v1.md", "size_bytes": 3438, "sha256": "6127558406ae472271a1974ff7eec1c7efe89f0019c30475e95df4d8d0dac9d1"},
+    "capacity_execution/run_index.csv": {"path": "capacity_execution/run_index.csv"},
+    "largest_fold/manifest.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/manifest.json"},
+    "largest_fold/checkpoint.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/checkpoint.json"},
+    "largest_fold/resource_usage.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/resource_usage.json"},
+    "full_dev/manifest.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/manifest.json"},
+    "full_dev/checkpoint.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/checkpoint.json"},
+    "full_dev/resource_usage.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/resource_usage.json"},
+    "full_dev/capacity_validation.json": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/capacity_validation.json"},
+    "full_dev/lr_selected_features.csv": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/branches/lr/selected_features.csv"},
+    "full_dev/catboost_selected_features.csv": {"path": "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/branches/catboost/selected_features.csv"}
+  },
+  "frozen_input_hashes": {
+    "scientific_protocol": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "row_alignment_contract": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "voting_protocol": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+    "execution_policy": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+    "mechanics_config": "4e2a17b93a751bbcb7443d8e82b15781f8a0467a07aa0037a3c298abff4132d7"
+  }
+}

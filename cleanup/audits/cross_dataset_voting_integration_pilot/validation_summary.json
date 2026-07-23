@@ -1,0 +1,84 @@
+{
+  "schema_version": "cross_dataset_voting_integration_pilot_validation_summary_v1",
+  "gate": "CONDITIONAL_PASS",
+  "implementation_status": "passed",
+  "pilot_status": "four_of_four_completed",
+  "focused_tests": {
+    "command": ".\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/test_cross_dataset_voting_integration.py tests/test_cross_dataset_voting_spec.py tests/test_rank_voting_protocol.py tests/test_row_alignment_contract.py tests/test_lendingclub_identity.py tests/test_resource_policy.py tests/test_resource_monitor.py tests/test_projected_loading.py tests/test_execution_dry_run.py tests/test_result_paths.py tests/test_checkpointing.py tests/test_research_matrix.py tests/test_paired_inference.py tests/selectors/test_registry.py tests/selectors/test_mrmr.py tests/selectors/test_boruta.py -q",
+    "passed": 132,
+    "failed": 0
+  },
+  "full_tests": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests -q",
+    "passed": 480,
+    "skipped": 31,
+    "warnings": 107,
+    "failed": 0
+  },
+  "repository_validator": "passed",
+  "compileall": "passed",
+  "git_diff_check": "passed",
+  "frozen_hashes": {
+    "scientific_protocol": {
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "expected_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "observed_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "unchanged": true
+    },
+    "row_alignment_contract": {
+      "path": "configs/protocols/row_alignment_contract_v1.json",
+      "expected_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "observed_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "unchanged": true
+    },
+    "voting_protocol": {
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "expected_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "observed_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "unchanged": true
+    },
+    "execution_policy": {
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "expected_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "observed_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "unchanged": true
+    }
+  },
+  "legacy_preservation": {
+    "root": "D:\\ResearchFindings\\results",
+    "file_count": 359,
+    "size_bytes": 110084164,
+    "added_count": 0,
+    "removed_count": 0,
+    "changed_count": 0,
+    "status": "passed"
+  },
+  "active_results": {
+    "run_index_rows": 4,
+    "run_directories": 4,
+    "pilot_ids_only": true,
+    "active_partial_files": [],
+    "active_execution_locks": [],
+    "research_run_rows": 0,
+    "research_run_directories": []
+  },
+  "prohibited_workloads": {
+    "oot_paths_opened": 0,
+    "reference_runs": 0,
+    "k100_runs": 0,
+    "k300_runs": 0,
+    "fivefold_runs": 0,
+    "full_dev_refits": 0,
+    "api_calls": 0,
+    "clip_embedding_shap_workloads": 0,
+    "gpu_training_runs": 0
+  },
+  "capacity_condition": {
+    "runs_requiring_review": [
+      "cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+      "cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0"
+    ],
+    "reason": "Conservative row-scaled working-set projections for LendingClub v2 cross the 8 GiB minimum-system-available threshold and/or the 28 GiB RSS ceiling after the frozen 1.35 safety factor. No limit was changed.",
+    "required_before_prompt_5": "Approve a separately versioned memory-safe execution refinement and validate the largest LendingClub fold/full-DEV shape under the unchanged policy before authorizing any frozen research run."
+  }
+}

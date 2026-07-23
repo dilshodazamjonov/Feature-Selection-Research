@@ -26,6 +26,16 @@ def get_selector(selector_name: str):
             "n_features": 40,
         }
 
+    if name == "rfe":
+        from credit_risk_fs.selectors.rfe import RFESelector
+
+        return RFESelector, {
+            "n_features": 40,
+            "step": 10,
+            "random_state": 42,
+            "thread_count": 1,
+        }
+
     if name == "mrmr":
         from credit_risk_fs.selectors.mrmr import RandomForestRelevanceMRMRSelector
 
@@ -105,7 +115,7 @@ def get_selector(selector_name: str):
 
     raise ValueError(
         f"Unsupported selector: {selector_name}. "
-        "Available: boruta, boruta_rfe, mrmr, pca, llm, llm_then_stat, "
+        "Available: boruta, boruta_rfe, rfe, mrmr, pca, llm, llm_then_stat, "
         "llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
         "stable_core_llm_fill, none"
     )

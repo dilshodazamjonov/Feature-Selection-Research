@@ -1,0 +1,111 @@
+{
+  "schema_version": "lendingclub_memory_refinement_equivalence_v1",
+  "status": "passed",
+  "fixture_equivalence": {
+    "status": "passed",
+    "focused_test_file": "tests/test_lendingclub_memory_refinement.py",
+    "checks": [
+      "canonical row and fold order exact",
+      "encoded values exact",
+      "source and encoded dtypes exact",
+      "voters instantiated and released sequentially",
+      "aggregate tie order exact",
+      "LR-20 and CatBoost-40 exact budgets",
+      "RFE selector release before the next branch",
+      "capacity prediction ineligible for research and comparison",
+      "frozen limits and precision fail closed",
+      "Prompt-4 pilot artifacts byte immutable"
+    ]
+  },
+  "real_data_replay": {
+    "scenario_id": "cdv1-equivalence-001-lendingclub-v2-first-fold-voting-k200-s42",
+    "run_directory": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/runs/lendingclub_v2/cdv1-equivalence-001-lendingclub-v2-first-fold-voting-k200-s42",
+    "status": "completed",
+    "purpose": "memory_capacity_validation",
+    "research_eligible": false,
+    "comparison_eligible": false,
+    "load_oot": false,
+    "candidate_universe": 675,
+    "candidate_pool": 200,
+    "seed": 42,
+    "fold_id": 1,
+    "training_rows": 83283,
+    "validation_rows": 114267,
+    "training_identity_sha256": "26772a3715cbd70d43e24b05c3707a40064ae15c53eb08dfbdbab61f25d7179a",
+    "training_identity_target_sha256": "6bdf5af9e49a5385a9da5529a235db6c9a8d58786f1cb276ef0cec8044f84c9f",
+    "validation_identity_sha256": "d3b525aa8662c01301a4e4b30394c32bf1562bf48564ffbbecff29c4c1a4ff3c",
+    "validation_identity_target_sha256": "6c18d9ee3e228e71217c17679c4c407202620f2d95176a35288cdca88052a020",
+    "candidate_universe_sha256": "cfca9f5dd5df4bfd9fa715365fe45e3ed2dc104fcae2be53548f2ce82e3851bf",
+    "comparators": {
+      "lr": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+      "catboost": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0"
+    }
+  },
+  "exact_comparisons": {
+    "full_675_feature_universe_and_order": true,
+    "training_identity_and_order": true,
+    "validation_identity_and_order": true,
+    "training_identity_target_hash": true,
+    "validation_identity_target_hash": true,
+    "source_candidate_dtypes": true,
+    "selector_effective_dtype_float32": true,
+    "voter_ranking_columns": true,
+    "rf_corr_mrmr_feature_names_and_ranks": true,
+    "boruta_feature_names_and_ranks": true,
+    "aggregate_ranking_and_tie_order": true,
+    "top_200_candidate_order": true,
+    "lr_rfe_core_trace": true,
+    "catboost_rfe_core_trace": true,
+    "lr_selected_feature_list_20": true,
+    "catboost_selected_feature_list_40": true,
+    "lr_effective_scientific_configuration": true,
+    "catboost_effective_scientific_configuration": true,
+    "prediction_identity_order": true,
+    "prediction_targets": true,
+    "probability_orientation_class_1": true,
+    "checkpoint_and_resource_schema": true
+  },
+  "probability_comparison": {
+    "absolute_tolerance": 1e-12,
+    "relative_tolerance": 1e-12,
+    "declared_before_replay": true,
+    "lr_maximum_absolute_difference": 0.0,
+    "catboost_maximum_absolute_difference": 0.0,
+    "lr_passed": true,
+    "catboost_passed": true
+  },
+  "ignored_non_scientific_fields_only": [
+    "timestamps",
+    "audit-root paths",
+    "attempt IDs",
+    "wall times",
+    "resource samples",
+    "capacity coverage labels",
+    "hashes derived from ignored fields"
+  ],
+  "attempt_history": {
+    "attempt_count": 3,
+    "cumulative_wall_seconds": 1070.8670136000146,
+    "cumulative_peak_process_tree_rss_bytes": 7255834624,
+    "cumulative_minimum_system_available_ram_bytes": 19518697472,
+    "attempt_1_stop_code": "worker_crash",
+    "attempt_1_cause": "pandas sparse-usecols DtypeWarning formatter IndexError after compact selection checkpoint",
+    "attempt_2_stop_code": "worker_crash",
+    "attempt_2_cause": "same bounded parser defect; source-order usecols alone was insufficient",
+    "attempt_3_stop_code": null,
+    "attempt_3_status": "completed",
+    "selection_checkpoint_reused": true,
+    "scientific_work_reduced": false
+  },
+  "oot_opened": false,
+  "oot_rows_retained": 0,
+  "oot_scored": false,
+  "gate": "scientific_equivalence_established",
+  "prompt5_1_authentication": {
+    "prior_equivalence_reused_without_replay": true,
+    "lr_maximum_probability_difference": 0.0,
+    "catboost_maximum_probability_difference": 0.0,
+    "full_dev_capacity_scientific_configuration_unchanged": true,
+    "oot_opened": false
+  }
+}

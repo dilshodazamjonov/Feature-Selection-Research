@@ -1,7 +1,7 @@
 # data.py
 import logging
 from pathlib import Path
-from typing import List, Dict, Mapping, Sequence
+from typing import Callable, List, Dict, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -103,8 +103,17 @@ class DataLoader:
         columns: Sequence[str] | None,
         require_projection: bool = True,
         csv_chunk_rows: int | None = None,
+        row_filter: Callable[[pd.DataFrame], object] | None = None,
+        preserve_source_row_position: bool = False,
+        csv_low_memory: bool = True,
     ) -> pd.DataFrame:
-        """Load exactly one explicitly projected table without dtype-changing casts."""
+        """Load one explicitly projected table, optionally retaining filtered rows only.
+
+        The filter is applied to each CSV chunk before chunks are concatenated.  This
+        lets experiment code scan a temporally mixed source without materializing the
+        forbidden split in the retained in-memory frame.  ``columns=None`` remains
+        prohibited for experiment loads.
+        """
 
         if require_projection and columns is None:
             raise ValueError(
@@ -124,23 +133,69 @@ class DataLoader:
         path = self.available_tables()[table_name]
         if csv_chunk_rows is not None and int(csv_chunk_rows) <= 0:
             raise ValueError("csv_chunk_rows must be positive when supplied")
+        if row_filter is not None and path.suffix.lower() != ".csv":
+            raise ValueError(
+                "row-filtered experiment loads require chunked CSV input so excluded "
+                "rows are never retained in the assembled frame"
+            )
+        if row_filter is not None and csv_chunk_rows is None:
+            raise ValueError("row-filtered experiment loads require csv_chunk_rows")
+
+        source_row_count = 0
+        retained_row_count = 0
+
+        def retain_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
+            nonlocal source_row_count, retained_row_count
+            start = source_row_count
+            source_row_count += len(chunk)
+            if preserve_source_row_position:
+                chunk = chunk.copy()
+                chunk.insert(
+                    0,
+                    "__source_row_position__",
+                    np.arange(start, start + len(chunk), dtype=np.int64),
+                )
+            if row_filter is not None:
+                mask = pd.Series(row_filter(chunk), index=chunk.index)
+                if len(mask) != len(chunk) or mask.isna().any():
+                    raise ValueError(
+                        f"row filter for {table_name!r} returned an invalid mask"
+                    )
+                chunk = chunk.loc[mask.astype(bool)].copy()
+            retained_row_count += len(chunk)
+            return chunk
+
         if path.suffix.lower() == ".parquet":
             frame = pd.read_parquet(path, columns=requested)
+            source_row_count = len(frame)
+            retained_row_count = len(frame)
         else:
-            read_kwargs = {"usecols": requested, "encoding": "utf-8"}
+            read_kwargs = {
+                "usecols": requested,
+                "encoding": "utf-8",
+                "low_memory": bool(csv_low_memory),
+            }
             try:
                 if csv_chunk_rows is None:
                     frame = pd.read_csv(path, **read_kwargs)
+                    source_row_count = len(frame)
+                    retained_row_count = len(frame)
                 else:
                     chunks = pd.read_csv(path, chunksize=int(csv_chunk_rows), **read_kwargs)
-                    frame = pd.concat(chunks, ignore_index=True)
+                    retained = [retain_chunk(chunk) for chunk in chunks]
+                    frame = pd.concat(retained, ignore_index=True)
             except UnicodeDecodeError:
                 read_kwargs["encoding"] = "latin1"
+                source_row_count = 0
+                retained_row_count = 0
                 if csv_chunk_rows is None:
                     frame = pd.read_csv(path, **read_kwargs)
+                    source_row_count = len(frame)
+                    retained_row_count = len(frame)
                 else:
                     chunks = pd.read_csv(path, chunksize=int(csv_chunk_rows), **read_kwargs)
-                    frame = pd.concat(chunks, ignore_index=True)
+                    retained = [retain_chunk(chunk) for chunk in chunks]
+                    frame = pd.concat(retained, ignore_index=True)
 
         frame = normalize_home_credit_sentinel_dates(frame, table_name)
         dtype_bytes = int(frame.memory_usage(index=True, deep=True).sum())
@@ -149,13 +204,69 @@ class DataLoader:
             "requested_columns": requested,
             "loaded_columns": list(map(str, frame.columns)),
             "row_count": int(len(frame)),
+            "source_row_count": int(source_row_count),
+            "retained_row_count": int(retained_row_count),
+            "row_filter_applied": row_filter is not None,
+            "excluded_row_count": int(source_row_count - retained_row_count),
+            "preserved_source_row_position": bool(preserve_source_row_position),
             "dtype_bytes": dtype_bytes,
             "dtypes": {str(column): str(dtype) for column, dtype in frame.dtypes.items()},
             "projection_enforced": bool(require_projection),
             "csv_chunk_rows": csv_chunk_rows,
+            "csv_low_memory": bool(csv_low_memory),
         }
         self.dataframes[table_name] = frame
         return frame
+
+    def aggregate_max_by_group(
+        self,
+        table_name: str,
+        *,
+        group_column: str,
+        value_column: str,
+        csv_chunk_rows: int,
+    ) -> pd.Series:
+        """Stream an explicit two-column CSV projection into per-group maxima."""
+
+        if int(csv_chunk_rows) <= 0:
+            raise ValueError("csv_chunk_rows must be positive")
+        requested = [str(group_column), str(value_column)]
+        available = self.inspect_columns(table_name)
+        missing = set(requested) - set(available)
+        if missing:
+            raise ValueError(
+                f"aggregate projection for {table_name!r} is missing: {sorted(missing)}"
+            )
+        path = self.available_tables()[table_name]
+        if path.suffix.lower() != ".csv":
+            raise ValueError("streaming group aggregation currently requires CSV input")
+        maxima: pd.Series | None = None
+        source_rows = 0
+        for chunk in pd.read_csv(
+            path,
+            usecols=requested,
+            encoding="utf-8",
+            chunksize=int(csv_chunk_rows),
+        ):
+            source_rows += len(chunk)
+            chunk = normalize_home_credit_sentinel_dates(chunk, table_name)
+            current = chunk.groupby(group_column, sort=False)[value_column].max()
+            maxima = current if maxima is None else pd.concat([maxima, current], axis=1).max(axis=1)
+        if maxima is None:
+            maxima = pd.Series(dtype="float64", name=value_column)
+        maxima.name = value_column
+        self.last_load_report[f"{table_name}__max_{value_column}"] = {
+            "path": str(path),
+            "requested_columns": requested,
+            "loaded_columns": requested,
+            "source_row_count": int(source_rows),
+            "retained_row_count": int(len(maxima)),
+            "row_filter_applied": False,
+            "streaming_group_aggregation": "max",
+            "projection_enforced": True,
+            "csv_chunk_rows": int(csv_chunk_rows),
+        }
+        return maxima
 
     def load_all(
         self,

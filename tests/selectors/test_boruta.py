@@ -48,12 +48,10 @@ def test_boruta_zero_feature_outcome_is_not_backfilled(monkeypatch):
     assert selector.transform(X).shape == (2, 0)
 
 
-def test_rfe_budget_larger_than_width_selects_all_without_fitting_model():
+def test_rfe_budget_larger_than_width_fails_exact_budget_contract():
     X = pd.DataFrame({"b": [0, 1], "a": [1, 0]})
-    selector = RFESelector(n_features=20).fit(X, pd.Series([0, 1]))
-
-    assert selector.selected_features_ == ["b", "a"]
-    assert list(selector.transform(X).columns) == ["b", "a"]
+    with pytest.raises(ValueError, match="exceeds projected candidate count"):
+        RFESelector(n_features=20).fit(X, pd.Series([0, 1]))
 
 
 def test_legacy_boruta_module_imports_remain_available():

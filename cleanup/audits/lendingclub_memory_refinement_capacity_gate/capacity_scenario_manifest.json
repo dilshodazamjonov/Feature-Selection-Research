@@ -1,0 +1,88 @@
+{
+  "schema_version": "lendingclub_memory_capacity_scenario_manifest_v1",
+  "purpose": "memory_capacity_validation",
+  "research_eligible": false,
+  "comparison_eligible": false,
+  "load_oot": false,
+  "refinement_config": "configs/execution/lendingclub_memory_safe_refinement_v1.yaml",
+  "execution_root": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution",
+  "authorized_scenarios": [
+    {
+      "scenario_id": "cdv1-equivalence-001-lendingclub-v2-first-fold-voting-k200-s42",
+      "mode": "fold",
+      "fold_id": 1,
+      "candidate_universe": 675,
+      "candidate_pool": 200,
+      "branches": ["lr", "catboost"],
+      "seed": 42,
+      "load_oot": false,
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "status": "completed",
+      "run_directory": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/runs/lendingclub_v2/cdv1-equivalence-001-lendingclub-v2-first-fold-voting-k200-s42"
+    },
+    {
+      "scenario_id": "cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42",
+      "mode": "fold",
+      "fold_id": 5,
+      "candidate_universe": 675,
+      "candidate_pool": 300,
+      "branches": ["lr", "catboost"],
+      "seed": 42,
+      "load_oot": false,
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "status": "completed",
+      "original_recorded_status": "running",
+      "reconciliation": {
+        "reason_stale": "The audit manifest was written while the monitored worker was active and was not finalized when the worker later completed.",
+        "terminal_evidence": [
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/manifest.json",
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/checkpoint.json",
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42/resource_usage.json",
+          "capacity_execution/run_index.csv"
+        ],
+        "terminal_status": "completed",
+        "stop_code": null,
+        "reconciled_without_rerun": true
+      },
+      "run_directory": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/runs/lendingclub_v2/cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42"
+    },
+    {
+      "scenario_id": "cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42",
+      "mode": "full_dev",
+      "fold_id": null,
+      "candidate_universe": 675,
+      "candidate_pool": 300,
+      "branches": ["lr", "catboost"],
+      "seed": 42,
+      "load_oot": false,
+      "final_refit_capacity_validation": true,
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "status": "completed",
+      "original_recorded_status": "blocked_pending_largest_fold",
+      "reconciliation": {
+        "reason_stale": "The full-DEV capacity scenario was authorized only after the largest-fold terminal evidence was reconciled; its manifest entry remained pending until the monitored worker completed.",
+        "terminal_evidence": [
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/manifest.json",
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/checkpoint.json",
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/resource_usage.json",
+          "capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42/capacity_validation.json",
+          "capacity_execution/run_index.csv"
+        ],
+        "terminal_status": "completed",
+        "stop_code": null,
+        "worker_exit_code": 0,
+        "reconciled_without_rerun": false
+      },
+      "run_directory": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/runs/lendingclub_v2/cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42"
+    }
+  ],
+  "boundary": {
+    "canonical_results_registration_allowed": false,
+    "frozen_research_run_ids_executed": 0,
+    "oot_paths_opened": [],
+    "oot_rows_retained": 0
+  }
+}

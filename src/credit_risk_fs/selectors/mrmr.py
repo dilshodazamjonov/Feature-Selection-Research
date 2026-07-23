@@ -101,6 +101,27 @@ class RandomForestRelevanceMRMRSelector(
         else:
             X_sample = X
 
+        # Pearson correlations do not change as the selected set grows.  Build
+        # the matrix once, then update mean redundancy from the relevant rows.
+        # This is algebraically identical to repeatedly calling Series.corr but
+        # avoids hundreds of thousands of redundant full-column scans for the
+        # frozen 529/675-feature universes.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            correlation_matrix = X_sample.loc[:, self.rf_importances_.index].corr(
+                method=self.correlation
+            ).abs()
+        correlation_matrix = correlation_matrix.replace([np.inf, -np.inf], np.nan)
+        score_trace: list[dict[str, object]] = [
+            {
+                "selection_rank": 1,
+                "feature": selected[0],
+                "relevance": float(self.rf_importances_.loc[selected[0]]),
+                "mean_absolute_correlation": 0.0,
+                "selection_score": float(self.rf_importances_.loc[selected[0]]) / 0.05,
+            }
+        ]
+
         for _ in range(1, self.k):
             remaining = [
                 str(feature)
@@ -110,23 +131,15 @@ class RandomForestRelevanceMRMRSelector(
             if not remaining:
                 break
 
-            redundancy: dict[str, float] = {}
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                for feature in remaining:
-                    correlations = [
-                        abs(X_sample[chosen].corr(X_sample[feature], method=self.correlation))
-                        for chosen in selected
-                    ]
-                    finite = [value for value in correlations if np.isfinite(value)]
-                    mean_correlation = float(np.mean(finite)) if finite else 0.0
-                    redundancy[feature] = max(mean_correlation, 0.05)
+            correlations = correlation_matrix.loc[selected, remaining]
+            mean_correlation = correlations.mean(axis=0, skipna=True).fillna(0.0)
+            redundancy = mean_correlation.clip(lower=0.05)
 
             scores = pd.DataFrame(
                 {
                     "feature": remaining,
                     "score": [
-                        float(self.rf_importances_.loc[feature]) / redundancy[feature]
+                        float(self.rf_importances_.loc[feature]) / float(redundancy.loc[feature])
                         for feature in remaining
                     ],
                 }
@@ -135,9 +148,20 @@ class RandomForestRelevanceMRMRSelector(
                 ascending=[False, True],
                 kind="mergesort",
             )
-            selected.append(str(scores.iloc[0]["feature"]))
+            chosen = str(scores.iloc[0]["feature"])
+            selected.append(chosen)
+            score_trace.append(
+                {
+                    "selection_rank": len(selected),
+                    "feature": chosen,
+                    "relevance": float(self.rf_importances_.loc[chosen]),
+                    "mean_absolute_correlation": float(mean_correlation.loc[chosen]),
+                    "selection_score": float(scores.iloc[0]["score"]),
+                }
+            )
 
         self.mrmr_features_ = selected
+        self.selection_trace_ = pd.DataFrame(score_trace)
 
     def fit(
         self,
@@ -157,8 +181,15 @@ class RandomForestRelevanceMRMRSelector(
             self.selected_features_ = names
             return self
 
-        X_named = X.copy()
-        X_named.columns = names
+        # The selection encoder already supplies canonical string column names.
+        # Avoid copying the complete training matrix solely to assign an equal
+        # Index; retain a shallow metadata view only when normalization is
+        # actually required by a third-party caller.
+        if list(X.columns) == names:
+            X_named = X
+        else:
+            X_named = X.copy(deep=False)
+            X_named.columns = names
         self.get_rf_importances(X_named, y)
 
         if self.method == "rf":

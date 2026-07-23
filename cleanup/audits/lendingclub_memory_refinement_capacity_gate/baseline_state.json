@@ -1,0 +1,132 @@
+{
+  "schema_version": "lendingclub_memory_refinement_baseline_v1",
+  "captured_before_prompt5_implementation": true,
+  "git_head": "888e971a6f1a80261b62658e79c126be0e503556",
+  "git_dirty": true,
+  "dirty_worktree_inherited_from_prompt4": [
+    "M .gitignore",
+    "M cleanup/audits/resource_safe_execution/hardware_preflight.json",
+    "M scripts/run_matrix.py",
+    "M src/credit_risk_fs/data/loaders.py",
+    "M src/credit_risk_fs/evaluation/paired_inference.py",
+    "M src/credit_risk_fs/experiments/compare.py",
+    "M src/credit_risk_fs/experiments/config.py",
+    "M src/credit_risk_fs/experiments/execution.py",
+    "M src/credit_risk_fs/experiments/matrix.py",
+    "M src/credit_risk_fs/experiments/rank_voting.py",
+    "M src/credit_risk_fs/experiments/runner.py",
+    "M src/credit_risk_fs/experiments/tracking.py",
+    "M src/credit_risk_fs/pipelines/common.py",
+    "M src/credit_risk_fs/preprocessing/encoding.py",
+    "M src/credit_risk_fs/selectors/mrmr.py",
+    "M src/credit_risk_fs/selectors/registry.py",
+    "M src/credit_risk_fs/selectors/rfe.py",
+    "M tests/selectors/test_boruta.py",
+    "?? cleanup/audits/cross_dataset_voting_integration_pilot/",
+    "?? cleanup/tools/build_cross_dataset_voting_pilot_audit.py",
+    "?? configs/experiments/cross_dataset_rank_voting_pilot_v1.yaml",
+    "?? docs/research_extension/cross_dataset_voting_integration_pilot_v1.md",
+    "?? src/credit_risk_fs/experiments/prediction_contract.py",
+    "?? tests/test_cross_dataset_voting_integration.py"
+  ],
+  "baseline_validation": {
+    "focused_tests": "132 passed",
+    "full_tests": "480 passed, 31 skipped, 107 warnings",
+    "repository_validator": "passed, 84 artifacts verified",
+    "compileall": "passed",
+    "git_diff_check": "passed"
+  },
+  "frozen_hashes": {
+    "scientific_protocol": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "row_alignment_contract": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "voting_protocol": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+    "execution_policy": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012"
+  },
+  "canonical_active_results": {
+    "run_index_rows": 4,
+    "run_root_count": 4,
+    "statuses": ["completed", "completed", "completed", "completed"],
+    "run_ids": [
+      "cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0",
+      "cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0",
+      "cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+      "cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0"
+    ],
+    "research_rows": 0,
+    "research_directories": 0,
+    "active_locks": 0,
+    "active_result_partials": 0,
+    "orphan_repository_workers": 0
+  },
+  "prompt4_pilot_artifact_snapshot": {
+    "path": "cleanup/audits/cross_dataset_voting_integration_pilot/pilot_manifest.json",
+    "sha256": "3efc9ddf42829813f2d3444b00ae13a5f7321cbfe4ab40088500b2650d6911df",
+    "size_bytes": 44753,
+    "registered_runs": 4,
+    "artifact_entries": 84,
+    "note": "This immutable snapshot records the exact path, size, and SHA-256 for every requested pilot manifest, ranking, selection, prediction, effective-configuration, resource, preflight, checkpoint, log, and validation artifact."
+  },
+  "legacy_bundle": {
+    "root": "D:/ResearchFindings/results",
+    "file_count": 359,
+    "size_bytes": 110084164,
+    "added_count": 0,
+    "removed_count": 0,
+    "changed_count": 0,
+    "manifest_path": "cleanup/audits/foundation_protocol_freeze/legacy_artifact_manifest.csv",
+    "manifest_sha256": "31ca80f026dc9169f14e3c518b49cd4ee0ad71074264daef4cf660263e1f2417"
+  },
+  "live_preflight": {
+    "path": "cleanup/audits/resource_safe_execution/hardware_preflight.json",
+    "timestamp_utc": "2026-07-22T14:35:38.374968+00:00",
+    "status": "pass",
+    "logical_cpu_count": 16,
+    "physical_cpu_count": 10,
+    "total_ram_gib": 39.63307189941406,
+    "available_ram_gib": 24.21783447265625,
+    "preflight_peak_process_rss_bytes": 111009792,
+    "results_free_disk_gib": 161.27148056030273,
+    "temp_free_disk_gib": 80.93771362304688,
+    "requested_accelerator": "cpu",
+    "gpu_training_enabled": false,
+    "resolved_parallelism": {
+      "concurrent_experiment_runs": 1,
+      "concurrent_folds": 1,
+      "data_loader_workers": 0,
+      "estimator_threads": 4,
+      "allow_nested_parallelism": false
+    }
+  },
+  "canonical_lendingclub_dev": {
+    "row_count": 598649,
+    "ordered_identity_sha256": "4d4cd7973f00eb946fef0a6bb09e61fe6d2b9be92892786f352446660c68818e",
+    "ordered_identity_target_sha256": "1373baf30fc16b022d1d9059e400df65b5d3bb3f9ae76e3397b3172578f91590",
+    "candidate_universe_count": 675
+  },
+  "largest_canonical_lendingclub_fold": {
+    "selection_basis": "All folds share the same columns and dtypes; fold 5 has the largest training plus validation materialization at 530,513 rows and the largest training boundary at 458,602 rows.",
+    "fold_id": 5,
+    "training_rows": 458602,
+    "validation_rows": 71911,
+    "combined_rows": 530513,
+    "training_identity_sha256": "888547e6d7105b994b6ae2ca313e26f3c080fe9951f08b0beb6a2895c557c25e",
+    "training_identity_target_sha256": "44ca8d06fc7499df48588a97b6b2952cc9120e25eb404a320a8c84414be3984a",
+    "validation_identity_sha256": "67e0588dc469cf1f08fb8221a7f0f5d4f0283c8e0f4f745d29f77fc5746dda3b",
+    "validation_identity_target_sha256": "2762f0b3e3b2cca940a5a8302929bc8fb3440eae4506909a14028a8a4cab187d"
+  },
+  "oot_opened": false,
+  "oot_rows_retained": 0,
+  "committed_staged_pushed_amended_reset": false,
+  "prompt5_1_continuation": {
+    "starting_status": "IN_PROGRESS",
+    "largest_fold_manifest_reconciled_without_rerun": true,
+    "full_dev_capacity_run_id": "cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42",
+    "full_dev_capacity_status": "completed",
+    "full_dev_peak_process_tree_rss_bytes": 8547688448,
+    "full_dev_minimum_system_available_ram_bytes": 17486753792,
+    "full_dev_stop_code": null,
+    "full_dev_oot_opened": false,
+    "final_shape_coverage_rows": 16,
+    "final_gate": "PASS"
+  }
+}

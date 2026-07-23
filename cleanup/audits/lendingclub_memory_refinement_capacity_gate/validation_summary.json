@@ -1,0 +1,49 @@
+{
+  "schema_version": "lendingclub_memory_refinement_capacity_gate_validation_v1",
+  "final_gate": "PASS",
+  "continuation_status": "completed",
+  "focused_tests": {"file": "tests/test_lendingclub_memory_refinement.py", "passed": 12, "failed": 0},
+  "full_test_suite": {"command": ".venv\\Scripts\\python.exe -m pytest tests -q", "status": "passed", "passed": 492, "skipped": 31, "warnings": 107},
+  "repository_validator": {"command": ".venv\\Scripts\\python.exe cleanup/tools/validate_repository_state.py --root .", "status": "passed", "artifacts_verified": 84, "registered_runs": 4, "run_roots": 4},
+  "compileall": {"command": ".venv\\Scripts\\python.exe -m compileall src scripts", "status": "passed"},
+  "git_diff_check": {"status": "passed", "notes": "No whitespace errors; Git emitted only existing CRLF normalization warnings."},
+  "frozen_hashes": {
+    "scientific_protocol": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "row_alignment_contract": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "voting_protocol": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+    "execution_policy": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+    "mechanics_config": "4e2a17b93a751bbcb7443d8e82b15781f8a0467a07aa0037a3c298abff4132d7"
+  },
+  "capacity_runs": {
+    "largest_fold": "largest_fold_resource_summary.json",
+    "full_dev": "full_dev_resource_summary.json",
+    "stage_trace": "stage_resource_trace.csv",
+    "projection": "post_refinement_capacity_projection.csv"
+  },
+  "final_documents": {
+    "implementation_report": "docs/research_extension/lendingclub_memory_refinement_capacity_gate_v1.md",
+    "research_runbook": "docs/research_extension/cross_dataset_voting_research_runbook_v1.md",
+    "artifact_manifest": "artifact_manifest.json"
+  },
+  "scientific_boundaries": {
+    "research_ids_executed": 0,
+    "research_dev_folds_executed": 0,
+    "research_full_dev_oot_fits_executed": 0,
+    "oot_paths_opened": [],
+    "oot_rows_retained": 0,
+    "capacity_rows_registered_in_canonical_results": 0,
+    "gpu_training": false,
+    "api_clip_embedding_shap_workloads": 0
+  },
+  "preservation": {
+    "canonical_run_index_rows": 4,
+    "canonical_run_roots": 4,
+    "prompt4_pilot_manifest_sha256": "3efc9ddf42829813f2d3444b00ae13a5f7321cbfe4ab40088500b2650d6911df",
+    "legacy_file_count": 359,
+    "legacy_size_bytes": 110084164,
+    "legacy_added_removed_changed": [0, 0, 0],
+    "mechanics_config_changed": false,
+    "git_commit_or_stage_or_push": false
+  },
+  "final_validation_note": "All required final validation commands passed after the full-DEV scenario and audit reconciliation."
+}

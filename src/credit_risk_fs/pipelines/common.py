@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable, Sequence
 import logging
 import json
 import random
 import time
 import hashlib
+import unicodedata
 
 import joblib
 import numpy as np
@@ -25,6 +26,7 @@ from credit_risk_fs.evaluation.stability import (
 from credit_risk_fs.experiments.compare import build_experiment_summary_row
 from credit_risk_fs.experiments.atomic_io import (
     copy_atomic,
+    sha256_file,
     write_csv_atomic,
     write_json_atomic,
 )
@@ -144,6 +146,23 @@ class PreparedExperimentData:
     oot_stable_row_ids: pd.Series | None = None
     source_identity: "SourceIdentityProvenance | None" = None
     data_load_report: dict[str, dict[str, object]] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class PreparedVotingPilotData:
+    """DEV-only projected frame for one bounded cross-dataset voting pilot."""
+
+    X: pd.DataFrame
+    y: pd.Series
+    stable_row_ids: pd.Series
+    time_values: pd.Series
+    candidate_features: tuple[str, ...]
+    source_projections: dict[str, list[str]]
+    data_load_report: dict[str, dict[str, object]]
+    source_artifact_hashes: dict[str, str]
+    split_evidence: dict[str, Any]
+    data_access_log: list[dict[str, Any]]
+    candidate_universe: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -317,6 +336,468 @@ def calculate_required_columns(
             f"required feature columns are absent from application_train: {sorted(missing_features)}"
         )
     return {"application_train": projection}
+
+
+def _candidate_name_hash(features: list[str] | tuple[str, ...]) -> str:
+    return hashlib.sha256(
+        json.dumps(list(features), ensure_ascii=False, separators=(",", ":")).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+
+
+def _validate_candidate_names(features: list[str], expected_count: int) -> None:
+    if len(features) != expected_count or len(set(features)) != expected_count:
+        raise ValueError(
+            "candidate universe count/uniqueness mismatch: "
+            f"expected={expected_count}, observed={len(features)}, unique={len(set(features))}"
+        )
+    normalized = [unicodedata.normalize("NFC", value).casefold() for value in features]
+    if len(set(normalized)) != len(normalized):
+        collisions: dict[str, list[str]] = {}
+        for original, canonical in zip(features, normalized, strict=True):
+            collisions.setdefault(canonical, []).append(original)
+        raise ValueError(
+            "candidate universe contains unresolved normalized-name collisions: "
+            f"{[values for values in collisions.values() if len(values) > 1]}"
+        )
+
+
+def _canonical_lendingclub_loan_ids(values: pd.Series) -> pd.Series:
+    """Restore sidecar loan IDs to the frozen canonical decimal-string type."""
+
+    numeric = pd.to_numeric(values, errors="raise")
+    if numeric.isna().any() or (numeric < 0).any() or (numeric % 1 != 0).any():
+        raise ValueError("LendingClub loan_id must contain non-negative integer values")
+    return numeric.astype("int64").astype("string")
+
+
+def _homecredit_source_projection(repository_root: Path) -> dict[str, list[str]]:
+    snapshot_path = repository_root / "data/homecredit/metadata/raw_schema_snapshot.json"
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    expected = (
+        "application_train",
+        "bureau",
+        "bureau_balance",
+        "credit_card_balance",
+        "installments_payments",
+        "POS_CASH_balance",
+        "previous_application",
+    )
+    available = {
+        Path(str(item["name"])).stem: list(map(str, item["columns"]))
+        for item in snapshot["files"]
+    }
+    missing = set(expected) - set(available)
+    if missing:
+        raise ValueError(f"Home Credit schema snapshot is missing tables: {sorted(missing)}")
+    return {name: available[name] for name in expected}
+
+
+def _homecredit_dev_identity_set(
+    recent_decision_by_id: pd.Series,
+    application_train_ids: Iterable[Any],
+) -> frozenset[Any]:
+    application_ids = frozenset(application_train_ids)
+    return frozenset(
+        value
+        for value in recent_decision_by_id.index[
+            (recent_decision_by_id >= -600) & (recent_decision_by_id < -240)
+        ].tolist()
+        if value in application_ids
+    )
+
+
+def _load_homecredit_voting_dev(
+    repository_root: Path,
+    *,
+    csv_chunk_rows: int,
+    split: str = "dev",
+    projected_candidate_features: Sequence[str] | None = None,
+) -> PreparedVotingPilotData:
+    split_name = str(split).lower()
+    if split_name not in {"dev", "oot"}:
+        raise ValueError("Home Credit voting split must be DEV or OOT")
+    data_dir = repository_root / "data/homecredit/raw"
+    loader = DataLoader(data_dir)
+    projections = _homecredit_source_projection(repository_root)
+    recent = loader.aggregate_max_by_group(
+        "previous_application",
+        group_column="SK_ID_CURR",
+        value_column="DAYS_DECISION",
+        csv_chunk_rows=csv_chunk_rows,
+    )
+    application_identity = loader.load_table(
+        "application_train",
+        columns=["SK_ID_CURR"],
+        csv_chunk_rows=csv_chunk_rows,
+    )
+    application_ids = frozenset(application_identity["SK_ID_CURR"].tolist())
+    if split_name == "dev":
+        retained_ids = _homecredit_dev_identity_set(recent, application_ids)
+        expected_rows = 99_092
+    else:
+        retained_ids = frozenset(
+            value
+            for value in recent.index[recent.between(-240, 0, inclusive="both")].tolist()
+            if value in application_ids
+        )
+        expected_rows = 120_053
+    if len(retained_ids) != expected_rows:
+        raise ValueError(
+            f"Home Credit {split_name.upper()} identity count mismatch: "
+            f"expected={expected_rows}, observed={len(retained_ids)}"
+        )
+
+    def current_id_filter(frame: pd.DataFrame) -> pd.Series:
+        return frame["SK_ID_CURR"].isin(retained_ids)
+
+    frames: dict[str, pd.DataFrame] = {}
+    frames["application_train"] = loader.load_table(
+        "application_train",
+        columns=projections["application_train"],
+        csv_chunk_rows=csv_chunk_rows,
+        row_filter=current_id_filter,
+    )
+    frames["bureau"] = loader.load_table(
+        "bureau",
+        columns=projections["bureau"],
+        csv_chunk_rows=csv_chunk_rows,
+        row_filter=current_id_filter,
+    )
+    bureau_ids = frozenset(frames["bureau"]["SK_ID_BUREAU"].dropna().tolist())
+    frames["bureau_balance"] = loader.load_table(
+        "bureau_balance",
+        columns=projections["bureau_balance"],
+        csv_chunk_rows=csv_chunk_rows,
+        row_filter=lambda frame: frame["SK_ID_BUREAU"].isin(bureau_ids),
+    )
+    for table in (
+        "credit_card_balance",
+        "installments_payments",
+        "POS_CASH_balance",
+        "previous_application",
+    ):
+        frames[table] = loader.load_table(
+            table,
+            columns=projections[table],
+            csv_chunk_rows=csv_chunk_rows,
+            row_filter=current_id_filter,
+        )
+
+    app = frames["application_train"]
+    time_proxy = build_application_time_proxy(frames)
+    feature_tables = build_all_features(frames.copy())
+    if time_proxy is not None:
+        feature_tables.append(time_proxy)
+    merged = loader.merge_features(app, feature_tables, on="SK_ID_CURR")
+    time_col = resolve_time_col(
+        merged,
+        "recent_decision",
+        extra_candidates=DECISION_TIME_CANDIDATES,
+    )
+    valid_times = (
+        merged[time_col].between(-600, -240, inclusive="left")
+        if split_name == "dev"
+        else merged[time_col].between(-240, 0, inclusive="both")
+    )
+    if merged[time_col].isna().any() or not valid_times.all():
+        raise ValueError(
+            f"Home Credit {split_name.upper()}-only materialization retained an invalid time row"
+        )
+    excluded = {
+        "TARGET",
+        "SK_ID_CURR",
+        "SK_ID_BUREAU",
+        "SK_ID_PREV",
+        "recent_decision",
+        "PREV_recent_decision_MAX",
+        "DAYS_DECISION",
+        "application_time_proxy",
+    }
+    candidates = [str(column) for column in merged.columns if str(column) not in excluded]
+    _validate_candidate_names(candidates, 529)
+    projected = (
+        list(candidates)
+        if projected_candidate_features is None
+        else [str(value) for value in projected_candidate_features]
+    )
+    if not projected or len(projected) != len(set(projected)):
+        raise ValueError("Home Credit candidate projection must be non-empty and unique")
+    if any(feature not in candidates for feature in projected):
+        raise ValueError("Home Credit candidate projection contains an unknown feature")
+
+    from credit_risk_fs.experiments.row_alignment import split_alignment_summary
+
+    split_evidence = split_alignment_summary(merged["SK_ID_CURR"], merged["TARGET"])
+    contract = json.loads(
+        (repository_root / "configs/protocols/row_alignment_contract_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )["datasets"]["homecredit"][split_name]
+    for key in ("row_count", "ordered_row_id_sha256", "ordered_row_id_target_sha256"):
+        if split_evidence[key] != contract[key]:
+            raise ValueError(
+                f"Home Credit {split_name.upper()} row-alignment mismatch for {key}"
+            )
+
+    source_hashes = {
+        table: sha256_file(loader.available_tables()[table]) for table in projections
+    }
+    access = [
+        {
+            "path": str(loader.available_tables()[table]),
+            "role": f"temporally_mixed_source_stream_filtered_to_{split_name}",
+            "requested_columns": projections[table],
+            "columns_were_implicit": False,
+            "oot_rows_retained": len(merged) if split_name == "oot" else 0,
+        }
+        for table in projections
+    ]
+    return PreparedVotingPilotData(
+        X=merged.loc[:, projected].reset_index(drop=True),
+        y=merged["TARGET"].astype("int8").reset_index(drop=True),
+        stable_row_ids=merged["SK_ID_CURR"].reset_index(drop=True),
+        time_values=merged[time_col].reset_index(drop=True),
+        candidate_features=tuple(projected),
+        source_projections=projections,
+        data_load_report=dict(loader.last_load_report),
+        source_artifact_hashes=source_hashes,
+        split_evidence={**split_evidence, "candidate_universe_sha256": _candidate_name_hash(candidates)},
+        data_access_log=access,
+        candidate_universe=tuple(candidates),
+    )
+
+
+def _load_lendingclub_v2_voting_dev(
+    repository_root: Path,
+    *,
+    csv_chunk_rows: int,
+    projected_candidate_features: Sequence[str] | None = None,
+    csv_low_memory: bool = True,
+    split: str = "dev",
+) -> PreparedVotingPilotData:
+    split_name = str(split).lower()
+    if split_name not in {"dev", "oot"}:
+        raise ValueError("LendingClub voting split must be DEV or OOT")
+    data_dir = repository_root / "data/lendingclub_v2/processed"
+    inventory_path = repository_root / "data/lendingclub_v2/metadata/feature_inventory.csv"
+    manifest_path = data_dir / "record_identity_v1.manifest.json"
+    inventory = pd.read_csv(inventory_path, usecols=["feature"])
+    candidates = inventory["feature"].astype(str).tolist()
+    _validate_candidate_names(candidates, 675)
+    projected = (
+        list(candidates)
+        if projected_candidate_features is None
+        else [str(value) for value in projected_candidate_features]
+    )
+    if not projected or len(projected) != len(set(projected)):
+        raise ValueError("LendingClub candidate projection must be non-empty and unique")
+    if any(feature not in candidates for feature in projected):
+        raise ValueError("LendingClub candidate projection contains an unknown feature")
+    # pandas' chunked C parser can raise while constructing mixed-dtype warning
+    # labels when a sparse usecols list is supplied in a different order from
+    # the CSV header.  Read the exact approved subset in physical source order,
+    # then restore aggregate-rank order explicitly below.
+    projected_set = set(projected)
+    projected_source_order = [
+        feature for feature in candidates if feature in projected_set
+    ]
+    projections = {
+        "application_train": [
+            "TARGET",
+            "recent_decision",
+            "issue_d",
+            *projected_source_order,
+        ],
+        "record_identity_v1": [
+            "loan_id",
+            "split",
+            "time_value",
+            "target",
+            "processed_row_position",
+            "source_row_position",
+            "issue_month",
+        ],
+    }
+    loader = DataLoader(data_dir)
+    identity = loader.load_table(
+        "record_identity_v1",
+        columns=projections["record_identity_v1"],
+        csv_chunk_rows=csv_chunk_rows,
+        row_filter=lambda frame: frame["split"].astype(str).str.upper().eq(
+            split_name.upper()
+        ),
+    )
+    # CSV inference reads the all-decimal source IDs as integers.  The frozen row
+    # contract hashes authenticated IDs as canonical strings, matching sidecar
+    # creation, so restore that semantic type before ordering or hashing.
+    identity["loan_id"] = _canonical_lendingclub_loan_ids(identity["loan_id"])
+    application = loader.load_table(
+        "application_train",
+        columns=projections["application_train"],
+        csv_chunk_rows=csv_chunk_rows,
+        row_filter=lambda frame: pd.to_numeric(
+            frame["recent_decision"], errors="raise"
+        ).between(
+            -1795 if split_name == "dev" else -1065,
+            -1065 if split_name == "dev" else -730,
+            inclusive="left" if split_name == "dev" else "both",
+        ),
+        preserve_source_row_position=True,
+        csv_low_memory=csv_low_memory,
+    )
+    expected_rows = 598_649 if split_name == "dev" else 293_105
+    if len(identity) != expected_rows or len(application) != len(identity):
+        raise ValueError(f"LendingClub v2 {split_name.upper()} row count mismatch")
+    observed_positions = application.pop("__source_row_position__").astype("int64").reset_index(drop=True)
+    if not observed_positions.equals(
+        identity["processed_row_position"].astype("int64").reset_index(drop=True)
+    ):
+        raise ValueError("LendingClub v2 sidecar/application position mismatch")
+    if not application["TARGET"].astype("int64").reset_index(drop=True).equals(
+        identity["target"].astype("int64").reset_index(drop=True)
+    ):
+        raise ValueError("LendingClub v2 sidecar/application target mismatch")
+    if not application["recent_decision"].astype("int64").reset_index(drop=True).equals(
+        identity["time_value"].astype("int64").reset_index(drop=True)
+    ):
+        raise ValueError("LendingClub v2 sidecar/application time mismatch")
+
+    from credit_risk_fs.experiments.lendingclub_identity import stable_chronological_order
+    from credit_risk_fs.experiments.row_alignment import split_alignment_summary
+
+    ordered_identity = stable_chronological_order(
+        identity.loc[:, ["loan_id", "time_value", "target"]],
+        time_column="time_value",
+        identity_column="loan_id",
+    )
+    split_evidence = split_alignment_summary(
+        ordered_identity["loan_id"], ordered_identity["target"]
+    )
+    contract = json.loads(
+        (repository_root / "configs/protocols/row_alignment_contract_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )["datasets"]["lendingclub_v2"][split_name]
+    for key in ("row_count", "ordered_row_id_sha256", "ordered_row_id_target_sha256"):
+        if split_evidence[key] != contract[key]:
+            raise ValueError(
+                f"LendingClub v2 {split_name.upper()} row-alignment mismatch for {key}"
+            )
+
+    identity_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if sha256_file(inventory_path) != "507d4bdfc5b83ecc5002312b25bdc9b5d89446f10d49a41848d1131cf34adae1":
+        raise ValueError("LendingClub v2 feature inventory hash mismatch")
+    if sha256_file(data_dir / "record_identity_v1.csv") != identity_manifest["sidecar"]["sha256"]:
+        raise ValueError("LendingClub v2 identity sidecar hash mismatch")
+    source_hashes = {
+        "application_train": str(identity_manifest["processed_dataset"]["sha256"]),
+        "record_identity_v1": str(identity_manifest["sidecar"]["sha256"]),
+        "feature_inventory": sha256_file(inventory_path),
+        "identity_manifest": sha256_file(manifest_path),
+    }
+    access = [
+        {
+            "path": str(loader.available_tables()[table]),
+            "role": f"temporally_mixed_source_stream_filtered_to_{split_name}",
+            "requested_columns": projections[table],
+            "columns_were_implicit": False,
+            "oot_rows_retained": len(application) if split_name == "oot" else 0,
+        }
+        for table in projections
+    ]
+    access.extend(
+        [
+            {
+                "path": str(inventory_path),
+                "role": "candidate_metadata_only",
+                "requested_columns": ["feature"],
+                "columns_were_implicit": False,
+                "oot_rows_retained": 0,
+            },
+            {
+                "path": str(manifest_path),
+                "role": "identity_provenance_manifest_only",
+                "requested_columns": [],
+                "columns_were_implicit": False,
+                "oot_rows_retained": 0,
+            },
+        ]
+    )
+    return PreparedVotingPilotData(
+        X=application.loc[:, projected].reset_index(drop=True),
+        y=application["TARGET"].astype("int8").reset_index(drop=True),
+        stable_row_ids=identity["loan_id"].astype("string").reset_index(drop=True),
+        time_values=application["recent_decision"].astype("int64").reset_index(drop=True),
+        candidate_features=tuple(projected),
+        source_projections=projections,
+        data_load_report=dict(loader.last_load_report),
+        source_artifact_hashes=source_hashes,
+        split_evidence={**split_evidence, "candidate_universe_sha256": _candidate_name_hash(candidates)},
+        data_access_log=access,
+        candidate_universe=tuple(candidates),
+    )
+
+
+def prepare_voting_pilot_dev_data(
+    repository_root: str | Path,
+    *,
+    dataset: str,
+    csv_chunk_rows: int = 25_000,
+    projected_candidate_features: Sequence[str] | None = None,
+    csv_low_memory: bool = True,
+) -> PreparedVotingPilotData:
+    """Load only retained DEV rows for the bounded voting integration pilot."""
+
+    root = Path(repository_root).resolve()
+    if dataset == "homecredit":
+        return _load_homecredit_voting_dev(
+            root,
+            csv_chunk_rows=csv_chunk_rows,
+            projected_candidate_features=projected_candidate_features,
+            split="dev",
+        )
+    if dataset == "lendingclub_v2":
+        return _load_lendingclub_v2_voting_dev(
+            root,
+            csv_chunk_rows=csv_chunk_rows,
+            projected_candidate_features=projected_candidate_features,
+            csv_low_memory=csv_low_memory,
+            split="dev",
+        )
+    raise ValueError(f"unsupported voting-pilot dataset: {dataset}")
+
+
+def prepare_voting_research_oot_data(
+    repository_root: str | Path,
+    *,
+    dataset: str,
+    projected_candidate_features: Sequence[str],
+    csv_chunk_rows: int = 25_000,
+    csv_low_memory: bool = False,
+) -> PreparedVotingPilotData:
+    """Load a locked OOT projection; callers own the global DEV barrier."""
+
+    root = Path(repository_root).resolve()
+    if not projected_candidate_features:
+        raise ValueError("OOT access requires an explicit non-empty feature projection")
+    if dataset == "homecredit":
+        return _load_homecredit_voting_dev(
+            root,
+            csv_chunk_rows=csv_chunk_rows,
+            projected_candidate_features=projected_candidate_features,
+            split="oot",
+        )
+    if dataset == "lendingclub_v2":
+        return _load_lendingclub_v2_voting_dev(
+            root,
+            csv_chunk_rows=csv_chunk_rows,
+            projected_candidate_features=projected_candidate_features,
+            csv_low_memory=csv_low_memory,
+            split="oot",
+        )
+    raise ValueError(f"unsupported voting-research dataset: {dataset}")
 
 
 def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:

@@ -1,0 +1,159 @@
+schema_version: lendingclub_memory_safe_refinement_v1
+version: 1.0.0
+purpose: memory_capacity_validation
+status: separately_versioned_execution_mechanics
+research_eligible: false
+comparison_eligible: false
+load_oot: false
+oot_scored: false
+
+parents:
+  scientific_protocol:
+    path: configs/protocols/credit_scoring_extension_v1.yaml
+    sha256: f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0
+  row_alignment_contract:
+    path: configs/protocols/row_alignment_contract_v1.json
+    sha256: fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0
+  voting_protocol:
+    path: configs/protocols/cross_dataset_rank_voting_v1.yaml
+    sha256: 51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49
+  execution_policy:
+    path: configs/execution/local_laptop_safe_v1.yaml
+    sha256: 1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012
+
+eligibility:
+  dataset: lendingclub_v2
+  stages:
+    - canonical_fold_projection
+    - selection_encoding
+    - rf_corr_mrmr
+    - boruta
+    - rank_aggregation
+    - top_k_projected_reload
+    - rfe_lr
+    - final_model_fit_lr
+    - rfe_catboost
+    - final_model_fit_catboost
+    - capacity_prediction_publication
+  candidate_universe: 675
+  candidate_pools: [200, 300]
+  seed: 42
+  branches: [lr, catboost]
+  final_feature_budgets:
+    lr: 20
+    catboost: 40
+
+ownership_rules:
+  - compute chronological source positions without reordering the candidate source frame
+  - materialize only the active training boundary from the 675-feature source frame
+  - release the source candidate frame before voter fitting
+  - construct selection encoding as one C-contiguous float32 owner
+  - instantiate and retain only one fitted voter at a time
+  - retain compact names, ranks, scores, and configuration after each voter
+  - release the 675-feature encoded matrix before top-K reload
+  - reload an explicit ordered top-K projection through the canonical loader
+  - reuse only the identical top-K raw and numeric projection between sequential branches
+  - release each fitted RFE selector and final-model state before the next branch
+  - release all material frames before lifecycle finalization
+
+numeric_semantics:
+  source_dtypes: unchanged_from_canonical_loader
+  selector_effective_dtype: float32
+  rfe_effective_dtype: float32
+  precision_change_allowed: false
+  missing_value_treatment: unchanged
+  categorical_mapping: sorted_casefold_training_only_unchanged
+  feature_order: exact
+  row_order: exact_canonical_chronological
+
+telemetry:
+  parent_supervisor_resource_monitor_required: true
+  stage_boundary_worker_ownership_trace_required: true
+  sampling_interval_seconds: 1.0
+  process_tree_rss_warning_gib: 24
+  process_tree_rss_abort_gib: 28
+  system_available_ram_abort_below_gib: 8
+  estimator_threads_maximum: 4
+  concurrent_runs: 1
+  concurrent_folds: 1
+  data_loader_workers: 0
+  gpu: disabled
+
+publication:
+  atomic_artifacts_required: true
+  compact_checkpoint_references_only: true
+  disk_backed_matrix_intermediates: false
+  implicit_all_column_requests_allowed: false
+  unapproved_fallbacks_allowed: false
+  capacity_results_root: cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution
+  canonical_results_registration_allowed: false
+
+equivalence:
+  exact_fields:
+    - ordered_row_identities
+    - ordered_feature_names
+    - source_and_encoded_dtypes
+    - voter_ranks
+    - aggregate_ranks_and_tie_order
+    - top_k_order
+    - rfe_trace
+    - selected_feature_lists
+    - effective_scientific_configuration
+    - probability_orientation
+  probability_absolute_tolerance: 1.0e-12
+  probability_relative_tolerance: 1.0e-12
+  tolerance_basis: deterministic CPU estimators with identical ordered inputs and seed; tolerance declared before replay
+  ignored_non_scientific_fields:
+    - timestamps
+    - audit_root_paths
+    - attempt_ids
+    - wall_times
+    - resource_samples
+    - hashes_derived_from_ignored_fields
+
+capacity_estimation:
+  safety_factor: 1.35
+  system_available_ram_floor_gib: 8
+  boruta_live_numeric_equivalents: 3.0
+  fixed_uncertainty_gib: 0.5
+  required_free_results_gib: 20
+  required_free_temp_gib: 20
+  atomic_write_safety_factor: 2.5
+
+scenarios:
+  - scenario_id: cdv1-equivalence-001-lendingclub-v2-first-fold-voting-k200-s42
+    execution_order: 1
+    dataset: lendingclub_v2
+    mode: fold
+    fold_id: 1
+    candidate_pool: 200
+    seed: 42
+    branches: [lr, catboost]
+    load_oot: false
+    final_refit: false
+    research_eligible: false
+    comparison_eligible: false
+  - scenario_id: cdv1-capacity-001-lendingclub-v2-largest-fold-voting-k300-s42
+    execution_order: 2
+    dataset: lendingclub_v2
+    mode: fold
+    fold_id: 5
+    candidate_pool: 300
+    seed: 42
+    branches: [lr, catboost]
+    load_oot: false
+    final_refit: false
+    research_eligible: false
+    comparison_eligible: false
+  - scenario_id: cdv1-capacity-002-lendingclub-v2-full-dev-voting-k300-s42
+    execution_order: 3
+    dataset: lendingclub_v2
+    mode: full_dev
+    fold_id: null
+    candidate_pool: 300
+    seed: 42
+    branches: [lr, catboost]
+    load_oot: false
+    final_refit_capacity_validation: true
+    research_eligible: false
+    comparison_eligible: false

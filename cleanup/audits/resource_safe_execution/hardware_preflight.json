@@ -1,11 +1,11 @@
 {
   "schema_version": "resource_safe_preflight_v1",
-  "timestamp_utc": "2026-07-22T07:06:13.867928+00:00",
+  "timestamp_utc": "2026-07-22T14:35:38.374968+00:00",
   "repository_root": "D:\\python projects\\Research",
   "active_results_root": "D:\\python projects\\Research\\results",
   "temporary_root": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp",
   "requested_accelerator": "cpu",
-  "git_commit": "b1e0d5236d8d6ceb6aa889eced45d11c9cdc0a8e",
+  "git_commit": "888e971a6f1a80261b62658e79c126be0e503556",
   "git_dirty": true,
   "gpu_telemetry_override": false,
   "configured_policy": {
@@ -84,16 +84,16 @@
     "logical_cpu_count": 16,
     "physical_cpu_count": 10,
     "total_ram_gb": 39.63307189941406,
-    "available_ram_gb": 24.50466537475586,
-    "results_free_disk_gb": 254.0965347290039,
-    "temp_free_disk_gb": 81.81854629516602,
+    "available_ram_gb": 24.21783447265625,
+    "results_free_disk_gb": 161.27148056030273,
+    "temp_free_disk_gb": 80.93771362304688,
     "results_volume": "D:\\",
     "temp_volume": "C:\\",
     "gpu": {
       "available": true,
       "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
       "total_vram_gb": 7.99609375,
-      "free_vram_gb": 6.721027374267578,
+      "free_vram_gb": 6.35888671875,
       "driver_version": "610.62",
       "cuda_visible": true,
       "process_telemetry_available": true,
@@ -125,19 +125,19 @@
       "name": "system_available_ram",
       "passed": true,
       "blocking": true,
-      "detail": "available=24.505 GiB, minimum=8.000 GiB"
+      "detail": "available=24.218 GiB, minimum=8.000 GiB"
     },
     {
       "name": "results_disk_free",
       "passed": true,
       "blocking": true,
-      "detail": "free=254.097 GiB, minimum=20.000 GiB"
+      "detail": "free=161.271 GiB, minimum=20.000 GiB"
     },
     {
       "name": "temp_disk_free",
       "passed": true,
       "blocking": true,
-      "detail": "free=81.819 GiB, minimum=20.000 GiB"
+      "detail": "free=80.938 GiB, minimum=20.000 GiB"
     },
     {
       "name": "gpu_process_telemetry",
@@ -152,9 +152,9 @@
   "blocking_reasons": [],
   "status": "pass",
   "preflight_resource_usage": {
-    "rss_start_bytes": 86069248,
-    "rss_end_bytes": 111398912,
-    "peak_rss_bytes": 111398912,
+    "rss_start_bytes": 85921792,
+    "rss_end_bytes": 111009792,
+    "peak_rss_bytes": 111009792,
     "peak_measurement": "unavailable"
   }
 }

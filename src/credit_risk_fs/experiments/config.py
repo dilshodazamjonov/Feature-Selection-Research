@@ -319,6 +319,8 @@ def apply_feature_budget_to_selector_kwargs(
         rfe_kwargs["n_features"] = feature_budget
         updated["rfe_kwargs"] = rfe_kwargs
         updated["n_features"] = feature_budget
+    elif name == "rfe":
+        updated["n_features"] = feature_budget
     elif name == "pca":
         updated["n_components"] = feature_budget
     elif name == "llm":

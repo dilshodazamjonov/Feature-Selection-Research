@@ -8,6 +8,58 @@ import numpy as np
 import pandas as pd
 
 
+def build_cross_dataset_voting_comparison_plan(specs: Iterable[object]) -> list[dict[str, object]]:
+    """Build the twelve frozen future paired comparisons without executing inference."""
+
+    values = list(specs)
+    references = {
+        (getattr(item, "dataset"), getattr(item, "model")): item
+        for item in values
+        if getattr(item, "method_id", None) == "rf_corr_mrmr"
+    }
+    voting = [
+        item for item in values if getattr(item, "method_id", None) == "rank_voting_v1"
+    ]
+    if len(references) != 4 or len(voting) != 12:
+        raise ValueError("comparison plan requires four references and twelve voting runs")
+    plan: list[dict[str, object]] = []
+    for item in voting:
+        key = (getattr(item, "dataset"), getattr(item, "model"))
+        reference = references.get(key)
+        if reference is None:
+            raise ValueError(f"missing rerun-required reference for {key}")
+        budget = int(getattr(item, "candidate_pool_budget"))
+        plan.append(
+            {
+                "family": getattr(item, "comparison_family"),
+                "dataset": key[0],
+                "model": key[1],
+                "voting_run_id": getattr(item, "run_id"),
+                "reference_run_id": getattr(reference, "run_id"),
+                "candidate_pool_budget": budget,
+                "comparison_type": "primary" if budget == 200 else "sensitivity",
+                "paired_auc_test": "two_sided_delong_on_identical_oot_rows",
+                "bootstrap": "paired_stratified_by_target",
+                "bootstrap_repetitions": 2000,
+                "bootstrap_minimum_valid": 1900,
+                "bootstrap_seed": 20260721,
+                "confidence_interval": "95_percent_percentile",
+                "holm_family_size": 3,
+                "execution_status": "not_executed_specification_only",
+            }
+        )
+    if sum(row["comparison_type"] == "primary" for row in plan) != 4:
+        raise ValueError("comparison plan must contain four primary comparisons")
+    if sum(row["comparison_type"] == "sensitivity" for row in plan) != 8:
+        raise ValueError("comparison plan must contain eight sensitivity comparisons")
+    families: dict[object, int] = {}
+    for row in plan:
+        families[row["family"]] = families.get(row["family"], 0) + 1
+    if len(families) != 4 or set(families.values()) != {3}:
+        raise ValueError("each Holm family must contain exactly three AUC comparisons")
+    return plan
+
+
 def _safe_mean(series: pd.Series) -> float:
     numeric = pd.to_numeric(series, errors="coerce")
     if numeric.notna().any():

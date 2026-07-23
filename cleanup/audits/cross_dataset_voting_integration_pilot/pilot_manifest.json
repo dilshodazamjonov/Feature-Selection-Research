@@ -1,0 +1,1006 @@
+{
+  "schema_version": "cross_dataset_voting_integration_pilot_manifest_v1",
+  "status": "passed",
+  "pilot_config": "configs/experiments/cross_dataset_rank_voting_pilot_v1.yaml",
+  "pilot_config_sha256": "52af4bb68f5c19571a24cb8c331e01c88f17970e18022385a2139165f9c31f97",
+  "execution_order": [
+    "cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0",
+    "cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0",
+    "cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+    "cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0"
+  ],
+  "registered_run_count": 4,
+  "registered_run_ids": [
+    "cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0",
+    "cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0",
+    "cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+    "cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0"
+  ],
+  "runs": [
+    {
+      "run_id": "cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0",
+      "run_directory": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0",
+      "status": "completed",
+      "purpose": "integration_resource_pilot",
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "coverage_type": "single_dev_fold_pilot",
+      "training_rows": 16242,
+      "validation_rows": 16720,
+      "candidate_universe_count": 529,
+      "voter_count": 2,
+      "voter_rows": 1058,
+      "top_k": 200,
+      "final_feature_count": 20,
+      "prediction_rows": 16720,
+      "training_validation_identity_overlap_count": 0,
+      "opened_oot_paths": [],
+      "retained_oot_rows": 0,
+      "effective_model": {
+        "model": "lr",
+        "implementation": "credit_risk_fs.models.lr",
+        "requested_model_configuration": {
+          "solver": "liblinear",
+          "max_iter": 1000,
+          "class_weight": "balanced",
+          "random_state": 42
+        },
+        "actual_estimator_configuration": {
+          "C": 1.0,
+          "class_weight": "balanced",
+          "dual": false,
+          "fit_intercept": true,
+          "intercept_scaling": 1,
+          "l1_ratio": 0.0,
+          "max_iter": 1000,
+          "n_jobs": null,
+          "penalty": "deprecated",
+          "random_state": 42,
+          "solver": "liblinear",
+          "tol": 0.0001,
+          "verbose": 0,
+          "warm_start": false
+        },
+        "effective_penalty": "l2_via_sklearn_deprecation_bridge_l1_ratio_0",
+        "preprocessing": {
+          "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+          "configuration": {},
+          "fit_boundary": "dev_fold_training_only",
+          "input_original_feature_count": 20,
+          "encoded_feature_count": 20
+        },
+        "validation_target_used_for_fit": false,
+        "probability_classes": [
+          0,
+          1
+        ],
+        "positive_probability_column": 1,
+        "probability_orientation": "class_1_higher_default_risk",
+        "task_type": "CPU",
+        "estimator_thread_count": 1,
+        "final_feature_budget": 20,
+        "rfe_effective_estimator_configuration": {
+          "implementation": "catboost.CatBoostClassifier",
+          "iterations": 500,
+          "depth": 6,
+          "learning_rate": 0.05,
+          "verbose": false,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4,
+          "task_type": "CPU",
+          "rfe_step": 10,
+          "n_features_to_select": 20
+        },
+        "candidate_pool_budget": 200,
+        "selector_seed": 42,
+        "protocol_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+        "checkpoint_resolved_config_hash": "053551ee34cc77755fe02de7dd25237c1b4b6f39826f73808e8fc80f6b4c65b3",
+        "selection_checkpoint_reused": true
+      },
+      "artifacts": {
+        "config": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/config.json",
+          "present": true,
+          "size_bytes": 2566,
+          "sha256": "6587ad9ff2da46d0756a36c4649d3c8d243573563579e34dced586825999719b"
+        },
+        "manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/manifest.json",
+          "present": true,
+          "size_bytes": 13411,
+          "sha256": "f59d6b3cce8c18e62b0fbbb4ec306cb4fe94df374cd5c5076661b9cccf140d86"
+        },
+        "selected_features": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/selected_features.csv",
+          "present": true,
+          "size_bytes": 1021,
+          "sha256": "f24b15e6570cd49808bd8644110506415bf5344eb243ce313759d01be05ea6db"
+        },
+        "fold_selections": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/fold_selections.csv",
+          "present": true,
+          "size_bytes": 11695,
+          "sha256": "8c91866da5ec37d62423b32428ab8bd79ba6e687c62a4d4491815be5eb1dcbb1"
+        },
+        "predictions_dev": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/predictions_dev.csv",
+          "present": true,
+          "size_bytes": 3087288,
+          "sha256": "0a94158fe5101472c163679c3f1bb05ee482149c35a8f55fbc4461de16612da6"
+        },
+        "resource_usage": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/resource_usage.json",
+          "present": true,
+          "size_bytes": 56393,
+          "sha256": "252fe48fd824a814d7f49be87d3656773c05167fd53c50e9dfb20134affe8b18"
+        },
+        "preflight": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/preflight.json",
+          "present": true,
+          "size_bytes": 5314,
+          "sha256": "8b67f2ae15082ab8207170acb7fb1448514c48c7be54d4aba51965f4e15f8957"
+        },
+        "checkpoint": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/checkpoint.json",
+          "present": true,
+          "size_bytes": 25086,
+          "sha256": "6dd903b7fa9c16ffe2b9c230c549cb2a56b38f9527a43573c7fb12650843bb97"
+        },
+        "run_log": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/run.log",
+          "present": true,
+          "size_bytes": 1567,
+          "sha256": "d9b9361acb0ea2eaf8ea7ac5e145620cbac482ead16a24057f71f4b86ece6908"
+        },
+        "voter_rankings": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/voter_rankings.csv",
+          "present": true,
+          "size_bytes": 736095,
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d"
+        },
+        "aggregate_ranking": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/aggregate_ranking.csv",
+          "present": true,
+          "size_bytes": 93419,
+          "sha256": "221387c1a1c9e71a3a4933e016884c33ef5af3ae40ecfb6dd31d5995f60553f7"
+        },
+        "candidate_features": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/candidate_features.csv",
+          "present": true,
+          "size_bytes": 9376,
+          "sha256": "3629940f3207b3f631be106c5e715606c24b5732987d64a776b5fea8ee986404"
+        },
+        "rfe_selection_trace": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/rfe_selection_trace.csv",
+          "present": true,
+          "size_bytes": 11561,
+          "sha256": "2a4fe0610bd919384f7430278d01476e5c10c14f9132f69277506f1f89f66238"
+        },
+        "candidate_projection_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/candidate_projection_manifest.json",
+          "present": true,
+          "size_bytes": 104612,
+          "sha256": "a6c77537be6145939f719968b6370cd2cf762aaa8c82fdbf01ab0be93bf45f01"
+        },
+        "selection_artifact_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/selection_artifact_manifest.json",
+          "present": true,
+          "size_bytes": 5144,
+          "sha256": "3ae13c618a9335aeac89359dcab9446bfe2dd2b215053d5ff2b36976ae892cd4"
+        },
+        "fold_identity_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/fold_identity_manifest.json",
+          "present": true,
+          "size_bytes": 1270,
+          "sha256": "f8b2b70ffb501d092cf64bbf613b44da542c3ad6213e326246bea2ac168f2286"
+        },
+        "data_access_log": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/data_access_log.json",
+          "present": true,
+          "size_bytes": 35629,
+          "sha256": "2b1b47da0e94b3a56fd0ce929a5cfc6f930d8da9c7b5ed31641321f21430f745"
+        },
+        "effective_model_config": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/effective_model_config.json",
+          "present": true,
+          "size_bytes": 1861,
+          "sha256": "0f464070dca643ac15470656d45541570d89d0c1871c54b7a6b481ffb0999738"
+        },
+        "prediction_metadata": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/prediction_metadata.json",
+          "present": true,
+          "size_bytes": 2031,
+          "sha256": "f8b1a3341875734dcc87c83c0983d116ff480fb17021ed62cf634a61a3ec72e8"
+        },
+        "pilot_validation": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/pilot_validation.json",
+          "present": true,
+          "size_bytes": 2743,
+          "sha256": "a74d2adda4c8f15fbe075ec2fbc93d936282a2ceade47b3f2b5a472c9069cbb0"
+        },
+        "stage_timings": {
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/stage_timings.csv",
+          "present": true,
+          "size_bytes": 237,
+          "sha256": "ea1ec12a5fc94bfdf6286c3aa402ae9dea109768768007d5b0e056d1eda737f6"
+        }
+      },
+      "attempts": [
+        {
+          "attempt": "attempt_01",
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/incomplete/attempt_history/attempt_01_resource_usage.json",
+          "status": "failed",
+          "wall_seconds": 1.0198763999796938,
+          "stop_code": "worker_crash",
+          "peak_process_tree_rss_bytes": 163246080
+        },
+        {
+          "attempt": "attempt_02",
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/incomplete/attempt_history/attempt_02_resource_usage.json",
+          "status": "failed",
+          "wall_seconds": 6.101676899997983,
+          "stop_code": "worker_crash",
+          "peak_process_tree_rss_bytes": 201244672
+        },
+        {
+          "attempt": "attempt_03",
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/incomplete/attempt_history/attempt_03_resource_usage.json",
+          "status": "failed",
+          "wall_seconds": 347.9360207999998,
+          "stop_code": "worker_crash",
+          "peak_process_tree_rss_bytes": 2231021568
+        },
+        {
+          "attempt": "attempt_04",
+          "path": "results/runs/homecredit/cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0/resource_usage.json",
+          "status": "completed",
+          "wall_seconds": 114.81530399998883,
+          "stop_code": null,
+          "peak_process_tree_rss_bytes": 2237083648
+        }
+      ],
+      "checkpoint_completed_stages": [
+        "initialized",
+        "data_validated",
+        "selection_completed",
+        "model_fit_completed",
+        "dev_prediction_completed"
+      ]
+    },
+    {
+      "run_id": "cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0",
+      "run_directory": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0",
+      "status": "completed",
+      "purpose": "integration_resource_pilot",
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "coverage_type": "single_dev_fold_pilot",
+      "training_rows": 16242,
+      "validation_rows": 16720,
+      "candidate_universe_count": 529,
+      "voter_count": 2,
+      "voter_rows": 1058,
+      "top_k": 200,
+      "final_feature_count": 40,
+      "prediction_rows": 16720,
+      "training_validation_identity_overlap_count": 0,
+      "opened_oot_paths": [],
+      "retained_oot_rows": 0,
+      "effective_model": {
+        "model": "catboost",
+        "implementation": "credit_risk_fs.models.catboost",
+        "requested_model_configuration": {
+          "depth": 10,
+          "learning_rate": 0.01,
+          "l2_leaf_reg": 95,
+          "min_data_in_leaf": 290,
+          "colsample_bylevel": 0.9,
+          "random_strength": 0.125,
+          "grow_policy": "Depthwise",
+          "one_hot_max_size": 21,
+          "leaf_estimation_method": "Newton",
+          "bootstrap_type": "Bernoulli",
+          "subsample": 0.55,
+          "loss_function": "Logloss",
+          "eval_metric": "AUC",
+          "auto_class_weights": "Balanced",
+          "iterations": 1500,
+          "early_stopping_rounds": 150,
+          "verbose": 100,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4
+        },
+        "actual_estimator_configuration": {
+          "iterations": 1500,
+          "learning_rate": 0.01,
+          "depth": 10,
+          "l2_leaf_reg": 95,
+          "loss_function": "Logloss",
+          "leaf_estimation_method": "Newton",
+          "thread_count": 4,
+          "verbose": 100,
+          "auto_class_weights": "Balanced",
+          "one_hot_max_size": 21,
+          "random_strength": 0.125,
+          "eval_metric": "AUC",
+          "allow_writing_files": false,
+          "bootstrap_type": "Bernoulli",
+          "subsample": 0.55,
+          "colsample_bylevel": 0.9,
+          "random_state": 42,
+          "early_stopping_rounds": 150,
+          "grow_policy": "Depthwise",
+          "min_data_in_leaf": 290
+        },
+        "effective_penalty": null,
+        "preprocessing": {
+          "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+          "configuration": {},
+          "fit_boundary": "dev_fold_training_only",
+          "input_original_feature_count": 40,
+          "encoded_feature_count": 90
+        },
+        "validation_target_used_for_fit": false,
+        "probability_classes": [
+          0,
+          1
+        ],
+        "positive_probability_column": 1,
+        "probability_orientation": "class_1_higher_default_risk",
+        "task_type": "CPU",
+        "estimator_thread_count": 4,
+        "final_feature_budget": 40,
+        "rfe_effective_estimator_configuration": {
+          "implementation": "catboost.CatBoostClassifier",
+          "iterations": 500,
+          "depth": 6,
+          "learning_rate": 0.05,
+          "verbose": false,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4,
+          "task_type": "CPU",
+          "rfe_step": 10,
+          "n_features_to_select": 40
+        },
+        "candidate_pool_budget": 200,
+        "selector_seed": 42,
+        "protocol_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+        "checkpoint_resolved_config_hash": "4122e72181531ea5541a1ac6bd17b6a885a81b2e627f6535a4336f66c5f24efd"
+      },
+      "artifacts": {
+        "config": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/config.json",
+          "present": true,
+          "size_bytes": 2584,
+          "sha256": "412411225f4b8e812fc84365d73ac2beebe85a7e112dd8bbf24bad6ac521cb34"
+        },
+        "manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/manifest.json",
+          "present": true,
+          "size_bytes": 13223,
+          "sha256": "daf7a49b2645a84639cedf6b6f2442dde311bc424bb3f258effdf54806c45a6a"
+        },
+        "selected_features": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/selected_features.csv",
+          "present": true,
+          "size_bytes": 2240,
+          "sha256": "769064fda073d5ef5360e5098395696f1f20df16d65301d9bd42f1a0579aa92b"
+        },
+        "fold_selections": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/fold_selections.csv",
+          "present": true,
+          "size_bytes": 11655,
+          "sha256": "86d211d923535a824cb5ad8c0005863ac70e4d80875d3260d6e688509bd25e88"
+        },
+        "predictions_dev": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/predictions_dev.csv",
+          "present": true,
+          "size_bytes": 3293251,
+          "sha256": "920dee6f0c35454696c6e8378320b2f92426d626a6a8188466c26bfe08f2f790"
+        },
+        "resource_usage": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/resource_usage.json",
+          "present": true,
+          "size_bytes": 163346,
+          "sha256": "a44ad54ad4b89312ca0088bb5790da0056346a72df453d604e3502e8043c97a0"
+        },
+        "preflight": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/preflight.json",
+          "present": true,
+          "size_bytes": 5327,
+          "sha256": "93b05c169d6f2dedc3473b3adf928d037024808cdd6adbf2f7d1d610454fd0cf"
+        },
+        "checkpoint": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/checkpoint.json",
+          "present": true,
+          "size_bytes": 21415,
+          "sha256": "973c02be5ece83a2364d69cd920fa4d5b431059d291106c1b036a48e101ce2e3"
+        },
+        "run_log": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/run.log",
+          "present": true,
+          "size_bytes": 983,
+          "sha256": "d1a04634684374d585ff3a4ceea94005bdbea28b830cf9bfdd95c200b5191eb2"
+        },
+        "voter_rankings": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/voter_rankings.csv",
+          "present": true,
+          "size_bytes": 736095,
+          "sha256": "5a9f575b6c57d45d77affae05be481c987a23b64d8e933b56787ae9ef7a1843d"
+        },
+        "aggregate_ranking": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/aggregate_ranking.csv",
+          "present": true,
+          "size_bytes": 93419,
+          "sha256": "221387c1a1c9e71a3a4933e016884c33ef5af3ae40ecfb6dd31d5995f60553f7"
+        },
+        "candidate_features": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/candidate_features.csv",
+          "present": true,
+          "size_bytes": 9376,
+          "sha256": "3629940f3207b3f631be106c5e715606c24b5732987d64a776b5fea8ee986404"
+        },
+        "rfe_selection_trace": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/rfe_selection_trace.csv",
+          "present": true,
+          "size_bytes": 11521,
+          "sha256": "89f0a713ed91190400d998f1426c1597abace30ebf8a0a84e7983d3c6820181d"
+        },
+        "candidate_projection_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/candidate_projection_manifest.json",
+          "present": true,
+          "size_bytes": 105227,
+          "sha256": "d724892a11af3fb3d8b5ea678b81df70b32dfff39c8aff2a68bf0212cec57131"
+        },
+        "selection_artifact_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/selection_artifact_manifest.json",
+          "present": true,
+          "size_bytes": 5186,
+          "sha256": "f830dd6327a25f5772fd3fb80bfe5ad2bb279c6dfd864571ce4abf5c67da68b1"
+        },
+        "fold_identity_manifest": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/fold_identity_manifest.json",
+          "present": true,
+          "size_bytes": 1270,
+          "sha256": "f8b2b70ffb501d092cf64bbf613b44da542c3ad6213e326246bea2ac168f2286"
+        },
+        "data_access_log": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/data_access_log.json",
+          "present": true,
+          "size_bytes": 35629,
+          "sha256": "2b1b47da0e94b3a56fd0ce929a5cfc6f930d8da9c7b5ed31641321f21430f745"
+        },
+        "effective_model_config": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/effective_model_config.json",
+          "present": true,
+          "size_bytes": 2521,
+          "sha256": "1893a5b238e0d95ac1e6b3c797d1b62707505d7b0d1be853c1125bb7799a31a0"
+        },
+        "prediction_metadata": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/prediction_metadata.json",
+          "present": true,
+          "size_bytes": 2049,
+          "sha256": "e4bf4bf5055fc33c2f692e8b3d7c0f7e4b8142b6d19e1387b96fc5dcad340061"
+        },
+        "pilot_validation": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/pilot_validation.json",
+          "present": true,
+          "size_bytes": 2721,
+          "sha256": "79e2949fbc1bdc25778a5b457cc84eb34af9d1259d796b4b9c9123c266abb99b"
+        },
+        "stage_timings": {
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/stage_timings.csv",
+          "present": true,
+          "size_bytes": 448,
+          "sha256": "07e0f9eded8a1005cce72a016637382923a5148ff63f081ff87727de2e6a7ef5"
+        }
+      },
+      "attempts": [
+        {
+          "attempt": "attempt_01",
+          "path": "results/runs/homecredit/cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0/resource_usage.json",
+          "status": "completed",
+          "wall_seconds": 349.7553797000146,
+          "stop_code": null,
+          "peak_process_tree_rss_bytes": 2241609728
+        }
+      ],
+      "checkpoint_completed_stages": [
+        "initialized",
+        "data_validated",
+        "selection_completed",
+        "model_fit_completed",
+        "dev_prediction_completed"
+      ]
+    },
+    {
+      "run_id": "cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+      "run_directory": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0",
+      "status": "completed",
+      "purpose": "integration_resource_pilot",
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "coverage_type": "single_dev_fold_pilot",
+      "training_rows": 83283,
+      "validation_rows": 114267,
+      "candidate_universe_count": 675,
+      "voter_count": 2,
+      "voter_rows": 1350,
+      "top_k": 200,
+      "final_feature_count": 20,
+      "prediction_rows": 114267,
+      "training_validation_identity_overlap_count": 0,
+      "opened_oot_paths": [],
+      "retained_oot_rows": 0,
+      "effective_model": {
+        "model": "lr",
+        "implementation": "credit_risk_fs.models.lr",
+        "requested_model_configuration": {
+          "solver": "liblinear",
+          "max_iter": 1000,
+          "class_weight": "balanced",
+          "random_state": 42
+        },
+        "actual_estimator_configuration": {
+          "C": 1.0,
+          "class_weight": "balanced",
+          "dual": false,
+          "fit_intercept": true,
+          "intercept_scaling": 1,
+          "l1_ratio": 0.0,
+          "max_iter": 1000,
+          "n_jobs": null,
+          "penalty": "deprecated",
+          "random_state": 42,
+          "solver": "liblinear",
+          "tol": 0.0001,
+          "verbose": 0,
+          "warm_start": false
+        },
+        "effective_penalty": "l2_via_sklearn_deprecation_bridge_l1_ratio_0",
+        "preprocessing": {
+          "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+          "configuration": {
+            "cat_min_frequency": 50
+          },
+          "fit_boundary": "dev_fold_training_only",
+          "input_original_feature_count": 20,
+          "encoded_feature_count": 31
+        },
+        "validation_target_used_for_fit": false,
+        "probability_classes": [
+          0,
+          1
+        ],
+        "positive_probability_column": 1,
+        "probability_orientation": "class_1_higher_default_risk",
+        "task_type": "CPU",
+        "estimator_thread_count": 1,
+        "final_feature_budget": 20,
+        "rfe_effective_estimator_configuration": {
+          "implementation": "catboost.CatBoostClassifier",
+          "iterations": 500,
+          "depth": 6,
+          "learning_rate": 0.05,
+          "verbose": false,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4,
+          "task_type": "CPU",
+          "rfe_step": 10,
+          "n_features_to_select": 20
+        },
+        "candidate_pool_budget": 200,
+        "selector_seed": 42,
+        "protocol_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+        "checkpoint_resolved_config_hash": "d3e35bd0b252937d2e0118f7d27e3506a5ae4c9c8e634a55ef53dc68bc795f10"
+      },
+      "artifacts": {
+        "config": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/config.json",
+          "present": true,
+          "size_bytes": 2574,
+          "sha256": "adbcc384f060856a9039cfcf28ff08bcb80c72f13a9d9140e170089e61ab9890"
+        },
+        "manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/manifest.json",
+          "present": true,
+          "size_bytes": 12401,
+          "sha256": "d510687942a2e2824cd224de32440de3c0fbabe09d614cf58b44a92b528fa0cb"
+        },
+        "selected_features": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/selected_features.csv",
+          "present": true,
+          "size_bytes": 1120,
+          "sha256": "9bd6344b43b0dd53e847c804403bb3ddce827e8d5b6bea06922b8715168b9afc"
+        },
+        "fold_selections": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/fold_selections.csv",
+          "present": true,
+          "size_bytes": 12270,
+          "sha256": "aee9524b22fbb0943735177de6b97a8dd10843cff82658bdbb830ca623c782fe"
+        },
+        "predictions_dev": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/predictions_dev.csv",
+          "present": true,
+          "size_bytes": 22308629,
+          "sha256": "b89a8df8b62b07d911b84832f3833d910fd2bba0c4669db660c03477c73c7b67"
+        },
+        "resource_usage": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/resource_usage.json",
+          "present": true,
+          "size_bytes": 355553,
+          "sha256": "4d699d43ee0d55be7df8c30820325aff0c385bbe6ba447b05e3be63506b3247c"
+        },
+        "preflight": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/preflight.json",
+          "present": true,
+          "size_bytes": 5323,
+          "sha256": "6a996783ddeeb0a56c8e709ce61aa1313b69b25cd867bcd29b4be8c60de0532d"
+        },
+        "checkpoint": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/checkpoint.json",
+          "present": true,
+          "size_bytes": 22624,
+          "sha256": "3b2c0ebe42d2f5eb50ef1001b8f5500392cb0d89ca5f815b84c79ebe0a6ce61d"
+        },
+        "run_log": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/run.log",
+          "present": true,
+          "size_bytes": 900,
+          "sha256": "a948f176c028f87041e11022488637a59e6362d21ab4a6a0b910d833eef1e113"
+        },
+        "voter_rankings": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/voter_rankings.csv",
+          "present": true,
+          "size_bytes": 940532,
+          "sha256": "f272e5e3b557ebf9ab44df069ed44777cc955490efb39b8b2ede8f8c8d9a6dcf"
+        },
+        "aggregate_ranking": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/aggregate_ranking.csv",
+          "present": true,
+          "size_bytes": 121549,
+          "sha256": "fb66c0ce0c5e15d567d5676a183fab2657c72a1600358e3cd6f3fad53bb2ccd8"
+        },
+        "candidate_features": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/candidate_features.csv",
+          "present": true,
+          "size_bytes": 9951,
+          "sha256": "e7b84bbe598581ef1b10b1666228487ebaade96a79a6e5923f6c91437ad10488"
+        },
+        "rfe_selection_trace": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/rfe_selection_trace.csv",
+          "present": true,
+          "size_bytes": 12136,
+          "sha256": "b9a8d501b8169792493904ea4f20bf7a0dcccd49c85bb6e0e5ea97cf4a600df6"
+        },
+        "candidate_projection_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/candidate_projection_manifest.json",
+          "present": true,
+          "size_bytes": 147356,
+          "sha256": "3c096a83eebea673de446a4b16a8b8b90c857e809794b4066b6f7f5fc09a10d2"
+        },
+        "selection_artifact_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/selection_artifact_manifest.json",
+          "present": true,
+          "size_bytes": 5201,
+          "sha256": "f41b8698fde76f72bd6a8df8e1b865877db80ed1a32004508d83981a6d60b179"
+        },
+        "fold_identity_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/fold_identity_manifest.json",
+          "present": true,
+          "size_bytes": 1283,
+          "sha256": "9044b99be5fa3b86559dd47310bc41339fa12db8b493ba36bb15b35aa3debbd0"
+        },
+        "data_access_log": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/data_access_log.json",
+          "present": true,
+          "size_bytes": 111754,
+          "sha256": "8203e7e8a20ba178f041219ca789330816968e213295dc4eb310a058dba4105e"
+        },
+        "effective_model_config": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/effective_model_config.json",
+          "present": true,
+          "size_bytes": 1858,
+          "sha256": "201701920a28b75ece65cb255db1b8f2763595a528d2f03385c624c81a8017e9"
+        },
+        "prediction_metadata": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/prediction_metadata.json",
+          "present": true,
+          "size_bytes": 2052,
+          "sha256": "ca11abef7603651bf11af1c16754f2cafe7e4662b9c86c056a4740a098f04759"
+        },
+        "pilot_validation": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/pilot_validation.json",
+          "present": true,
+          "size_bytes": 2726,
+          "sha256": "1c3b980c887838e3c1f7d77a202a9378d410c7a4d5858c5d3551e21c1b780b3b"
+        },
+        "stage_timings": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/stage_timings.csv",
+          "present": true,
+          "size_bytes": 445,
+          "sha256": "42b482f91319259ed4f580ae4645219e2cfd7d0e6b2e99c9ad2eacaa968e9132"
+        }
+      },
+      "attempts": [
+        {
+          "attempt": "attempt_01",
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/incomplete/attempt_history/attempt_01_resource_usage.json",
+          "status": "failed",
+          "wall_seconds": 68.08715320000192,
+          "stop_code": "worker_crash",
+          "peak_process_tree_rss_bytes": 6941106176
+        },
+        {
+          "attempt": "attempt_02",
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0/resource_usage.json",
+          "status": "completed",
+          "wall_seconds": 766.0210867999995,
+          "stop_code": null,
+          "peak_process_tree_rss_bytes": 13526896640
+        }
+      ],
+      "checkpoint_completed_stages": [
+        "initialized",
+        "data_validated",
+        "selection_completed",
+        "model_fit_completed",
+        "dev_prediction_completed"
+      ]
+    },
+    {
+      "run_id": "cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0",
+      "run_directory": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0",
+      "status": "completed",
+      "purpose": "integration_resource_pilot",
+      "research_eligible": false,
+      "comparison_eligible": false,
+      "coverage_type": "single_dev_fold_pilot",
+      "training_rows": 83283,
+      "validation_rows": 114267,
+      "candidate_universe_count": 675,
+      "voter_count": 2,
+      "voter_rows": 1350,
+      "top_k": 200,
+      "final_feature_count": 40,
+      "prediction_rows": 114267,
+      "training_validation_identity_overlap_count": 0,
+      "opened_oot_paths": [],
+      "retained_oot_rows": 0,
+      "effective_model": {
+        "model": "catboost",
+        "implementation": "credit_risk_fs.models.catboost",
+        "requested_model_configuration": {
+          "depth": 10,
+          "learning_rate": 0.01,
+          "l2_leaf_reg": 95,
+          "min_data_in_leaf": 290,
+          "colsample_bylevel": 0.9,
+          "random_strength": 0.125,
+          "grow_policy": "Depthwise",
+          "one_hot_max_size": 21,
+          "leaf_estimation_method": "Newton",
+          "bootstrap_type": "Bernoulli",
+          "subsample": 0.55,
+          "loss_function": "Logloss",
+          "eval_metric": "AUC",
+          "auto_class_weights": "Balanced",
+          "iterations": 1500,
+          "early_stopping_rounds": 150,
+          "verbose": 100,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4
+        },
+        "actual_estimator_configuration": {
+          "iterations": 1500,
+          "learning_rate": 0.01,
+          "depth": 10,
+          "l2_leaf_reg": 95,
+          "loss_function": "Logloss",
+          "leaf_estimation_method": "Newton",
+          "thread_count": 4,
+          "verbose": 100,
+          "auto_class_weights": "Balanced",
+          "one_hot_max_size": 21,
+          "random_strength": 0.125,
+          "eval_metric": "AUC",
+          "allow_writing_files": false,
+          "bootstrap_type": "Bernoulli",
+          "subsample": 0.55,
+          "colsample_bylevel": 0.9,
+          "random_state": 42,
+          "early_stopping_rounds": 150,
+          "grow_policy": "Depthwise",
+          "min_data_in_leaf": 290
+        },
+        "effective_penalty": null,
+        "preprocessing": {
+          "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+          "configuration": {
+            "cat_min_frequency": 50
+          },
+          "fit_boundary": "dev_fold_training_only",
+          "input_original_feature_count": 40,
+          "encoded_feature_count": 119
+        },
+        "validation_target_used_for_fit": false,
+        "probability_classes": [
+          0,
+          1
+        ],
+        "positive_probability_column": 1,
+        "probability_orientation": "class_1_higher_default_risk",
+        "task_type": "CPU",
+        "estimator_thread_count": 4,
+        "final_feature_budget": 40,
+        "rfe_effective_estimator_configuration": {
+          "implementation": "catboost.CatBoostClassifier",
+          "iterations": 500,
+          "depth": 6,
+          "learning_rate": 0.05,
+          "verbose": false,
+          "random_state": 42,
+          "allow_writing_files": false,
+          "thread_count": 4,
+          "task_type": "CPU",
+          "rfe_step": 10,
+          "n_features_to_select": 40
+        },
+        "candidate_pool_budget": 200,
+        "selector_seed": 42,
+        "protocol_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+        "checkpoint_resolved_config_hash": "85f865d10d6ccb8bb5716e7d16ea9ce769f76010830ce6ccca60cc2ad179d66a"
+      },
+      "artifacts": {
+        "config": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/config.json",
+          "present": true,
+          "size_bytes": 2592,
+          "sha256": "e25ce70fe2e3222b9e733e4c0714ea020274dd6af7a52c18304139acf55e400e"
+        },
+        "manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/manifest.json",
+          "present": true,
+          "size_bytes": 12249,
+          "sha256": "48e5de9bb67e791b5588dc83a402a6d671c410e93fb24de6ca116dc95090a8f6"
+        },
+        "selected_features": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/selected_features.csv",
+          "present": true,
+          "size_bytes": 2419,
+          "sha256": "affd406de2e5acf2e305f195585eb108a50244bae12c228eb516d8b29264b40d"
+        },
+        "fold_selections": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/fold_selections.csv",
+          "present": true,
+          "size_bytes": 12230,
+          "sha256": "c19ebafaca51efba8d76bfd1ebccb9402db026af314f447017491593ec2e0313"
+        },
+        "predictions_dev": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/predictions_dev.csv",
+          "present": true,
+          "size_bytes": 23687169,
+          "sha256": "3f84ea5cd169ae28f313b634bf1db158a4441ccdbcc8c74a49c2ba15ecc843e6"
+        },
+        "resource_usage": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/resource_usage.json",
+          "present": true,
+          "size_bytes": 375843,
+          "sha256": "8ccaff66102d65f4b902989a620bfc66b82af0587615b3a80b726930116ecab2"
+        },
+        "preflight": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/preflight.json",
+          "present": true,
+          "size_bytes": 5335,
+          "sha256": "64b5d6c168b6a9eaa5315d3ad01d798a0d065362354c81bc86e29834c6a7d70d"
+        },
+        "checkpoint": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/checkpoint.json",
+          "present": true,
+          "size_bytes": 21440,
+          "sha256": "71b8a669dbcefa14c86f0e653c0921cb656a274d5352c98e9c219cfb64ed2b32"
+        },
+        "run_log": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/run.log",
+          "present": true,
+          "size_bytes": 774,
+          "sha256": "9039f9cfbba50a5fe07a6a6a8d8b9da0d138525328d08683c9ec87ab76a00c46"
+        },
+        "voter_rankings": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/voter_rankings.csv",
+          "present": true,
+          "size_bytes": 940532,
+          "sha256": "f272e5e3b557ebf9ab44df069ed44777cc955490efb39b8b2ede8f8c8d9a6dcf"
+        },
+        "aggregate_ranking": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/aggregate_ranking.csv",
+          "present": true,
+          "size_bytes": 121549,
+          "sha256": "fb66c0ce0c5e15d567d5676a183fab2657c72a1600358e3cd6f3fad53bb2ccd8"
+        },
+        "candidate_features": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/candidate_features.csv",
+          "present": true,
+          "size_bytes": 9951,
+          "sha256": "e7b84bbe598581ef1b10b1666228487ebaade96a79a6e5923f6c91437ad10488"
+        },
+        "rfe_selection_trace": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/rfe_selection_trace.csv",
+          "present": true,
+          "size_bytes": 12096,
+          "sha256": "b17b725f84d6aa7bd31ccfe9efe442cd96169f4c6e98f59725402e36995761df"
+        },
+        "candidate_projection_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/candidate_projection_manifest.json",
+          "present": true,
+          "size_bytes": 147974,
+          "sha256": "764ca6dd2490cafdebb362bde673c2a538dd02fccad583493d5d630270bebb3b"
+        },
+        "selection_artifact_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/selection_artifact_manifest.json",
+          "present": true,
+          "size_bytes": 5243,
+          "sha256": "e838c71e46d4185bfcb468d27d3186a2f967fafa33ca141bec99426dea914f8e"
+        },
+        "fold_identity_manifest": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/fold_identity_manifest.json",
+          "present": true,
+          "size_bytes": 1283,
+          "sha256": "9044b99be5fa3b86559dd47310bc41339fa12db8b493ba36bb15b35aa3debbd0"
+        },
+        "data_access_log": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/data_access_log.json",
+          "present": true,
+          "size_bytes": 111754,
+          "sha256": "8203e7e8a20ba178f041219ca789330816968e213295dc4eb310a058dba4105e"
+        },
+        "effective_model_config": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/effective_model_config.json",
+          "present": true,
+          "size_bytes": 2559,
+          "sha256": "7667f5c92bd0afa917f899a8b5816152a29b6b642a8780dd5ef1a94640b3ddc2"
+        },
+        "prediction_metadata": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/prediction_metadata.json",
+          "present": true,
+          "size_bytes": 2070,
+          "sha256": "94afc0e57dc47fe86d4d0684d91432ea373c9c1e10df0fd39fedff5220f12fcc"
+        },
+        "pilot_validation": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/pilot_validation.json",
+          "present": true,
+          "size_bytes": 2744,
+          "sha256": "998cbf1827af15d01f3b442a07d28b8c64e5de92e94710ac68c1466df233d7e1"
+        },
+        "stage_timings": {
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/stage_timings.csv",
+          "present": true,
+          "size_bytes": 443,
+          "sha256": "c9b7cff965099a80147afbd61138c287218f845909fa0efc2205f717a6225496"
+        }
+      },
+      "attempts": [
+        {
+          "attempt": "attempt_01",
+          "path": "results/runs/lendingclub_v2/cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0/resource_usage.json",
+          "status": "completed",
+          "wall_seconds": 809.7430447999795,
+          "stop_code": null,
+          "peak_process_tree_rss_bytes": 13523734528
+        }
+      ],
+      "checkpoint_completed_stages": [
+        "initialized",
+        "data_validated",
+        "selection_completed",
+        "model_fit_completed",
+        "dev_prediction_completed"
+      ]
+    }
+  ]
+}

@@ -148,6 +148,7 @@ def build_run_manifest(
     output_folder: str | Path,
     project_root: str | Path = ".",
     status: str = "running",
+    artifact_applicability: dict[str, bool] | None = None,
 ) -> dict[str, Any]:
     """Build the audit manifest for one matrix run."""
     config_hash = compute_config_hash(config)
@@ -169,7 +170,7 @@ def build_run_manifest(
         "output_folder": str(Path(output_folder)),
         "artifacts": {
             name: {
-                "applicable": True,
+                "applicable": bool((artifact_applicability or {}).get(name, True)),
                 "path": relative,
                 "present": relative in {"config.json", "manifest.json"},
             }
@@ -222,6 +223,26 @@ def build_artifact_contract(
                     "size_bytes": metadata.size_bytes,
                     "sha256": metadata.sha256,
                 }
+            )
+    for name, previous in existing.items():
+        if name in STANDARD_ARTIFACTS:
+            continue
+        if not isinstance(previous, dict):
+            raise ValueError(f"additional artifact entry must be a mapping: {name}")
+        relative = str(previous.get("path", "")).strip()
+        applicable = bool(previous.get("applicable", True))
+        if not relative or Path(relative).is_absolute() or ".." in Path(relative).parts:
+            raise ValueError(f"additional artifact path is invalid: {name}={relative!r}")
+        present = (run_path / relative).is_file()
+        contract[name] = {
+            "applicable": applicable,
+            "path": relative,
+            "present": present,
+        }
+        if present:
+            metadata = inspect_artifact(run_path / relative)
+            contract[name].update(
+                {"size_bytes": metadata.size_bytes, "sha256": metadata.sha256}
             )
     return contract
 

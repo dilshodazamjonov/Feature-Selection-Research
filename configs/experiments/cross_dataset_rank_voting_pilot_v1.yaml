@@ -1,0 +1,53 @@
+schema_version: cross_dataset_rank_voting_pilot_v1
+pilot_id: cross_dataset_rank_voting_integration_resource_pilot_v1
+status: authorized_bounded_integration_pilot
+purpose: integration_resource_pilot
+research_eligible: false
+comparison_eligible: false
+protocol:
+  path: configs/protocols/cross_dataset_rank_voting_v1.yaml
+  sha256: 51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49
+row_contract:
+  path: configs/protocols/row_alignment_contract_v1.json
+  sha256: fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0
+scientific_protocol:
+  path: configs/protocols/credit_scoring_extension_v1.yaml
+  sha256: f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0
+execution_policy:
+  path: configs/execution/local_laptop_safe_v1.yaml
+  sha256: 1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012
+shared:
+  method: rank_voting_v1
+  candidate_pool: 200
+  seed: 42
+  fold_count: 1
+  canonical_fold: 1
+  fold_protocol: grouped_time_series_cv_5_splits_gap_1_expanding
+  load_oot: false
+  final_refit: false
+  accelerator: cpu
+  concurrent_experiment_runs: 1
+  concurrent_folds: 1
+  data_loader_workers: 0
+  maximum_estimator_threads: 4
+jobs:
+  - run_id: cdv1-pilot-001-homecredit-voting-k200-lr-s42-f0
+    execution_order: 1
+    dataset: homecredit
+    model: lr
+    final_feature_budget: 20
+  - run_id: cdv1-pilot-002-homecredit-voting-k200-catboost-s42-f0
+    execution_order: 2
+    dataset: homecredit
+    model: catboost
+    final_feature_budget: 40
+  - run_id: cdv1-pilot-003-lendingclub-v2-voting-k200-lr-s42-f0
+    execution_order: 3
+    dataset: lendingclub_v2
+    model: lr
+    final_feature_budget: 20
+  - run_id: cdv1-pilot-004-lendingclub-v2-voting-k200-catboost-s42-f0
+    execution_order: 4
+    dataset: lendingclub_v2
+    model: catboost
+    final_feature_budget: 40

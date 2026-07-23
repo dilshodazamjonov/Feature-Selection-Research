@@ -1,0 +1,76 @@
+{
+  "schema_version": "lendingclub_memory_refinement_implementation_validation_v1",
+  "status": "passed",
+  "refinement_config": "configs/execution/lendingclub_memory_safe_refinement_v1.yaml",
+  "refinement_config_sha256": "4e2a17b93a751bbcb7443d8e82b15781f8a0467a07aa0037a3c298abff4132d7",
+  "mechanical_changes": [
+    "canonical_fold_projection returns stable source positions without a candidate-frame reorder",
+    "OriginalFeatureNumericEncoder.transform owns one contiguous float32 output block",
+    "RandomForestRelevanceMRMRSelector.fit avoids a redundant equal-name deep copy",
+    "fit_voters_sequentially_memory_safe releases compacted mRMR state before Boruta construction",
+    "the capacity worker releases full-universe source/training frames before voter fits",
+    "the canonical loader supports explicit top-K reload and rejects unknown/duplicate candidates",
+    "sparse top-K CSV reload uses source-order usecols plus exact aggregate-order restoration and dtype validation",
+    "fit_rfe_memory_safe releases each fitted selector before the next branch",
+    "full-DEV capacity fitting uses existing preprocessors and model wrappers without OOT prediction"
+  ],
+  "scientific_invariants": {
+    "candidate_universe": 675,
+    "voters": ["rf_corr_mrmr", "boruta"],
+    "voter_weights": [0.5, 0.5],
+    "mrmr_k": 300,
+    "boruta_max_iter": 15,
+    "rfe_step": 10,
+    "lr_final_budget": 20,
+    "catboost_final_budget": 40,
+    "seed": 42,
+    "selector_dtype": "float32",
+    "numeric_precision_changed": false,
+    "concurrent_runs": 1,
+    "concurrent_folds": 1,
+    "estimator_threads": 4,
+    "data_loader_workers": 0,
+    "gpu": "disabled",
+    "system_available_ram_floor_gib": 8
+  },
+  "focused_tests": {
+    "status": "passed",
+    "count": 96
+  },
+  "pre_real_data_full_suite": {
+    "status": "passed",
+    "passed": 491,
+    "skipped": 31,
+    "warnings": 107
+  },
+  "pre_real_data_repository_validator": {
+    "status": "passed",
+    "canonical_artifacts_verified": 84,
+    "canonical_registered_runs": 4,
+    "canonical_run_roots": 4
+  },
+  "capacity_registration_boundary": {
+    "canonical_results_root": "results",
+    "capacity_results_root": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution",
+    "separate": true,
+    "research_comparison_eligible": false
+  },
+  "disk_backed_intermediates_used": false,
+  "untracked_memory_maps": 0,
+  "oot_access_possible": false,
+  "prompt5_1_final_capacity_validation": {
+    "status": "passed",
+    "focused_tests": 12,
+    "full_dev_rows": 598649,
+    "candidate_universe": 675,
+    "candidate_pool": 300,
+    "lr_budget": 20,
+    "catboost_budget": 40,
+    "peak_process_tree_rss_bytes": 8547688448,
+    "minimum_system_available_ram_bytes": 17486753792,
+    "warnings": 0,
+    "stop_code": null,
+    "worker_exit_code": 0,
+    "oot_opened": false
+  }
+}
