@@ -16,7 +16,10 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 
-from credit_risk_fs.experiments.research_logging import emit_research_event
+from credit_risk_fs.experiments.research_logging import (
+    emit_research_event,
+    suppress_third_party_output,
+)
 
 
 PROTOCOL_NAME = "cross_dataset_rank_voting_v1"
@@ -422,7 +425,8 @@ def fit_voters_sequentially_memory_safe(
             "rf_corr_mrmr"
         ],
     )
-    mrmr.fit(X_numeric, y)
+    with suppress_third_party_output():
+        mrmr.fit(X_numeric, y)
     mrmr_ranking = list(mrmr.selected_features_ or [])
     raw_mrmr = {
         str(feature): float(value)
@@ -471,7 +475,8 @@ def fit_voters_sequentially_memory_safe(
         internal_iteration_available=False,
         configuration=_selector_configurations(seed, estimator_threads)["boruta"],
     )
-    boruta.fit(X_numeric, y)
+    with suppress_third_party_output():
+        boruta.fit(X_numeric, y)
     boruta_ranking = list(boruta.feature_ranking_ or [])
     fitted_boruta = getattr(boruta, "selector", None)
     confirmed_count = int(
@@ -588,10 +593,12 @@ def fit_fold_local_voting_adapter(
     ))()
     if stage_callback:
         stage_callback("voter_rf_corr_mrmr", 1)
-    mrmr.fit(X_train_numeric, y_train)
+    with suppress_third_party_output():
+        mrmr.fit(X_train_numeric, y_train)
     if stage_callback:
         stage_callback("voter_boruta", 1)
-    boruta.fit(X_train_numeric, y_train)
+    with suppress_third_party_output():
+        boruta.fit(X_train_numeric, y_train)
     mrmr_ranking = list(mrmr.selected_features_ or [])
     boruta_ranking = list(boruta.feature_ranking_ or [])
     if len(mrmr_ranking) != 300 or len(boruta_ranking) != len(candidates):
@@ -663,7 +670,8 @@ def fit_fold_local_voting_adapter(
         random_state=seed,
         thread_count=estimator_threads,
     ))()
-    rfe.fit(X_rfe_train, y_train)
+    with suppress_third_party_output():
+        rfe.fit(X_rfe_train, y_train)
     supported = set(rfe.selected_features_ or [])
     selected_features = [feature for feature in top_candidates if feature in supported]
     if len(selected_features) != final_budget or len(set(selected_features)) != final_budget:
@@ -756,7 +764,8 @@ def _fit_final_model(
             input_row_count=len(train_encoded),
             input_feature_count=train_encoded.shape[1],
         )
-    model.fit(train_encoded, y_train, eval_set=None)
+    with suppress_third_party_output():
+        model.fit(train_encoded, y_train, eval_set=None)
     if stage_callback:
         stage_callback(
             "final_prediction",
@@ -848,7 +857,8 @@ def _fit_full_dev_capacity_model(
     train_encoded = preprocessor.fit_transform(selected_train)
     get_model, _, _, _ = get_model_bundle(model_name, model_kwargs)
     model = get_model()
-    model.fit(train_encoded, y_train, eval_set=None)
+    with suppress_third_party_output():
+        model.fit(train_encoded, y_train, eval_set=None)
     actual_classes = [int(value) for value in model.model.classes_]
     if actual_classes != [0, 1]:
         raise ValueError(f"positive-class probability orientation is invalid: {actual_classes}")
@@ -945,7 +955,8 @@ def fit_rfe_memory_safe(
         input_feature_count=X_numeric.shape[1],
         final_feature_budget=final_budget,
     )
-    rfe.fit(X_numeric, y)
+    with suppress_third_party_output():
+        rfe.fit(X_numeric, y)
     supported = set(rfe.selected_features_ or [])
     selected = [feature for feature in top_candidates if feature in supported]
     if len(selected) != final_budget or len(set(selected)) != final_budget:

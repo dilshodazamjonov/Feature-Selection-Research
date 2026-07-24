@@ -1,34 +1,45 @@
 # Cross-Dataset Voting Durable Logging v1
 
-The manual research runner creates and appends UTF-8 JSON Lines to `logs\runs.log` before plan authentication or research execution. Each invocation has a unique `session_id`; the file is never truncated, is excluded narrowly by `/logs/runs.log`, and is outside result manifests and scientific hashes.
+The manual research runner opens three append-only UTF-8 logs before plan authentication or research execution:
 
-Every line is one JSON object with `schema_version`, millisecond UTC `timestamp_utc` ending in `Z`, `level`, `pid`, `session_id`, `event`, and `message`. Applicable records add `run_id`, `dataset`, `model`, `seed`, `phase`, `fold_id`, `stage`, `component`, monotonic elapsed seconds, worker/parent memory, repository-relative artifact paths, warning or stop codes, exception classes, and tracebacks. Values are bounded and sanitized; data frames, arrays, model objects, predictions, row data, targets, environment values, and secrets are not retained.
+- `logs\runs.log` contains concise UTC progress lines for people and is mirrored to the terminal.
+- `logs\events.jsonl` contains the detailed machine-readable audit events.
+- `logs\debug.log` contains full Python tracebacks for unexpected errors.
 
-The lifecycle is visible through `logging_initialized`, `session_started`, authenticated release/hash and plan decisions, stage/component events, resource/supervisor events, checkpoint events, and one session terminal state. Potentially expensive stages have start and terminal records. The parent supervisor writes a `stage_heartbeat` at least every 30 seconds while a worker stage remains active, including available process and memory evidence. Boruta receives explicit configuration/count records and the truthful heartbeat `Boruta fit active; internal iteration unavailable.` because its installed API exposes no computation-preserving iteration callback.
+All three files are flushed after every record, preserved across resumed runs, narrowly ignored by Git, and excluded from checkpoint eligibility, scientific manifests, and scientific hashes. If an older `runs.log` contains JSON events, the next logging session moves those events into `events.jsonl` and rewrites their visible progress as human text before appending.
 
-The parent process owns the sole append file and terminal sink. Spawned workers use a separate bounded 1,024-record queue; routine records never block. Priority records wait for a bounded 250 ms, and any routine or priority loss is made durable through `logging_backpressure` counters. This transport is separate from stage and result queues. The listener starts before workers, drains during bounded shutdown, and never owns scientific objects. Canonical parent lifecycle, stop, and final records bypass queue pressure and flush immediately; all records currently flush immediately, exceeding the one-second ordinary-record requirement.
+Human lines use this form:
 
-Interpret the latest event as follows:
+```text
+[2026-07-24 06:20:10 UTC] START | Run 014 | LendingClub | Voting K=100 | CatBoost
+[2026-07-24 06:22:15 UTC] INFO  | Fold 3/5 | Boruta started
+[2026-07-24 06:22:45 UTC] ACTIVE | Fold 3/5 | Boruta running | Elapsed 30s | RAM 6.4 GiB | Available 18.2 GiB
+[2026-07-24 06:35:40 UTC] DONE  | Fold 3/5 | Boruta completed in 13m 25s
+```
 
-- Repeating `stage_heartbeat` records mean the supervised stage is active.
-- `resource_warning`, `RESOURCE_STOP_LATCHED`, `stage_aborted`, and `session_controlled_stop` identify a controlled resource stop without changing first-cause precedence.
-- `stage_interrupted`, `worker_interrupted`, or `session_interrupted` identify an interrupt.
-- `stage_failed`, `worker_failed`, or `session_failed` include exception evidence and a full traceback where Python supplied one.
-- `worker_finalized` reports exit code, cleanup confirmation, and survivor PIDs; `session_completed` is successful runner finalization.
+The human log never prints raw JSON, PIDs, session IDs, schema versions, or full tracebacks. CatBoost and sklearn progress is suppressed around estimator fitting; the runner instead emits stage starts, 30-second heartbeats, completions, warnings, and stops. A manual `Ctrl+C` produces a short `STOP` message without a traceback. An unexpected error produces a concise `ERROR` message with a pointer to `logs\debug.log`.
 
-To watch the canonical log live in PowerShell:
+The parent process owns the file and terminal sinks. Spawned workers use a bounded queue, while canonical parent lifecycle and terminal events bypass queue pressure. Queue loss is reported as a human warning and retained with counters in `events.jsonl`. Machine audit values remain bounded and sanitized; data frames, arrays, model objects, predictions, row data, targets, environment values, and secrets are not retained.
+
+To watch progress live in PowerShell:
 
 ```powershell
 Get-Content .\logs\runs.log -Wait -Tail 50
 ```
 
-To filter run 014 or one fold:
+To filter the human log for run 014 or fold 5:
 
 ```powershell
-Select-String -Path .\logs\runs.log -Pattern "cdv1-014"
-Get-Content .\logs\runs.log | ConvertFrom-Json | Where-Object { $_.run_id -eq "cdv1-014-lendingclub-v2-voting-k100-catboost-s42" -and $_.fold_id -eq 5 }
+Select-String -Path .\logs\runs.log -Pattern "Run 014"
+Select-String -Path .\logs\runs.log -Pattern "Fold 5/5"
 ```
 
-Retain `logs\runs.log` for as long as its operational history is useful. Rotate or delete it only while the runner is stopped; a later session recreates it. Third-party libraries may still print raw progress, but canonical start, heartbeat, and completion records remain sufficient to distinguish activity from a stall. An operating-system hard kill can prevent a final application record, so use the already-flushed heartbeat and supervisor records as the last durable evidence.
+For programmatic audit filtering, read the separate JSONL stream:
+
+```powershell
+Get-Content .\logs\events.jsonl | ConvertFrom-Json | Where-Object { $_.run_id -eq "cdv1-014-lendingclub-v2-voting-k100-catboost-s42" -and $_.fold_id -eq 5 }
+```
+
+Retain the files for as long as their operational history is useful. Rotate or delete them only while the runner is stopped; a later session recreates missing files. An operating-system hard kill can prevent a final application record, so the last already-flushed heartbeat or supervisor record is the final durable evidence.
 
 The only supported continuation procedure and exact command are in [cross_dataset_voting_resume_after_run_014_v1.md](cross_dataset_voting_resume_after_run_014_v1.md).

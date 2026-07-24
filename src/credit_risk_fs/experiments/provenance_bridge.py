@@ -1,4 +1,4 @@
-"""Fail-closed provenance bridge for the exact cdv1 observability release."""
+"""Fail-closed provenance bridge for the exact cdv1 observability releases."""
 
 from __future__ import annotations
 
@@ -10,16 +10,18 @@ from typing import Any, Mapping
 from credit_risk_fs.experiments.atomic_io import sha256_file
 
 
-BRIDGE_SCHEMA_VERSION = "cdv1_durable_logging_compatibility_bridge_v1"
+BRIDGE_SCHEMA_VERSION = "cdv1_durable_logging_compatibility_bridge_v2"
 BRIDGE_PATH = Path(
-    "configs/execution/cdv1_durable_logging_compatibility_bridge_v1.json"
+    "configs/execution/cdv1_durable_logging_compatibility_bridge_v2.json"
 )
 RESEARCH_FAMILY = "cdv1"
 ORIGINAL_TAG = "cross-dataset-voting-pre-execution-v1"
 ORIGINAL_COMMIT = "f00f474b6f263ee2619a178524c7c0fdf806024f"
 SAFETY_TAG = "cross-dataset-voting-resume-safety-v1"
 SAFETY_COMMIT = "69c4bb565e6dcb4caad90b01237f0be134f72e88"
-OBSERVABILITY_TAG = "cross-dataset-voting-observability-v1"
+PRIOR_OBSERVABILITY_TAG = "cross-dataset-voting-observability-v1"
+PRIOR_OBSERVABILITY_COMMIT = "0abb454b7c22e3d482ee4a318a69260c19219884"
+OBSERVABILITY_TAG = "cross-dataset-voting-observability-v2"
 # Backward-compatible public name used by the runner and older tests.
 MECHANICS_TAG = OBSERVABILITY_TAG
 REUSABLE_RUN_IDS = (
@@ -91,6 +93,7 @@ def _require_exact_bridge_identity(payload: Mapping[str, Any]) -> None:
         raise ProvenanceBridgeError("BRIDGE_FAMILY_MISMATCH", "research family differs")
     original = payload.get("original_release", {})
     safety = payload.get("safety_release", {})
+    prior_observability = payload.get("prior_observability_release", {})
     observability = payload.get("observability_release", {})
     if original != {"tag": ORIGINAL_TAG, "commit": ORIGINAL_COMMIT}:
         raise ProvenanceBridgeError(
@@ -99,6 +102,14 @@ def _require_exact_bridge_identity(payload: Mapping[str, Any]) -> None:
     if safety != {"tag": SAFETY_TAG, "commit": SAFETY_COMMIT}:
         raise ProvenanceBridgeError(
             "BRIDGE_SAFETY_RELEASE_MISMATCH", "Prompt 6.1 release identity differs"
+        )
+    if prior_observability != {
+        "tag": PRIOR_OBSERVABILITY_TAG,
+        "commit": PRIOR_OBSERVABILITY_COMMIT,
+    }:
+        raise ProvenanceBridgeError(
+            "BRIDGE_PRIOR_OBSERVABILITY_RELEASE_MISMATCH",
+            "prior observability release identity differs",
         )
     if observability.get("tag") != OBSERVABILITY_TAG:
         raise ProvenanceBridgeError(
@@ -149,6 +160,9 @@ def _validate_release_chain(
         )
     _validate_annotated_tag(root, ORIGINAL_TAG, ORIGINAL_COMMIT)
     _validate_annotated_tag(root, SAFETY_TAG, SAFETY_COMMIT)
+    _validate_annotated_tag(
+        root, PRIOR_OBSERVABILITY_TAG, PRIOR_OBSERVABILITY_COMMIT
+    )
     _validate_annotated_tag(root, OBSERVABILITY_TAG, current_commit)
 
 
@@ -195,6 +209,11 @@ def _validate_runtime_and_frozen_files(root: Path, payload: Mapping[str, Any]) -
     }
     _validate_hashed_files(root, current_entries, category="runtime")
     _validate_hashed_files(root, payload.get("frozen_files", {}), category="frozen")
+    _validate_hashed_files(
+        root,
+        payload.get("observability_patch_files", {}),
+        category="observability_patch",
+    )
 
 
 def _validate_run_artifacts(root: Path, payload: Mapping[str, Any]) -> None:
@@ -247,7 +266,7 @@ def authenticate_compatibility_bridge(
     current_tag: str,
     validate_inventory: bool = True,
 ) -> dict[str, Any]:
-    """Authenticate the exact three-release chain and cdv1 artifact inventory."""
+    """Authenticate the exact four-release chain and cdv1 artifact inventory."""
 
     root = Path(repository_root).resolve()
     payload = load_compatibility_bridge(root)
@@ -302,6 +321,8 @@ def compatible_resume_identity(
         "original_tag": ORIGINAL_TAG,
         "safety_commit": SAFETY_COMMIT,
         "safety_tag": SAFETY_TAG,
+        "prior_observability_commit": PRIOR_OBSERVABILITY_COMMIT,
+        "prior_observability_tag": PRIOR_OBSERVABILITY_TAG,
         "observability_commit": current_commit,
         "observability_tag": current_tag,
         "historical_checkpoint_commit": historical_commit,
@@ -316,6 +337,8 @@ __all__ = [
     "INTERRUPTED_RUN_ID",
     "MECHANICS_TAG",
     "OBSERVABILITY_TAG",
+    "PRIOR_OBSERVABILITY_COMMIT",
+    "PRIOR_OBSERVABILITY_TAG",
     "ORIGINAL_COMMIT",
     "ORIGINAL_TAG",
     "ProvenanceBridgeError",

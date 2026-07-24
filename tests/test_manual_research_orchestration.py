@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -87,12 +88,22 @@ def test_manual_plan_expands_exact_frozen_matrix_and_limits():
     }
 
 
-def test_plan_mode_creates_no_index_rows_or_run_directories(capsys, monkeypatch):
+def test_plan_mode_creates_no_index_rows_or_run_directories(
+    capsys, monkeypatch, tmp_path
+):
     monkeypatch.setattr(manual_research, "authenticate_release", lambda root: _provenance())
     index = ROOT / "results/run_index.csv"
     before_index = index.read_bytes()
     before_dirs = sorted(path.resolve() for path in (ROOT / "results/runs").glob("*/*"))
-    assert manual_research.main(["--plan", "--repository-root", str(ROOT)]) == 0
+    assert manual_research.main(
+        [
+            "--plan",
+            "--repository-root",
+            str(ROOT),
+            "--log-file",
+            str(tmp_path / "logs" / "runs.log"),
+        ]
+    ) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["execution"] == "not_started_planning_only"
     assert index.read_bytes() == before_index
@@ -161,7 +172,62 @@ def test_release_authentication_rejects_tag_or_commit_drift(monkeypatch):
     assert error.value.code == "GIT_TAG_MISMATCH"
 
 
-def test_controlled_failure_is_nonzero_and_reports_stable_reason(monkeypatch, capsys):
+def test_ignored_runtime_logs_do_not_break_clean_release_authentication(tmp_path):
+    (tmp_path / ".gitignore").write_text(
+        "/logs/runs.log\n/logs/events.jsonl\n/logs/debug.log\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname = 'logging-auth-fixture'\nversion = '0.0.0'\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "requirements.txt").write_text("pytest\n", encoding="utf-8")
+    subprocess.run(["git", "init", "--quiet"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True)
+    identity = [
+        "-c",
+        "user.name=Authentication Test",
+        "-c",
+        "user.email=authentication-test@example.invalid",
+    ]
+    subprocess.run(
+        ["git", *identity, "commit", "--quiet", "-m", "fixture release"],
+        cwd=tmp_path,
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            *identity,
+            "tag",
+            "--annotate",
+            manual_research.EXPECTED_TAG,
+            "--message",
+            "fixture observability release",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
+    with manual_research.ResearchLogSession(
+        Path("logs/runs.log"),
+        repository_root=tmp_path,
+        command_arguments=[],
+    ) as session:
+        session.finish("session_completed", message="authentication fixture complete")
+    provenance = manual_research.authenticate_release(tmp_path)
+    assert provenance.git_tag == manual_research.EXPECTED_TAG
+    assert subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout == ""
+
+
+def test_controlled_failure_is_nonzero_and_reports_stable_reason(
+    monkeypatch, capsys, tmp_path
+):
     monkeypatch.setattr(
         manual_research,
         "build_manual_research_plan",
@@ -169,8 +235,58 @@ def test_controlled_failure_is_nonzero_and_reports_stable_reason(monkeypatch, ca
             manual_research.ManualResearchStop("FIXTURE_STOP", "fixture failure")
         ),
     )
-    assert manual_research.main(["--repository-root", str(ROOT)]) == 2
-    assert "CONTROLLED_STOP FIXTURE_STOP" in capsys.readouterr().err
+    log_path = tmp_path / "logs" / "runs.log"
+    assert manual_research.main(
+        ["--repository-root", str(ROOT), "--log-file", str(log_path)]
+    ) == 2
+    terminal = capsys.readouterr().err
+    assert "STOP  | fixture failure" in terminal
+    assert "CONTROLLED_STOP" not in terminal
+    assert "Traceback (most recent call last)" not in terminal
+    assert "ManualResearchStop" not in (
+        tmp_path / "logs" / "debug.log"
+    ).read_text(encoding="utf-8")
+
+
+def test_unexpected_failure_prints_one_error_and_routes_traceback(
+    monkeypatch, capsys, tmp_path
+):
+    monkeypatch.setattr(
+        manual_research,
+        "build_manual_research_plan",
+        lambda root: (_ for _ in ()).throw(RuntimeError("fixture explosion")),
+    )
+    log_path = tmp_path / "logs" / "runs.log"
+    assert manual_research.main(
+        ["--repository-root", str(ROOT), "--log-file", str(log_path)]
+    ) == 3
+    terminal = capsys.readouterr().err
+    assert terminal.count("ERROR |") == 1
+    assert "RuntimeError: fixture explosion" in terminal
+    assert "Traceback (most recent call last)" not in terminal
+    assert "Traceback (most recent call last)" in (
+        tmp_path / "logs" / "debug.log"
+    ).read_text(encoding="utf-8")
+
+
+def test_keyboard_interrupt_prints_one_short_stop_without_traceback(
+    monkeypatch, capsys, tmp_path
+):
+    monkeypatch.setattr(
+        manual_research,
+        "build_manual_research_plan",
+        lambda root: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+    log_path = tmp_path / "logs" / "runs.log"
+    assert manual_research.main(
+        ["--repository-root", str(ROOT), "--log-file", str(log_path)]
+    ) == 130
+    terminal = capsys.readouterr().err
+    assert terminal.count("STOP  | Research run interrupted manually") == 1
+    assert "Traceback (most recent call last)" not in terminal
+    assert "KeyboardInterrupt" not in (
+        tmp_path / "logs" / "debug.log"
+    ).read_text(encoding="utf-8")
 
 
 def test_orchestration_contract_never_reaches_real_loaders_or_estimators(monkeypatch):

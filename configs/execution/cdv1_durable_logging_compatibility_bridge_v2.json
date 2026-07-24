@@ -1,8 +1,12 @@
 {
   "allowed_change_categories": [
     "durable_structured_logging",
+    "human_readable_terminal_and_run_log",
+    "separate_machine_audit_and_debug_logs",
     "stage_and_component_observability",
     "parent_owned_bounded_worker_log_transport",
+    "third_party_progress_suppression",
+    "narrow_runtime_log_exclusion",
     "logging_tests",
     "documentation_and_audit"
   ],
@@ -63,11 +67,15 @@
   "matrix_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
   "observability_release": {
     "commit_binding": "annotated_tag_peels_to_current_head",
-    "tag": "cross-dataset-voting-observability-v1"
+    "tag": "cross-dataset-voting-observability-v2"
   },
   "original_release": {
     "commit": "f00f474b6f263ee2619a178524c7c0fdf806024f",
     "tag": "cross-dataset-voting-pre-execution-v1"
+  },
+  "prior_observability_release": {
+    "commit": "0abb454b7c22e3d482ee4a318a69260c19219884",
+    "tag": "cross-dataset-voting-observability-v1"
   },
   "research_family": "cdv1",
   "reusable_run_ids": [
@@ -2808,6 +2816,12 @@
     }
   },
   "runtime_files": {
+    ".gitignore": {
+      "new_sha256": "5de3a818ee6ce030c676c2624f73bd934a454d094c0c7697c1f805f1265500ac",
+      "new_size_bytes": 691,
+      "old_release": "0abb454b7c22e3d482ee4a318a69260c19219884",
+      "old_sha256": "85beeaad0cb8b6b576fc4182479adcbcec73e56cb98698b48c53bfc24f9fe2da"
+    },
     "src/credit_risk_fs/experiments/checkpointing.py": {
       "new_sha256": "4cd030dfab9e6cb1097c18ff3572e7c77a97ba4893d500944bbd2d23479b72bd",
       "new_size_bytes": 19472,
@@ -2815,8 +2829,8 @@
       "old_sha256": "df7b8308f51c347d5a894be9074f76168e5d60b75a5722f453e06c3fd88017e0"
     },
     "src/credit_risk_fs/experiments/cross_dataset_research.py": {
-      "new_sha256": "3079162fa3f6acbd235a5a2d76193815237e09d921bc423d74a8bf225c11e744",
-      "new_size_bytes": 43116,
+      "new_sha256": "d7504f872b79e577e30aab5d3cc481893faa95cf7e850c7d71cd7ef616419c3f",
+      "new_size_bytes": 43292,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "08d666ee7366bb46fc423477444392a5830c756c9094c5397f247c1e4f1ce465"
     },
@@ -2827,32 +2841,32 @@
       "old_sha256": "483ce8823ef3d81836af01036ecd9fbba4dceca4911227fab4ffade76b94df8a"
     },
     "src/credit_risk_fs/experiments/manual_research.py": {
-      "new_sha256": "37459770887accc85ac04eeb126ef1a4d9008c413ad8e885d14f8c0955a02484",
-      "new_size_bytes": 20939,
+      "new_sha256": "35c2bc3eb19b272e75f48de30044827f4a955138f90143e09d28d5560d7a968b",
+      "new_size_bytes": 20865,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "47c50f754330a0ca56decce7c1ef6b4df97eea46b6b3538aa0f83ae6de932bf1"
     },
     "src/credit_risk_fs/experiments/provenance_bridge.py": {
-      "new_sha256": "fa0fad2a96584b3820626823d26659a7433209b6bc5e5e14f2f03d974490590e",
-      "new_size_bytes": 13153,
+      "new_sha256": "1372041b6c14ef405f9669bcd334176877f83cf9540a820fc253762e0859a93c",
+      "new_size_bytes": 14089,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "32d202cd912c4d4bd22800cd5f53c1d9f24d99d57f9591271a5a1a18f32e02e4"
     },
     "src/credit_risk_fs/experiments/rank_voting.py": {
-      "new_sha256": "e98d4d793a4422fc9f1696ea880d1e2676d664f90f689fc60ea4239d35117e15",
-      "new_size_bytes": 102106,
+      "new_sha256": "d90f22b94b9e9d0ef99ca6f63a968a33b05d53878bfa0dfac0efa2ff460a92f6",
+      "new_size_bytes": 102500,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "3db7940b3200a4969a49c9252f62133efb8b3cbc79325622c58d2c0f3208564b"
     },
     "src/credit_risk_fs/experiments/research_logging.py": {
-      "new_sha256": "b9f5445c819aa550a28033c720e799874965d66e207f886ce1dd1ff8e6527549",
-      "new_size_bytes": 20165,
+      "new_sha256": "31eb907e66a89f86a8a22f0a76ed73038c7b87c7eb841cbfabb33a3d21360f25",
+      "new_size_bytes": 39387,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "absent"
     },
     "src/credit_risk_fs/experiments/resource_monitor.py": {
-      "new_sha256": "43fd867069822ac8e361721e8b82bea628f71954ee758ad9287c1fb1f09e0315",
-      "new_size_bytes": 54856,
+      "new_sha256": "e7bb2234197e56f6511d1bb4d9d286389ed57869679b158050587df88a19f529",
+      "new_size_bytes": 54810,
       "old_release": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
       "old_sha256": "d991cee28c58d45f7c62506736336cc31cb282ed02058fd6d7deb9459c546faf"
     },
@@ -2870,24 +2884,64 @@
     }
   },
   "runtime_log_exclusion": {
-    "gitignore_rule": "/logs/runs.log",
     "included_in_scientific_artifacts": false,
-    "path": "logs/runs.log"
+    "paths": {
+      "logs/debug.log": "/logs/debug.log",
+      "logs/events.jsonl": "/logs/events.jsonl",
+      "logs/runs.log": "/logs/runs.log"
+    }
   },
   "safety_release": {
     "commit": "69c4bb565e6dcb4caad90b01237f0be134f72e88",
     "tag": "cross-dataset-voting-resume-safety-v1"
   },
-  "schema_version": "cdv1_durable_logging_compatibility_bridge_v1",
-  "scope_rule": "Applies only to the exact original, Prompt 6.1 safety, and current observability annotated releases, cdv1, and the exact run inventory.",
+  "schema_version": "cdv1_durable_logging_compatibility_bridge_v2",
+  "scope_rule": "Applies only to the exact original, Prompt 6.1 safety, prior observability, and current observability annotated releases, cdv1, and the exact run inventory.",
+  "observability_patch_files": {
+    ".gitignore": {
+      "classification": "narrow runtime-log exclusion",
+      "sha256": "5de3a818ee6ce030c676c2624f73bd934a454d094c0c7697c1f805f1265500ac",
+      "size_bytes": 691
+    },
+    "docs/research_extension/cross_dataset_voting_durable_logging_v1.md": {
+      "classification": "operator logging documentation",
+      "sha256": "7ffa62c72d4f7319a6fef4a8dac47066675a7bf8b382fb039df0569d868073b5",
+      "size_bytes": 3000
+    },
+    "docs/research_extension/cross_dataset_voting_research_runbook_v1.md": {
+      "classification": "operator stop-message documentation",
+      "sha256": "eb02073d5454bcba7549bb3aa6b509f20ccfef16e2cc1e6f3c7c5f9ef9527738",
+      "size_bytes": 2536
+    },
+    "docs/research_extension/cross_dataset_voting_resume_after_run_014_v1.md": {
+      "classification": "authenticated release and runtime-log handoff",
+      "sha256": "f0bd93a894bd460576554d00b7282263713e480eb67d50fbb3dc3bdc71fd0bec",
+      "size_bytes": 2235
+    },
+    "tests/test_manual_research_orchestration.py": {
+      "classification": "clean-release and terminal-path tests",
+      "sha256": "65edef406e792425a6926f9e5895b7d6c99aa3fa895c06d5bc77602242fa58aa",
+      "size_bytes": 13120
+    },
+    "tests/test_provenance_bridge.py": {
+      "classification": "four-release compatibility authentication tests",
+      "sha256": "ce61cda446a4ac98dd038a40495be057473fa260341c9152ecdd188e04d49edf",
+      "size_bytes": 6991
+    },
+    "tests/test_research_logging.py": {
+      "classification": "human, audit, debug, append, heartbeat, and ignore tests",
+      "sha256": "d59f7535eb669c5e53223ae7d84db4dfe82ad2b0f5c28ceaeaa8b0deecce4947",
+      "size_bytes": 22218
+    }
+  },
   "test_files": {
     "tests/fixtures/cdv1_scientific_equivalence_golden.json": "f393e8e3e731e6a721727d951c81f02195b55ede1ca83f8f20a059b107f9bd66",
     "tests/support/cdv1_scientific_equivalence_probe.py": "e32d50aa1260cfb89bd0a4c5a185f72d8976d5ee86ecc96cce08dbd6145900d6",
     "tests/test_cdv1_scientific_equivalence.py": "a5c9dfa0040266c714f9ea21d066064b9a2c549c43991ab626a7b48d8c5ba261",
     "tests/test_checkpointing.py": "fbe96466dfa3697302535920934d23a89aaf33fdd23e1a54e1f90384707377bf",
-    "tests/test_manual_research_orchestration.py": "93a540a92fe96e781fb92dc20c15c5e7fa701683f28eca8a4f1a9ef79a7aac34",
-    "tests/test_provenance_bridge.py": "43a451eace31bbd5156e68bafd3ddb9a70ee80f1104466b6a457d92904abdfc4",
-    "tests/test_research_logging.py": "2b9e9f4104df51178ac42061edd8587dd981192619988b8a501b367352eb8d58",
+    "tests/test_manual_research_orchestration.py": "65edef406e792425a6926f9e5895b7d6c99aa3fa895c06d5bc77602242fa58aa",
+    "tests/test_provenance_bridge.py": "ce61cda446a4ac98dd038a40495be057473fa260341c9152ecdd188e04d49edf",
+    "tests/test_research_logging.py": "d59f7535eb669c5e53223ae7d84db4dfe82ad2b0f5c28ceaeaa8b0deecce4947",
     "tests/test_resource_monitor.py": "e12db7865cf38ebce402fdf72184b33e2655584215b5c0aa57d658935c607e92"
   }
 }

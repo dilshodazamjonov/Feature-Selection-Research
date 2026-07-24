@@ -1,6 +1,6 @@
 # Cross-Dataset Voting Research Runbook v1
 
-This records the original full-launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access. The current supported continuation is [cross_dataset_voting_resume_after_run_014_v1.md](cross_dataset_voting_resume_after_run_014_v1.md), at annotated tag `cross-dataset-voting-observability-v1`; logging operations are documented in [cross_dataset_voting_durable_logging_v1.md](cross_dataset_voting_durable_logging_v1.md).
+This records the original full-launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access. The current supported continuation is [cross_dataset_voting_resume_after_run_014_v1.md](cross_dataset_voting_resume_after_run_014_v1.md), at annotated tag `cross-dataset-voting-observability-v2`; logging operations are documented in [cross_dataset_voting_durable_logging_v1.md](cross_dataset_voting_durable_logging_v1.md).
 
 The historical tags `cross-dataset-voting-pre-execution-v1` and `cross-dataset-voting-resume-safety-v1` remain immutable and must not be moved. Do not use a historical tag to resume.
 
@@ -14,7 +14,7 @@ The invocation authenticates the release and expands exactly 16 IDs: 12 voting c
 
 All 80 DEV folds must complete and validate before the global DEV barrier can unlock one full-DEV fit and one locked OOT evaluation per configuration. After all 16 OOT runs validate, the workflow publishes the fixed comparison and completeness evidence. OOT results cannot alter later configurations. Terminal success is `CROSS_DATASET_VOTING_RESEARCH_COMPLETE` with exit code 0.
 
-No wall-clock duration is promised. To interrupt safely, press `Ctrl+C` once and let the supervisor finalize checkpoint and cleanup evidence. A controlled stop prints `CONTROLLED_STOP <stable-reason>` and returns nonzero. Do not change datasets, folds, seeds, features, budgets, models, resource limits, or tags, and do not delete partial run state.
+No wall-clock duration is promised. To interrupt safely, press `Ctrl+C` once and let the supervisor finalize checkpoint and cleanup evidence. A controlled stop prints one concise `STOP` line and returns nonzero; a manual interrupt has no traceback. Do not change datasets, folds, seeds, features, budgets, models, resource limits, or tags, and do not delete partial run state.
 
 Frozen SHA-256 references:
 

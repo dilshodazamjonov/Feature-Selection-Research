@@ -392,7 +392,6 @@ def _worker_entry(
             worker_pid=os.getpid(),
             stop_code=MANUAL_INTERRUPT,
             exception_class="KeyboardInterrupt",
-            traceback=traceback.format_exc(),
         )
         try:
             result_queue.put_nowait(

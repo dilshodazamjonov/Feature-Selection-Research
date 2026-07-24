@@ -32,5 +32,7 @@ tests_runtime/
 .tmp/
 .uv-cache/
 /logs/runs.log
+/logs/events.jsonl
+/logs/debug.log
 
 results/

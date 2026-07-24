@@ -31,7 +31,7 @@ from credit_risk_fs.experiments.research_logging import (
 )
 
 
-EXPECTED_TAG = "cross-dataset-voting-observability-v1"
+EXPECTED_TAG = "cross-dataset-voting-observability-v2"
 ORIGINAL_TAG = "cross-dataset-voting-pre-execution-v1"
 MATRIX_PATH = "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml"
 POLICY_PATH = "configs/execution/local_laptop_safe_v1.yaml"
@@ -431,7 +431,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--log-file",
         type=Path,
         default=DEFAULT_RESEARCH_LOG,
-        help="Append JSONL lifecycle records here (default: logs/runs.log).",
+        help="Append concise human progress here (default: logs/runs.log).",
     )
     return parser
 
@@ -503,10 +503,9 @@ def main(argv: list[str] | None = None) -> int:
             log_session.finish(
                 "session_interrupted",
                 level="ERROR",
-                message="CONTROLLED_STOP MANUAL_INTERRUPT: user KeyboardInterrupt",
+                message="Research run interrupted manually",
                 stop_code="manual_interrupt",
                 exception_class=type(exc).__name__,
-                traceback=traceback.format_exc(),
                 exit_code=130,
             )
             return 130

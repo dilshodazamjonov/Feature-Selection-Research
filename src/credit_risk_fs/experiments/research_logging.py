@@ -1,4 +1,4 @@
-"""Process-safe, append-only JSONL logging for manual research workflows."""
+"""Process-safe human run logs with a separate machine-readable audit stream."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ import logging
 import multiprocessing
 import os
 import queue
+import re
 import sys
 import threading
 import traceback as traceback_module
 import uuid
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +21,8 @@ from typing import Any, Iterator, Mapping, TextIO
 
 
 DEFAULT_RESEARCH_LOG = Path("logs/runs.log")
+DEFAULT_AUDIT_LOG_NAME = "events.jsonl"
+DEFAULT_DEBUG_LOG_NAME = "debug.log"
 LOG_SCHEMA_VERSION = "research_run_log_v1"
 DEFAULT_QUEUE_CAPACITY = 1024
 PRIORITY_QUEUE_TIMEOUT_SECONDS = 0.25
@@ -28,6 +31,74 @@ STAGE_HEARTBEAT_INTERVAL_SECONDS = 30.0
 _MAX_STRING_LENGTH = 16_384
 _MAX_SEQUENCE_ITEMS = 64
 _MAX_MAPPING_ITEMS = 64
+_GIB = 1024**3
+_NO_DEBUG_TRACEBACK_EXCEPTIONS = {"KeyboardInterrupt", "ManualResearchStop"}
+
+_STAGE_LABELS = {
+    "plan_construction": "Research plan",
+    "release_authentication": "Release authentication",
+    "workflow_preflight": "Repository preflight",
+    "inter_run_readiness": "Resource readiness check",
+    "dev_global_barrier": "DEV validation",
+    "workflow_finalization": "Research finalization",
+    "dev_data_loading": "DEV data loading",
+    "target_extraction": "Target validation",
+    "feature_filtering_sanitization": "Feature filtering",
+    "row_boundary_selection": "Fold boundary selection",
+    "selection_encoding": "Selection encoding",
+    "voter_rf_corr_mrmr": "RF relevance + mRMR",
+    "reference_rf_corr_mrmr": "RF relevance + mRMR",
+    "voter_boruta": "Boruta",
+    "rank_aggregation": "Rank voting",
+    "rfe_encoding": "RFE encoding",
+    "rfe": "RFE",
+    "selected_projection_reload": "Selected-feature loading",
+    "final_preprocessing": "Model preprocessing",
+    "final_model_fit": "Model fit",
+    "final_prediction": "DEV prediction",
+    "fold_artifact_writing": "Fold artifact writing",
+    "fold_checkpoint_finalization": "Fold checkpoint",
+    "dev_oof_aggregation": "DEV prediction aggregation",
+    "dev_evaluation": "DEV evaluation",
+    "dev_artifact_writing": "DEV artifact writing",
+    "dev_checkpoint_finalization": "DEV checkpoint",
+    "full_dev_data_loading": "Full-DEV data loading",
+    "full_dev_target_extraction": "Full-DEV target validation",
+    "full_dev_feature_filtering_sanitization": "Full-DEV feature filtering",
+    "full_dev_selected_projection_reload": "Full-DEV selected-feature loading",
+    "full_dev_selected_feature_validation": "Selected-feature validation",
+    "locked_oot_data_loading": "Locked OOT data loading",
+    "oot_target_extraction": "OOT target validation",
+    "oot_feature_filtering_sanitization": "OOT feature filtering",
+    "full_dev_preprocessing": "Full-DEV preprocessing",
+    "full_dev_model_fit": "Full-DEV model fit",
+    "full_dev_prediction": "Full-DEV prediction",
+    "oot_prediction": "OOT prediction",
+    "oot_artifact_writing": "OOT artifact writing",
+    "oot_evaluation": "OOT evaluation",
+    "oot_checkpoint_finalization": "OOT checkpoint",
+    "checkpoint_resume_validation": "Checkpoint validation",
+}
+
+_HUMAN_SILENT_EVENTS = {
+    "logging_shutdown",
+    "worker_logging_configured",
+    "worker_spawn_requested",
+    "worker_spawned",
+    "worker_started",
+    "worker_completed",
+    "worker_failed",
+    "worker_interrupted",
+    # The session/run terminal event renders the single concise failure or
+    # manual-interrupt line after cleanup and checkpoint handling completes.
+    "stage_failed",
+    "stage_interrupted",
+    "component_started",
+    "component_completed",
+    "resource_artifact_written",
+    "execution_lock_created",
+    "execution_lock_released",
+}
 
 
 _CONTEXT: ContextVar[dict[str, Any]] = ContextVar("research_log_context", default={})
@@ -100,6 +171,267 @@ def _record(
     return payload
 
 
+def _human_timestamp(value: Any) -> str:
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        parsed = parsed.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        parsed = datetime.now(timezone.utc)
+    return parsed.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def _clean_message(value: Any) -> str:
+    message = " ".join(str(value or "").split())
+    message = re.sub(r"^CONTROLLED_STOP\s+[A-Z0-9_]+:\s*", "", message)
+    return message[:500]
+
+
+def _run_number(run_id: Any) -> str | None:
+    match = re.search(r"(?:^|-)cdv1-(\d{3})(?:-|$)", f"-{run_id}")
+    return match.group(1) if match else None
+
+
+def _dataset_label(dataset: Any, run_id: Any) -> str | None:
+    value = str(dataset or "").lower()
+    combined = f"{value} {run_id}".lower()
+    if "lendingclub" in combined:
+        return "LendingClub"
+    if "homecredit" in combined:
+        return "Home Credit"
+    return str(dataset).replace("_", " ").title() if dataset else None
+
+
+def _model_label(model: Any, run_id: Any) -> str | None:
+    value = str(model or "").lower()
+    combined = f"{value} {run_id}".lower()
+    if "catboost" in combined:
+        return "CatBoost"
+    if value == "lr" or re.search(r"-lr-s\d+$", combined):
+        return "Logistic Regression"
+    return str(model).replace("_", " ").title() if model else None
+
+
+def _method_label(payload: Mapping[str, Any]) -> str | None:
+    run_id = str(payload.get("run_id") or "")
+    match = re.search(r"-voting-k(\d+)-", run_id)
+    if match:
+        return f"Voting K={match.group(1)}"
+    if "-reference-rf-corr-mrmr-" in run_id:
+        return "Reference RF+Corr+mRMR"
+    selector = str(payload.get("selector") or "")
+    if selector == "rank_voting_v1":
+        return "Rank voting"
+    if selector:
+        return selector.replace("_", " ").title()
+    return None
+
+
+def _fold_label(payload: Mapping[str, Any]) -> str | None:
+    fold = payload.get("fold_id")
+    try:
+        value = int(fold)
+    except (TypeError, ValueError):
+        return None
+    return f"Fold {value}/5" if 1 <= value <= 5 else None
+
+
+def _stage_label(payload: Mapping[str, Any]) -> str:
+    stage = str(payload.get("stage") or "")
+    if stage in {"final_model_fit", "full_dev_model_fit"}:
+        model = _model_label(payload.get("model"), payload.get("run_id"))
+        if model:
+            return f"{model} model fit"
+    if stage in _STAGE_LABELS:
+        return _STAGE_LABELS[stage]
+    component = str(payload.get("component") or "")
+    if component and component not in {"model_fit", "checkpoint_manager"}:
+        return component.replace("_", " ").title()
+    return stage.replace("_", " ").title() if stage else "Research stage"
+
+
+def _duration(value: Any) -> str | None:
+    try:
+        seconds = max(0, int(round(float(value))))
+    except (TypeError, ValueError):
+        return None
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes}m {seconds}s"
+    if minutes:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"
+
+
+def _gib(value: Any) -> str | None:
+    try:
+        return f"{float(value) / _GIB:.1f} GiB"
+    except (TypeError, ValueError):
+        return None
+
+
+def _stop_reason(code: Any, message: Any = "") -> str:
+    normalized = str(code or "").lower()
+    if normalized in {"ram_system_headroom", "ram_process_limit"}:
+        return "RAM safety limit reached"
+    if normalized == "gpu_process_limit":
+        return "GPU memory safety limit reached"
+    if normalized in {"disk_results_limit", "disk_temp_limit"}:
+        return "disk safety limit reached"
+    if normalized == "manual_interrupt":
+        return "interrupted manually"
+    cleaned = _clean_message(message)
+    return cleaned or normalized.replace("_", " ") or "controlled stop"
+
+
+def _human_line(
+    payload: Mapping[str, Any], *, debug_log_path: str
+) -> str | None:
+    event = str(payload.get("event") or "")
+    level = str(payload.get("level") or "INFO").upper()
+    if event in _HUMAN_SILENT_EVENTS:
+        return None
+    if event == "python_log" and level not in {"WARNING", "ERROR", "CRITICAL"}:
+        return None
+
+    action = "INFO"
+    parts: list[str] = []
+    run_number = _run_number(payload.get("run_id"))
+    run_label = f"Run {run_number}" if run_number else None
+    fold_label = _fold_label(payload)
+
+    if event == "logging_initialized":
+        parts = ["Logging ready", str(payload.get("log_path") or "logs/runs.log")]
+    elif event == "session_started":
+        action, parts = "START", ["Research session started"]
+    elif event == "configuration_authenticated":
+        parts = ["Research plan and configuration hashes authenticated"]
+    elif event == "release_authenticated":
+        commit = str(payload.get("git_commit") or "")[:8]
+        parts = [f"Release {commit} authenticated" if commit else "Release authenticated"]
+    elif event == "plan_resume_decision":
+        parts = [_clean_message(payload.get("message"))]
+    elif event == "run_execution_started":
+        action = "START"
+        parts = [
+            item
+            for item in (
+                run_label,
+                _dataset_label(payload.get("dataset"), payload.get("run_id")),
+                _method_label(payload),
+                _model_label(payload.get("model"), payload.get("run_id")),
+            )
+            if item
+        ]
+    elif event in {"run_resume_decision", "run_resume_authenticated"}:
+        parts = [item for item in (run_label, _clean_message(payload.get("message"))) if item]
+    elif event == "stage_started":
+        parts = [item for item in (fold_label, f"{_stage_label(payload)} started") if item]
+    elif event == "stage_heartbeat":
+        action = "ACTIVE"
+        parts = [item for item in (fold_label, f"{_stage_label(payload)} running") if item]
+        elapsed = _duration(
+            payload.get("elapsed_stage_seconds", payload.get("elapsed_supervisor_seconds"))
+        )
+        ram = _gib(
+            payload.get(
+                "worker_rss_bytes",
+                payload.get("process_tree_rss_bytes", payload.get("parent_rss_bytes")),
+            )
+        )
+        available = _gib(payload.get("system_available_ram_bytes"))
+        if elapsed:
+            parts.append(f"Elapsed {elapsed}")
+        if ram:
+            parts.append(f"RAM {ram}")
+        if available:
+            parts.append(f"Available {available}")
+    elif event == "stage_completed":
+        action = "DONE"
+        parts = [item for item in (fold_label, f"{_stage_label(payload)} completed") if item]
+        elapsed = _duration(payload.get("elapsed_stage_seconds"))
+        if elapsed:
+            parts[-1] += f" in {elapsed}"
+    elif event == "stage_aborted":
+        action = "STOP"
+        reason = _stop_reason(payload.get("stop_code"), payload.get("message"))
+        parts = [item for item in (fold_label, f"{_stage_label(payload)} stopped: {reason}") if item]
+    elif event == "resource_warning":
+        action = "WARN"
+        parts = [_stop_reason(payload.get("warning_code"), payload.get("message"))]
+    elif event == "supervisor_lifecycle":
+        state = str(payload.get("lifecycle_state") or "")
+        if state == "RESOURCE_STOP_LATCHED":
+            action, parts = "STOP", [_stop_reason(payload.get("stop_code"), payload.get("message"))]
+        elif state == "COOPERATIVE_STOP_REQUESTED":
+            action, parts = "INFO", ["Graceful worker stop requested"]
+        elif state == "GRACE_PERIOD":
+            action, parts = "INFO", ["Waiting for graceful worker exit"]
+        elif state == "TERMINATE_PROCESS_TREE":
+            action, parts = "WARN", ["Terminating the research worker"]
+        elif state == "FORCE_KILL_REMAINDERS":
+            action, parts = "WARN", ["Force-stopping remaining worker processes"]
+        elif state == "EXIT_CONFIRMED":
+            action, parts = "DONE", ["Research worker cleanup confirmed"]
+        elif state == "WORKER_TREE_TERMINATION_FAILED":
+            action, parts = "ERROR", ["Research worker cleanup could not be confirmed"]
+        else:
+            return None
+    elif event == "checkpoint_transition":
+        parts = [item for item in (run_label, f"Checkpoint saved after {_stage_label(payload)}") if item]
+    elif event == "checkpoint_validation_started":
+        parts = [item for item in (run_label, "Checkpoint validation started") if item]
+    elif event == "checkpoint_validation_completed":
+        action, parts = "DONE", [item for item in (run_label, "Checkpoint validation completed") if item]
+    elif event == "run_finalized":
+        status = str(payload.get("status") or "")
+        if status in {"completed", "dev_complete"}:
+            action, parts = "DONE", [item for item in (run_label, f"Run {status.replace('_', ' ')}") if item]
+        elif status == "aborted_resource_limit":
+            action, parts = "STOP", [f"{run_label or 'Run'} stopped: {_stop_reason(payload.get('stop_code'))}"]
+        else:
+            action, parts = "ERROR", [f"{run_label or 'Run'} failed", f"Details: {debug_log_path}"]
+    elif event == "session_completed":
+        action, parts = "DONE", [_clean_message(payload.get("message")) or "Research session completed"]
+    elif event == "session_controlled_stop":
+        action, parts = "STOP", [_stop_reason(payload.get("stop_code"), payload.get("message"))]
+    elif event == "session_interrupted":
+        action, parts = "STOP", [_clean_message(payload.get("message")) or "Research run interrupted manually"]
+    elif event == "session_failed":
+        action = "ERROR"
+        parts = [_clean_message(payload.get("message")) or "Unexpected research error", f"Details: {debug_log_path}"]
+    elif event == "logging_backpressure":
+        action, parts = "WARN", ["Some internal audit events were dropped under queue pressure"]
+    elif event == "python_log":
+        action = "ERROR" if level in {"ERROR", "CRITICAL"} else "WARN"
+        parts = [_clean_message(payload.get("message"))]
+        if payload.get("exception_class") and action == "ERROR":
+            parts.append(f"Details: {debug_log_path}")
+    elif event == "session_finalized":
+        action, parts = "WARN", [_clean_message(payload.get("message"))]
+    elif level in {"WARNING", "ERROR", "CRITICAL"}:
+        action = "ERROR" if level in {"ERROR", "CRITICAL"} else "WARN"
+        parts = [_clean_message(payload.get("message"))]
+    else:
+        return None
+
+    rendered = " | ".join(part for part in parts if part)
+    action_spacing = " " * max(1, 6 - len(action))
+    return (
+        f"[{_human_timestamp(payload.get('timestamp_utc'))}] "
+        f"{action}{action_spacing}| {rendered}"
+    )
+
+
+@contextmanager
+def suppress_third_party_output() -> Iterator[None]:
+    """Silence raw library progress while canonical parent heartbeats remain visible."""
+
+    with open(os.devnull, "w", encoding="utf-8") as sink:
+        with redirect_stdout(sink), redirect_stderr(sink):
+            yield
+
+
 class _ParentEmitter:
     def __init__(self, session: "ResearchLogSession") -> None:
         self.session = session
@@ -145,7 +477,7 @@ class _WorkerEmitter:
 
 
 class _PythonLoggingBridge(logging.Handler):
-    """Mirror ordinary Python logging into the canonical JSONL stream."""
+    """Mirror ordinary Python logging into the audit stream and human warnings."""
 
     _research_logging_bridge = True
 
@@ -285,7 +617,6 @@ def logged_stage(
             priority=True,
             elapsed_stage_seconds=monotonic() - started,
             exception_class="KeyboardInterrupt",
-            traceback=traceback_module.format_exc(),
             **context,
         )
         raise
@@ -318,7 +649,7 @@ def logged_stage(
 
 
 class ResearchLogSession:
-    """Own the only durable file handle and the bounded worker-log listener."""
+    """Own human, audit, and debug sinks plus the bounded worker-log listener."""
 
     def __init__(
         self,
@@ -335,11 +666,15 @@ class ResearchLogSession:
         if not self.log_path.is_absolute():
             self.log_path = self.repository_root / self.log_path
         self.log_path = self.log_path.resolve()
+        self.audit_path = self.log_path.with_name(DEFAULT_AUDIT_LOG_NAME)
+        self.debug_path = self.log_path.with_name(DEFAULT_DEBUG_LOG_NAME)
         self.command_arguments = list(command_arguments)
         self.terminal_stream = terminal_stream or sys.stderr
         self.session_id = session_id or str(uuid.uuid4())
         self.queue_capacity = max(8, int(queue_capacity))
         self._file: TextIO | None = None
+        self._audit_file: TextIO | None = None
+        self._debug_file: TextIO | None = None
         self._write_lock = threading.Lock()
         self._listener_stop = threading.Event()
         self._listener: threading.Thread | None = None
@@ -352,12 +687,20 @@ class ResearchLogSession:
         self.priority_drop_counter = context.Value("Q", 0)
         self._observed_routine_drops = 0
         self._observed_priority_drops = 0
+        self._written_traceback_hashes: set[int] = set()
 
     def __enter__(self) -> "ResearchLogSession":
         global _ACTIVE_EMITTER, _ACTIVE_SESSION
         if _ACTIVE_SESSION is not None:
             raise RuntimeError("a research logging session is already active")
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._audit_file = self.audit_path.open(
+            "a", encoding="utf-8", newline="\n", buffering=1
+        )
+        self._debug_file = self.debug_path.open(
+            "a", encoding="utf-8", newline="\n", buffering=1
+        )
+        self._migrate_legacy_json_run_log()
         self._file = self.log_path.open(
             "a", encoding="utf-8", newline="\n", buffering=1
         )
@@ -376,7 +719,9 @@ class ResearchLogSession:
             message="Durable append-only research logging initialized",
             priority=True,
             log_path=self.relative_path(self.log_path),
-            format="jsonl",
+            audit_path=self.relative_path(self.audit_path),
+            debug_path=self.relative_path(self.debug_path),
+            format="human_text",
             queue_capacity=self.queue_capacity,
             heartbeat_interval_seconds=STAGE_HEARTBEAT_INTERVAL_SECONDS,
         )
@@ -435,15 +780,113 @@ class ResearchLogSession:
         )
         self._terminal_event_written = True
 
+    def _write_debug_traceback(
+        self, payload: Mapping[str, Any], traceback_text: str
+    ) -> None:
+        if (
+            not traceback_text
+            or str(payload.get("exception_class")) in _NO_DEBUG_TRACEBACK_EXCEPTIONS
+        ):
+            return
+        traceback_hash = hash(traceback_text)
+        if traceback_hash in self._written_traceback_hashes:
+            return
+        if len(self._written_traceback_hashes) >= 128:
+            self._written_traceback_hashes.clear()
+        self._written_traceback_hashes.add(traceback_hash)
+        if self._debug_file is None:
+            return
+        header = (
+            f"[{_human_timestamp(payload.get('timestamp_utc'))}] "
+            f"{payload.get('event', 'error')} | "
+            f"{payload.get('exception_class', 'Exception')} | "
+            f"{_clean_message(payload.get('message'))}"
+        )
+        self._debug_file.write(header + "\n")
+        self._debug_file.write(traceback_text.rstrip() + "\n\n")
+        self._debug_file.flush()
+
+    def _audit_payload(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+        audit_payload = dict(payload)
+        traceback_text = str(audit_payload.pop("traceback", "") or "")
+        if (
+            traceback_text
+            and str(audit_payload.get("exception_class"))
+            not in _NO_DEBUG_TRACEBACK_EXCEPTIONS
+        ):
+            self._write_debug_traceback(audit_payload, traceback_text)
+            audit_payload["debug_log_path"] = self.relative_path(self.debug_path)
+        return audit_payload
+
+    def _migrate_legacy_json_run_log(self) -> None:
+        """Convert prior JSON run lines to human text while preserving JSON in audit."""
+
+        if not self.log_path.is_file() or self.log_path.stat().st_size == 0:
+            return
+        temporary = self.log_path.with_name(
+            f"{self.log_path.name}.{os.getpid()}.human-migration"
+        )
+        converted = False
+        with self.log_path.open("r", encoding="utf-8", errors="replace") as source:
+            with temporary.open("w", encoding="utf-8", newline="\n") as target:
+                for raw_line in source:
+                    stripped = raw_line.strip()
+                    payload: Mapping[str, Any] | None = None
+                    if stripped.startswith("{"):
+                        try:
+                            candidate = json.loads(stripped)
+                            if isinstance(candidate, Mapping):
+                                payload = candidate
+                        except json.JSONDecodeError:
+                            payload = None
+                    if payload is None:
+                        target.write(raw_line if raw_line.endswith("\n") else raw_line + "\n")
+                        continue
+                    converted = True
+                    audit_payload = self._audit_payload(payload)
+                    if self._audit_file is not None:
+                        self._audit_file.write(
+                            json.dumps(
+                                audit_payload,
+                                sort_keys=True,
+                                separators=(",", ":"),
+                            )
+                            + "\n"
+                        )
+                    human = _human_line(
+                        audit_payload,
+                        debug_log_path=self.relative_path(self.debug_path),
+                    )
+                    if human:
+                        target.write(human + "\n")
+                target.flush()
+                os.fsync(target.fileno())
+        if converted:
+            if self._audit_file is not None:
+                self._audit_file.flush()
+            os.replace(temporary, self.log_path)
+        else:
+            temporary.unlink(missing_ok=True)
+
     def _write(self, payload: Mapping[str, Any]) -> None:
-        line = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         with self._write_lock:
-            if self._file is None:
+            if self._file is None or self._audit_file is None:
                 return
-            self._file.write(line + "\n")
-            self._file.flush()
-            self.terminal_stream.write(line + "\n")
-            self.terminal_stream.flush()
+            audit_payload = self._audit_payload(payload)
+            audit_line = json.dumps(
+                audit_payload, sort_keys=True, separators=(",", ":")
+            )
+            self._audit_file.write(audit_line + "\n")
+            self._audit_file.flush()
+            human_line = _human_line(
+                audit_payload,
+                debug_log_path=self.relative_path(self.debug_path),
+            )
+            if human_line:
+                self._file.write(human_line + "\n")
+                self._file.flush()
+                self.terminal_stream.write(human_line + "\n")
+                self.terminal_stream.flush()
 
     def _report_backpressure(self) -> None:
         routine = int(self.routine_drop_counter.value)
@@ -544,9 +987,13 @@ class ResearchLogSession:
         except (OSError, ValueError):
             pass
         with self._write_lock:
-            self._file.flush()
-            self._file.close()
+            for handle in (self._file, self._audit_file, self._debug_file):
+                if handle is not None:
+                    handle.flush()
+                    handle.close()
             self._file = None
+            self._audit_file = None
+            self._debug_file = None
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         self.close()
@@ -593,6 +1040,8 @@ def configure_worker_logging(
 
 
 __all__ = [
+    "DEFAULT_AUDIT_LOG_NAME",
+    "DEFAULT_DEBUG_LOG_NAME",
     "DEFAULT_QUEUE_CAPACITY",
     "DEFAULT_RESEARCH_LOG",
     "LOG_SCHEMA_VERSION",
@@ -604,4 +1053,5 @@ __all__ = [
     "emit_research_event",
     "logged_stage",
     "research_logging_active",
+    "suppress_third_party_output",
 ]

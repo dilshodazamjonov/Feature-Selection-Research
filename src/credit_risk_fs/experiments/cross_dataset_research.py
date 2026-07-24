@@ -44,6 +44,7 @@ from credit_risk_fs.experiments.row_alignment import (
     ordered_row_id_sha256,
     ordered_row_id_target_sha256,
 )
+from credit_risk_fs.experiments.research_logging import suppress_third_party_output
 from credit_risk_fs.pipelines.common import (
     prepare_voting_pilot_dev_data,
     prepare_voting_research_oot_data,
@@ -77,7 +78,8 @@ def _reference_selection(
     selector = RandomForestRelevanceMRMRSelector(
         k=budget, method="mrmr", random_state=seed, n_jobs=estimator_threads
     )
-    selector.fit(X_numeric, y)
+    with suppress_third_party_output():
+        selector.fit(X_numeric, y)
     selected = list(selector.selected_features_ or [])
     if len(selected) != budget or len(set(selected)) != budget:
         raise ValueError("reference selector did not produce the exact final budget")
@@ -936,7 +938,8 @@ def _run_oot_phase(
         get_model, _, _, _ = get_model_bundle(str(spec["model"]), model_kwargs)
         model = get_model()
         _report(stop_event, stage_queue, "full_dev_model_fit", None)
-        model.fit(X_dev, dev_selected.y, eval_set=None)
+        with suppress_third_party_output():
+            model.fit(X_dev, dev_selected.y, eval_set=None)
     _report(
         stop_event,
         stage_queue,

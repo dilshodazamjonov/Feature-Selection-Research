@@ -61,6 +61,10 @@ def _fixture_bridge(root: Path) -> dict:
             "tag": bridge.SAFETY_TAG,
             "commit": bridge.SAFETY_COMMIT,
         },
+        "prior_observability_release": {
+            "tag": bridge.PRIOR_OBSERVABILITY_TAG,
+            "commit": bridge.PRIOR_OBSERVABILITY_COMMIT,
+        },
         "observability_release": {
             "tag": bridge.OBSERVABILITY_TAG,
             "commit_binding": "annotated_tag_peels_to_current_head",
@@ -83,6 +87,12 @@ def _fixture_bridge(root: Path) -> dict:
                 "size_bytes": frozen.stat().st_size,
             }
         },
+        "observability_patch_files": {
+            "runtime.py": {
+                "sha256": sha256_file(runtime),
+                "size_bytes": runtime.stat().st_size,
+            }
+        },
         "runs": run_entries,
     }
     _write_json(root / bridge.BRIDGE_PATH, payload)
@@ -94,6 +104,8 @@ def _fake_git(_root, *args):
         return bridge.ORIGINAL_COMMIT
     if args == ("rev-list", "-n", "1", bridge.SAFETY_TAG):
         return bridge.SAFETY_COMMIT
+    if args == ("rev-list", "-n", "1", bridge.PRIOR_OBSERVABILITY_TAG):
+        return bridge.PRIOR_OBSERVABILITY_COMMIT
     if args == ("rev-list", "-n", "1", bridge.OBSERVABILITY_TAG):
         return "b" * 40
     if args[0:2] == ("cat-file", "-t"):
@@ -125,6 +137,26 @@ def test_exact_bridge_authenticates_and_resolves_historical_identity(
     assert identity["git_commit"] == bridge.SAFETY_COMMIT
     assert config["run_id"] == bridge.INTERRUPTED_RUN_ID
     assert metadata["authorized_run_id"] == bridge.INTERRUPTED_RUN_ID
+    assert metadata["prior_observability_commit"] == bridge.PRIOR_OBSERVABILITY_COMMIT
+
+
+def test_prior_observability_tag_movement_blocks_bridge(tmp_path, monkeypatch):
+    _fixture_bridge(tmp_path)
+
+    def moved_prior_tag(root, *args):
+        if args == ("rev-list", "-n", "1", bridge.PRIOR_OBSERVABILITY_TAG):
+            return "c" * 40
+        return _fake_git(root, *args)
+
+    monkeypatch.setattr(bridge, "_git", moved_prior_tag)
+    bridge._AUTHENTICATED_RELEASES.clear()
+    with pytest.raises(bridge.ProvenanceBridgeError) as error:
+        bridge.authenticate_compatibility_bridge(
+            tmp_path,
+            current_commit="b" * 40,
+            current_tag=bridge.OBSERVABILITY_TAG,
+        )
+    assert error.value.code == "BRIDGE_RELEASE_TAG_MOVED"
 
 
 @pytest.mark.parametrize(
