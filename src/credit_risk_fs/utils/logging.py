@@ -7,6 +7,21 @@ from contextlib import contextmanager
 from pathlib import Path
 
 
+class _SuppressDuringResearchSession(logging.Filter):
+    """Avoid duplicate plain console lines while canonical JSONL logging is active."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        del record
+        try:
+            from credit_risk_fs.experiments.research_logging import (
+                research_logging_active,
+            )
+
+            return not research_logging_active()
+        except ImportError:
+            return True
+
+
 def setup_logging(
     name: str = "research",
     level: int = logging.INFO,
@@ -44,13 +59,14 @@ def setup_logging(
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
+    console_handler.addFilter(_SuppressDuringResearchSession())
     logger.addHandler(console_handler)
     
     # File handler (if specified)
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_file, mode="a")
+        file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     
@@ -84,7 +100,7 @@ def run_log_context(log_file: str | Path, level: int = logging.INFO):
         "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    handler = logging.FileHandler(log_path, mode="a")
+    handler = logging.FileHandler(log_path, mode="a", encoding="utf-8")
     handler.setFormatter(formatter)
     handler.setLevel(level)
 

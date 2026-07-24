@@ -31,5 +31,6 @@ pytest_tmp/
 tests_runtime/
 .tmp/
 .uv-cache/
+/logs/runs.log
 
 results/

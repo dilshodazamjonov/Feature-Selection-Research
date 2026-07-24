@@ -1,0 +1,36 @@
+{
+  "schema_version": "cdv1_durable_logging_stage_coverage_v1",
+  "heartbeat_interval_seconds_maximum": 30,
+  "generic_terminal_events": [
+    "stage_completed",
+    "stage_failed",
+    "stage_interrupted",
+    "stage_aborted"
+  ],
+  "coverage": {
+    "repository_and_provenance": ["plan_construction", "release_authentication", "workflow_preflight"],
+    "plan_and_resume": ["configuration_authenticated", "plan_resume_decision", "run_resume_decision", "run_resume_authenticated"],
+    "readiness": ["inter_run_readiness", "inter_run_readiness_result"],
+    "data_and_boundaries": ["dev_data_loading", "target_extraction", "feature_filtering_sanitization", "row_boundary_selection", "selected_projection_reload"],
+    "preprocessing": ["selection_encoding", "rfe_encoding", "final_preprocessing", "full_dev_preprocessing"],
+    "configured_voters": ["voter_rf_corr_mrmr", "voter_boruta"],
+    "reference_selector": ["reference_rf_corr_mrmr"],
+    "aggregation_and_tie_breaking": ["rank_aggregation"],
+    "downstream_selector": ["rfe"],
+    "model_and_prediction": ["final_model_fit", "final_prediction", "full_dev_model_fit", "full_dev_prediction", "oot_prediction"],
+    "evaluation": ["dev_evaluation", "oot_evaluation"],
+    "artifact_and_checkpoint": ["fold_artifact_writing", "fold_checkpoint_finalization", "dev_artifact_writing", "dev_checkpoint_finalization", "oot_artifact_writing", "oot_checkpoint_finalization", "checkpoint_transition", "checkpoint_validation_started", "checkpoint_validation_completed"],
+    "fold_and_run_completion": ["dev_oof_aggregation", "run_finalized", "workflow_finalization"],
+    "oot_locked_path": ["full_dev_data_loading", "full_dev_target_extraction", "full_dev_feature_filtering_sanitization", "full_dev_selected_projection_reload", "full_dev_selected_feature_validation", "locked_oot_data_loading", "oot_target_extraction", "oot_feature_filtering_sanitization"],
+    "resource_and_cleanup": ["resource_warning", "RESOURCE_STOP_LATCHED", "COOPERATIVE_STOP_REQUESTED", "GRACE_PERIOD", "TERMINATE_PROCESS_TREE", "FORCE_KILL_REMAINDERS", "EXIT_CONFIRMED", "WORKER_TREE_TERMINATION_FAILED", "worker_finalized"],
+    "session_terminal": ["session_completed", "session_controlled_stop", "session_interrupted", "session_failed"]
+  },
+  "boruta": {
+    "start_fields": ["input_row_count", "input_feature_count", "configuration", "fold_id", "component", "internal_iteration_available"],
+    "heartbeat_message": "Boruta fit active; internal iteration unavailable.",
+    "completion_fields": ["selected_feature_count", "tentative_feature_count", "rejected_feature_count", "ranked_feature_count", "elapsed_stage_seconds"],
+    "iteration_progress_invented": false
+  },
+  "inactive_selectors_not_enabled": ["IV", "LASSO"],
+  "research_or_oot_executed": false
+}

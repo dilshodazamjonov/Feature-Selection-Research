@@ -1,0 +1,98 @@
+{
+  "cleanup_evidence": {
+    "child_cleanup_confirmed": true,
+    "parent_rss_after_bytes": 454004736,
+    "parent_rss_before_bytes": 453767168,
+    "queue_cleanup_confirmed": true,
+    "survivor_processes": [],
+    "system_available_ram_after_bytes": 21942272000
+  },
+  "completed_fold_ids": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "finalized_artifact_count": 36,
+  "fold_5_artifacts_present": false,
+  "last_sample": {
+    "elapsed_seconds": 7640.282369999972,
+    "fold_id": 5,
+    "stage": "voter_boruta",
+    "system_available_ram_bytes": 8571129856,
+    "worker_rss_bytes": 13437038592
+  },
+  "oot_paths_present": false,
+  "primary_stop_code": "ram_system_headroom",
+  "research_executed_by_audit": false,
+  "run_id": "cdv1-014-lendingclub-v2-voting-k100-catboost-s42",
+  "safe_resume_boundary": {
+    "discarded_in_memory_stage": "voter_boruta",
+    "first_expensive_stage": "voter_rf_corr_mrmr",
+    "first_selection_stage": "selection_encoding",
+    "fold_id": 5,
+    "phase": "DEV",
+    "stage": "dev_data_loading"
+  },
+  "schema_version": "cdv1_run_014_durable_logging_reconciliation_v1",
+  "secondary_events": [],
+  "stop_lifecycle": [
+    {
+      "detail": "run_association=cdv1-014-lendingclub-v2-voting-k100-catboost-s42:2026-07-24T02:26:16+00:00",
+      "elapsed_seconds": 0.055846799979917705,
+      "pids": [
+        36208
+      ],
+      "state": "RUNNING",
+      "timestamp_utc": "2026-07-24T02:26:16.173144+00:00"
+    },
+    {
+      "detail": "primary_stop_code=ram_system_headroom",
+      "elapsed_seconds": 7640.338263500016,
+      "pids": [
+        36208
+      ],
+      "state": "RESOURCE_STOP_LATCHED",
+      "timestamp_utc": "2026-07-24T04:33:36.455568+00:00"
+    },
+    {
+      "detail": "primary_stop_code=ram_system_headroom",
+      "elapsed_seconds": 7640.341779500013,
+      "pids": [],
+      "state": "COOPERATIVE_STOP_REQUESTED",
+      "timestamp_utc": "2026-07-24T04:33:36.459071+00:00"
+    },
+    {
+      "detail": "timeout_seconds=20.0",
+      "elapsed_seconds": 7640.341794600012,
+      "pids": [],
+      "state": "GRACE_PERIOD",
+      "timestamp_utc": "2026-07-24T04:33:36.459098+00:00"
+    },
+    {
+      "detail": "timeout_seconds=10.0",
+      "elapsed_seconds": 7660.35638469999,
+      "pids": [
+        36208
+      ],
+      "state": "TERMINATE_PROCESS_TREE",
+      "timestamp_utc": "2026-07-24T04:33:56.473676+00:00"
+    },
+    {
+      "detail": "owned worker process tree is absent",
+      "elapsed_seconds": 7661.014150200004,
+      "pids": [],
+      "state": "EXIT_CONFIRMED",
+      "timestamp_utc": "2026-07-24T04:33:57.131436+00:00"
+    },
+    {
+      "detail": "status=aborted_resource_limit; stop_code=ram_system_headroom",
+      "elapsed_seconds": 7661.532662999991,
+      "pids": [],
+      "state": "ARTIFACT_AND_STATE_FINALIZATION",
+      "timestamp_utc": "2026-07-24T04:33:57.649953+00:00"
+    }
+  ],
+  "terminal_status": "aborted_resource_limit",
+  "worker_exit_code": 15
+}

@@ -1,8 +1,8 @@
 # Cross-Dataset Voting Research Runbook v1
 
-This records the original full-launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access. After the run-011 interruption, the supported continuation procedure moved to [cross_dataset_voting_resume_after_run_011_v1.md](cross_dataset_voting_resume_after_run_011_v1.md) and the annotated mechanics tag `cross-dataset-voting-resume-safety-v1`.
+This records the original full-launch procedure for the frozen 16-configuration research workflow. Prompt 6 validated the entry point with planning, mocks, fixtures, and temporary roots; Prompt 6 did **not** execute the command, any research ID, any real DEV fold, or any OOT access. The current supported continuation is [cross_dataset_voting_resume_after_run_014_v1.md](cross_dataset_voting_resume_after_run_014_v1.md), at annotated tag `cross-dataset-voting-observability-v1`; logging operations are documented in [cross_dataset_voting_durable_logging_v1.md](cross_dataset_voting_durable_logging_v1.md).
 
-Historically, the first launch was run from `D:\python projects\Research` at the annotated tag `cross-dataset-voting-pre-execution-v1`. That tag remains the immutable provenance of runs 001–011 and must not be moved. Do not use the old tag to resume; use the authenticated continuation handoff linked above.
+The historical tags `cross-dataset-voting-pre-execution-v1` and `cross-dataset-voting-resume-safety-v1` remain immutable and must not be moved. Do not use a historical tag to resume.
 
 ## One-command manual execution
 
@@ -10,22 +10,11 @@ Historically, the first launch was run from `D:\python projects\Research` at the
 .\.venv\Scripts\python.exe scripts\run_cross_dataset_voting_research.py
 ```
 
-This one invocation performs a live CPU/resource preflight and then runs sequentially with one research run, one fold, zero loader workers, at most four estimator threads, GPU disabled, the unchanged RAM/disk/headroom policy, and the validated LendingClub memory-safe refinement.
+The invocation authenticates the release and expands exactly 16 IDs: 12 voting configurations and four rerun-required references. It executes one run and one fold at a time, with zero loader workers, at most four estimator threads, CPU-only execution, the unchanged resource policy, and the validated LendingClub memory refinement.
 
-Expected scale and phases are:
+All 80 DEV folds must complete and validate before the global DEV barrier can unlock one full-DEV fit and one locked OOT evaluation per configuration. After all 16 OOT runs validate, the workflow publishes the fixed comparison and completeness evidence. OOT results cannot alter later configurations. Terminal success is `CROSS_DATASET_VOTING_RESEARCH_COMPLETE` with exit code 0.
 
-1. Authenticate the release and expand exactly 16 IDs: 12 voting runs and four rerun-required references.
-2. Complete and validate all 80 DEV fold executions (five per configuration). OOT is inaccessible in this phase.
-3. Freeze the fully validated 16-configuration set. Any missing/invalid DEV artifact closes the OOT barrier.
-4. Perform 16 sequential full-DEV fits and one locked OOT evaluation per configuration. Early OOT results cannot change later configurations.
-5. After all 16 OOT runs validate, publish the consolidated 12 paired comparisons, fixed bootstrap/DeLong inference, within-family Holm corrections, and final completeness evidence.
-6. Run the repository/result validator. Terminal success is the line `CROSS_DATASET_VOTING_RESEARCH_COMPLETE` with exit code 0.
-
-No wall-clock duration is promised. The workload includes 80 fold fits, 16 full-DEV fits, and large projected datasets; the monitor may stop safely when a frozen resource guardrail is reached.
-
-To interrupt safely, press `Ctrl+C` once and allow the supervisor to preserve the current checkpoint and controlled stop evidence. Do not delete a partial run or `_SUCCESS` marker. To resume, return to the same clean tagged commit and invoke the exact same command above. Resume validates Git/configuration provenance and every finalized artifact before reusing completed folds or phases; completed runs remain immutable.
-
-A controlled failure prints `CONTROLLED_STOP <stable-reason>`, returns a non-zero exit code, and leaves resumable evidence. Do not raise limits, add `--force`, change seeds/features/budgets/models, enable GPU, or work around the DEV-to-OOT barrier. If code or configuration must change, stop and create a newly reviewed protocol/release rather than resuming this one.
+No wall-clock duration is promised. To interrupt safely, press `Ctrl+C` once and let the supervisor finalize checkpoint and cleanup evidence. A controlled stop prints `CONTROLLED_STOP <stable-reason>` and returns nonzero. Do not change datasets, folds, seeds, features, budgets, models, resource limits, or tags, and do not delete partial run state.
 
 Frozen SHA-256 references:
 

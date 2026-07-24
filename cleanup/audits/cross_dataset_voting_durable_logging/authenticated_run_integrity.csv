@@ -1,0 +1,15 @@
+run_id,checkpoint_commit,manifest_status,completed_fold_ids,expected_fold_ids,immutable_artifact_count,immutable_artifact_bytes,hash_and_size_validation,authenticated_for_reuse_or_resume
+cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,31314244,pass,True
+cdv1-002-homecredit-voting-k100-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,33469173,pass,True
+cdv1-003-homecredit-voting-k200-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,33505093,pass,True
+cdv1-004-homecredit-voting-k300-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,33541160,pass,True
+cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,33334201,pass,True
+cdv1-006-homecredit-voting-k100-catboost-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,35482042,pass,True
+cdv1-007-homecredit-voting-k200-catboost-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,35519988,pass,True
+cdv1-008-homecredit-voting-k300-catboost-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,35555318,pass,True
+cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,196930982,pass,True
+cdv1-010-lendingclub-v2-voting-k100-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,192619875,pass,True
+cdv1-011-lendingclub-v2-voting-k200-lr-s42,f00f474b6f263ee2619a178524c7c0fdf806024f,dev_complete,1;2;3;4;5,1;2;3;4;5,48,192656052,pass,True
+cdv1-012-lendingclub-v2-voting-k300-lr-s42,69c4bb565e6dcb4caad90b01237f0be134f72e88,dev_complete,1;2;3;4;5,1;2;3;4;5,48,192688928,pass,True
+cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42,69c4bb565e6dcb4caad90b01237f0be134f72e88,dev_complete,1;2;3;4;5,1;2;3;4;5,48,208954258,pass,True
+cdv1-014-lendingclub-v2-voting-k100-catboost-s42,69c4bb565e6dcb4caad90b01237f0be134f72e88,aborted_resource_limit,1;2;3;4,1;2;3;4,35,89040277,pass,True

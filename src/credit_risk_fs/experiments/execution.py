@@ -12,6 +12,7 @@ from credit_risk_fs.experiments.atomic_io import inspect_artifact, sha256_file, 
 from credit_risk_fs.experiments.checkpointing import CheckpointManager, ResumeValidationError
 from credit_risk_fs.experiments.config import compute_config_hash
 from credit_risk_fs.experiments.resource_monitor import SupervisorResult, supervise_worker
+from credit_risk_fs.experiments.research_logging import emit_research_event, logged_stage
 from credit_risk_fs.experiments.resource_policy import ResolvedExecutionPolicy
 from credit_risk_fs.experiments.result_paths import (
     append_run_index_row,
@@ -274,9 +275,30 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     config_path = run_dir / "config.json"
     preflight_path = run_dir / "preflight.json"
     manifest_path = run_dir / "manifest.json"
+    log_context = {
+        "run_id": run_id,
+        "dataset": request.dataset,
+        "model": request.model,
+        "seed": request.seed,
+        "selector": request.selector,
+    }
+    emit_research_event(
+        "run_execution_started",
+        message="Registered research run execution started",
+        priority=True,
+        resume=request.resume,
+        run_directory=repository_relative_path(run_dir, request.repository_root),
+        **log_context,
+    )
 
     if request.resume:
-        checkpoint.validate_resume(identity)
+        with logged_stage(
+            "checkpoint_resume_validation",
+            message="Validate checkpoint identity and finalized artifact hashes",
+            component="checkpoint_manager",
+            **log_context,
+        ):
+            checkpoint.validate_resume(identity)
         checkpoint.begin_resume_attempt()
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("status") == "completed":
@@ -290,6 +312,18 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             request.results_root,
             run_id,
             {"status": "running", "notes": "explicit validated resume"},
+        )
+        emit_research_event(
+            "run_resume_authenticated",
+            message="Existing run checkpoint authenticated for resume",
+            priority=True,
+            phase=str((request.worker_kwargs or {}).get("phase", "")).upper(),
+            checkpoint_path=repository_relative_path(
+                checkpoint.path, request.repository_root
+            ),
+            completed_fold_ids=checkpoint.load().get("completed_fold_ids", []),
+            last_successful_stage=checkpoint.load().get("last_successful_stage"),
+            **log_context,
         )
     else:
         write_json_atomic(config_path, request.effective_config, overwrite=False)
@@ -356,6 +390,13 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             lock.write(f"pid={os.getpid()}\n")
             lock.flush()
             os.fsync(lock.fileno())
+        emit_research_event(
+            "execution_lock_created",
+            message="Run execution lock created",
+            priority=True,
+            lock_path=repository_relative_path(lock_path, request.repository_root),
+            **log_context,
+        )
         default_worker_kwargs = {
             "experiment_config": request.experiment_config,
             "checkpoint_identity": identity,
@@ -379,10 +420,28 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     finally:
         if lock_path.exists():
             lock_path.unlink()
+        emit_research_event(
+            "execution_lock_released",
+            message="Run execution lock released",
+            priority=True,
+            lock_path=repository_relative_path(lock_path, request.repository_root),
+            **log_context,
+        )
 
     resource_payload = _resource_payload(supervisor, request)
     resource_usage = write_resource_usage(run_dir, resource_payload)
     resource_artifact = inspect_artifact(run_dir / "resource_usage.json")
+    emit_research_event(
+        "resource_artifact_written",
+        message="Resource usage artifact written and hash-validated",
+        priority=True,
+        artifact_path=repository_relative_path(
+            run_dir / "resource_usage.json", request.repository_root
+        ),
+        artifact_size_bytes=resource_artifact.size_bytes,
+        artifact_sha256=resource_artifact.sha256,
+        **log_context,
+    )
     now = utc_timestamp()
     manifest["status"] = supervisor.status
     manifest["stop_code"] = supervisor.stop_code
@@ -491,6 +550,25 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             "peak_gpu_mb": resource_usage["peak_gpu_mb"],
             "notes": f"stop_code={supervisor.stop_code or ''}; checkpoint=checkpoint.json",
         },
+    )
+    final_checkpoint = checkpoint.load()
+    emit_research_event(
+        "run_finalized",
+        level="INFO" if published_status in {"completed", "dev_complete"} else "ERROR",
+        message=f"Registered research run finalized as {published_status}",
+        priority=True,
+        status=published_status,
+        stop_code=supervisor.stop_code,
+        primary_stop_code=supervisor.primary_stop_code,
+        secondary_events=supervisor.secondary_events,
+        worker_exit_code=supervisor.worker_exit_code,
+        child_cleanup_confirmed=supervisor.child_cleanup_confirmed,
+        queue_cleanup_confirmed=supervisor.queue_cleanup_confirmed,
+        survivor_pids=[item["pid"] for item in supervisor.survivor_processes],
+        completed_fold_ids=final_checkpoint.get("completed_fold_ids", []),
+        last_successful_stage=final_checkpoint.get("last_successful_stage"),
+        checkpoint_status=final_checkpoint.get("status"),
+        **log_context,
     )
     return ExecutionOutcome(
         run_id=run_id,

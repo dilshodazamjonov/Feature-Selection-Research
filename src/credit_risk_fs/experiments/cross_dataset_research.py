@@ -52,10 +52,16 @@ from credit_risk_fs.preprocessing.encoding import OriginalFeatureNumericEncoder,
 from credit_risk_fs.utils.logging import run_log_context
 
 
-def _report(stop_event: Any, stage_queue: Any, stage: str, fold_id: Any = None) -> None:
+def _report(
+    stop_event: Any,
+    stage_queue: Any,
+    stage: str,
+    fold_id: Any = None,
+    **fields: Any,
+) -> None:
     if stop_event.is_set():
         raise RuntimeError(f"cooperative stop requested before stage {stage}")
-    stage_queue.put({"stage": stage, "fold_id": fold_id})
+    stage_queue.put({"stage": stage, "fold_id": fold_id, **fields})
 
 
 def _reference_selection(
@@ -154,7 +160,15 @@ def _select_on_boundary(
     stage_queue: Any,
 ) -> dict[str, Any]:
     candidates = list(map(str, X_train.columns))
-    _report(stop_event, stage_queue, "selection_encoding", fold_id)
+    _report(
+        stop_event,
+        stage_queue,
+        "selection_encoding",
+        fold_id,
+        input_row_count=len(X_train),
+        input_feature_count=X_train.shape[1],
+        component="original_feature_numeric_encoder",
+    )
     encoder = OriginalFeatureNumericEncoder()
     X_numeric = encoder.fit_transform(X_train)
     del encoder
@@ -205,7 +219,15 @@ def _select_on_boundary(
         protocol_sha256=protocol_sha256,
         fit_scope="full_dev_only" if fold_id == 0 else REQUIRED_FIT_SCOPE,
     )
-    _report(stop_event, stage_queue, "rank_aggregation", fold_id)
+    _report(
+        stop_event,
+        stage_queue,
+        "rank_aggregation",
+        fold_id,
+        input_feature_count=len(candidates),
+        voter_count=len(ELIGIBLE_VOTERS),
+        component="rank_voting",
+    )
     aggregate = aggregate_cross_dataset_rank_voting(
         eligible_features=candidates,
         rankings=voter_result["rankings"],
@@ -223,9 +245,27 @@ def _select_on_boundary(
     top = aggregate.head(candidate_pool_budget)["feature"].astype(str).tolist()
     del X_numeric, voter_result
     gc.collect()
-    _report(stop_event, stage_queue, "rfe", fold_id)
+    _report(
+        stop_event,
+        stage_queue,
+        "rfe_encoding",
+        fold_id,
+        input_row_count=len(X_train),
+        input_feature_count=len(top),
+        component="original_feature_numeric_encoder",
+    )
     top_encoder = OriginalFeatureNumericEncoder()
     X_top_numeric = top_encoder.fit_transform(X_train.loc[:, top])
+    _report(
+        stop_event,
+        stage_queue,
+        "rfe",
+        fold_id,
+        input_row_count=len(X_top_numeric),
+        input_feature_count=X_top_numeric.shape[1],
+        final_feature_budget=final_feature_budget,
+        component=f"{model_name}_rfe",
+    )
     rfe = fit_rfe_memory_safe(
         X_numeric=X_top_numeric,
         y=y_train,
@@ -371,12 +411,35 @@ def _run_dev_phase(
     for fold_id in range(1, 6):
         if str(fold_id) in completed_folds:
             continue
-        _report(stop_event, stage_queue, "dev_data_loading", fold_id)
+        _report(
+            stop_event,
+            stage_queue,
+            "dev_data_loading",
+            fold_id,
+            component="prepare_voting_pilot_dev_data",
+        )
         prepared = prepare_voting_pilot_dev_data(
             root,
             dataset=str(spec["dataset"]),
             csv_chunk_rows=25_000,
             csv_low_memory=False,
+        )
+        _report(
+            stop_event,
+            stage_queue,
+            "target_extraction",
+            fold_id,
+            component="validated_target_projection",
+            target_row_count=len(prepared.y),
+            target_class_count=int(prepared.y.nunique()),
+        )
+        _report(
+            stop_event,
+            stage_queue,
+            "feature_filtering_sanitization",
+            fold_id,
+            component="candidate_feature_contract",
+            candidate_feature_count=prepared.X.shape[1],
         )
         if fold_id == 1 and "data_validated" not in checkpoint.load()["completed_stages"]:
             data_meta = write_json_atomic(
@@ -401,6 +464,17 @@ def _run_dev_phase(
         tr = projection["training_indices"]
         va = projection["validation_indices"]
         positions = projection["source_positions"]
+        _report(
+            stop_event,
+            stage_queue,
+            "row_boundary_selection",
+            fold_id,
+            total_dev_row_count=len(projection["y"]),
+            training_row_count=len(tr),
+            validation_row_count=len(va),
+            input_feature_count=prepared.X.shape[1],
+            component="canonical_fold_projection",
+        )
         X_train = prepared.X.iloc[positions[tr]].reset_index(drop=True)
         y_train = projection["y"].iloc[tr].reset_index(drop=True)
         selection = _select_on_boundary(
@@ -423,7 +497,14 @@ def _run_dev_phase(
         selected = list(selection["selected_features"])
         del X_train, prepared
         gc.collect()
-        _report(stop_event, stage_queue, "selected_projection_reload", fold_id)
+        _report(
+            stop_event,
+            stage_queue,
+            "selected_projection_reload",
+            fold_id,
+            selected_feature_count=len(selected),
+            component="prepare_voting_pilot_dev_data",
+        )
         projected = prepare_voting_pilot_dev_data(
             root,
             dataset=str(spec["dataset"]),
@@ -440,7 +521,6 @@ def _run_dev_phase(
         ptr = projected_fold["training_indices"]
         pva = projected_fold["validation_indices"]
         ppos = projected_fold["source_positions"]
-        _report(stop_event, stage_queue, "final_model_fit", fold_id)
         probabilities, effective = _fit_final_model(
             repository_root=root,
             dataset=str(spec["dataset"]),
@@ -451,6 +531,17 @@ def _run_dev_phase(
             X_validation_raw=projected.X.iloc[ppos[pva]].reset_index(drop=True),
             seed=42,
             estimator_threads=estimator_threads,
+            stage_callback=lambda stage, current, **details: _report(
+                stop_event, stage_queue, stage, current, **details
+            ),
+            fold_id=fold_id,
+        )
+        _report(
+            stop_event,
+            stage_queue,
+            "fold_artifact_writing",
+            fold_id,
+            component="atomic_artifact_writer",
         )
         artifacts, _ = _write_fold_artifacts(
             run_dir,
@@ -468,6 +559,14 @@ def _run_dev_phase(
             protocol_sha256=protocol_sha256,
             configuration_hash=str(checkpoint_identity["resolved_config_hash"]),
         )
+        _report(
+            stop_event,
+            stage_queue,
+            "fold_checkpoint_finalization",
+            fold_id,
+            artifact_count=len(artifacts),
+            component="checkpoint_manager",
+        )
         checkpoint.transition("selection_completed", artifacts=artifacts[:5])
         checkpoint.transition("model_fit_completed", artifacts=(artifacts[5],))
         checkpoint.transition(
@@ -476,6 +575,14 @@ def _run_dev_phase(
         del projected, selection, probabilities
         gc.collect()
 
+    _report(
+        stop_event,
+        stage_queue,
+        "dev_oof_aggregation",
+        None,
+        fold_count=5,
+        component="prediction_contract",
+    )
     fold_predictions = [
         pd.read_csv(run_dir / "folds" / f"fold_{fold_id}" / "predictions_dev.csv")
         for fold_id in range(1, 6)
@@ -484,6 +591,13 @@ def _run_dev_phase(
     complete["coverage_type"] = COMPLETE_OOF_COVERAGE
     complete["research_eligible"] = True
     complete["comparison_eligible"] = True
+    _report(
+        stop_event,
+        stage_queue,
+        "dev_artifact_writing",
+        None,
+        component="atomic_artifact_writer",
+    )
     prediction, sidecar, metadata = publish_prediction_artifact(
         path=run_dir / "results" / "dev_predictions.csv",
         metadata_path=run_dir / "results" / "dev_prediction_metadata.json",
@@ -517,6 +631,14 @@ def _run_dev_phase(
         fold_selected,
         overwrite=False,
     )
+    _report(
+        stop_event,
+        stage_queue,
+        "dev_evaluation",
+        None,
+        fold_count=5,
+        component="evaluation_metrics",
+    )
     fold_metrics = []
     selected_sets = []
     for fold_id, frame in enumerate(fold_predictions, start=1):
@@ -545,6 +667,13 @@ def _run_dev_phase(
             ]
         ),
         overwrite=False,
+    )
+    _report(
+        stop_event,
+        stage_queue,
+        "dev_checkpoint_finalization",
+        None,
+        component="checkpoint_manager",
     )
     checkpoint.transition(
         "dev_prediction_completed",
@@ -600,6 +729,13 @@ def _run_oot_phase(
         oof = pd.read_csv(run_dir / "results" / "dev_predictions.csv")
         metric_artifacts = []
         if not existing_metrics_path.is_file():
+            _report(
+                stop_event,
+                stage_queue,
+                "oot_evaluation",
+                None,
+                component="evaluation_metrics",
+            )
             metrics_meta = write_csv_atomic(
                 existing_metrics_path,
                 pd.DataFrame(
@@ -623,6 +759,13 @@ def _run_oot_phase(
             metric_artifacts.append(metrics_meta)
         else:
             metric_artifacts.append(inspect_artifact(existing_metrics_path))
+        _report(
+            stop_event,
+            stage_queue,
+            "oot_checkpoint_finalization",
+            None,
+            component="checkpoint_manager",
+        )
         checkpoint.transition("evaluation_completed", artifacts=metric_artifacts)
         return {
             "summary": {
@@ -656,6 +799,23 @@ def _run_oot_phase(
             csv_chunk_rows=25_000,
             csv_low_memory=False,
         )
+        _report(
+            stop_event,
+            stage_queue,
+            "full_dev_target_extraction",
+            None,
+            component="validated_target_projection",
+            target_row_count=len(dev.y),
+            target_class_count=int(dev.y.nunique()),
+        )
+        _report(
+            stop_event,
+            stage_queue,
+            "full_dev_feature_filtering_sanitization",
+            None,
+            component="candidate_feature_contract",
+            candidate_feature_count=dev.X.shape[1],
+        )
         selection = _select_on_boundary(
             X_train=dev.X.reset_index(drop=True),
             y_train=dev.y.reset_index(drop=True),
@@ -684,6 +844,15 @@ def _run_oot_phase(
         csv_chunk_rows=25_000,
         csv_low_memory=False,
     )
+    _report(
+        stop_event,
+        stage_queue,
+        "full_dev_selected_feature_validation",
+        None,
+        component="candidate_feature_contract",
+        selected_feature_count=dev_selected.X.shape[1],
+        target_row_count=len(dev_selected.y),
+    )
     dev_source_hashes = dict(dev_selected.source_artifact_hashes)
 
     # This is the first and only OOT loader call in a run, after the global gate.
@@ -694,6 +863,23 @@ def _run_oot_phase(
         projected_candidate_features=selected,
         csv_chunk_rows=25_000,
         csv_low_memory=False,
+    )
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_target_extraction",
+        None,
+        component="validated_target_projection",
+        target_row_count=len(oot.y),
+        target_class_count=int(oot.y.nunique()),
+    )
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_feature_filtering_sanitization",
+        None,
+        component="candidate_feature_contract",
+        selected_feature_count=oot.X.shape[1],
     )
     if _input_hash(oot.source_artifact_hashes) != _input_hash(dev_source_hashes):
         raise ValueError("locked OOT projection source provenance changed")
@@ -722,6 +908,14 @@ def _run_oot_phase(
             raise ValueError("reusable full-DEV model provenance differs")
         model = bundle["model"]
         preprocessor = bundle["preprocessor"]
+        _report(
+            stop_event,
+            stage_queue,
+            "full_dev_preprocessing",
+            None,
+            component="preprocessor",
+            selected_feature_count=len(selected),
+        )
         X_dev = preprocessor.transform(dev_selected.X.loc[:, selected])
         X_oot = preprocessor.transform(oot.X.loc[:, selected])
         model_artifacts.extend(
@@ -729,13 +923,37 @@ def _run_oot_phase(
         )
     else:
         preprocessor = Preprocessor(**dict(dataset_config.get("preprocessor_kwargs", {})))
+        _report(
+            stop_event,
+            stage_queue,
+            "full_dev_preprocessing",
+            None,
+            component="preprocessor",
+            selected_feature_count=len(selected),
+        )
         X_dev = preprocessor.fit_transform(dev_selected.X.loc[:, selected])
         X_oot = preprocessor.transform(oot.X.loc[:, selected])
         get_model, _, _, _ = get_model_bundle(str(spec["model"]), model_kwargs)
         model = get_model()
         _report(stop_event, stage_queue, "full_dev_model_fit", None)
         model.fit(X_dev, dev_selected.y, eval_set=None)
+    _report(
+        stop_event,
+        stage_queue,
+        "full_dev_prediction",
+        None,
+        component=str(spec["model"]),
+        prediction_row_count=len(X_dev),
+    )
     dev_probabilities = np.asarray(model.predict_proba(X_dev), dtype=float)
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_prediction",
+        None,
+        component=str(spec["model"]),
+        prediction_row_count=len(X_oot),
+    )
     oot_probabilities = np.asarray(model.predict_proba(X_oot), dtype=float)
     if not np.isfinite(dev_probabilities).all() or not np.isfinite(oot_probabilities).all():
         raise ValueError("full-DEV model produced non-finite probabilities")
@@ -790,6 +1008,13 @@ def _run_oot_phase(
             "comparison_eligible": True,
             "probability_orientation": PROBABILITY_ORIENTATION,
         }
+    )
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_artifact_writing",
+        None,
+        component="atomic_artifact_writer",
     )
     prediction, sidecar, prediction_metadata = publish_prediction_artifact(
         path=run_dir / "results" / "oot_predictions.csv",
@@ -863,6 +1088,13 @@ def _run_oot_phase(
                 final_candidate_meta,
             )
         )
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_evaluation",
+        None,
+        component="evaluation_metrics",
+    )
     oof = pd.read_csv(run_dir / "results" / "dev_predictions.csv")
     metrics = pd.DataFrame(
         [
@@ -886,6 +1118,13 @@ def _run_oot_phase(
             "data_access_log": oot.data_access_log,
         },
         overwrite=False,
+    )
+    _report(
+        stop_event,
+        stage_queue,
+        "oot_checkpoint_finalization",
+        None,
+        component="checkpoint_manager",
     )
     checkpoint.transition(
         "selection_completed",

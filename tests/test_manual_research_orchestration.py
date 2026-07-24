@@ -87,7 +87,8 @@ def test_manual_plan_expands_exact_frozen_matrix_and_limits():
     }
 
 
-def test_plan_mode_creates_no_index_rows_or_run_directories(capsys):
+def test_plan_mode_creates_no_index_rows_or_run_directories(capsys, monkeypatch):
+    monkeypatch.setattr(manual_research, "authenticate_release", lambda root: _provenance())
     index = ROOT / "results/run_index.csv"
     before_index = index.read_bytes()
     before_dirs = sorted(path.resolve() for path in (ROOT / "results/runs").glob("*/*"))
@@ -198,16 +199,16 @@ def test_runbook_has_exactly_one_supported_manual_launch_command():
     assert "Prompt 6 did **not** execute the command" in runbook
 
 
-def test_resume_handoff_has_one_supported_command_and_exact_run_011_boundary():
+def test_resume_handoff_has_one_supported_command_and_exact_run_014_boundary():
     handoff = (
         ROOT
-        / "docs/research_extension/cross_dataset_voting_resume_after_run_011_v1.md"
+        / "docs/research_extension/cross_dataset_voting_resume_after_run_014_v1.md"
     ).read_text(encoding="utf-8")
     assert "## One-command manual resume" in handoff
     assert handoff.count(manual_research.MANUAL_COMMAND) == 1
     assert manual_research.EXPECTED_TAG in handoff
-    assert "DEV fold 3 at `dev_data_loading`" in handoff
-    assert "Prompt 6.1 did not execute the resume command" in handoff
+    assert "DEV fold 5 at `dev_data_loading`" in handoff
+    assert "Prompt 6.2 did not execute the resume command" in handoff
 
 
 def test_existing_pilots_and_isolated_capacity_evidence_remain_unchanged():
@@ -220,4 +221,4 @@ def test_existing_pilots_and_isolated_capacity_evidence_remain_unchanged():
     validation = json.loads((capacity / "validation_summary.json").read_text(encoding="utf-8"))
     assert validation["final_gate"] == "PASS"
     assert len(list((capacity / "capacity_execution/runs/lendingclub_v2").glob("*"))) == 3
-    assert len(list((ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*"))) == 11
+    assert len(list((ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*"))) == 14

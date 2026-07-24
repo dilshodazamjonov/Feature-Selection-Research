@@ -16,6 +16,8 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 
+from credit_risk_fs.experiments.research_logging import emit_research_event
+
 
 PROTOCOL_NAME = "cross_dataset_rank_voting_v1"
 ELIGIBLE_VOTERS = ("rf_corr_mrmr", "boruta")
@@ -406,6 +408,20 @@ def fit_voters_sequentially_memory_safe(
     )()
     if lifetime_observer:
         lifetime_observer("rf_corr_mrmr_constructed", mrmr)
+    mrmr_started = time.monotonic()
+    emit_research_event(
+        "component_started",
+        message="RF relevance/correlation-redundancy voter fit started",
+        priority=True,
+        fold_id=fold_id,
+        stage="voter_rf_corr_mrmr",
+        component="rf_corr_mrmr",
+        input_row_count=len(X_numeric),
+        input_feature_count=X_numeric.shape[1],
+        configuration=_selector_configurations(seed, estimator_threads)[
+            "rf_corr_mrmr"
+        ],
+    )
     mrmr.fit(X_numeric, y)
     mrmr_ranking = list(mrmr.selected_features_ or [])
     raw_mrmr = {
@@ -414,6 +430,16 @@ def fit_voters_sequentially_memory_safe(
             mrmr, "rf_importances_", pd.Series(dtype=float)
         ).items()
     }
+    emit_research_event(
+        "component_completed",
+        message="RF relevance/correlation-redundancy voter fit completed",
+        priority=True,
+        fold_id=fold_id,
+        stage="voter_rf_corr_mrmr",
+        component="rf_corr_mrmr",
+        elapsed_stage_seconds=time.monotonic() - mrmr_started,
+        selected_feature_count=len(mrmr_ranking),
+    )
     del mrmr
     gc.collect()
     if lifetime_observer:
@@ -432,8 +458,44 @@ def fit_voters_sequentially_memory_safe(
     )()
     if lifetime_observer:
         lifetime_observer("boruta_constructed", boruta)
+    boruta_started = time.monotonic()
+    emit_research_event(
+        "component_started",
+        message="Boruta fit started; internal iteration unavailable.",
+        priority=True,
+        fold_id=fold_id,
+        stage="voter_boruta",
+        component="boruta",
+        input_row_count=len(X_numeric),
+        input_feature_count=X_numeric.shape[1],
+        internal_iteration_available=False,
+        configuration=_selector_configurations(seed, estimator_threads)["boruta"],
+    )
     boruta.fit(X_numeric, y)
     boruta_ranking = list(boruta.feature_ranking_ or [])
+    fitted_boruta = getattr(boruta, "selector", None)
+    confirmed_count = int(
+        np.asarray(getattr(fitted_boruta, "support_", []), dtype=bool).sum()
+    )
+    tentative_count = int(
+        np.asarray(getattr(fitted_boruta, "support_weak_", []), dtype=bool).sum()
+    )
+    rejected_count = max(
+        0, X_numeric.shape[1] - confirmed_count - tentative_count
+    )
+    emit_research_event(
+        "component_completed",
+        message="Boruta fit completed",
+        priority=True,
+        fold_id=fold_id,
+        stage="voter_boruta",
+        component="boruta",
+        elapsed_stage_seconds=time.monotonic() - boruta_started,
+        selected_feature_count=confirmed_count,
+        tentative_feature_count=tentative_count,
+        rejected_feature_count=rejected_count,
+        ranked_feature_count=len(boruta_ranking),
+    )
     del boruta
     gc.collect()
     if lifetime_observer:
@@ -649,6 +711,8 @@ def _fit_final_model(
     X_validation_raw: pd.DataFrame,
     seed: int,
     estimator_threads: int,
+    stage_callback: Callable[..., None] | None = None,
+    fold_id: int | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     import yaml
 
@@ -671,12 +735,35 @@ def _fit_final_model(
     selected_validation = X_validation_raw.loc[:, selected_features]
     if list(selected_train.columns) != selected_features:
         raise ValueError("final-model projected column order mismatch")
+    if stage_callback:
+        stage_callback(
+            "final_preprocessing",
+            fold_id,
+            component="preprocessor",
+            input_row_count=len(selected_train),
+            input_feature_count=len(selected_features),
+        )
     train_encoded = preprocessor.fit_transform(selected_train)
     validation_encoded = preprocessor.transform(selected_validation)
     get_model, _, predict_proba, _ = get_model_bundle(model_name, model_kwargs)
     model = get_model()
     # Held-out validation targets are deliberately not supplied as an eval set.
+    if stage_callback:
+        stage_callback(
+            "final_model_fit",
+            fold_id,
+            component=model_name,
+            input_row_count=len(train_encoded),
+            input_feature_count=train_encoded.shape[1],
+        )
     model.fit(train_encoded, y_train, eval_set=None)
+    if stage_callback:
+        stage_callback(
+            "final_prediction",
+            fold_id,
+            component=model_name,
+            prediction_row_count=len(validation_encoded),
+        )
     probabilities = np.asarray(predict_proba(model, validation_encoded), dtype=float)
     if probabilities.ndim != 1 or not np.isfinite(probabilities).all():
         raise ValueError("final model produced invalid validation probabilities")
@@ -847,6 +934,17 @@ def fit_rfe_memory_safe(
     )
     if lifetime_observer:
         lifetime_observer(f"{model_name}_rfe_constructed", rfe)
+    rfe_started = time.monotonic()
+    emit_research_event(
+        "component_started",
+        message=f"{model_name} RFE fit started",
+        priority=True,
+        stage="rfe",
+        component=f"{model_name}_rfe",
+        input_row_count=len(X_numeric),
+        input_feature_count=X_numeric.shape[1],
+        final_feature_budget=final_budget,
+    )
     rfe.fit(X_numeric, y)
     supported = set(rfe.selected_features_ or [])
     selected = [feature for feature in top_candidates if feature in supported]
@@ -857,6 +955,15 @@ def fit_rfe_memory_safe(
         )
     trace = rfe.selection_trace_.copy()
     effective = dict(rfe.effective_estimator_config_ or {})
+    emit_research_event(
+        "component_completed",
+        message=f"{model_name} RFE fit completed",
+        priority=True,
+        stage="rfe",
+        component=f"{model_name}_rfe",
+        elapsed_stage_seconds=time.monotonic() - rfe_started,
+        selected_feature_count=len(selected),
+    )
     del rfe
     gc.collect()
     if lifetime_observer:

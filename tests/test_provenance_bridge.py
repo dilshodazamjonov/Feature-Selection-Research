@@ -20,7 +20,12 @@ def _fixture_bridge(root: Path) -> dict:
     runtime.write_text("runtime = 'mechanics-only'\n", encoding="utf-8")
     frozen.write_text("frozen: true\n", encoding="utf-8")
     run_entries = {}
-    for run_id in (*bridge.REUSABLE_RUN_IDS, bridge.INTERRUPTED_RUN_ID):
+    for index, run_id in enumerate(
+        (*bridge.REUSABLE_RUN_IDS, bridge.INTERRUPTED_RUN_ID)
+    ):
+        checkpoint_commit = (
+            bridge.ORIGINAL_COMMIT if index < 11 else bridge.SAFETY_COMMIT
+        )
         run_dir = root / "results" / "runs" / "fixture" / run_id
         run_dir.mkdir(parents=True)
         artifact = run_dir / "immutable.txt"
@@ -30,13 +35,14 @@ def _fixture_bridge(root: Path) -> dict:
             {
                 "identity": {
                     "run_id": run_id,
-                    "git_commit": bridge.ORIGINAL_COMMIT,
+                    "git_commit": checkpoint_commit,
                 }
             },
         )
         _write_json(run_dir / "config.json", {"run_id": run_id})
         run_entries[run_id] = {
             "run_directory": run_dir.relative_to(root).as_posix(),
+            "checkpoint_commit": checkpoint_commit,
             "immutable_artifacts": {
                 "immutable.txt": {
                     "size_bytes": artifact.stat().st_size,
@@ -51,8 +57,12 @@ def _fixture_bridge(root: Path) -> dict:
             "tag": bridge.ORIGINAL_TAG,
             "commit": bridge.ORIGINAL_COMMIT,
         },
-        "mechanics_release": {
-            "tag": bridge.MECHANICS_TAG,
+        "safety_release": {
+            "tag": bridge.SAFETY_TAG,
+            "commit": bridge.SAFETY_COMMIT,
+        },
+        "observability_release": {
+            "tag": bridge.OBSERVABILITY_TAG,
             "commit_binding": "annotated_tag_peels_to_current_head",
         },
         "reusable_run_ids": list(bridge.REUSABLE_RUN_IDS),
@@ -82,7 +92,9 @@ def _fixture_bridge(root: Path) -> dict:
 def _fake_git(_root, *args):
     if args == ("rev-list", "-n", "1", bridge.ORIGINAL_TAG):
         return bridge.ORIGINAL_COMMIT
-    if args == ("rev-list", "-n", "1", bridge.MECHANICS_TAG):
+    if args == ("rev-list", "-n", "1", bridge.SAFETY_TAG):
+        return bridge.SAFETY_COMMIT
+    if args == ("rev-list", "-n", "1", bridge.OBSERVABILITY_TAG):
         return "b" * 40
     if args[0:2] == ("cat-file", "-t"):
         return "tag"
@@ -98,7 +110,7 @@ def test_exact_bridge_authenticates_and_resolves_historical_identity(
     payload = bridge.authenticate_compatibility_bridge(
         tmp_path,
         current_commit="b" * 40,
-        current_tag=bridge.MECHANICS_TAG,
+        current_tag=bridge.OBSERVABILITY_TAG,
     )
     assert payload["reusable_run_ids"] == list(bridge.REUSABLE_RUN_IDS)
     run_dir = (
@@ -108,9 +120,9 @@ def test_exact_bridge_authenticates_and_resolves_historical_identity(
         tmp_path,
         run_dir,
         current_commit="b" * 40,
-        current_tag=bridge.MECHANICS_TAG,
+        current_tag=bridge.OBSERVABILITY_TAG,
     )
-    assert identity["git_commit"] == bridge.ORIGINAL_COMMIT
+    assert identity["git_commit"] == bridge.SAFETY_COMMIT
     assert config["run_id"] == bridge.INTERRUPTED_RUN_ID
     assert metadata["authorized_run_id"] == bridge.INTERRUPTED_RUN_ID
 
@@ -129,7 +141,7 @@ def test_any_tag_runtime_artifact_or_inventory_drift_blocks_reuse(
 ):
     payload = _fixture_bridge(tmp_path)
     monkeypatch.setattr(bridge, "_git", _fake_git)
-    current_tag = bridge.MECHANICS_TAG
+    current_tag = bridge.OBSERVABILITY_TAG
     if mutation == "tag":
         current_tag = "wrong-tag"
     elif mutation == "runtime":

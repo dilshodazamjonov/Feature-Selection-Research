@@ -23,6 +23,12 @@ from credit_risk_fs.experiments.resource_policy import (
     ResolvedExecutionPolicy,
     apply_thread_environment,
 )
+from credit_risk_fs.experiments.research_logging import (
+    STAGE_HEARTBEAT_INTERVAL_SECONDS,
+    active_worker_transport,
+    configure_worker_logging,
+    emit_research_event,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +44,45 @@ WORKER_CRASH = "worker_crash"
 WORKER_TREE_TERMINATION_FAILED = "worker_tree_termination_failed"
 RESULT_PAYLOAD_LIMIT_BYTES = 1024 * 1024
 MAX_QUEUE_DRAIN_MESSAGES = 1024
+
+_STAGE_COMPONENTS = {
+    "dev_data_loading": "data_loading",
+    "target_extraction": "validated_target_projection",
+    "feature_filtering_sanitization": "candidate_feature_contract",
+    "row_boundary_selection": "fold_boundary",
+    "selection_encoding": "preprocessing",
+    "voter_rf_corr_mrmr": "rf_corr_mrmr",
+    "reference_rf_corr_mrmr": "rf_corr_mrmr",
+    "voter_boruta": "boruta",
+    "rank_aggregation": "rank_voting",
+    "rfe_encoding": "preprocessing",
+    "rfe": "rfe",
+    "selected_projection_reload": "data_loading",
+    "final_preprocessing": "preprocessing",
+    "final_model_fit": "model_fit",
+    "final_prediction": "prediction",
+    "fold_artifact_writing": "artifact_writer",
+    "fold_checkpoint_finalization": "checkpoint",
+    "dev_oof_aggregation": "prediction",
+    "dev_evaluation": "evaluation",
+    "dev_artifact_writing": "artifact_writer",
+    "dev_checkpoint_finalization": "checkpoint",
+    "full_dev_data_loading": "data_loading",
+    "full_dev_target_extraction": "validated_target_projection",
+    "full_dev_feature_filtering_sanitization": "candidate_feature_contract",
+    "full_dev_selected_projection_reload": "data_loading",
+    "full_dev_selected_feature_validation": "candidate_feature_contract",
+    "locked_oot_data_loading": "data_loading",
+    "oot_target_extraction": "validated_target_projection",
+    "oot_feature_filtering_sanitization": "candidate_feature_contract",
+    "full_dev_preprocessing": "preprocessing",
+    "full_dev_model_fit": "model_fit",
+    "full_dev_prediction": "prediction",
+    "oot_prediction": "prediction",
+    "oot_artifact_writing": "artifact_writer",
+    "oot_evaluation": "evaluation",
+    "oot_checkpoint_finalization": "checkpoint",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -293,9 +338,28 @@ def _worker_entry(
     result_queue: Any,
     stage_queue: Any,
     run_association: str,
+    logging_transport: tuple[Any, str, Any, Any] | None,
+    logging_context: Mapping[str, Any],
 ) -> None:
     publisher = _NonBlockingPublisher(stage_queue)
+    if logging_transport is not None:
+        target_queue, session_id, routine_counter, priority_counter = logging_transport
+        configure_worker_logging(
+            target_queue,
+            session_id=session_id,
+            context=logging_context,
+            routine_drop_counter=routine_counter,
+            priority_drop_counter=priority_counter,
+        )
     try:
+        emit_research_event(
+            "worker_started",
+            message="Spawned research worker started",
+            priority=True,
+            worker_pid=os.getpid(),
+            worker_target=target,
+            run_association=run_association,
+        )
         function = _load_worker_target(target)
         value = function(stop_event=stop_event, stage_queue=publisher, **kwargs)
         encoded = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
@@ -312,7 +376,24 @@ def _worker_entry(
                 "run_association": run_association,
             }
         )
+        emit_research_event(
+            "worker_completed",
+            message="Spawned research worker completed its target",
+            priority=True,
+            worker_pid=os.getpid(),
+            result_payload_bytes=len(encoded),
+        )
     except KeyboardInterrupt:
+        emit_research_event(
+            "worker_interrupted",
+            level="ERROR",
+            message="Spawned research worker received KeyboardInterrupt",
+            priority=True,
+            worker_pid=os.getpid(),
+            stop_code=MANUAL_INTERRUPT,
+            exception_class="KeyboardInterrupt",
+            traceback=traceback.format_exc(),
+        )
         try:
             result_queue.put_nowait(
                 {
@@ -325,12 +406,22 @@ def _worker_entry(
             pass
         raise
     except Exception as exc:
+        error_traceback = traceback.format_exc()
+        emit_research_event(
+            "worker_failed",
+            level="ERROR",
+            message=f"Spawned research worker failed: {type(exc).__name__}: {exc}",
+            priority=True,
+            worker_pid=os.getpid(),
+            exception_class=type(exc).__name__,
+            traceback=error_traceback,
+        )
         try:
             result_queue.put_nowait(
                 {
                     "kind": "error",
                     "error": f"{type(exc).__name__}: {exc}",
-                    "traceback": traceback.format_exc(),
+                    "traceback": error_traceback,
                     "run_association": run_association,
                 }
             )
@@ -339,15 +430,29 @@ def _worker_entry(
         raise
 
 
-def _drain_stage_queue(stage_queue: Any, stage: str | None, fold_id: Any) -> tuple[str | None, Any]:
+def _drain_stage_queue(
+    stage_queue: Any,
+    stage: str | None,
+    fold_id: Any,
+    *,
+    on_update: Any | None = None,
+) -> tuple[str | None, Any]:
     for _ in range(MAX_QUEUE_DRAIN_MESSAGES):
         try:
             update = stage_queue.get_nowait()
         except (queue.Empty, EOFError, OSError, ValueError):
             return stage, fold_id
         if isinstance(update, Mapping):
-            stage = str(update.get("stage")) if update.get("stage") is not None else stage
-            fold_id = update.get("fold_id", fold_id)
+            next_stage = (
+                str(update.get("stage"))
+                if update.get("stage") is not None
+                else stage
+            )
+            next_fold_id = update.get("fold_id", fold_id)
+            if on_update is not None:
+                on_update(stage, fold_id, next_stage, next_fold_id, update)
+            stage = next_stage
+            fold_id = next_fold_id
     return stage, fold_id
 
 
@@ -554,15 +659,38 @@ def _lifecycle_event(
     supervisor_started: float,
     detail: str,
     pids: tuple[int, ...] = (),
+    log_context: Mapping[str, Any] | None = None,
 ) -> None:
-    lifecycle.append(
-        {
-            "state": str(state),
-            "timestamp_utc": _utc_now(),
-            "elapsed_seconds": monotonic() - supervisor_started,
-            "detail": str(detail),
-            "pids": list(map(int, pids)),
+    elapsed = monotonic() - supervisor_started
+    payload = {
+        "state": str(state),
+        "timestamp_utc": _utc_now(),
+        "elapsed_seconds": elapsed,
+        "detail": str(detail),
+        "pids": list(map(int, pids)),
+    }
+    lifecycle.append(payload)
+    level = (
+        "ERROR"
+        if state == "WORKER_TREE_TERMINATION_FAILED"
+        else "WARNING"
+        if state in {
+            "RESOURCE_STOP_LATCHED",
+            "TERMINATE_PROCESS_TREE",
+            "FORCE_KILL_REMAINDERS",
+            "SECONDARY_TERMINATION_EVENT",
         }
+        else "INFO"
+    )
+    emit_research_event(
+        "supervisor_lifecycle",
+        level=level,
+        message=f"Supervisor lifecycle state: {state} ({detail})",
+        priority=True,
+        lifecycle_state=state,
+        elapsed_supervisor_seconds=elapsed,
+        owned_pids=list(map(int, pids)),
+        **dict(log_context or {}),
     )
 
 
@@ -573,6 +701,7 @@ def _bounded_join(
     recorder: _StopCauseRecorder,
     lifecycle: list[dict[str, Any]],
     supervisor_started: float,
+    log_context: Mapping[str, Any] | None = None,
 ) -> None:
     try:
         process.join(timeout=max(0.0, float(timeout_seconds)))
@@ -587,6 +716,7 @@ def _bounded_join(
             "SECONDARY_TERMINATION_EVENT",
             supervisor_started=supervisor_started,
             detail="user_keyboard_interrupt",
+            log_context=log_context,
         )
 
 
@@ -599,6 +729,7 @@ def _shutdown_owned_worker(
     recorder: _StopCauseRecorder,
     lifecycle: list[dict[str, Any]],
     supervisor_started: float,
+    log_context: Mapping[str, Any] | None = None,
 ) -> tuple[bool, tuple[dict[str, Any], ...], str | None, float, bool]:
     """Run finite cooperative, terminate, and force-kill phases."""
 
@@ -609,6 +740,7 @@ def _shutdown_owned_worker(
         "COOPERATIVE_STOP_REQUESTED",
         supervisor_started=supervisor_started,
         detail=f"primary_stop_code={recorder.primary}",
+        log_context=log_context,
     )
     _lifecycle_event(
         lifecycle,
@@ -617,6 +749,7 @@ def _shutdown_owned_worker(
         detail=(
             f"timeout_seconds={policy.monitoring.graceful_stop_timeout_seconds}"
         ),
+        log_context=log_context,
     )
     _bounded_join(
         process,
@@ -624,6 +757,7 @@ def _shutdown_owned_worker(
         recorder=recorder,
         lifecycle=lifecycle,
         supervisor_started=supervisor_started,
+        log_context=log_context,
     )
     alive = ownership.alive()
     graceful_completed = not alive and not process.is_alive()
@@ -637,6 +771,7 @@ def _shutdown_owned_worker(
                 f"timeout_seconds={policy.monitoring.forced_stop_timeout_seconds}"
             ),
             pids=pids,
+            log_context=log_context,
         )
         try:
             alive = ownership.terminate_phase(
@@ -655,6 +790,7 @@ def _shutdown_owned_worker(
             recorder=recorder,
             lifecycle=lifecycle,
             supervisor_started=supervisor_started,
+            log_context=log_context,
         )
     if alive or process.is_alive():
         pids = tuple(sorted({int(item.pid) for item in alive} | {int(process.pid)}))
@@ -666,6 +802,7 @@ def _shutdown_owned_worker(
                 f"timeout_seconds={policy.monitoring.forced_stop_timeout_seconds}"
             ),
             pids=pids,
+            log_context=log_context,
         )
         try:
             alive = ownership.kill_phase(
@@ -684,6 +821,7 @@ def _shutdown_owned_worker(
             recorder=recorder,
             lifecycle=lifecycle,
             supervisor_started=supervisor_started,
+            log_context=log_context,
         )
     survivors = ownership.survivor_records()
     if survivors or process.is_alive():
@@ -694,6 +832,7 @@ def _shutdown_owned_worker(
             supervisor_started=supervisor_started,
             detail="owned process identities remain alive after force-kill wait",
             pids=tuple(int(item["pid"]) for item in survivors),
+            log_context=log_context,
         )
     else:
         condition = None
@@ -702,6 +841,7 @@ def _shutdown_owned_worker(
             "EXIT_CONFIRMED",
             supervisor_started=supervisor_started,
             detail="owned worker process tree is absent",
+            log_context=log_context,
         )
     return (
         condition is None,
@@ -787,7 +927,7 @@ def wait_for_inter_run_readiness(
             last_code = None
         elapsed = monotonic() - started
         if last_code is None or elapsed >= timeout or active_children:
-            return InterRunReadiness(
+            result = InterRunReadiness(
                 ready=last_code is None,
                 stop_code=last_code,
                 elapsed_seconds=elapsed,
@@ -799,12 +939,64 @@ def wait_for_inter_run_readiness(
                 temp_free_disk_bytes=temp_free,
                 active_child_pids=active_children,
             )
+            emit_research_event(
+                "inter_run_readiness_result",
+                level="INFO" if result.ready else "ERROR",
+                message=(
+                    "Inter-run resource readiness passed"
+                    if result.ready
+                    else f"Inter-run resource readiness blocked: {result.stop_code}"
+                ),
+                priority=True,
+                ready=result.ready,
+                stop_code=result.stop_code,
+                elapsed_stage_seconds=result.elapsed_seconds,
+                sample_count=result.sample_count,
+                parent_pid=result.parent_pid,
+                parent_rss_bytes=result.parent_rss_bytes,
+                system_available_ram_bytes=result.system_available_ram_bytes,
+                results_free_disk_bytes=result.results_free_disk_bytes,
+                temp_free_disk_bytes=result.temp_free_disk_bytes,
+                active_child_pids=result.active_child_pids,
+            )
+            return result
         sleep(
             min(
                 float(policy.monitoring.sample_interval_seconds),
                 max(0.0, timeout - elapsed),
             )
         )
+
+
+def _supervisor_logging_context(
+    worker_kwargs: Mapping[str, Any], association: str
+) -> dict[str, Any]:
+    spec = worker_kwargs.get("spec", {})
+    if not isinstance(spec, Mapping):
+        spec = {}
+    run_directory = worker_kwargs.get("run_directory")
+    run_id = spec.get("run_id")
+    if run_id is None and run_directory:
+        run_id = Path(str(run_directory)).name
+    phase = worker_kwargs.get("phase")
+    return {
+        "run_association": association,
+        "run_id": run_id,
+        "dataset": spec.get("dataset"),
+        "model": spec.get("model"),
+        "seed": spec.get("seed"),
+        "phase": str(phase).upper() if phase is not None else None,
+        "selector": spec.get("method_id"),
+    }
+
+
+def _stage_activity_message(stage: str | None, *, heartbeat: bool) -> str:
+    label = str(stage or "unknown")
+    if label == "voter_boruta" and heartbeat:
+        return "Boruta fit active; internal iteration unavailable."
+    if heartbeat:
+        return f"Stage {label} remains active"
+    return f"Stage {label} started"
 
 
 def supervise_worker(
@@ -816,12 +1008,22 @@ def supervise_worker(
     temp_root: str | Path,
     sampler_factory: Any = ProcessTreeSampler,
     run_association: str | None = None,
+    heartbeat_interval_seconds: float = STAGE_HEARTBEAT_INTERVAL_SECONDS,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
 
     apply_thread_environment(policy.parallelism.estimator_threads)
     supervisor_started = monotonic()
     association = run_association or f"supervised-worker:{uuid.uuid4()}"
+    resolved_worker_kwargs = dict(worker_kwargs or {})
+    supervisor_log_context = _supervisor_logging_context(
+        resolved_worker_kwargs, association
+    )
+    worker_logging_transport = active_worker_transport()
+    heartbeat_interval = min(
+        STAGE_HEARTBEAT_INTERVAL_SECONDS,
+        max(0.01, float(heartbeat_interval_seconds)),
+    )
     import psutil
 
     parent_rss_before = int(psutil.Process(os.getpid()).memory_info().rss)
@@ -833,15 +1035,33 @@ def supervise_worker(
         target=_worker_entry,
         args=(
             worker_target,
-            dict(worker_kwargs or {}),
+            resolved_worker_kwargs,
             stop_event,
             result_queue,
             stage_queue,
             association,
+            worker_logging_transport,
+            supervisor_log_context,
         ),
         daemon=False,
     )
+    emit_research_event(
+        "worker_spawn_requested",
+        message="Starting supervised research worker",
+        priority=True,
+        worker_target=worker_target,
+        parent_pid=os.getpid(),
+        **supervisor_log_context,
+    )
     process.start()
+    emit_research_event(
+        "worker_spawned",
+        message="Supervised research worker spawned",
+        priority=True,
+        worker_pid=int(process.pid),
+        parent_pid=os.getpid(),
+        **supervisor_log_context,
+    )
     ownership = _OwnedProcessRegistry(process.pid, association=association)
     sampler = sampler_factory(results_root=results_root, temp_root=temp_root)
     samples: list[ResourceSample] = []
@@ -857,6 +1077,7 @@ def supervise_worker(
         supervisor_started=supervisor_started,
         detail=f"run_association={association}",
         pids=(int(process.pid),),
+        log_context=supervisor_log_context,
     )
     child_cleanup_confirmed = True
     queue_cleanup_confirmed = True
@@ -865,11 +1086,60 @@ def supervise_worker(
     shutdown_elapsed: float | None = None
     graceful_stop_completed: bool | None = None
     message: Mapping[str, Any] | None = None
+    stage_started_at = supervisor_started
+    last_heartbeat_at = supervisor_started
+
+    def on_stage_update(
+        previous_stage: str | None,
+        previous_fold: Any,
+        next_stage: str | None,
+        next_fold: Any,
+        update: Mapping[str, Any],
+    ) -> None:
+        nonlocal stage_started_at, last_heartbeat_at
+        if next_stage == previous_stage and next_fold == previous_fold:
+            return
+        now = monotonic()
+        if previous_stage not in {None, "initialized"}:
+            emit_research_event(
+                "stage_completed",
+                message=f"Stage {previous_stage} completed",
+                priority=True,
+                fold_id=previous_fold,
+                stage=previous_stage,
+                component=_STAGE_COMPONENTS.get(str(previous_stage), previous_stage),
+                elapsed_stage_seconds=now - stage_started_at,
+                worker_pid=int(process.pid),
+                **supervisor_log_context,
+            )
+        stage_started_at = now
+        last_heartbeat_at = now
+        details = {
+            str(key): value
+            for key, value in update.items()
+            if key not in {"stage", "fold_id"}
+        }
+        stage_component = details.pop(
+            "component", _STAGE_COMPONENTS.get(str(next_stage), next_stage)
+        )
+        emit_research_event(
+            "stage_started",
+            message=_stage_activity_message(next_stage, heartbeat=False),
+            priority=True,
+            fold_id=next_fold,
+            stage=next_stage,
+            component=stage_component,
+            worker_pid=int(process.pid),
+            **details,
+            **supervisor_log_context,
+        )
 
     try:
         while process.is_alive():
             ownership.refresh()
-            stage, fold_id = _drain_stage_queue(stage_queue, stage, fold_id)
+            stage, fold_id = _drain_stage_queue(
+                stage_queue, stage, fold_id, on_update=on_stage_update
+            )
             if message is None:
                 try:
                     candidate = result_queue.get_nowait()
@@ -881,7 +1151,45 @@ def supervise_worker(
             samples.append(sample)
             for warning_message in _new_warnings(sample, policy, emitted_warnings):
                 warnings.append(warning_message)
-                logger.warning("RESOURCE_WARNING %s", warning_message)
+                logged = emit_research_event(
+                    "resource_warning",
+                    level="WARNING",
+                    message=f"RESOURCE_WARNING {warning_message}",
+                    priority=True,
+                    warning_code=warning_message.split(":", 1)[0],
+                    fold_id=fold_id,
+                    stage=stage,
+                    component=_STAGE_COMPONENTS.get(str(stage), stage),
+                    worker_pid=sample.worker_pid,
+                    worker_rss_bytes=sample.process_tree_rss_bytes,
+                    system_available_ram_bytes=sample.system_available_ram_bytes,
+                    parent_rss_bytes=int(
+                        psutil.Process(os.getpid()).memory_info().rss
+                    ),
+                    **supervisor_log_context,
+                )
+                if not logged:
+                    logger.warning("RESOURCE_WARNING %s", warning_message)
+            now = monotonic()
+            if now - last_heartbeat_at >= heartbeat_interval:
+                emit_research_event(
+                    "stage_heartbeat",
+                    message=_stage_activity_message(stage, heartbeat=True),
+                    fold_id=fold_id,
+                    stage=stage,
+                    component=_STAGE_COMPONENTS.get(str(stage), stage),
+                    elapsed_stage_seconds=now - stage_started_at,
+                    worker_pid=sample.worker_pid,
+                    worker_rss_bytes=sample.process_tree_rss_bytes,
+                    parent_rss_bytes=int(
+                        psutil.Process(os.getpid()).memory_info().rss
+                    ),
+                    system_available_ram_bytes=sample.system_available_ram_bytes,
+                    process_tree_cpu_percent=sample.process_tree_cpu_percent,
+                    process_tree_cpu_seconds=sample.process_tree_cpu_seconds,
+                    **supervisor_log_context,
+                )
+                last_heartbeat_at = now
             threshold = _classify_threshold(sample, policy)
             if threshold is not None:
                 recorder.observe(
@@ -897,6 +1205,15 @@ def supervise_worker(
                     pids=tuple(
                         sorted({sample.worker_pid, *sample.child_pids})
                     ),
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": threshold,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": sample.worker_pid,
+                        "worker_rss_bytes": sample.process_tree_rss_bytes,
+                        "system_available_ram_bytes": sample.system_available_ram_bytes,
+                    },
                 )
                 (
                     child_cleanup_confirmed,
@@ -912,6 +1229,13 @@ def supervise_worker(
                     recorder=recorder,
                     lifecycle=lifecycle,
                     supervisor_started=supervisor_started,
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": recorder.primary,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": int(process.pid),
+                    },
                 )
                 break
             stop_event.wait(policy.monitoring.sample_interval_seconds)
@@ -935,6 +1259,13 @@ def supervise_worker(
             recorder=recorder,
             lifecycle=lifecycle,
             supervisor_started=supervisor_started,
+            log_context={
+                **supervisor_log_context,
+                "stop_code": recorder.primary,
+                "fold_id": fold_id,
+                "stage": stage,
+                "worker_pid": int(process.pid),
+            },
         )
     finally:
         ownership.refresh()
@@ -959,6 +1290,13 @@ def supervise_worker(
                 recorder=recorder,
                 lifecycle=lifecycle,
                 supervisor_started=supervisor_started,
+                log_context={
+                    **supervisor_log_context,
+                    "stop_code": recorder.primary,
+                    "fold_id": fold_id,
+                    "stage": stage,
+                    "worker_pid": int(process.pid),
+                },
             )
             child_cleanup_confirmed = child_cleanup_confirmed and cleanup_ok
             shutdown_elapsed = (
@@ -972,7 +1310,9 @@ def supervise_worker(
         if gpu is not None:
             gpu.close()
 
-    stage, fold_id = _drain_stage_queue(stage_queue, stage, fold_id)
+    stage, fold_id = _drain_stage_queue(
+        stage_queue, stage, fold_id, on_update=on_stage_update
+    )
     try:
         if message is None:
             candidate = result_queue.get(timeout=0.5)
@@ -995,6 +1335,7 @@ def supervise_worker(
     worker_error = None
     if message and message.get("kind") in {"error", "interrupt"}:
         worker_error = str(message.get("error"))
+    worker_traceback = str(message.get("traceback")) if message and message.get("traceback") else None
     if message and message.get("run_association") != association:
         worker_error = "worker result run association mismatch"
         return_value = None
@@ -1051,6 +1392,33 @@ def supervise_worker(
         if worker_error is None:
             worker_error = f"worker exited with code {worker_exit_code} without a result"
 
+    terminal_stage_event = {
+        "completed": "stage_completed",
+        "aborted_resource_limit": "stage_aborted",
+        "interrupted": "stage_interrupted",
+        "failed": "stage_failed",
+    }[status]
+    emit_research_event(
+        terminal_stage_event,
+        level="INFO" if status == "completed" else "ERROR",
+        message=f"Stage {stage} ended with worker status {status}",
+        priority=True,
+        fold_id=fold_id,
+        stage=stage,
+        component=_STAGE_COMPONENTS.get(str(stage), stage),
+        elapsed_stage_seconds=monotonic() - stage_started_at,
+        worker_pid=int(process.pid),
+        worker_exit_code=worker_exit_code,
+        stop_code=stop_code,
+        exception_class=(
+            worker_error.split(":", 1)[0]
+            if worker_error and ":" in worker_error
+            else None
+        ),
+        traceback=worker_traceback,
+        **supervisor_log_context,
+    )
+
     rss_values = [item.process_tree_rss_bytes for item in samples]
     gpu_values = [item.process_gpu_bytes for item in samples if item.process_gpu_bytes is not None]
     available_values = [item.system_available_ram_bytes for item in samples]
@@ -1061,6 +1429,13 @@ def supervise_worker(
         "ARTIFACT_AND_STATE_FINALIZATION",
         supervisor_started=supervisor_started,
         detail=f"status={status}; stop_code={stop_code}",
+        log_context={
+            **supervisor_log_context,
+            "stop_code": stop_code,
+            "fold_id": fold_id,
+            "stage": stage,
+            "worker_pid": int(process.pid),
+        },
     )
     del message
     gc.collect(0)
@@ -1071,6 +1446,24 @@ def supervise_worker(
     survivors = ownership.survivor_records()
     final_child_cleanup_confirmed = (
         child_cleanup_confirmed and not survivors and not process.is_alive()
+    )
+    emit_research_event(
+        "worker_finalized",
+        level="INFO" if status == "completed" else "ERROR",
+        message=f"Supervised worker finalized with status {status}",
+        priority=True,
+        worker_pid=int(process.pid),
+        worker_exit_code=worker_exit_code,
+        status=status,
+        stop_code=stop_code,
+        secondary_events=recorder.secondary,
+        child_cleanup_confirmed=final_child_cleanup_confirmed,
+        queue_cleanup_confirmed=queue_cleanup_confirmed,
+        survivor_pids=[item["pid"] for item in survivors],
+        parent_rss_before_bytes=parent_rss_before,
+        parent_rss_after_bytes=parent_rss_after,
+        system_available_ram_after_bytes=system_available_after,
+        **supervisor_log_context,
     )
     if not process.is_alive():
         try:

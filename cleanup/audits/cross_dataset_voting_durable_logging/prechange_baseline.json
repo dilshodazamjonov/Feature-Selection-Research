@@ -1,0 +1,47 @@
+{
+    "schema_version":  "cdv1_durable_logging_prechange_baseline_v1",
+    "captured_at_utc":  "2026-07-24T04:49:01.2692175Z",
+    "branch":  "main",
+    "head_commit":  "69c4bb565e6dcb4caad90b01237f0be134f72e88",
+    "origin_main_commit":  "69c4bb565e6dcb4caad90b01237f0be134f72e88",
+    "working_tree_clean":  true,
+    "prompt_6_1_tag":  "cross-dataset-voting-resume-safety-v1",
+    "prompt_6_1_tag_object":  "1ef8f94bf261a54da5e0c52c1402d5f7567b2b53",
+    "prompt_6_1_tag_peel":  "69c4bb565e6dcb4caad90b01237f0be134f72e88",
+    "canonical_results":  {
+                              "files":  831,
+                              "bytes":  1439586868,
+                              "manifest_path":  "cleanup/audits/cross_dataset_voting_durable_logging/immutable_prechange_results_manifest.csv",
+                              "manifest_sha256":  "21aa51f12170cdf79da2e0289b709dc7b6f70e9929ede1d416b0cc1f416e4591"
+                          },
+    "run_index":  {
+                      "rows":  18,
+                      "completed_pilots":  4,
+                      "dev_complete":  13,
+                      "aborted_resource_limit":  1
+                  },
+    "run_014":  {
+                    "run_id":  "cdv1-014-lendingclub-v2-voting-k100-catboost-s42",
+                    "status":  "aborted_resource_limit",
+                    "primary_stop_code":  "ram_system_headroom",
+                    "completed_fold_ids":  [
+                                               1,
+                                               2,
+                                               3,
+                                               4
+                                           ],
+                    "last_observed_fold_id":  5,
+                    "last_observed_stage":  "voter_boruta",
+                    "safe_resume_boundary":  {
+                                                 "phase":  "DEV",
+                                                 "fold_id":  5,
+                                                 "stage":  "dev_data_loading"
+                                             },
+                    "finalized_artifacts_verified":  36,
+                    "artifact_mismatches":  0
+                },
+    "oot_named_artifacts":  0,
+    "partial_files":  0,
+    "active_execution_locks":  0,
+    "repository_python_processes":  0
+}

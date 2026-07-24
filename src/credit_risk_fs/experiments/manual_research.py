@@ -12,6 +12,7 @@ import json
 import platform
 import subprocess
 import sys
+import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -22,9 +23,15 @@ from credit_risk_fs.experiments.matrix import (
     cross_dataset_matrix_expansion_summary,
     expand_cross_dataset_voting_matrix,
 )
+from credit_risk_fs.experiments.research_logging import (
+    DEFAULT_RESEARCH_LOG,
+    ResearchLogSession,
+    emit_research_event,
+    logged_stage,
+)
 
 
-EXPECTED_TAG = "cross-dataset-voting-resume-safety-v1"
+EXPECTED_TAG = "cross-dataset-voting-observability-v1"
 ORIGINAL_TAG = "cross-dataset-voting-pre-execution-v1"
 MATRIX_PATH = "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml"
 POLICY_PATH = "configs/execution/local_laptop_safe_v1.yaml"
@@ -220,11 +227,44 @@ def execute_manual_workflow(
 ) -> None:
     """Run every DEV configuration, close the global gate, then permit OOT."""
 
-    backend.preflight(plan, provenance)
+    with logged_stage(
+        "workflow_preflight",
+        message="Repository, release, bridge, and execution preflight",
+        component="orchestration",
+    ):
+        backend.preflight(plan, provenance)
     for index, spec in enumerate(plan.run_specs):
         if index:
-            backend.ensure_ready(plan.run_specs[index - 1].run_id, spec.run_id, "dev")
+            with logged_stage(
+                "inter_run_readiness",
+                message="Inter-run readiness barrier before DEV",
+                component="resource_readiness",
+                run_id=spec.run_id,
+                dataset=spec.dataset,
+                model=spec.model,
+                seed=42,
+                phase="DEV",
+            ):
+                backend.ensure_ready(
+                    plan.run_specs[index - 1].run_id, spec.run_id, "dev"
+                )
         state = backend.run_state(spec)
+        emit_research_event(
+            "run_resume_decision",
+            message=f"DEV run state resolved as {state}",
+            priority=True,
+            run_id=spec.run_id,
+            dataset=spec.dataset,
+            model=spec.model,
+            seed=42,
+            phase="DEV",
+            run_state=state,
+            decision=(
+                "reuse_completed"
+                if state in {"completed", "dev_complete"}
+                else "resume_or_start"
+            ),
+        )
         if state == "completed":
             backend.validate_dev(spec)
             continue
@@ -237,7 +277,13 @@ def execute_manual_workflow(
         backend.validate_dev(spec)
 
     # This hash is recorded only after all sixteen DEV configurations validate.
-    frozen_set_sha256 = backend.freeze_configuration_set(plan)
+    with logged_stage(
+        "dev_global_barrier",
+        message="Validate all DEV configurations and freeze the configuration set",
+        component="checkpoint_validation",
+        phase="DEV",
+    ):
+        frozen_set_sha256 = backend.freeze_configuration_set(plan)
     if frozen_set_sha256 != plan.configuration_set_sha256:
         raise ManualResearchStop(
             "CONFIGURATION_SET_DRIFT",
@@ -246,8 +292,30 @@ def execute_manual_workflow(
 
     for index, spec in enumerate(plan.run_specs):
         previous = plan.run_specs[index - 1].run_id if index else plan.run_specs[-1].run_id
-        backend.ensure_ready(previous, spec.run_id, "oot")
+        with logged_stage(
+            "inter_run_readiness",
+            message="Inter-run readiness barrier before OOT",
+            component="resource_readiness",
+            run_id=spec.run_id,
+            dataset=spec.dataset,
+            model=spec.model,
+            seed=42,
+            phase="OOT",
+        ):
+            backend.ensure_ready(previous, spec.run_id, "oot")
         state = backend.run_state(spec)
+        emit_research_event(
+            "run_resume_decision",
+            message=f"OOT run state resolved as {state}",
+            priority=True,
+            run_id=spec.run_id,
+            dataset=spec.dataset,
+            model=spec.model,
+            seed=42,
+            phase="OOT",
+            run_state=state,
+            decision="reuse_completed" if state == "completed" else "execute_oot",
+        )
         if state == "completed":
             backend.validate_oot(spec)
             continue
@@ -262,8 +330,13 @@ def execute_manual_workflow(
             )
         backend.validate_oot(spec)
 
-    backend.finalize(plan, frozen_set_sha256)
-    backend.validate_complete(plan)
+    with logged_stage(
+        "workflow_finalization",
+        message="Finalize and validate the complete cross-dataset workflow",
+        component="artifact_finalization",
+    ):
+        backend.finalize(plan, frozen_set_sha256)
+        backend.validate_complete(plan)
 
 
 class CanonicalWorkflowBackend:
@@ -354,28 +427,120 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Authenticate and print the frozen matrix without creating results or loading data.",
     )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=DEFAULT_RESEARCH_LOG,
+        help="Append JSONL lifecycle records here (default: logs/runs.log).",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    raw_arguments = list(sys.argv[1:] if argv is None else argv)
+    args = build_parser().parse_args(raw_arguments)
     root = args.repository_root.resolve()
-    try:
-        plan = build_manual_research_plan(root)
-        if args.plan:
-            print(json.dumps(plan.public_payload(), indent=2, sort_keys=True))
-            return 0
-        provenance = authenticate_release(root)
-        backend = CanonicalWorkflowBackend(root, provenance)
-        execute_manual_workflow(plan, provenance, backend)
-    except ManualResearchStop as exc:
-        print(f"CONTROLLED_STOP {exc.code}: {exc}", file=sys.stderr)
-        return 2
-    except Exception as exc:
-        print(f"CONTROLLED_STOP UNEXPECTED_WORKFLOW_FAILURE: {type(exc).__name__}: {exc}", file=sys.stderr)
-        return 3
-    print("CROSS_DATASET_VOTING_RESEARCH_COMPLETE")
-    return 0
+    with ResearchLogSession(
+        args.log_file,
+        repository_root=root,
+        command_arguments=raw_arguments,
+    ) as log_session:
+        try:
+            with logged_stage(
+                "plan_construction",
+                message="Build and authenticate the frozen research plan",
+                component="orchestration",
+            ):
+                plan = build_manual_research_plan(root)
+            emit_research_event(
+                "configuration_authenticated",
+                message="Frozen protocol and configuration hashes authenticated",
+                priority=True,
+                matrix_sha256=plan.matrix_sha256,
+                configuration_set_sha256=plan.configuration_set_sha256,
+                frozen_hashes=plan.frozen_hashes,
+                planned_run_count=len(plan.run_specs),
+                planned_dev_fold_count=plan.counts["total_dev_fold_executions"],
+            )
+            with logged_stage(
+                "release_authentication",
+                message="Authenticate clean tagged Git release",
+                component="provenance",
+            ):
+                provenance = authenticate_release(root)
+            emit_research_event(
+                "release_authenticated",
+                message="Tagged Git release authenticated",
+                priority=True,
+                git_commit=provenance.git_commit,
+                git_tag=provenance.git_tag,
+                git_tag_object_type=provenance.git_tag_object_type,
+                pyproject_sha256=provenance.pyproject_sha256,
+                dependency_lock_sha256=provenance.dependency_lock_sha256,
+            )
+            emit_research_event(
+                "plan_resume_decision",
+                message=(
+                    "Plan-only validation requested"
+                    if args.plan
+                    else "Authenticated resume-capable execution requested"
+                ),
+                priority=True,
+                mode="plan_only" if args.plan else "resume_or_execute",
+            )
+            if args.plan:
+                print(json.dumps(plan.public_payload(), indent=2, sort_keys=True))
+                log_session.finish(
+                    "session_completed",
+                    message="Plan-only research runner session completed",
+                    exit_code=0,
+                    mode="plan_only",
+                )
+                return 0
+            backend = CanonicalWorkflowBackend(root, provenance)
+            execute_manual_workflow(plan, provenance, backend)
+        except KeyboardInterrupt as exc:
+            log_session.finish(
+                "session_interrupted",
+                level="ERROR",
+                message="CONTROLLED_STOP MANUAL_INTERRUPT: user KeyboardInterrupt",
+                stop_code="manual_interrupt",
+                exception_class=type(exc).__name__,
+                traceback=traceback.format_exc(),
+                exit_code=130,
+            )
+            return 130
+        except ManualResearchStop as exc:
+            log_session.finish(
+                "session_controlled_stop",
+                level="ERROR",
+                message=f"CONTROLLED_STOP {exc.code}: {exc}",
+                stop_code=exc.code,
+                exception_class=type(exc).__name__,
+                exit_code=2,
+            )
+            return 2
+        except Exception as exc:
+            log_session.finish(
+                "session_failed",
+                level="ERROR",
+                message=(
+                    "CONTROLLED_STOP UNEXPECTED_WORKFLOW_FAILURE: "
+                    f"{type(exc).__name__}: {exc}"
+                ),
+                stop_code="unexpected_workflow_failure",
+                exception_class=type(exc).__name__,
+                traceback=traceback.format_exc(),
+                exit_code=3,
+            )
+            return 3
+        log_session.finish(
+            "session_completed",
+            message="CROSS_DATASET_VOTING_RESEARCH_COMPLETE",
+            exit_code=0,
+            mode="research",
+        )
+        return 0
 
 
 __all__ = [

@@ -1,0 +1,39 @@
+{
+  "schema_version": "cdv1_durable_logging_architecture_audit_v1",
+  "prechange_findings": {
+    "canonical_session_sink_present": false,
+    "plain_logger_format": "local-time text without session/run/fold/stage identity",
+    "per_run_log": "results/runs/<dataset>/<run_id>/run.log",
+    "manual_runner_output": "raw print calls for plan, controlled stop, and completion",
+    "catboost_output": "configs/base.yaml verbose=100 raw third-party stdout",
+    "boruta_output": "selector verbose disabled and no iteration callback",
+    "worker_stage_transport": "bounded 256-record nonblocking stage queue",
+    "resource_output": "plain Python logger warning plus structured terminal artifacts",
+    "exception_output": "parent controlled-stop text and worker result traceback",
+    "durable_cross_session_file": null
+  },
+  "implemented_architecture": {
+    "default_path": "logs/runs.log",
+    "format": "UTF-8 append-only JSON Lines",
+    "schema_version": "research_run_log_v1",
+    "timestamp": "UTC ISO 8601 with milliseconds and Z suffix",
+    "parent_owned_sink": true,
+    "terminal_mirror": "same canonical JSON record to stderr",
+    "worker_transport": "separate bounded multiprocessing queue",
+    "worker_queue_capacity": 1024,
+    "routine_enqueue": "nonblocking; drops counted",
+    "priority_enqueue_timeout_seconds": 0.25,
+    "backpressure_record": "logging_backpressure with cumulative and delta counters",
+    "parent_priority_path": "direct lock-protected write and immediate flush",
+    "listener_thread": "one non-daemon parent listener with bounded 2-second join",
+    "scientific_objects_retained": false,
+    "scientific_manifest_membership": false,
+    "gitignore_rule": "/logs/runs.log"
+  },
+  "third_party_policy": {
+    "catboost": "raw output may remain, surrounded by canonical start, heartbeat, completion, failure, or interruption records",
+    "boruta": "no library patch or invented progress; supervisor emits truthful time/memory heartbeat",
+    "duplicate_prevention": "existing plain console handlers are filtered while a canonical session is active; spawned workers configure one bridge after spawn"
+  },
+  "research_or_oot_executed": false
+}

@@ -1,0 +1,49 @@
+{
+  "artifacts": {
+    "cleanup/audits/cross_dataset_voting_durable_logging/authenticated_run_integrity.csv": {
+      "sha256": "36f96cf19043f07541b7bcfaf8c0357f62aa850e4840fe2a7cd299cc58020c48",
+      "size_bytes": 2207
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/evidence_build_summary.json": {
+      "sha256": "290c6ed1235393deb5e8c885b914e7278328906ad55c946661ebd6392548dd6b",
+      "size_bytes": 1188
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/immutable_postchange_results_manifest.csv": {
+      "sha256": "2c2f35ab0a9e464c015a97f6ab52abc8d1c969f19265a614e0120386a571ae5c",
+      "size_bytes": 145983
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/immutable_prechange_results_manifest.csv": {
+      "sha256": "21aa51f12170cdf79da2e0289b709dc7b6f70e9929ede1d416b0cc1f416e4591",
+      "size_bytes": 150975
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/implementation_report.md": {
+      "sha256": "324d3fb726ca9dbe063b05f5a0a3ea5d6279e2ea2e7706a914ee48d040c6ddcc",
+      "size_bytes": 7204
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/logging_architecture.json": {
+      "sha256": "abf06f8a9b7266cc93441167a6f5c4094dce44e391e90e3bf4153b26def42e8f",
+      "size_bytes": 2184
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/prechange_baseline.json": {
+      "sha256": "8f83c1e138958ee6c2e6521bf374055419a7992744ced5d485eb9bf50d066cab",
+      "size_bytes": 2382
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/run_014_reconciliation.json": {
+      "sha256": "1262c6555c129aca1fcc972804f6bd4925b2b07780911c56f08c3bb0d1645bda",
+      "size_bytes": 3022
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/scientific_equivalence.json": {
+      "sha256": "410667863a868c922725d9f8851e76a975fe2d2db9c180afb67e96706c390256",
+      "size_bytes": 1056
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/stage_coverage.json": {
+      "sha256": "efc95a9360b4ea8c0b6833a88d1a6b51a26586ff505a037674425f760557187f",
+      "size_bytes": 2794
+    },
+    "cleanup/audits/cross_dataset_voting_durable_logging/validation_summary.json": {
+      "sha256": "5059d93dfcf6f2e34df51d26fea6cf9883453de052127738b92e67aa5cf2ed09",
+      "size_bytes": 2208
+    }
+  },
+  "schema_version": "cdv1_durable_logging_audit_manifest_v1"
+}

@@ -1,0 +1,28 @@
+{
+  "bridge_path": "configs/execution/cdv1_durable_logging_compatibility_bridge_v1.json",
+  "canonical_results_snapshot": {
+    "added_paths": [],
+    "changed_paths": [],
+    "exact_path_size_sha256_match": true,
+    "postchange_file_count": 831,
+    "postchange_manifest_path": "cleanup/audits/cross_dataset_voting_durable_logging/immutable_postchange_results_manifest.csv",
+    "postchange_manifest_sha256": "2c2f35ab0a9e464c015a97f6ab52abc8d1c969f19265a614e0120386a571ae5c",
+    "postchange_total_bytes": 1439586868,
+    "prechange_file_count": 831,
+    "prechange_total_bytes": 1439586868,
+    "removed_paths": []
+  },
+  "completed_runs_authenticated": 13,
+  "generated_at_utc": "2026-07-24T05:24:33.707377+00:00",
+  "incomplete_run_authenticated": "cdv1-014-lendingclub-v2-voting-k100-catboost-s42",
+  "research_or_oot_executed": false,
+  "safe_resume_boundary": {
+    "discarded_in_memory_stage": "voter_boruta",
+    "first_expensive_stage": "voter_rf_corr_mrmr",
+    "first_selection_stage": "selection_encoding",
+    "fold_id": 5,
+    "phase": "DEV",
+    "stage": "dev_data_loading"
+  },
+  "schema_version": "cdv1_durable_logging_evidence_build_v1"
+}

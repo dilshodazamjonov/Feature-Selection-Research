@@ -1,0 +1,21 @@
+{
+  "schema_version": "cdv1_durable_logging_scientific_equivalence_v1",
+  "frozen_scientific_protocol_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+  "frozen_voting_protocol_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+  "frozen_row_alignment_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+  "frozen_execution_policy_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+  "frozen_memory_refinement_sha256": "4e2a17b93a751bbcb7443d8e82b15781f8a0467a07aa0037a3c298abff4132d7",
+  "exact_equivalence_test": "tests/test_cdv1_scientific_equivalence.py",
+  "proves": [
+    "voter rankings and raw scores",
+    "rank aggregation and deterministic tie breaking",
+    "selected feature ordering and exact budgets",
+    "class-1 probabilities",
+    "metrics",
+    "checkpoint interpretation and resume boundaries",
+    "run planning"
+  ],
+  "observability_only": true,
+  "real_data_opened_by_validation": false,
+  "oot_opened_by_validation": false
+}

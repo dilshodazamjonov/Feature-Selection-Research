@@ -7,6 +7,11 @@ import os
 import time
 from typing import Any
 
+from credit_risk_fs.experiments.research_logging import (
+    configure_worker_logging,
+    emit_research_event,
+)
+
 
 def _child_wait(stop_event: Any) -> None:
     while not stop_event.is_set():
@@ -146,3 +151,102 @@ def near_limit_result_worker(
     del stop_event
     stage_queue.put({"stage": "near_limit_result", "fold_id": None})
     return {"bounded_metadata": b"x" * (512 * 1024)}
+
+
+def mock_slow_boruta_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    duration_seconds: float = 0.18,
+) -> dict[str, int]:
+    """Exercise Boruta observability without fitting a scientific model."""
+
+    stage_queue.put(
+        {
+            "stage": "voter_boruta",
+            "fold_id": 5,
+            "component": "boruta",
+            "internal_iteration_available": False,
+        }
+    )
+    emit_research_event(
+        "component_started",
+        message="Synthetic Boruta fit started",
+        priority=True,
+        component="boruta",
+        stage="voter_boruta",
+        fold_id=5,
+        input_feature_count=12,
+        max_iter=100,
+        internal_iteration_available=False,
+    )
+    stop_event.wait(max(0.01, float(duration_seconds)))
+    if stop_event.is_set():
+        raise KeyboardInterrupt("synthetic Boruta interrupted")
+    result = {"confirmed": 4, "tentative": 2, "rejected": 6}
+    emit_research_event(
+        "component_completed",
+        message="Synthetic Boruta fit completed",
+        priority=True,
+        component="boruta",
+        stage="voter_boruta",
+        fold_id=5,
+        **result,
+    )
+    return result
+
+
+def mock_model_fit_worker(
+    *, stop_event: Any, stage_queue: Any, duration_seconds: float = 0.04
+) -> dict[str, bool]:
+    """Exercise model-fit stage logging without loading research data."""
+
+    stage_queue.put(
+        {
+            "stage": "final_model_fit",
+            "fold_id": 2,
+            "details": {"component": "catboost"},
+        }
+    )
+    stop_event.wait(max(0.01, float(duration_seconds)))
+    if stop_event.is_set():
+        raise KeyboardInterrupt("synthetic model fit interrupted")
+    return {"fit_completed": True}
+
+
+def keyboard_interrupt_worker(*, stop_event: Any, stage_queue: Any) -> None:
+    del stop_event
+    stage_queue.put({"stage": "synthetic_interrupt", "fold_id": None})
+    raise KeyboardInterrupt("synthetic worker interrupt")
+
+
+def exception_worker(*, stop_event: Any, stage_queue: Any) -> None:
+    del stop_event
+    stage_queue.put({"stage": "synthetic_failure", "fold_id": None})
+    raise RuntimeError("synthetic worker failure")
+
+
+def logging_transport_process(
+    target_queue: Any,
+    session_id: str,
+    routine_drop_counter: Any,
+    priority_drop_counter: Any,
+    prefix: str,
+    count: int,
+) -> None:
+    """Publish bounded synthetic records from a standalone spawned process."""
+
+    configure_worker_logging(
+        target_queue,
+        session_id=session_id,
+        context={"run_id": f"synthetic-{prefix}", "component": "transport_test"},
+        routine_drop_counter=routine_drop_counter,
+        priority_drop_counter=priority_drop_counter,
+    )
+    for index in range(max(0, int(count))):
+        emit_research_event(
+            "synthetic_transport_record",
+            message="Synthetic concurrent logging record",
+            record_prefix=prefix,
+            record_index=index,
+        )

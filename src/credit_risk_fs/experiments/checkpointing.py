@@ -16,6 +16,7 @@ from credit_risk_fs.experiments.atomic_io import (
     sha256_file,
     write_json_atomic,
 )
+from credit_risk_fs.experiments.research_logging import emit_research_event
 
 
 CHECKPOINT_SCHEMA_VERSION = "experiment_stage_checkpoint_v1"
@@ -70,6 +71,16 @@ class ResumeValidation:
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _repository_relative_log_path(path: Path) -> str:
+    """Render an artifact path without leaking an absolute workstation path."""
+
+    resolved = path.resolve()
+    for candidate in (resolved.parent, *resolved.parents):
+        if (candidate / ".git").exists():
+            return resolved.relative_to(candidate).as_posix()
+    return resolved.name
 
 
 def _validate_identity(identity: Mapping[str, Any]) -> dict[str, Any]:
@@ -256,6 +267,29 @@ class CheckpointManager:
                 }
             )
         write_json_atomic(self.path, payload)
+        stage_artifacts = [
+            {
+                "path": _repository_relative_log_path(self.run_directory / relative),
+                "size_bytes": metadata.get("size_bytes"),
+                "sha256": metadata.get("sha256"),
+            }
+            for relative, metadata in finalized.items()
+            if metadata.get("stage") == stage
+        ]
+        emit_research_event(
+            "checkpoint_transition",
+            message=f"Checkpoint transitioned to {stage}",
+            priority=True,
+            run_id=payload.get("run_id"),
+            stage=stage,
+            component="checkpoint_manager",
+            checkpoint_path=_repository_relative_log_path(self.path),
+            completed_fold_id=completed_fold_id,
+            checkpoint_status=payload.get("status"),
+            stop_code=stop_code,
+            artifact_count=len(stage_artifacts),
+            artifacts=stage_artifacts,
+        )
         return payload
 
     def validate_resume(
@@ -265,6 +299,17 @@ class CheckpointManager:
         quarantine_partials: bool = True,
     ) -> ResumeValidation:
         payload = self.load()
+        emit_research_event(
+            "checkpoint_validation_started",
+            message="Checkpoint resume validation started",
+            priority=True,
+            run_id=payload.get("run_id"),
+            stage=payload.get("last_successful_stage"),
+            component="checkpoint_manager",
+            completed_fold_ids=payload.get("completed_fold_ids", []),
+            finalized_artifact_count=len(payload.get("finalized_artifacts", {})),
+            checkpoint_path=_repository_relative_log_path(self.path),
+        )
         if payload.get("status") == "completed" or "completed" in payload.get("completed_stages", []):
             raise ResumeValidationError("completed_run_immutable", "completed runs cannot be resumed")
         expected = _validate_identity(expected_identity)
@@ -339,7 +384,7 @@ class CheckpointManager:
                     )
                 os.replace(path, destination)
                 quarantined.append(destination)
-        return ResumeValidation(
+        validation = ResumeValidation(
             run_directory=self.run_directory,
             checkpoint_path=self.path,
             reusable_stages=tuple(payload.get("completed_stages", [])),
@@ -347,6 +392,19 @@ class CheckpointManager:
             quarantined_partials=tuple(str(path) for path in quarantined),
             resumable=True,
         )
+        emit_research_event(
+            "checkpoint_validation_completed",
+            message="Checkpoint resume validation completed",
+            priority=True,
+            run_id=payload.get("run_id"),
+            stage=payload.get("last_successful_stage"),
+            component="checkpoint_manager",
+            completed_fold_ids=list(validation.completed_fold_ids),
+            reusable_stages=list(validation.reusable_stages),
+            quarantined_partial_count=len(validation.quarantined_partials),
+            checkpoint_path=_repository_relative_log_path(self.path),
+        )
+        return validation
 
     def begin_resume_attempt(self) -> dict[str, Any]:
         """Archive prior terminal resource evidence before a validated retry."""

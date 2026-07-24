@@ -1,4 +1,4 @@
-"""Narrow provenance bridge for the exact cdv1 mechanics-only resume release."""
+"""Fail-closed provenance bridge for the exact cdv1 observability release."""
 
 from __future__ import annotations
 
@@ -10,30 +10,37 @@ from typing import Any, Mapping
 from credit_risk_fs.experiments.atomic_io import sha256_file
 
 
-BRIDGE_SCHEMA_VERSION = "cdv1_resume_compatibility_bridge_v1"
-BRIDGE_PATH = Path("configs/execution/cdv1_resume_compatibility_bridge_v1.json")
+BRIDGE_SCHEMA_VERSION = "cdv1_durable_logging_compatibility_bridge_v1"
+BRIDGE_PATH = Path(
+    "configs/execution/cdv1_durable_logging_compatibility_bridge_v1.json"
+)
 RESEARCH_FAMILY = "cdv1"
 ORIGINAL_TAG = "cross-dataset-voting-pre-execution-v1"
-MECHANICS_TAG = "cross-dataset-voting-resume-safety-v1"
 ORIGINAL_COMMIT = "f00f474b6f263ee2619a178524c7c0fdf806024f"
-REUSABLE_RUN_IDS = tuple(
-    [
-        "cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42",
-        "cdv1-002-homecredit-voting-k100-lr-s42",
-        "cdv1-003-homecredit-voting-k200-lr-s42",
-        "cdv1-004-homecredit-voting-k300-lr-s42",
-        "cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42",
-        "cdv1-006-homecredit-voting-k100-catboost-s42",
-        "cdv1-007-homecredit-voting-k200-catboost-s42",
-        "cdv1-008-homecredit-voting-k300-catboost-s42",
-        "cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42",
-        "cdv1-010-lendingclub-v2-voting-k100-lr-s42",
-    ]
+SAFETY_TAG = "cross-dataset-voting-resume-safety-v1"
+SAFETY_COMMIT = "69c4bb565e6dcb4caad90b01237f0be134f72e88"
+OBSERVABILITY_TAG = "cross-dataset-voting-observability-v1"
+# Backward-compatible public name used by the runner and older tests.
+MECHANICS_TAG = OBSERVABILITY_TAG
+REUSABLE_RUN_IDS = (
+    "cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42",
+    "cdv1-002-homecredit-voting-k100-lr-s42",
+    "cdv1-003-homecredit-voting-k200-lr-s42",
+    "cdv1-004-homecredit-voting-k300-lr-s42",
+    "cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42",
+    "cdv1-006-homecredit-voting-k100-catboost-s42",
+    "cdv1-007-homecredit-voting-k200-catboost-s42",
+    "cdv1-008-homecredit-voting-k300-catboost-s42",
+    "cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42",
+    "cdv1-010-lendingclub-v2-voting-k100-lr-s42",
+    "cdv1-011-lendingclub-v2-voting-k200-lr-s42",
+    "cdv1-012-lendingclub-v2-voting-k300-lr-s42",
+    "cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42",
 )
-INTERRUPTED_RUN_ID = "cdv1-011-lendingclub-v2-voting-k200-lr-s42"
+INTERRUPTED_RUN_ID = "cdv1-014-lendingclub-v2-voting-k100-catboost-s42"
 SAFE_RESUME_BOUNDARY = {
     "phase": "DEV",
-    "fold_id": 3,
+    "fold_id": 5,
     "stage": "dev_data_loading",
     "first_selection_stage": "selection_encoding",
     "first_expensive_stage": "voter_rf_corr_mrmr",
@@ -53,11 +60,7 @@ class ProvenanceBridgeError(RuntimeError):
 def _git(root: Path, *args: str) -> str:
     try:
         result = subprocess.run(
-            ["git", *args],
-            cwd=root,
-            check=True,
-            capture_output=True,
-            text=True,
+            ["git", *args], cwd=root, check=True, capture_output=True, text=True
         )
     except (OSError, subprocess.CalledProcessError) as exc:
         detail = getattr(exc, "stderr", "") or str(exc)
@@ -87,18 +90,24 @@ def _require_exact_bridge_identity(payload: Mapping[str, Any]) -> None:
     if payload.get("research_family") != RESEARCH_FAMILY:
         raise ProvenanceBridgeError("BRIDGE_FAMILY_MISMATCH", "research family differs")
     original = payload.get("original_release", {})
-    mechanics = payload.get("mechanics_release", {})
-    if original.get("tag") != ORIGINAL_TAG or original.get("commit") != ORIGINAL_COMMIT:
+    safety = payload.get("safety_release", {})
+    observability = payload.get("observability_release", {})
+    if original != {"tag": ORIGINAL_TAG, "commit": ORIGINAL_COMMIT}:
         raise ProvenanceBridgeError(
             "BRIDGE_ORIGINAL_RELEASE_MISMATCH", "original release identity differs"
         )
-    if mechanics.get("tag") != MECHANICS_TAG:
+    if safety != {"tag": SAFETY_TAG, "commit": SAFETY_COMMIT}:
         raise ProvenanceBridgeError(
-            "BRIDGE_MECHANICS_TAG_MISMATCH", "mechanics-patch tag differs"
+            "BRIDGE_SAFETY_RELEASE_MISMATCH", "Prompt 6.1 release identity differs"
         )
-    if mechanics.get("commit_binding") != "annotated_tag_peels_to_current_head":
+    if observability.get("tag") != OBSERVABILITY_TAG:
         raise ProvenanceBridgeError(
-            "BRIDGE_MECHANICS_BINDING_MISMATCH", "mechanics commit binding differs"
+            "BRIDGE_OBSERVABILITY_TAG_MISMATCH", "observability tag differs"
+        )
+    if observability.get("commit_binding") != "annotated_tag_peels_to_current_head":
+        raise ProvenanceBridgeError(
+            "BRIDGE_OBSERVABILITY_BINDING_MISMATCH",
+            "observability commit binding differs",
         )
     if tuple(payload.get("reusable_run_ids", [])) != REUSABLE_RUN_IDS:
         raise ProvenanceBridgeError(
@@ -115,7 +124,18 @@ def _require_exact_bridge_identity(payload: Mapping[str, Any]) -> None:
         )
 
 
-def _validate_release_pair(
+def _validate_annotated_tag(root: Path, tag: str, expected_commit: str) -> None:
+    if _git(root, "cat-file", "-t", f"refs/tags/{tag}") != "tag":
+        raise ProvenanceBridgeError(
+            "BRIDGE_RELEASE_TAG_TYPE", f"release tag is not annotated: {tag}"
+        )
+    if _git(root, "rev-list", "-n", "1", tag) != expected_commit:
+        raise ProvenanceBridgeError(
+            "BRIDGE_RELEASE_TAG_MOVED", f"release tag moved: {tag}"
+        )
+
+
+def _validate_release_chain(
     root: Path,
     payload: Mapping[str, Any],
     *,
@@ -123,23 +143,13 @@ def _validate_release_pair(
     current_tag: str,
 ) -> None:
     _require_exact_bridge_identity(payload)
-    if current_tag != MECHANICS_TAG:
+    if current_tag != OBSERVABILITY_TAG:
         raise ProvenanceBridgeError(
             "BRIDGE_CURRENT_TAG_MISMATCH", f"current tag is {current_tag!r}"
         )
-    if _git(root, "rev-list", "-n", "1", ORIGINAL_TAG) != ORIGINAL_COMMIT:
-        raise ProvenanceBridgeError(
-            "BRIDGE_ORIGINAL_TAG_MOVED", "original annotated tag no longer peels to its commit"
-        )
-    if _git(root, "cat-file", "-t", f"refs/tags/{ORIGINAL_TAG}") != "tag":
-        raise ProvenanceBridgeError("BRIDGE_ORIGINAL_TAG_TYPE", "original tag is not annotated")
-    if _git(root, "cat-file", "-t", f"refs/tags/{MECHANICS_TAG}") != "tag":
-        raise ProvenanceBridgeError("BRIDGE_MECHANICS_TAG_TYPE", "mechanics tag is not annotated")
-    if _git(root, "rev-list", "-n", "1", MECHANICS_TAG) != current_commit:
-        raise ProvenanceBridgeError(
-            "BRIDGE_MECHANICS_COMMIT_MISMATCH",
-            "mechanics tag does not peel to current HEAD",
-        )
+    _validate_annotated_tag(root, ORIGINAL_TAG, ORIGINAL_COMMIT)
+    _validate_annotated_tag(root, SAFETY_TAG, SAFETY_COMMIT)
+    _validate_annotated_tag(root, OBSERVABILITY_TAG, current_commit)
 
 
 def _validate_hashed_files(
@@ -184,11 +194,7 @@ def _validate_runtime_and_frozen_files(root: Path, payload: Mapping[str, Any]) -
         if isinstance(metadata, Mapping)
     }
     _validate_hashed_files(root, current_entries, category="runtime")
-    _validate_hashed_files(
-        root,
-        payload.get("frozen_files", {}),
-        category="frozen",
-    )
+    _validate_hashed_files(root, payload.get("frozen_files", {}), category="frozen")
 
 
 def _validate_run_artifacts(root: Path, payload: Mapping[str, Any]) -> None:
@@ -205,21 +211,20 @@ def _validate_run_artifacts(root: Path, payload: Mapping[str, Any]) -> None:
             raise ProvenanceBridgeError(
                 "BRIDGE_RUN_DIRECTORY_MISMATCH", f"invalid run directory for {run_id}"
             )
-        checkpoint_path = run_dir / "checkpoint.json"
         try:
-            checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+            checkpoint = json.loads((run_dir / "checkpoint.json").read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ProvenanceBridgeError(
                 "BRIDGE_CHECKPOINT_UNREADABLE", f"{run_id}: {exc}"
             ) from exc
         identity = checkpoint.get("identity", {})
-        if identity.get("run_id") != run_id or identity.get("git_commit") != ORIGINAL_COMMIT:
+        expected_commit = entry.get("checkpoint_commit")
+        if identity.get("run_id") != run_id or identity.get("git_commit") != expected_commit:
             raise ProvenanceBridgeError(
                 "BRIDGE_CHECKPOINT_PROVENANCE_MISMATCH",
                 f"checkpoint provenance differs for {run_id}",
             )
-        artifacts = entry.get("immutable_artifacts", {})
-        for relative, metadata in artifacts.items():
+        for relative, metadata in entry.get("immutable_artifacts", {}).items():
             path = (run_dir / relative).resolve()
             if not path.is_relative_to(run_dir) or not path.is_file():
                 raise ProvenanceBridgeError(
@@ -242,15 +247,12 @@ def authenticate_compatibility_bridge(
     current_tag: str,
     validate_inventory: bool = True,
 ) -> dict[str, Any]:
-    """Authenticate only the exact old/new release pair and cdv1 inventory."""
+    """Authenticate the exact three-release chain and cdv1 artifact inventory."""
 
     root = Path(repository_root).resolve()
     payload = load_compatibility_bridge(root)
-    _validate_release_pair(
-        root,
-        payload,
-        current_commit=current_commit,
-        current_tag=current_tag,
+    _validate_release_chain(
+        root, payload, current_commit=current_commit, current_tag=current_tag
     )
     _validate_runtime_and_frozen_files(root, payload)
     cache_key = (str(root), str(current_commit))
@@ -267,7 +269,7 @@ def compatible_resume_identity(
     current_commit: str,
     current_tag: str,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]] | None:
-    """Return the historical identity/config only for an authenticated bridge run."""
+    """Return historical identity/config only for an authenticated bridge run."""
 
     root = Path(repository_root).resolve()
     run_dir = Path(run_directory).resolve()
@@ -282,11 +284,13 @@ def compatible_resume_identity(
         validate_inventory=True,
     )
     run_id = run_dir.name
-    if run_id not in {*REUSABLE_RUN_IDS, INTERRUPTED_RUN_ID}:
+    run_entry = payload.get("runs", {}).get(run_id)
+    if run_entry is None or run_id not in {*REUSABLE_RUN_IDS, INTERRUPTED_RUN_ID}:
         raise ProvenanceBridgeError(
             "BRIDGE_RUN_NOT_AUTHORIZED", f"bridge does not authorize {run_id}"
         )
-    if identity.get("git_commit") != ORIGINAL_COMMIT:
+    historical_commit = run_entry.get("checkpoint_commit")
+    if identity.get("git_commit") != historical_commit:
         raise ProvenanceBridgeError(
             "BRIDGE_RESUME_COMMIT_MISMATCH", f"historical commit differs for {run_id}"
         )
@@ -296,8 +300,11 @@ def compatible_resume_identity(
         "bridge_schema_version": BRIDGE_SCHEMA_VERSION,
         "original_commit": ORIGINAL_COMMIT,
         "original_tag": ORIGINAL_TAG,
-        "mechanics_commit": current_commit,
-        "mechanics_tag": current_tag,
+        "safety_commit": SAFETY_COMMIT,
+        "safety_tag": SAFETY_TAG,
+        "observability_commit": current_commit,
+        "observability_tag": current_tag,
+        "historical_checkpoint_commit": historical_commit,
         "authorized_run_id": run_id,
     }
     return identity, effective_config, metadata
@@ -308,10 +315,14 @@ __all__ = [
     "BRIDGE_SCHEMA_VERSION",
     "INTERRUPTED_RUN_ID",
     "MECHANICS_TAG",
+    "OBSERVABILITY_TAG",
     "ORIGINAL_COMMIT",
     "ORIGINAL_TAG",
     "ProvenanceBridgeError",
+    "RESEARCH_FAMILY",
     "REUSABLE_RUN_IDS",
+    "SAFETY_COMMIT",
+    "SAFETY_TAG",
     "SAFE_RESUME_BOUNDARY",
     "authenticate_compatibility_bridge",
     "compatible_resume_identity",
