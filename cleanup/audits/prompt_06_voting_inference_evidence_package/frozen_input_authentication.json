@@ -1,0 +1,81 @@
+{
+  "schema_version": "prompt_06_frozen_input_authentication_v1",
+  "analysis_config_path": "configs/analysis/cross_dataset_voting_inference_v1.yaml",
+  "analysis_config_sha256": "8195e14412a55777064f4754dba5774b52107d2621d8799765d280d5df5d63db",
+  "inputs": [
+    {
+      "input_name": "scientific_protocol",
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "present": true,
+      "expected_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "observed_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "size_bytes": 18481,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "row_alignment_contract",
+      "path": "configs/protocols/row_alignment_contract_v1.json",
+      "present": true,
+      "expected_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "observed_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "size_bytes": 5090,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "voting_protocol",
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "present": true,
+      "expected_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "observed_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "size_bytes": 5342,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "execution_policy",
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "present": true,
+      "expected_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "observed_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "size_bytes": 756,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "run_matrix",
+      "path": "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml",
+      "present": true,
+      "expected_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
+      "observed_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
+      "size_bytes": 25081,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "configuration_lock",
+      "path": "results/comparisons/cross_dataset_voting_configuration_lock.json",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "7bd0ea6c5840124b2865c38679993654005fb6ddab15593754b3ff628e7b067c",
+      "size_bytes": 1331,
+      "status": "recorded_not_pinned"
+    },
+    {
+      "input_name": "completeness_summary",
+      "path": "results/comparisons/cross_dataset_voting_completeness_summary.json",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "55c0c7fe495b33de543f3e3399f3713bc5d5fc071b8c6d082186ff10491deb94",
+      "size_bytes": 335,
+      "status": "recorded_not_pinned"
+    },
+    {
+      "input_name": "run_index",
+      "path": "results/run_index.csv",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "89bc4b57e0dd213eef2fe291b249a2f9fd1a1783f081a2f1c0f85e0437b57111",
+      "size_bytes": 10649,
+      "status": "recorded_not_pinned"
+    }
+  ],
+  "failures": [],
+  "status": "PASS"
+}
