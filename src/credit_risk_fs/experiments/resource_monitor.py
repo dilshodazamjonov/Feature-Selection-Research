@@ -42,10 +42,17 @@ MANUAL_INTERRUPT = "manual_interrupt"
 PREFLIGHT_REJECTED = "preflight_rejected"
 WORKER_CRASH = "worker_crash"
 WORKER_TREE_TERMINATION_FAILED = "worker_tree_termination_failed"
+WALL_CLOCK_LIMIT = "wall_clock_limit"
 RESULT_PAYLOAD_LIMIT_BYTES = 1024 * 1024
 MAX_QUEUE_DRAIN_MESSAGES = 1024
 
 _STAGE_COMPONENTS = {
+    "pilot_dev_data_loading": "prepare_voting_pilot_dev_data",
+    "pilot_fold_projection": "canonical_fold_projection",
+    "pilot_selection_encoding": "original_feature_numeric_encoder",
+    "pilot_catboost_shap": "catboost_shap",
+    "pilot_boruta_random_forest": "boruta_random_forest",
+    "pilot_rfe_catboost": "rfe_catboost",
     "dev_data_loading": "data_loading",
     "target_extraction": "validated_target_projection",
     "feature_filtering_sanitization": "candidate_feature_contract",
@@ -675,6 +682,7 @@ def _lifecycle_event(
         else "WARNING"
         if state in {
             "RESOURCE_STOP_LATCHED",
+            "WALL_CLOCK_STOP_LATCHED",
             "TERMINATE_PROCESS_TREE",
             "FORCE_KILL_REMAINDERS",
             "SECONDARY_TERMINATION_EVENT",
@@ -974,13 +982,15 @@ def _supervisor_logging_context(
     if not isinstance(spec, Mapping):
         spec = {}
     run_directory = worker_kwargs.get("run_directory")
-    run_id = spec.get("run_id")
+    run_id = spec.get("run_id") or spec.get("cell_id")
     if run_id is None and run_directory:
         run_id = Path(str(run_directory)).name
     phase = worker_kwargs.get("phase")
     return {
         "run_association": association,
         "run_id": run_id,
+        "pilot_cell": spec.get("cell_id"),
+        "cell_index": spec.get("cell_index"),
         "dataset": spec.get("dataset"),
         "model": spec.get("model"),
         "seed": spec.get("seed"),
@@ -991,8 +1001,12 @@ def _supervisor_logging_context(
 
 def _stage_activity_message(stage: str | None, *, heartbeat: bool) -> str:
     label = str(stage or "unknown")
-    if label == "voter_boruta" and heartbeat:
+    if label in {"voter_boruta", "pilot_boruta_random_forest"} and heartbeat:
         return "Boruta fit active; internal iteration unavailable."
+    if label == "pilot_rfe_catboost" and heartbeat:
+        return "CatBoost RFE remains active; elimination is supervised externally."
+    if label == "pilot_catboost_shap" and heartbeat:
+        return "CatBoost fit or native SHAP calculation remains active."
     if heartbeat:
         return f"Stage {label} remains active"
     return f"Stage {label} started"
@@ -1008,10 +1022,13 @@ def supervise_worker(
     sampler_factory: Any = ProcessTreeSampler,
     run_association: str | None = None,
     heartbeat_interval_seconds: float = STAGE_HEARTBEAT_INTERVAL_SECONDS,
+    max_wall_clock_seconds: float | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
 
     apply_thread_environment(policy.parallelism.estimator_threads)
+    if max_wall_clock_seconds is not None and float(max_wall_clock_seconds) <= 0:
+        raise ValueError("max_wall_clock_seconds must be positive or None")
     supervisor_started = monotonic()
     association = run_association or f"supervised-worker:{uuid.uuid4()}"
     resolved_worker_kwargs = dict(worker_kwargs or {})
@@ -1237,6 +1254,58 @@ def supervise_worker(
                     },
                 )
                 break
+            if (
+                max_wall_clock_seconds is not None
+                and monotonic() - supervisor_started >= float(max_wall_clock_seconds)
+            ):
+                recorder.observe(
+                    WALL_CLOCK_LIMIT,
+                    elapsed_seconds=monotonic() - supervisor_started,
+                    detail=(
+                        "per-worker wall-clock limit reached: "
+                        f"{float(max_wall_clock_seconds):.3f} seconds"
+                    ),
+                )
+                _lifecycle_event(
+                    lifecycle,
+                    "WALL_CLOCK_STOP_LATCHED",
+                    supervisor_started=supervisor_started,
+                    detail=f"primary_stop_code={WALL_CLOCK_LIMIT}",
+                    pids=tuple(sorted({sample.worker_pid, *sample.child_pids})),
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": WALL_CLOCK_LIMIT,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": sample.worker_pid,
+                        "worker_rss_bytes": sample.process_tree_rss_bytes,
+                        "system_available_ram_bytes": sample.system_available_ram_bytes,
+                        "max_wall_clock_seconds": float(max_wall_clock_seconds),
+                    },
+                )
+                (
+                    child_cleanup_confirmed,
+                    survivors,
+                    termination_condition,
+                    shutdown_elapsed,
+                    graceful_stop_completed,
+                ) = _shutdown_owned_worker(
+                    process=process,
+                    stop_event=stop_event,
+                    ownership=ownership,
+                    policy=policy,
+                    recorder=recorder,
+                    lifecycle=lifecycle,
+                    supervisor_started=supervisor_started,
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": recorder.primary,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": int(process.pid),
+                    },
+                )
+                break
             stop_event.wait(policy.monitoring.sample_interval_seconds)
     except KeyboardInterrupt:
         recorder.observe(
@@ -1377,6 +1446,8 @@ def supervise_worker(
         status = "aborted_resource_limit"
     elif stop_code == MANUAL_INTERRUPT:
         status = "interrupted"
+    elif stop_code == WALL_CLOCK_LIMIT:
+        status = "timed_out"
     elif process.exitcode == 0 and message and message.get("kind") == "result":
         status = "completed"
     else:
@@ -1395,6 +1466,7 @@ def supervise_worker(
         "completed": "stage_completed",
         "aborted_resource_limit": "stage_aborted",
         "interrupted": "stage_interrupted",
+        "timed_out": "stage_aborted",
         "failed": "stage_failed",
     }[status]
     emit_research_event(

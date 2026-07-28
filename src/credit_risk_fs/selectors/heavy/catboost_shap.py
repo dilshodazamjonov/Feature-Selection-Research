@@ -169,6 +169,8 @@ class CatBoostShapSelector(LightweightSelector):
     def _heavy_metadata(self) -> dict[str, Any]:
         return {
             "cost_class": "heavy",
+            "estimator_fit_count": 1 if self.shap_scores_ is not None else 0,
+            "shap_calculation_count": 1 if self.shap_scores_ is not None else 0,
             "feature_importance_type": SHAP_IMPORTANCE_TYPE,
             "shap_calc_type": SHAP_CALC_TYPE,
             "model_output": SHAP_MODEL_OUTPUT,

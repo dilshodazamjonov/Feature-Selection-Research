@@ -1,0 +1,51 @@
+{
+  "schema_version": "prompt_09_heavy_selector_dev_pilot_audit_v1",
+  "status": "implementation_complete_real_pilot_not_started",
+  "baseline_commit": "b7baffc",
+  "deliverables": [
+    "configs/experiments/heavy_selector_dev_pilots_v1.yaml",
+    "scripts/run_heavy_selector_dev_pilots.py",
+    "src/credit_risk_fs/experiments/heavy_selector_pilots.py",
+    "src/credit_risk_fs/experiments/resource_monitor.py",
+    "src/credit_risk_fs/experiments/research_logging.py",
+    "src/credit_risk_fs/selectors/heavy/boruta_rf.py",
+    "src/credit_risk_fs/selectors/heavy/catboost_shap.py",
+    "src/credit_risk_fs/selectors/heavy/rfe_catboost.py",
+    "tests/test_heavy_selector_dev_pilots.py",
+    "docs/research_extension/heavy_selector_dev_pilots_v1.md",
+    "cleanup/audits/prompt_09_heavy_selector_dev_pilots/implementation_report.md",
+    "cleanup/audits/prompt_09_heavy_selector_dev_pilots/artifact_manifest.json"
+  ],
+  "verification": {
+    "focused_runner": {
+      "passed": 11,
+      "failed": 0
+    },
+    "affected_scope": {
+      "passed": 151,
+      "failed": 0
+    },
+    "full_suite": {
+      "passed": 881,
+      "skipped": 31,
+      "failed": 0,
+      "errors": 0,
+      "seconds": 219.638
+    }
+  },
+  "execution_boundary": {
+    "real_pilot_entry_point_invoked": false,
+    "real_heavy_selector_cell_executed": false,
+    "prompt_09_runtime_artifact_created": false,
+    "new_pipeline_oot_loader_exists": false,
+    "new_pipeline_performance_evaluation_exists": false,
+    "focused_tests_use_only_synthetic_or_mocked_work": true
+  },
+  "preservation": {
+    "frozen_voting_protocol_modified": false,
+    "prompt_06_to_08_audit_artifact_modified": false,
+    "runtime_logs_committed": false,
+    "pilot_outputs_committed": false,
+    "datasets_committed": false
+  }
+}

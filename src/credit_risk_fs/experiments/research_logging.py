@@ -78,6 +78,12 @@ _STAGE_LABELS = {
     "oot_evaluation": "OOT evaluation",
     "oot_checkpoint_finalization": "OOT checkpoint",
     "checkpoint_resume_validation": "Checkpoint validation",
+    "pilot_dev_data_loading": "Pilot DEV data loading",
+    "pilot_fold_projection": "Pilot fold-1 projection",
+    "pilot_selection_encoding": "Pilot selection encoding",
+    "pilot_catboost_shap": "CatBoost-SHAP pilot",
+    "pilot_boruta_random_forest": "Boruta pilot",
+    "pilot_rfe_catboost": "CatBoost RFE pilot",
 }
 
 _HUMAN_SILENT_EVENTS = {
@@ -280,6 +286,8 @@ def _stop_reason(code: Any, message: Any = "") -> str:
         return "disk safety limit reached"
     if normalized == "manual_interrupt":
         return "interrupted manually"
+    if normalized == "wall_clock_limit":
+        return "wall-clock safety limit reached"
     cleaned = _clean_message(message)
     return cleaned or normalized.replace("_", " ") or "controlled stop"
 
@@ -298,6 +306,8 @@ def _human_line(
     parts: list[str] = []
     run_number = _run_number(payload.get("run_id"))
     run_label = f"Run {run_number}" if run_number else None
+    pilot_cell = str(payload.get("pilot_cell") or "")
+    pilot_label = f"Pilot {pilot_cell[:2]}" if pilot_cell[:2].isdigit() else None
     fold_label = _fold_label(payload)
 
     if event == "logging_initialized":
@@ -317,6 +327,7 @@ def _human_line(
             item
             for item in (
                 run_label,
+                pilot_label,
                 _dataset_label(payload.get("dataset"), payload.get("run_id")),
                 _method_label(payload),
                 _model_label(payload.get("model"), payload.get("run_id")),
@@ -324,7 +335,11 @@ def _human_line(
             if item
         ]
     elif event in {"run_resume_decision", "run_resume_authenticated"}:
-        parts = [item for item in (run_label, _clean_message(payload.get("message"))) if item]
+        parts = [
+            item
+            for item in (run_label, pilot_label, _clean_message(payload.get("message")))
+            if item
+        ]
     elif event == "stage_started":
         parts = [item for item in (fold_label, f"{_stage_label(payload)} started") if item]
     elif event == "stage_heartbeat":
@@ -363,6 +378,8 @@ def _human_line(
         state = str(payload.get("lifecycle_state") or "")
         if state == "RESOURCE_STOP_LATCHED":
             action, parts = "STOP", [_stop_reason(payload.get("stop_code"), payload.get("message"))]
+        elif state == "WALL_CLOCK_STOP_LATCHED":
+            action, parts = "STOP", [_stop_reason(payload.get("stop_code"), payload.get("message"))]
         elif state == "COOPERATIVE_STOP_REQUESTED":
             action, parts = "INFO", ["Graceful worker stop requested"]
         elif state == "GRACE_PERIOD":
@@ -386,11 +403,45 @@ def _human_line(
     elif event == "run_finalized":
         status = str(payload.get("status") or "")
         if status in {"completed", "dev_complete"}:
-            action, parts = "DONE", [item for item in (run_label, f"Run {status.replace('_', ' ')}") if item]
-        elif status == "aborted_resource_limit":
-            action, parts = "STOP", [f"{run_label or 'Run'} stopped: {_stop_reason(payload.get('stop_code'))}"]
+            action, parts = "DONE", [
+                item
+                for item in (
+                    run_label,
+                    pilot_label,
+                    f"Run {status.replace('_', ' ')}",
+                )
+                if item
+            ]
+        elif status in {
+            "aborted_resource_limit",
+            "resource_aborted",
+            "timed_out",
+            "manually_interrupted",
+            "interrupted",
+        }:
+            action, parts = "STOP", [
+                item
+                for item in (
+                    run_label,
+                    pilot_label,
+                    f"Run stopped: {_stop_reason(payload.get('stop_code'))}",
+                )
+                if item
+            ]
         else:
-            action, parts = "ERROR", [f"{run_label or 'Run'} failed", f"Details: {debug_log_path}"]
+            action, parts = "ERROR", [
+                item for item in (run_label, pilot_label, "Run failed") if item
+            ]
+            parts.append(f"Details: {debug_log_path}")
+        elapsed = _duration(payload.get("runtime_seconds"))
+        ram = _gib(payload.get("peak_process_tree_rss_bytes"))
+        available = _gib(payload.get("minimum_system_available_ram_bytes"))
+        if elapsed:
+            parts.append(f"Elapsed {elapsed}")
+        if ram:
+            parts.append(f"Peak RAM {ram}")
+        if available:
+            parts.append(f"Minimum available {available}")
     elif event == "session_completed":
         action, parts = "DONE", [_clean_message(payload.get("message")) or "Research session completed"]
     elif event == "session_controlled_stop":
