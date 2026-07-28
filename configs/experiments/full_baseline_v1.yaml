@@ -1,0 +1,179 @@
+schema_version: full_baseline_config_v1
+configuration_status: frozen_after_authenticated_dev_pilot_review
+purpose: complete_selector_baseline_comparison
+
+provenance:
+  prompt_8_baseline_commit: b7baffc
+  prompt_9_pipeline_commit: 0972dfd
+  prompt_9_logging_fix_commit: 087d09a
+  pilot_config_path: configs/experiments/heavy_selector_dev_pilots_v1.yaml
+  pilot_config_sha256: a694d26d43d563d20ca1c8657770c298581a930792bf7d2fa2aee49806507f8a
+  authenticated_pilot_cells: 6
+  pilot_phase: DEV
+  pilot_fold_ids: [1]
+  pilot_oot_accessed: false
+  pilot_oot_evaluated: false
+
+protocol:
+  split_protocol: grouped_time_series_cv_5_splits_gap_1_then_locked_oot
+  configuration_frozen_before_full_baseline_execution: true
+  datasets: [homecredit, lendingclub_v2]
+  models: [lr, catboost]
+  methods:
+    - full_features
+    - random_k
+    - iv_woe
+    - mrmr_mutual_information
+    - lasso_l1_logistic
+    - legacy_rf_relevance_corr
+    - catboost_shap
+    - boruta_random_forest
+    - rfe_catboost
+  matrix_nesting: [method, dataset, model]
+  expected_cell_count: 36
+  random_seeds: [42]
+  n_splits: 5
+  cv_gap_groups: 1
+  concurrent_cells: 1
+  concurrent_folds: 1
+  oot_policy: locked_final_evaluation_after_configuration_freeze
+  configuration_adaptation_after_oot: forbidden
+  frozen_voting_protocol_changes: forbidden
+
+execution:
+  policy_path: configs/execution/local_laptop_safe_v1.yaml
+  results_root: results/full_baseline_v1
+  log_path: logs/runs.log
+  accelerator: cpu
+  csv_chunk_rows: 25000
+  lendingclub_csv_low_memory: false
+  wall_clock_limits_seconds:
+    lightweight: 10800
+    catboost_shap: 10800
+    boruta_random_forest: 21600
+    rfe_catboost: 28800
+
+feature_budgets:
+  lr: 20
+  catboost: 40
+
+final_model_settings:
+  lr:
+    solver: liblinear
+    max_iter: 1000
+    class_weight: balanced
+    random_state: 42
+  catboost:
+    depth: 10
+    learning_rate: 0.01
+    l2_leaf_reg: 95
+    min_data_in_leaf: 290
+    colsample_bylevel: 0.9
+    random_strength: 0.125
+    grow_policy: Depthwise
+    one_hot_max_size: 21
+    leaf_estimation_method: Newton
+    bootstrap_type: Bernoulli
+    subsample: 0.55
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    iterations: 1500
+    early_stopping_rounds: 150
+    verbose: 100
+    random_state: 42
+    allow_writing_files: false
+
+dataset_inventory:
+  homecredit:
+    display_label: Home Credit
+    experiment_config_path: configs/experiments/homecredit_matrix.yaml
+    authenticated_candidate_count: 529
+    stable_row_id_column: SK_ID_CURR
+  lendingclub_v2:
+    display_label: LendingClub v2
+    experiment_config_path: configs/experiments/lendingclub_v2_matrix.yaml
+    authenticated_candidate_count: 675
+    stable_row_id_column: loan_id
+
+selector_settings:
+  full_features:
+    random_state: 42
+  random_k:
+    random_state: 42
+  iv_woe:
+    n_bins: 10
+    binning_strategy: quantile
+    zero_count_smoothing: 0.5
+    random_state: 42
+  mrmr_mutual_information:
+    n_bins: 10
+    objective: mid
+    random_state: 42
+  lasso_l1_logistic:
+    C: 0.05
+    solver: liblinear
+    max_iter: 2000
+    tol: 0.0001
+    random_state: 42
+    n_jobs: 1
+    allow_zero_coefficient_fill: false
+  legacy_rf_relevance_corr:
+    method: mrmr
+    random_state: 42
+    n_jobs: 4
+  catboost_shap:
+    explanation_sample_size: 10000
+    random_state: 42
+    explanation_sample_seed: 42
+    thread_count: 4
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+  boruta_random_forest:
+    selection_mode: confirmed_top_k
+    random_state: 42
+    n_jobs: 4
+    forest_params:
+      n_estimators: 500
+      max_depth: 6
+      class_weight: null
+    boruta_params:
+      n_estimators: auto
+      max_iter: 10
+      perc: 100
+      alpha: 0.05
+      two_step: true
+      verbose: 0
+  rfe_catboost:
+    step_fraction: 0.20
+    random_state: 42
+    thread_count: 4
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+
+pilot_review_decisions:
+  homecredit_boruta:
+    requested_budget: 40
+    confirmed_count: 26
+    tentative_count: 25
+    rejected_count: 478
+    pilot_budget_status: infeasible_natural_support
+    decision: retain_confirmed_only_without_padding
+    full_baseline_interpretation: actual_selected_count_may_be_below_model_budget
+  lendingclub_v2_boruta:
+    requested_budget: 40
+    confirmed_count: 161
+    tentative_count: 9
+    rejected_count: 505
+    pilot_budget_status: satisfied
+    decision: retain_confirmed_only_top_k

@@ -218,6 +218,7 @@ def test_unexpected_worker_crash_is_finalized_in_manifest_and_index(tmp_path, mo
 def test_manual_interrupt_status_is_finalized_in_manifest_and_index(tmp_path, monkeypatch):
     monkeypatch.delenv("CREDIT_RISK_LEGACY_RESULTS_ROOT", raising=False)
     request = _fixture(tmp_path, run_id="synthetic-interrupt", policy=_policy())
+    request = replace(request, max_wall_clock_seconds=123.0)
     interrupted = SupervisorResult(
         status="interrupted",
         stop_code=MANUAL_INTERRUPT,
@@ -235,10 +236,13 @@ def test_manual_interrupt_status_is_finalized_in_manifest_and_index(tmp_path, mo
         final_stage="initialized",
         final_fold_id=None,
     )
-    monkeypatch.setattr(
-        "credit_risk_fs.experiments.execution.supervise_worker",
-        lambda **_kwargs: interrupted,
-    )
+    captured = {}
+
+    def supervise(**kwargs):
+        captured.update(kwargs)
+        return interrupted
+
+    monkeypatch.setattr("credit_risk_fs.experiments.execution.supervise_worker", supervise)
     outcome = execute_registered_run(request)
     assert outcome.status == "interrupted"
     manifest = json.loads((request.run_directory / "manifest.json").read_text(encoding="utf-8"))
@@ -246,6 +250,7 @@ def test_manual_interrupt_status_is_finalized_in_manifest_and_index(tmp_path, mo
     index = pd.read_csv(request.results_root / "run_index.csv")
     assert index.iloc[0]["status"] == "interrupted"
     assert not (request.run_directory / "_SUCCESS").exists()
+    assert captured["max_wall_clock_seconds"] == 123.0
 
 
 def test_interrupted_publication_restart_and_mismatch_proof(tmp_path):

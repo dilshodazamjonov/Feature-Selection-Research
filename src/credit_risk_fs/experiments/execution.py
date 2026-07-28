@@ -61,6 +61,7 @@ class RegisteredRunRequest:
     deferred_success_status: str = "dev_complete"
     checkpoint_identity_override: dict[str, Any] | None = None
     resume_metadata: dict[str, Any] | None = None
+    max_wall_clock_seconds: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -419,6 +420,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             results_root=request.results_root,
             temp_root=request.preflight_report["temporary_root"],
             run_association=f"{run_id}:{utc_timestamp()}",
+            max_wall_clock_seconds=request.max_wall_clock_seconds,
         )
     finally:
         if lock_path.exists():
