@@ -1,0 +1,94 @@
+schema_version: heavy_selector_dev_pilot_config_v1
+configuration_status: provisional_pending_six_cell_review
+purpose: configuration_and_capacity_gate_only
+baseline_commit: b7baffc
+
+protocol:
+  phase: DEV
+  fold_ids: [1]
+  fold_definition: grouped_time_series_cv_5_splits_gap_1_expanding_fold_1
+  ordering: method_major_cheapest_first
+  datasets: [homecredit, lendingclub_v2]
+  methods: [catboost_shap, boruta_random_forest, rfe_catboost]
+  concurrent_cells: 1
+  concurrent_folds: 1
+  oot_access: forbidden
+  performance_evaluation: false
+  full_dev_refit: false
+  frozen_voting_protocol_changes: forbidden
+
+execution:
+  policy_path: configs/execution/local_laptop_safe_v1.yaml
+  results_root: results/heavy_selector_dev_pilots_v1
+  log_path: logs/runs.log
+  heartbeat_interval_seconds: 30
+  csv_chunk_rows: 25000
+  lendingclub_csv_low_memory: false
+  estimator_threads: null
+  wall_clock_limits_seconds:
+    catboost_shap: 7200
+    boruta_random_forest: 14400
+    rfe_catboost: 21600
+
+dataset_inventory:
+  homecredit:
+    display_label: Home Credit
+    experiment_config_path: configs/experiments/homecredit_matrix.yaml
+    authenticated_candidate_count: 529
+    stable_row_id_column: SK_ID_CURR
+    final_feature_budget: 40
+  lendingclub_v2:
+    display_label: LendingClub v2
+    experiment_config_path: configs/experiments/lendingclub_v2_matrix.yaml
+    authenticated_candidate_count: 675
+    stable_row_id_column: loan_id
+    final_feature_budget: 40
+
+method_settings:
+  catboost_shap:
+    k: 40
+    explanation_sample_size: 10000
+    random_state: 42
+    explanation_sample_seed: 42
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+  boruta_random_forest:
+    k: 40
+    selection_mode: confirmed_top_k
+    random_state: 42
+    forest_params:
+      n_estimators: 500
+      max_depth: 6
+      class_weight: null
+    boruta_params:
+      n_estimators: auto
+      max_iter: 10
+      perc: 100
+      alpha: 0.05
+      two_step: true
+      verbose: 0
+  rfe_catboost:
+    k: 40
+    step_fraction: 0.20
+    random_state: 42
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+
+configuration_inventory:
+  pilot_settings_status: provisional_not_frozen
+  accepted_after_pilot_review: null
+  mi_mrmr_prompt_7_decision:
+    method_id: mrmr_mutual_information
+    n_bins: 10
+    status: provisional_unfrozen_carried_from_prompt_7
+    executed_by_this_pipeline: false

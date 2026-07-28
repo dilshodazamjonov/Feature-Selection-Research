@@ -121,6 +121,8 @@ class BorutaRandomForestSelector(LightweightSelector):
         self.rejected_: list[str] = []
         self.engine_ranking_: dict[str, int] | None = None
         self.stop_reason_: str | None = None
+        self.engine_iteration_count_: int | None = None
+        self.final_forest_n_estimators_: int | str | None = None
         self._budget_status_override: str | None = None
         self._resource: dict[str, Any] = {}
 
@@ -189,6 +191,18 @@ class BorutaRandomForestSelector(LightweightSelector):
             "selection_mode": self.selection_mode,
             "natural_support_definition": "confirmed_only",
             "stop_reason": self.stop_reason_,
+            "forest_n_estimators_configured": self._effective_forest_params().get(
+                "n_estimators"
+            ),
+            "boruta_n_estimators_policy": self._effective_boruta_params().get(
+                "n_estimators"
+            ),
+            "boruta_max_iter_configured": self._effective_boruta_params().get(
+                "max_iter"
+            ),
+            "engine_iteration_count": self.engine_iteration_count_,
+            "estimator_fit_count": self.engine_iteration_count_,
+            "final_forest_n_estimators": self.final_forest_n_estimators_,
             "n_jobs": self.n_jobs,
             **self._resource,
         }
@@ -323,6 +337,17 @@ class BorutaRandomForestSelector(LightweightSelector):
         self.stop_reason_ = str(
             getattr(engine, "stop_reason_", None)
             or f"engine_completed_max_iter_{self._effective_boruta_params().get('max_iter')}"
+        )
+        importance_history = getattr(engine, "importance_history_", None)
+        if importance_history is not None:
+            history_array = np.asarray(importance_history)
+            # BorutaPy prefixes the per-iteration history with one all-zero row.
+            self.engine_iteration_count_ = max(0, int(history_array.shape[0]) - 1)
+        else:
+            self.engine_iteration_count_ = None
+        engine_estimator = getattr(engine, "estimator", None)
+        self.final_forest_n_estimators_ = getattr(
+            engine_estimator, "n_estimators", None
         )
 
         states: dict[str, str] = {}

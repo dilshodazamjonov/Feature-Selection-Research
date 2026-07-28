@@ -109,6 +109,8 @@ class CatBoostRFESelector(LightweightSelector):
         self.elimination_history_: pd.DataFrame | None = None
         self.estimator_fit_count_: int = 0
         self.final_importances_: dict[str, float] | None = None
+        self.initial_feature_count_: int = 0
+        self.final_feature_count_: int = 0
         self._resource: dict[str, Any] = {}
 
     # -- configuration -----------------------------------------------------
@@ -170,7 +172,16 @@ class CatBoostRFESelector(LightweightSelector):
         return {
             "cost_class": "heavy",
             "estimator_fit_count": int(self.estimator_fit_count_),
+            "initial_feature_count": int(self.initial_feature_count_),
+            "final_feature_count": int(self.final_feature_count_),
             "step_fraction_configured": self.step_fraction,
+            "requested_elimination_steps": int(
+                sum(int(item["requested_removals"]) for item in history)
+            ),
+            "realized_elimination_steps": int(
+                sum(int(item["realized_removals"]) for item in history)
+            ),
+            "elimination_iteration_count": int(len(history)),
             "elimination_history": history,
             "final_estimator_importances": dict(self.final_importances_ or {}),
             "thread_count": self.thread_count,
@@ -256,6 +267,8 @@ class CatBoostRFESelector(LightweightSelector):
         order_index = {str(name): position for position, name in enumerate(candidate_order)}
         target = int(min(int(self.k or 0), len(candidate_order)))
         surviving = [str(name) for name in candidate_order]
+        self.initial_feature_count_ = int(len(surviving))
+        self.final_feature_count_ = int(target)
         eliminated: list[tuple[str, int]] = []
         history: list[dict[str, Any]] = []
         self.estimator_fit_count_ = 0
