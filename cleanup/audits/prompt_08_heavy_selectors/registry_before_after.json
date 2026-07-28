@@ -1,0 +1,360 @@
+{
+  "schema_version": "prompt_08_registry_before_after_v1",
+  "before_prompt_08": {
+    "method_ids": [
+      "iv_woe",
+      "mrmr_mutual_information",
+      "lasso_l1_logistic",
+      "random_k",
+      "full_features",
+      "legacy_rf_relevance_corr"
+    ],
+    "count": 6,
+    "note": "Prompt 7 registry; every entry cost_class=light"
+  },
+  "after_prompt_08": {
+    "method_ids": [
+      "iv_woe",
+      "mrmr_mutual_information",
+      "lasso_l1_logistic",
+      "random_k",
+      "full_features",
+      "rfe_catboost",
+      "boruta_random_forest",
+      "catboost_shap",
+      "legacy_rf_relevance_corr"
+    ],
+    "count": 9
+  },
+  "added_by_prompt_08": [
+    "boruta_random_forest",
+    "catboost_shap",
+    "rfe_catboost"
+  ],
+  "removed_by_prompt_08": [],
+  "identity_changes_to_existing_methods": [],
+  "historical_routes_unchanged": {
+    "rfe": "credit_risk_fs.selectors.rfe.RFESelector",
+    "boruta": "credit_risk_fs.selectors.boruta.BorutaSelector",
+    "boruta_rfe": "credit_risk_fs.selectors.boruta_then_rfe.BorutaThenRFESelector",
+    "mrmr": "credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector",
+    "pca": "credit_risk_fs.selectors.pca.PCASelector",
+    "none": "None (no selector object)"
+  },
+  "frozen_voting_protocol": {
+    "eligible_voters": [
+      "rf_corr_mrmr",
+      "boruta"
+    ],
+    "changed_by_prompt_08": false,
+    "prompt_08_methods_allowed_in_voting": false
+  },
+  "snapshot_after": {
+    "contract_version": "lightweight_selector_contract_v1",
+    "methods": [
+      {
+        "method_id": "iv_woe",
+        "display_label": "Information Value (WOE binning)",
+        "implementation_id": "iv_woe_quantile_binned_v1",
+        "algorithm": "weight_of_evidence_information_value",
+        "supervised": true,
+        "selection_modes": [
+          "matched_budget"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.lightweight.iv.InformationValueSelector",
+        "default_kwargs": {
+          "k": 40,
+          "n_bins": 10,
+          "binning_strategy": "quantile",
+          "zero_count_smoothing": 0.5,
+          "random_state": 42
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 7. IV previously appeared only as a pre-filter inside the LLM screening selector, never as a standalone ranked selector.",
+        "notes": "",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      },
+      {
+        "method_id": "mrmr_mutual_information",
+        "display_label": "mRMR (mutual information)",
+        "implementation_id": "mrmr_mutual_information_discrete_plugin_v1",
+        "algorithm": "sequential_max_relevance_min_redundancy_mutual_information",
+        "supervised": true,
+        "selection_modes": [
+          "matched_budget"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.lightweight.mi_mrmr.MutualInformationMRMRSelector",
+        "default_kwargs": {
+          "k": 40,
+          "n_bins": 10,
+          "objective": "mid",
+          "random_state": 42
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 7. No historical result used this algorithm.",
+        "notes": "Not reachable through the legacy 'mrmr' alias, which means the random-forest relevance / correlation redundancy selector.",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      },
+      {
+        "method_id": "lasso_l1_logistic",
+        "display_label": "LASSO (L1-penalized logistic regression)",
+        "implementation_id": "lasso_l1_logistic_v1",
+        "algorithm": "l1_penalized_logistic_regression_support",
+        "supervised": true,
+        "selection_modes": [
+          "natural",
+          "matched_budget",
+          "coefficient_ranking"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": true,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.lightweight.lasso.L1LogisticSelector",
+        "default_kwargs": {
+          "k": 40,
+          "C": 0.05,
+          "solver": "liblinear",
+          "max_iter": 2000,
+          "tol": 0.0001,
+          "random_state": 42,
+          "n_jobs": 1
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 7. No historical result used this algorithm.",
+        "notes": "",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      },
+      {
+        "method_id": "random_k",
+        "display_label": "Random-k control",
+        "implementation_id": "random_k_local_generator_v1",
+        "algorithm": "uniform_random_subset_without_replacement",
+        "supervised": false,
+        "selection_modes": [
+          "random_control"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.lightweight.controls.RandomKSelector",
+        "default_kwargs": {
+          "k": 40,
+          "random_state": 42
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 7.",
+        "notes": "",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      },
+      {
+        "method_id": "full_features",
+        "display_label": "Full candidate features",
+        "implementation_id": "full_candidate_features_v1",
+        "algorithm": "no_selection_over_eligible_candidates",
+        "supervised": false,
+        "selection_modes": [
+          "full_control"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": false,
+        "budget_kwarg": null,
+        "import_path": "credit_risk_fs.selectors.lightweight.controls.FullCandidateFeaturesSelector",
+        "default_kwargs": {
+          "random_state": 42
+        },
+        "aliases": [
+          "none_explicit"
+        ],
+        "historical_use": "Formalizes the pre-existing 'none' route, which stays available and continues to resolve to no selector object.",
+        "notes": "",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      },
+      {
+        "method_id": "rfe_catboost",
+        "display_label": "RFE (CatBoost)",
+        "implementation_id": "rfe_catboost_fractional_step_v1",
+        "algorithm": "recursive_feature_elimination_catboost_importance",
+        "supervised": true,
+        "selection_modes": [
+          "matched_budget"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.heavy.rfe_catboost.CatBoostRFESelector",
+        "default_kwargs": {
+          "k": 40,
+          "step_fraction": 0.2,
+          "random_state": 42,
+          "thread_count": 1
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 8. The historical 'rfe' route keeps sklearn RFE with an integer step of 10 and is unchanged.",
+        "notes": "Fractional removal step (default 0.20) and explicit fit/elimination history, unlike the integer-step legacy path.",
+        "cost_class": "heavy",
+        "estimator_family": "catboost.CatBoostClassifier",
+        "guarantees_exact_k": true,
+        "score_name": "rank_derived_elimination_score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": [
+          "k=None (no natural stopping point)",
+          "k<=0",
+          "CatBoost training failure",
+          "importance length mismatch"
+        ]
+      },
+      {
+        "method_id": "boruta_random_forest",
+        "display_label": "Boruta (random forest)",
+        "implementation_id": "boruta_random_forest_confirmed_tentative_v1",
+        "algorithm": "all_relevant_shadow_feature_test_random_forest",
+        "supervised": true,
+        "selection_modes": [
+          "natural_confirmed",
+          "confirmed_top_k",
+          "confirmed_then_tentative"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": true,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.heavy.boruta_rf.BorutaRandomForestSelector",
+        "default_kwargs": {
+          "k": null,
+          "selection_mode": "natural_confirmed",
+          "random_state": 42,
+          "n_jobs": 1
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 8. The historical 'boruta' route -- including the frozen voting protocol's boruta voter -- keeps BorutaSelector unchanged.",
+        "notes": "Preserves confirmed/tentative/rejected. Natural support is confirmed only; the legacy selector discards the tentative state entirely.",
+        "cost_class": "heavy",
+        "estimator_family": "sklearn.ensemble.RandomForestClassifier via boruta.BorutaPy",
+        "guarantees_exact_k": false,
+        "score_name": "state_then_engine_rank_derived_score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": [
+          "k=None in a fixed-budget mode",
+          "k<=0 in a fixed-budget mode",
+          "Boruta engine failure",
+          "support/ranking length mismatch"
+        ]
+      },
+      {
+        "method_id": "catboost_shap",
+        "display_label": "CatBoost-SHAP",
+        "implementation_id": "catboost_native_shap_regular_mean_abs_train_sample_v1",
+        "algorithm": "native_catboost_shapvalues_regular_mean_absolute",
+        "supervised": true,
+        "selection_modes": [
+          "matched_budget"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.heavy.catboost_shap.CatBoostShapSelector",
+        "default_kwargs": {
+          "k": 40,
+          "explanation_sample_size": 10000,
+          "random_state": 42,
+          "thread_count": 1
+        },
+        "aliases": [],
+        "historical_use": "New in Prompt 8. The repository had no SHAP path; CatBoostModel.get_feature_importance() returns PredictionValuesChange, not SHAP.",
+        "notes": "Native EFstrType.ShapValues with shap_calc_type='Regular'; trailing expected-value column excluded; no fallback importance permitted.",
+        "cost_class": "heavy",
+        "estimator_family": "catboost.CatBoostClassifier",
+        "guarantees_exact_k": true,
+        "score_name": "mean_absolute_native_shap",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": [
+          "k=None (no defensible natural SHAP threshold)",
+          "k<=0",
+          "CatBoost training failure",
+          "native SHAP failure",
+          "unexpected SHAP array shape",
+          "non-finite SHAP values"
+        ]
+      },
+      {
+        "method_id": "legacy_rf_relevance_corr",
+        "display_label": "Legacy RF relevance / correlation redundancy",
+        "implementation_id": "rf_relevance_correlation_redundancy",
+        "algorithm": "rf_impurity_relevance_over_mean_absolute_correlation",
+        "supervised": true,
+        "selection_modes": [
+          "matched_budget"
+        ],
+        "provides_ranking": true,
+        "provides_natural_support": false,
+        "supports_fixed_budget": true,
+        "budget_kwarg": "k",
+        "import_path": "credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector",
+        "default_kwargs": {
+          "k": 50,
+          "method": "mrmr",
+          "random_state": 42,
+          "n_jobs": 1
+        },
+        "aliases": [
+          "mrmr"
+        ],
+        "historical_use": "Every historical artifact naming 'mrmr' or 'rf_corr_mrmr' used this algorithm, including the rf_corr_mrmr voter and the reference arm of all 16 cross_dataset_rank_voting_v1 runs.",
+        "notes": "Preserved unchanged for historical parity. It is NOT canonical mutual-information mRMR; the class already declares canonical_mrmr = False.",
+        "cost_class": "light",
+        "estimator_family": null,
+        "guarantees_exact_k": false,
+        "score_name": "score",
+        "serialization_version": "lightweight_selector_contract_v1",
+        "allowed_in_frozen_voting": false,
+        "controlled_failure_conditions": []
+      }
+    ]
+  }
+}

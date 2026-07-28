@@ -44,7 +44,7 @@ from credit_risk_fs.experiments.result_paths import (  # noqa: E402
 )
 from credit_risk_fs.selectors.lightweight.contract import SelectionResult  # noqa: E402
 from credit_risk_fs.selectors.lightweight.registry import (  # noqa: E402
-    lightweight_method_ids,
+    method_ids_by_cost_class,
     registry_snapshot,
     validate_method_selection_mode,
 )
@@ -241,7 +241,10 @@ def main(argv: list[str] | None = None) -> int:
 
     records = [
         run_one(method_id, candidates, target, scratch)
-        for method_id in lightweight_method_ids()
+        # Light methods only. Heavy methods share this registry and contract but
+        # have their own fixture in scripts/verify_heavy_selectors.py, which uses
+        # per-method cases and tiny estimator profiles.
+        for method_id in method_ids_by_cost_class("light")
         if method_id != "legacy_rf_relevance_corr"  # exercised by its own suite
     ]
 

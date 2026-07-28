@@ -17,7 +17,16 @@ from credit_risk_fs.experiments.result_paths import (
     AUDITED_LEGACY_RESULTS_ROOT,
     HistoricalResultsWriteError,
 )
-from credit_risk_fs.selectors.lightweight.registry import lightweight_method_ids
+from credit_risk_fs.selectors.lightweight.registry import method_ids_by_cost_class
+
+#: This fixture is the *light* integration pass. Heavy methods share the same
+#: registry and contract but have their own fixture in test_heavy_integration.py
+#: with per-method cases, so they are filtered out by declared cost class rather
+#: than by a hard-coded name list that would go stale.
+LIGHT_METHOD_IDS = [
+    name for name in method_ids_by_cost_class("light")
+    if name != "legacy_rf_relevance_corr"
+]
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/verify_lightweight_selectors.py"
@@ -55,7 +64,7 @@ def test_fixture_contains_every_required_shape(script) -> None:
 
 
 @pytest.mark.parametrize(
-    "method_id", [name for name in lightweight_method_ids() if name != "legacy_rf_relevance_corr"]
+    "method_id", LIGHT_METHOD_IDS
 )
 def test_each_method_round_trips_through_the_real_artifact_path(
     script, method_id, tmp_path: Path
@@ -86,8 +95,7 @@ def test_supervised_methods_see_the_target_and_controls_do_not(script, tmp_path)
     candidates, target, _ = script.build_fixture()
     records = {
         method_id: script.run_one(method_id, candidates, target, tmp_path / method_id)
-        for method_id in lightweight_method_ids()
-        if method_id != "legacy_rf_relevance_corr"
+        for method_id in LIGHT_METHOD_IDS
     }
     for method_id in ("iv_woe", "mrmr_mutual_information", "lasso_l1_logistic"):
         assert records[method_id]["supervised"] is True
@@ -141,9 +149,7 @@ def test_published_fixture_evidence_is_consistent_when_present() -> None:
     assert payload["fixture"]["kind"] == "deterministic_synthetic_only"
     assert payload["isolation"]["inside_active_results_root"] is False
     assert payload["isolation"]["inside_legacy_results_root"] is False
-    assert {entry["method_id"] for entry in payload["selectors"]} == {
-        name for name in lightweight_method_ids() if name != "legacy_rf_relevance_corr"
-    }
+    assert {entry["method_id"] for entry in payload["selectors"]} == set(LIGHT_METHOD_IDS)
     for entry in payload["selectors"]:
         assert entry["status"] == "PASS"
         assert entry["deterministic_on_refit"] is True

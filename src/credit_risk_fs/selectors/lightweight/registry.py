@@ -39,6 +39,23 @@ class MethodDescriptor:
     aliases: tuple[str, ...] = ()
     historical_use: str = ""
     notes: str = ""
+    #: ``light`` finishes in milliseconds on a fold; ``heavy`` fits a real
+    #: estimator, possibly many times, and needs stage logging and resource
+    #: supervision. Declared so a caller can budget before instantiating.
+    cost_class: str = "light"
+    #: Estimator family actually used, or ``None`` for the pure controls.
+    estimator_family: str | None = None
+    #: ``True`` when a successful fit always returns exactly ``k`` features.
+    guarantees_exact_k: bool = False
+    #: Score name and orientation for the published ranking.
+    score_name: str = "score"
+    #: Serialization contract this method's results conform to.
+    serialization_version: str = "lightweight_selector_contract_v1"
+    #: Whether the frozen voting protocol is permitted to use this method. Only
+    #: the two historical voters may, and neither is a Prompt 8 addition.
+    allowed_in_frozen_voting: bool = False
+    #: Conditions under which the method raises a controlled failure.
+    controlled_failure_conditions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         unknown = set(self.selection_modes) - SELECTION_MODES
@@ -46,6 +63,8 @@ class MethodDescriptor:
             raise ValueError(
                 f"{self.method_id} declares unknown selection mode(s): {sorted(unknown)}"
             )
+        if self.cost_class not in {"light", "heavy"}:
+            raise ValueError(f"{self.method_id} declares unknown cost class")
 
     def load(self) -> type:
         module_path, _, class_name = self.import_path.rpartition(".")
@@ -164,6 +183,127 @@ LIGHTWEIGHT_METHODS: tuple[MethodDescriptor, ...] = (
         ),
     ),
     MethodDescriptor(
+        method_id="rfe_catboost",
+        display_label="RFE (CatBoost)",
+        implementation_id="rfe_catboost_fractional_step_v1",
+        algorithm="recursive_feature_elimination_catboost_importance",
+        supervised=True,
+        selection_modes=("matched_budget",),
+        provides_ranking=True,
+        provides_natural_support=False,
+        supports_fixed_budget=True,
+        budget_kwarg="k",
+        import_path="credit_risk_fs.selectors.heavy.rfe_catboost.CatBoostRFESelector",
+        default_kwargs={
+            "k": 40,
+            "step_fraction": 0.20,
+            "random_state": 42,
+            "thread_count": 1,
+        },
+        cost_class="heavy",
+        estimator_family="catboost.CatBoostClassifier",
+        guarantees_exact_k=True,
+        score_name="rank_derived_elimination_score",
+        historical_use=(
+            "New in Prompt 8. The historical 'rfe' route keeps sklearn RFE with an "
+            "integer step of 10 and is unchanged."
+        ),
+        controlled_failure_conditions=(
+            "k=None (no natural stopping point)",
+            "k<=0",
+            "CatBoost training failure",
+            "importance length mismatch",
+        ),
+        notes=(
+            "Fractional removal step (default 0.20) and explicit fit/elimination "
+            "history, unlike the integer-step legacy path."
+        ),
+    ),
+    MethodDescriptor(
+        method_id="boruta_random_forest",
+        display_label="Boruta (random forest)",
+        implementation_id="boruta_random_forest_confirmed_tentative_v1",
+        algorithm="all_relevant_shadow_feature_test_random_forest",
+        supervised=True,
+        selection_modes=(
+            "natural_confirmed",
+            "confirmed_top_k",
+            "confirmed_then_tentative",
+        ),
+        provides_ranking=True,
+        provides_natural_support=True,
+        supports_fixed_budget=True,
+        budget_kwarg="k",
+        import_path=(
+            "credit_risk_fs.selectors.heavy.boruta_rf.BorutaRandomForestSelector"
+        ),
+        default_kwargs={
+            "k": None,
+            "selection_mode": "natural_confirmed",
+            "random_state": 42,
+            "n_jobs": 1,
+        },
+        cost_class="heavy",
+        estimator_family="sklearn.ensemble.RandomForestClassifier via boruta.BorutaPy",
+        guarantees_exact_k=False,
+        score_name="state_then_engine_rank_derived_score",
+        historical_use=(
+            "New in Prompt 8. The historical 'boruta' route -- including the frozen "
+            "voting protocol's boruta voter -- keeps BorutaSelector unchanged."
+        ),
+        controlled_failure_conditions=(
+            "k=None in a fixed-budget mode",
+            "k<=0 in a fixed-budget mode",
+            "Boruta engine failure",
+            "support/ranking length mismatch",
+        ),
+        notes=(
+            "Preserves confirmed/tentative/rejected. Natural support is confirmed "
+            "only; the legacy selector discards the tentative state entirely."
+        ),
+    ),
+    MethodDescriptor(
+        method_id="catboost_shap",
+        display_label="CatBoost-SHAP",
+        implementation_id="catboost_native_shap_regular_mean_abs_train_sample_v1",
+        algorithm="native_catboost_shapvalues_regular_mean_absolute",
+        supervised=True,
+        selection_modes=("matched_budget",),
+        provides_ranking=True,
+        provides_natural_support=False,
+        supports_fixed_budget=True,
+        budget_kwarg="k",
+        import_path=(
+            "credit_risk_fs.selectors.heavy.catboost_shap.CatBoostShapSelector"
+        ),
+        default_kwargs={
+            "k": 40,
+            "explanation_sample_size": 10_000,
+            "random_state": 42,
+            "thread_count": 1,
+        },
+        cost_class="heavy",
+        estimator_family="catboost.CatBoostClassifier",
+        guarantees_exact_k=True,
+        score_name="mean_absolute_native_shap",
+        historical_use=(
+            "New in Prompt 8. The repository had no SHAP path; CatBoostModel."
+            "get_feature_importance() returns PredictionValuesChange, not SHAP."
+        ),
+        controlled_failure_conditions=(
+            "k=None (no defensible natural SHAP threshold)",
+            "k<=0",
+            "CatBoost training failure",
+            "native SHAP failure",
+            "unexpected SHAP array shape",
+            "non-finite SHAP values",
+        ),
+        notes=(
+            "Native EFstrType.ShapValues with shap_calc_type='Regular'; trailing "
+            "expected-value column excluded; no fallback importance permitted."
+        ),
+    ),
+    MethodDescriptor(
         method_id="legacy_rf_relevance_corr",
         display_label="Legacy RF relevance / correlation redundancy",
         implementation_id="rf_relevance_correlation_redundancy",
@@ -208,6 +348,24 @@ def lightweight_method_ids() -> tuple[str, ...]:
     return tuple(_BY_ID)
 
 
+def method_ids_by_cost_class(cost_class: str) -> tuple[str, ...]:
+    """Canonical IDs whose declared cost class matches.
+
+    The registry holds every contract-conformant method regardless of cost, so a
+    caller that only wants the fast ones -- a quick fixture, a smoke test -- filters
+    here rather than hard-coding a list that silently goes stale when a method is
+    added.
+    """
+
+    if cost_class not in {"light", "heavy"}:
+        raise ValueError(f"unknown cost class {cost_class!r}")
+    return tuple(
+        descriptor.method_id
+        for descriptor in LIGHTWEIGHT_METHODS
+        if descriptor.cost_class == cost_class
+    )
+
+
 def resolve_method_id(name: str) -> str:
     """Map a canonical ID or historical alias to its canonical ID."""
 
@@ -250,6 +408,15 @@ def registry_snapshot() -> dict[str, Any]:
                 "aliases": list(descriptor.aliases),
                 "historical_use": descriptor.historical_use,
                 "notes": descriptor.notes,
+                "cost_class": descriptor.cost_class,
+                "estimator_family": descriptor.estimator_family,
+                "guarantees_exact_k": descriptor.guarantees_exact_k,
+                "score_name": descriptor.score_name,
+                "serialization_version": descriptor.serialization_version,
+                "allowed_in_frozen_voting": descriptor.allowed_in_frozen_voting,
+                "controlled_failure_conditions": list(
+                    descriptor.controlled_failure_conditions
+                ),
             }
             for descriptor in LIGHTWEIGHT_METHODS
         ],
@@ -272,6 +439,7 @@ __all__ = [
     "MethodDescriptor",
     "get_method_descriptor",
     "lightweight_method_ids",
+    "method_ids_by_cost_class",
     "registry_snapshot",
     "resolve_method_id",
     "validate_method_selection_mode",

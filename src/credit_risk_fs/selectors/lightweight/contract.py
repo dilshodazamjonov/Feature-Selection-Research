@@ -50,6 +50,13 @@ DEV_FOLD_TRAINING_ONLY = "dev_fold_training_only"
 #:                        budget-matched subset to extend past a model's natural
 #:                        support. Named separately so a padded subset can never
 #:                        be mistaken for a natural support.
+#: ``natural_confirmed``       Boruta's own all-relevant answer: confirmed only,
+#:                             tentative reported separately and never promoted
+#: ``confirmed_top_k``         top-k of the confirmed set; short of k it reports
+#:                             the budget unmet rather than padding
+#: ``confirmed_then_tentative`` separately named matched-budget adaptation that
+#:                             may extend into tentative features. It is NOT
+#:                             natural Boruta support and is labelled so.
 SELECTION_MODES = frozenset(
     {
         "natural",
@@ -57,6 +64,9 @@ SELECTION_MODES = frozenset(
         "full_control",
         "random_control",
         "coefficient_ranking",
+        "natural_confirmed",
+        "confirmed_top_k",
+        "confirmed_then_tentative",
     }
 )
 
@@ -234,6 +244,16 @@ class SelectionResult:
     fit_seconds: float = 0.0
     warnings: tuple[str, ...] = ()
     failure_reason: str | None = None
+    #: Hash of the estimator configuration actually handed to the fitted model.
+    #: Heavy methods wrap a real estimator, so the configuration is scientific
+    #: evidence rather than incidental plumbing.
+    estimator_config_sha256: str | None = None
+    #: Extension slot for metadata that only heavy methods produce: fit counts,
+    #: elimination history, Boruta support states, explanation-sample identity,
+    #: SHAP calculation type, thread counts, resource observations. Added as one
+    #: nested mapping rather than a dozen top-level fields so the contract stays
+    #: stable and Prompt 7 payloads keep loading without migration.
+    heavy_metadata: Mapping[str, Any] | None = None
     contract_version: str = CONTRACT_VERSION
 
     def __post_init__(self) -> None:
@@ -402,6 +422,10 @@ class SelectionResult:
             "fit_seconds": float(self.fit_seconds),
             "warnings": list(self.warnings),
             "failure_reason": self.failure_reason,
+            "estimator_config_sha256": self.estimator_config_sha256,
+            "heavy_metadata": (
+                None if self.heavy_metadata is None else dict(self.heavy_metadata)
+            ),
         }
 
     def to_json(self, *, indent: int | None = 2) -> str:
@@ -452,6 +476,12 @@ class SelectionResult:
             fit_seconds=float(payload.get("fit_seconds", 0.0)),
             warnings=tuple(str(item) for item in payload.get("warnings") or ()),
             failure_reason=payload.get("failure_reason"),
+            # Absent in Prompt 7 payloads, which therefore still load unchanged.
+            estimator_config_sha256=payload.get("estimator_config_sha256"),
+            heavy_metadata=(
+                None if payload.get("heavy_metadata") is None
+                else dict(payload["heavy_metadata"])
+            ),
         )
 
     @classmethod
@@ -593,10 +623,28 @@ class LightweightSelector(SelectedFeaturesMixin):
         status = "satisfied" if len(selected) == requested else "infeasible_natural_support"
         return selected, requested, status
 
+    def _validate_configuration(self, *, eligible_count: int) -> None:
+        """Reject an unusable configuration before any expensive work begins.
+
+        Heavy selectors override this so an unsupported budget fails before an
+        estimator is constructed, let alone fitted.
+        """
+
+    def _heavy_metadata(self) -> Mapping[str, Any] | None:
+        """Extra evidence a heavy method produced during ``_compute``."""
+
+        return None
+
+    def _estimator_config_sha256(self) -> str | None:
+        """Hash of the estimator configuration actually used, when there is one."""
+
+        return None
+
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> LightweightSelector:
         started = time.perf_counter()
         names = validate_feature_frame(X)
         self._guard_excluded(names)
+        self._validate_configuration(eligible_count=len(names))
 
         target = self._require_target(y) if self.supervised else None
         if not self.supervised and y is not None:
@@ -659,6 +707,8 @@ class LightweightSelector(SelectedFeaturesMixin):
             training_identity_sha256=training_identity_hash(X, target),
             fit_seconds=time.perf_counter() - started,
             warnings=tuple(self._collect_warnings(status)),
+            estimator_config_sha256=self._estimator_config_sha256(),
+            heavy_metadata=self._heavy_metadata(),
         )
         self.selected_features_ = list(selected)
         return self

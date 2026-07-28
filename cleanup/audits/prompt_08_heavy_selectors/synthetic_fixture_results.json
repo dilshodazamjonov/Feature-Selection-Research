@@ -1,0 +1,299 @@
+{
+  "schema_version": "prompt_08_synthetic_fixture_results_v1",
+  "status": "PASS",
+  "generated_at_utc": "2026-07-28T16:19:03.897612+00:00",
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.2",
+    "pandas": "3.0.1"
+  },
+  "estimator_profiles": {
+    "classification": "synthetic_test_profiles_not_frozen_research_settings",
+    "catboost": {
+      "iterations": 30,
+      "depth": 3
+    },
+    "random_forest": {
+      "n_estimators": 40,
+      "max_depth": 4
+    },
+    "boruta": {
+      "max_iter": 10
+    },
+    "frozen_by": "Prompt 9 after real single-fold runtime measurement"
+  },
+  "fixture": {
+    "kind": "deterministic_synthetic_only",
+    "seed": 20260729,
+    "rows": 500,
+    "candidate_order": [
+      "zulu_linear_signal",
+      "delta_nonlinear_signal",
+      "mike_redundant_copy",
+      "alpha_noise",
+      "bravo_noise",
+      "charlie_constant",
+      "echo_sparse_with_gaps"
+    ],
+    "candidate_count": 7,
+    "excluded_columns": [
+      "SK_ID_CURR",
+      "TARGET",
+      "split_label",
+      "time_index"
+    ],
+    "metadata_columns_supplied_separately": [
+      "SK_ID_CURR",
+      "TARGET",
+      "split_label",
+      "time_index"
+    ],
+    "target_positive_rate": 0.432,
+    "contains_linear_signal": true,
+    "contains_nonlinear_signal": true,
+    "contains_redundant_copy": true,
+    "contains_noise": true,
+    "contains_constant": true,
+    "contains_missing_values": true,
+    "real_dataset_loaded": false,
+    "oot_data_loaded": false,
+    "real_fold_executed": false
+  },
+  "isolation": {
+    "scratch_directory": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp\\claude\\d--python-projects-Research\\a14d9b15-197d-46c5-a1ec-7419ec35a532\\scratchpad\\p08_fixture",
+    "inside_active_results_root": false,
+    "inside_legacy_results_root": false,
+    "catboost_info_written": false
+  },
+  "cases": [
+    {
+      "case": "rfe_catboost_feasible_budget",
+      "method_id": "rfe_catboost",
+      "status": "PASS",
+      "display_label": "RFE (CatBoost)",
+      "implementation_id": "rfe_catboost_fractional_step_v1",
+      "cost_class": "heavy",
+      "estimator_family": "catboost.CatBoostClassifier",
+      "selection_mode": "matched_budget",
+      "requested_budget": 3,
+      "actual_selected_count": 3,
+      "natural_selected_count": null,
+      "budget_status": "satisfied",
+      "selected_features": [
+        "delta_nonlinear_signal",
+        "zulu_linear_signal",
+        "mike_redundant_copy"
+      ],
+      "ranking_length": 7,
+      "candidate_universe_count": 7,
+      "candidate_universe_sha256": "5e2d58160fc142e68ff44c9666a6d45c3dfeadd990de69c31ef5428a8720db00",
+      "training_identity_sha256": "0249aeb0aef073a90f3eb1d6e0e21e7999c5713f5b18e706d36c8ca3a2d82436",
+      "estimator_config_sha256": "edd0aec378b0d92b0de9a9eece521919d09975da8fe1c404d69ca5f1f5c871ca",
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "excluded_columns_absent_from_selection": true,
+      "selection_inside_candidate_universe": true,
+      "harness_median_imputation_applied": false,
+      "estimator_fit_count": 5,
+      "elimination_history_rows": 4,
+      "support_state_counts": null,
+      "explanation_sample": null,
+      "shap_calc_type": null,
+      "peak_process_rss_bytes": 180428800,
+      "artifacts": {
+        "json": {
+          "path": "rfe_catboost_feasible_budget_selection_result.json",
+          "sha256": "47994c0e4368f06b0c5adaffaa106f9821f9e2eaa61d29e1f907e804221aa593"
+        },
+        "csv": {
+          "path": "rfe_catboost_feasible_budget_selection_ranking.csv",
+          "sha256": "33ae9a14399399702950008a0d0a3eca505d7bca5fed9c3eb9aff50bef1cb6a2"
+        }
+      },
+      "warnings": [],
+      "fit_seconds": 0.278649,
+      "elapsed_seconds": 0.423963
+    },
+    {
+      "case": "boruta_natural_confirmed",
+      "method_id": "boruta_random_forest",
+      "status": "PASS",
+      "display_label": "Boruta (random forest)",
+      "implementation_id": "boruta_random_forest_confirmed_tentative_v1",
+      "cost_class": "heavy",
+      "estimator_family": "sklearn.ensemble.RandomForestClassifier via boruta.BorutaPy",
+      "selection_mode": "natural_confirmed",
+      "requested_budget": null,
+      "actual_selected_count": 4,
+      "natural_selected_count": 4,
+      "budget_status": "not_applicable",
+      "selected_features": [
+        "zulu_linear_signal",
+        "delta_nonlinear_signal",
+        "mike_redundant_copy",
+        "echo_sparse_with_gaps"
+      ],
+      "ranking_length": 7,
+      "candidate_universe_count": 7,
+      "candidate_universe_sha256": "5e2d58160fc142e68ff44c9666a6d45c3dfeadd990de69c31ef5428a8720db00",
+      "training_identity_sha256": "0249aeb0aef073a90f3eb1d6e0e21e7999c5713f5b18e706d36c8ca3a2d82436",
+      "estimator_config_sha256": "a1a889888cd008dd4db91143a756e81159060fb365b36edc1e3c41a3853d05a5",
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "excluded_columns_absent_from_selection": true,
+      "selection_inside_candidate_universe": true,
+      "harness_median_imputation_applied": true,
+      "estimator_fit_count": null,
+      "elimination_history_rows": null,
+      "support_state_counts": {
+        "confirmed": 4,
+        "tentative": 0,
+        "rejected": 3
+      },
+      "explanation_sample": null,
+      "shap_calc_type": null,
+      "peak_process_rss_bytes": 183742464,
+      "artifacts": {
+        "json": {
+          "path": "boruta_natural_confirmed_selection_result.json",
+          "sha256": "ab142c64d0c5e211177f3b282b4141b82ebe824cb70b880822eda62db8624668"
+        },
+        "csv": {
+          "path": "boruta_natural_confirmed_selection_ranking.csv",
+          "sha256": "c15e611bb869b1ffb0bbb023a4ee911fce01b21c94b8c9aea7f81033002d64f0"
+        }
+      },
+      "warnings": [],
+      "fit_seconds": 0.689097,
+      "elapsed_seconds": 1.378248
+    },
+    {
+      "case": "boruta_insufficient_confirmed",
+      "method_id": "boruta_random_forest",
+      "status": "PASS",
+      "display_label": "Boruta (random forest)",
+      "implementation_id": "boruta_random_forest_confirmed_tentative_v1",
+      "cost_class": "heavy",
+      "estimator_family": "sklearn.ensemble.RandomForestClassifier via boruta.BorutaPy",
+      "selection_mode": "confirmed_top_k",
+      "requested_budget": 7,
+      "actual_selected_count": 4,
+      "natural_selected_count": 4,
+      "budget_status": "infeasible_natural_support",
+      "selected_features": [
+        "zulu_linear_signal",
+        "delta_nonlinear_signal",
+        "mike_redundant_copy",
+        "echo_sparse_with_gaps"
+      ],
+      "ranking_length": 7,
+      "candidate_universe_count": 7,
+      "candidate_universe_sha256": "5e2d58160fc142e68ff44c9666a6d45c3dfeadd990de69c31ef5428a8720db00",
+      "training_identity_sha256": "0249aeb0aef073a90f3eb1d6e0e21e7999c5713f5b18e706d36c8ca3a2d82436",
+      "estimator_config_sha256": "85315ca5ffd2bac5d47ce3ea5aec3c4260f05dbdbd5b9517ec9deaf637feb15b",
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "excluded_columns_absent_from_selection": true,
+      "selection_inside_candidate_universe": true,
+      "harness_median_imputation_applied": true,
+      "estimator_fit_count": null,
+      "elimination_history_rows": null,
+      "support_state_counts": {
+        "confirmed": 4,
+        "tentative": 0,
+        "rejected": 3
+      },
+      "explanation_sample": null,
+      "shap_calc_type": null,
+      "peak_process_rss_bytes": 183873536,
+      "artifacts": {
+        "json": {
+          "path": "boruta_insufficient_confirmed_selection_result.json",
+          "sha256": "60a3cdee044a3ea3717aabfb9ce384dd7d783ca0b841c4b7e198aec4b31b8f6c"
+        },
+        "csv": {
+          "path": "boruta_insufficient_confirmed_selection_ranking.csv",
+          "sha256": "32df00ab45b094834750ebf900c0860457e5a3cff8ca6aea1d61d75538bf149d"
+        }
+      },
+      "warnings": [
+        "requested budget 7 exceeds the algorithm's natural support; the budget was not padded",
+        "confirmed set holds 4 feature(s), fewer than the requested 7; tentative features were not used as filler because confirmed_top_k forbids it"
+      ],
+      "fit_seconds": 0.664035,
+      "elapsed_seconds": 1.348328
+    },
+    {
+      "case": "catboost_shap_feasible_budget",
+      "method_id": "catboost_shap",
+      "status": "PASS",
+      "display_label": "CatBoost-SHAP",
+      "implementation_id": "catboost_native_shap_regular_mean_abs_train_sample_v1",
+      "cost_class": "heavy",
+      "estimator_family": "catboost.CatBoostClassifier",
+      "selection_mode": "matched_budget",
+      "requested_budget": 3,
+      "actual_selected_count": 3,
+      "natural_selected_count": null,
+      "budget_status": "satisfied",
+      "selected_features": [
+        "zulu_linear_signal",
+        "mike_redundant_copy",
+        "delta_nonlinear_signal"
+      ],
+      "ranking_length": 7,
+      "candidate_universe_count": 7,
+      "candidate_universe_sha256": "5e2d58160fc142e68ff44c9666a6d45c3dfeadd990de69c31ef5428a8720db00",
+      "training_identity_sha256": "0249aeb0aef073a90f3eb1d6e0e21e7999c5713f5b18e706d36c8ca3a2d82436",
+      "estimator_config_sha256": "a6ad05a4c08e75bef695f85c11a231b6fea49fe39c8e1e3250e7c4ea2c8b19fc",
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "excluded_columns_absent_from_selection": true,
+      "selection_inside_candidate_universe": true,
+      "harness_median_imputation_applied": false,
+      "estimator_fit_count": null,
+      "elimination_history_rows": null,
+      "support_state_counts": null,
+      "explanation_sample": {
+        "requested_size": 200,
+        "realized_size": 200,
+        "training_row_count": 500,
+        "used_all_training_rows": false,
+        "positive_count": 86,
+        "negative_count": 114,
+        "training_positive_rate": 0.432,
+        "sample_positive_rate": 0.43,
+        "seed": 42,
+        "row_identity_sha256": "607a06979a052e82df6ccecf68804899dc1a91b03bd3d9ab3e51dc48754f207c",
+        "scope": "selector_training_partition_only"
+      },
+      "shap_calc_type": "Regular",
+      "peak_process_rss_bytes": 184229888,
+      "artifacts": {
+        "json": {
+          "path": "catboost_shap_feasible_budget_selection_result.json",
+          "sha256": "07e44020ae56631be80d92f2c420222e4be9674a818d5ffa134f40c1a5b7f848"
+        },
+        "csv": {
+          "path": "catboost_shap_feasible_budget_selection_ranking.csv",
+          "sha256": "4375a3c19835015b3713f21ed29923b780f9227442a320a4d76fba7adbcd43b6"
+        }
+      },
+      "warnings": [],
+      "fit_seconds": 0.037022,
+      "elapsed_seconds": 0.093315
+    }
+  ],
+  "failure_count": 0,
+  "total_elapsed_seconds": 3.270776,
+  "peak_process_rss_mb": 175.8
+}

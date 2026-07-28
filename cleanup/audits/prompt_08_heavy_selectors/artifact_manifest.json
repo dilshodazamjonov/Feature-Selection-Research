@@ -1,0 +1,327 @@
+{
+  "schema_version": "prompt_08_artifact_manifest_v1",
+  "deliverable_count": 31,
+  "missing_count": 0,
+  "separately_identified_changes": [
+    "tests/test_manual_research_orchestration.py -- the narrow authenticated 14-to-16 preservation-test correction authorized by Prompt 8 Phase 1; see run_count_assertion_resolution.md"
+  ],
+  "excluded_from_commit": [
+    "src/credit_risk_fs/clip/checkpointing.py (pre-existing user change committed in e48a848; empty diff at Phase 0, untouched by Prompt 8)",
+    "results/ (git-ignored active results)",
+    "logs/ (git-ignored runtime logs)",
+    "scratch fixture artifacts (written outside the repository)",
+    "__pycache__ (git-ignored)"
+  ],
+  "artifacts": [
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/selector_registry_snapshot.json",
+      "size_bytes": 12081,
+      "sha256": "c6a516a00286cf2621508384f0932fece03e2be0d64514024706959b350f4dbe",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/tiny_fixture_results.json",
+      "size_bytes": 10403,
+      "sha256": "f879ce2861384b6297439b637f045503895ceff0c2a9c4c81fedb019f073c40d",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/baseline_and_preservation.md",
+      "size_bytes": 3800,
+      "sha256": "38822bc365acb61921ddef4a3ed51e75d75e64494ebea3808a20699fcd535415",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/boruta_implementation_evidence.md",
+      "size_bytes": 5812,
+      "sha256": "72014e54de1563795b816d2c1fde4f9c6509b051417dc826aa7ee989e7ab64d6",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/catboost_shap_implementation_evidence.md",
+      "size_bytes": 5398,
+      "sha256": "568ba5da37c1eb178890dc006ac46faf4d259308eddf95540cfbd85a3fba3b25",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/heavy_selector_audit.md",
+      "size_bytes": 6905,
+      "sha256": "330a6649ae1f3e1751fa52d8b1eb46e2b924c0736b3319a963c3ee6dd2eab754",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/heavy_selector_contract_v1.md",
+      "size_bytes": 5391,
+      "sha256": "5f5bf1ec10938ab8b54a0013ee9fef95f5fb09658c4a52ca626764c239f86c0d",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/registry_before_after.json",
+      "size_bytes": 14188,
+      "sha256": "bd6c9e4d28bad722c0d21c361571b14ad13049e77c0d4bd2884cc41887d45165",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/rfe_implementation_evidence.md",
+      "size_bytes": 4797,
+      "sha256": "0c198e98247052e3a2a88604a0ac1ce3d9d63f0429e69d4e405915f148aead2c",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/run_count_assertion_resolution.md",
+      "size_bytes": 4260,
+      "sha256": "1f8ddea6203b28e9afea3dfdd41f96b4fb56b3f8ada30368f6d14f1b39735d9f",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/synthetic_fixture_results.json",
+      "size_bytes": 11402,
+      "sha256": "078555b79c65e883df19a81b480ccb6da68148f05b79c57ef936489e35d1bda8",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "cleanup/audits/prompt_08_heavy_selectors/test_results.md",
+      "size_bytes": 6317,
+      "sha256": "87e70df5cab46eb111600063a9d448d8ec4697f270fde7c2c03957ac88621b32",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "docs/research_extension/heavy_selector_controls_v1.md",
+      "size_bytes": 9355,
+      "sha256": "91984ee86b049a8fc994d719f4b1280ecbd98c3aa44157fb98b9e965e6249103",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "scripts/verify_heavy_selectors.py",
+      "size_bytes": 15967,
+      "sha256": "dc27bc04c1f772aea978aa87cbf3f0bc29ba77dfc2abb3df504bebfb71c8d420",
+      "purpose": "synthetic heavy integration fixture",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "scripts/verify_lightweight_selectors.py",
+      "size_bytes": 12654,
+      "sha256": "d2010e62612dc479cb36a61de0683205f75a0e26f0b16628d5b11df0338f13dd",
+      "purpose": "scoped to light methods by cost class",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/experiments/config.py",
+      "size_bytes": 14606,
+      "sha256": "dd6961e05f4d46764252b0acf4c0b651d102936729f42fa202cf2b6566002f31",
+      "purpose": "feature-budget wiring for the three heavy method ids",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/heavy/__init__.py",
+      "size_bytes": 1116,
+      "sha256": "d2869b0d48730dae8c92586670a7ec0d61c8eb5b7fa55f86fcc1edc70f69ad2b",
+      "purpose": "package exports",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/heavy/_support.py",
+      "size_bytes": 3354,
+      "sha256": "398c9bb530b4206df2f56dd3856d6d0f05a2b728b46465c24f384dd9a124a4d3",
+      "purpose": "estimator hashing, stage logging, resource observation",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/heavy/boruta_rf.py",
+      "size_bytes": 18325,
+      "sha256": "1550859aaeb937ffdcbf3f458c9937f23449825a190ed32430bf67f75b164af0",
+      "purpose": "random-forest Boruta with confirmed/tentative/rejected",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/heavy/catboost_shap.py",
+      "size_bytes": 17052,
+      "sha256": "28130675099f68e0092bf4e5b42450537228b6886a57d5e250c011c4e716e7f8",
+      "purpose": "native CatBoost ShapValues ranking",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/heavy/rfe_catboost.py",
+      "size_bytes": 15084,
+      "sha256": "83a6ea9a86b46b7479846449d785488c2611906c3dccbd963e929c030d4bdce7",
+      "purpose": "CatBoost-backed recursive elimination, fractional step",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/contract.py",
+      "size_bytes": 32171,
+      "sha256": "4cffcc94b32948a09f41f7afd8509a0abdf6a445651242b7c667765fc6150937",
+      "purpose": "shared contract: two optional heavy fields + pre-fit validation hook",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/registry.py",
+      "size_bytes": 17219,
+      "sha256": "54b8f2eb3a769292d1a6f88aeb67f4060d555f37f12577c1e529209e8b34ae91",
+      "purpose": "method descriptors, heavy cost class, cost-class filter",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/registry.py",
+      "size_bytes": 5510,
+      "sha256": "beb165489585b9983657cccf73b10f86c9ed6a4dfd784e6efeffca8e8c012550",
+      "purpose": "method descriptors, heavy cost class, cost-class filter",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_heavy_boruta.py",
+      "size_bytes": 15759,
+      "sha256": "836f375b61134bc3be0d31d2fbb7d2744671017514c419b7258d942b9a8f09d5",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_heavy_catboost_shap.py",
+      "size_bytes": 16826,
+      "sha256": "14fd2e0b1bbfd3d97745f091e4e08ca8e78d9b7314ff131b37230392ba4ea6f8",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_heavy_common.py",
+      "size_bytes": 16499,
+      "sha256": "f32e1c3c4f707b4a482b51c95ae0442302d1abbd13af37d92e1633c47256def5",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_heavy_integration.py",
+      "size_bytes": 8154,
+      "sha256": "d5ee2daeb700bbd608dc9336f407d74dd43d9b9ad82c0bea212923f611db5fd0",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_heavy_rfe.py",
+      "size_bytes": 11934,
+      "sha256": "a959b4f182200aa492c380b4d0efcbc15fbf8fa1a6c4142dc2e671e95f17d9b0",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": false,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_integration.py",
+      "size_bytes": 6605,
+      "sha256": "4d2397c20936dcc4811450058438b2522747a5ee281f9747dc0c2b27f079e32e",
+      "purpose": "scoped to light methods by cost class",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": false
+    },
+    {
+      "path": "tests/test_manual_research_orchestration.py",
+      "size_bytes": 15126,
+      "sha256": "b5c01e682e6ffb94182543efea6b4bd44c49612f754c8a38196896cb336fae01",
+      "purpose": "AUTHENTICATED 14->16 run-identity assertion repair",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_08": true,
+      "separately_identified": true
+    }
+  ]
+}
