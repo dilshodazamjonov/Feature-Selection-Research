@@ -5,7 +5,10 @@ from typing import Any
 
 import torch
 
-from credit_risk_fs.clip.model import ClipModelConfig, SemanticStatisticalContrastiveEncoder
+from credit_risk_fs.clip.model import (
+    ClipModelConfig,
+    SemanticStatisticalContrastiveEncoder,
+)
 from credit_risk_fs.clip.training_validation import ClipTrainingConfig
 from credit_risk_fs.utils.hashing import sha256_file
 from credit_risk_fs.utils.io import read_json, write_json
