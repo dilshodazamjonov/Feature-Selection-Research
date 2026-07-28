@@ -1,0 +1,154 @@
+{
+  "contract_version": "lightweight_selector_contract_v1",
+  "methods": [
+    {
+      "method_id": "iv_woe",
+      "display_label": "Information Value (WOE binning)",
+      "implementation_id": "iv_woe_quantile_binned_v1",
+      "algorithm": "weight_of_evidence_information_value",
+      "supervised": true,
+      "selection_modes": [
+        "matched_budget"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": false,
+      "supports_fixed_budget": true,
+      "budget_kwarg": "k",
+      "import_path": "credit_risk_fs.selectors.lightweight.iv.InformationValueSelector",
+      "default_kwargs": {
+        "k": 40,
+        "n_bins": 10,
+        "binning_strategy": "quantile",
+        "zero_count_smoothing": 0.5,
+        "random_state": 42
+      },
+      "aliases": [],
+      "historical_use": "New in Prompt 7. IV previously appeared only as a pre-filter inside the LLM screening selector, never as a standalone ranked selector.",
+      "notes": ""
+    },
+    {
+      "method_id": "mrmr_mutual_information",
+      "display_label": "mRMR (mutual information)",
+      "implementation_id": "mrmr_mutual_information_discrete_plugin_v1",
+      "algorithm": "sequential_max_relevance_min_redundancy_mutual_information",
+      "supervised": true,
+      "selection_modes": [
+        "matched_budget"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": false,
+      "supports_fixed_budget": true,
+      "budget_kwarg": "k",
+      "import_path": "credit_risk_fs.selectors.lightweight.mi_mrmr.MutualInformationMRMRSelector",
+      "default_kwargs": {
+        "k": 40,
+        "n_bins": 10,
+        "objective": "mid",
+        "random_state": 42
+      },
+      "aliases": [],
+      "historical_use": "New in Prompt 7. No historical result used this algorithm.",
+      "notes": "Not reachable through the legacy 'mrmr' alias, which means the random-forest relevance / correlation redundancy selector."
+    },
+    {
+      "method_id": "lasso_l1_logistic",
+      "display_label": "LASSO (L1-penalized logistic regression)",
+      "implementation_id": "lasso_l1_logistic_v1",
+      "algorithm": "l1_penalized_logistic_regression_support",
+      "supervised": true,
+      "selection_modes": [
+        "natural",
+        "matched_budget",
+        "coefficient_ranking"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": true,
+      "supports_fixed_budget": true,
+      "budget_kwarg": "k",
+      "import_path": "credit_risk_fs.selectors.lightweight.lasso.L1LogisticSelector",
+      "default_kwargs": {
+        "k": 40,
+        "C": 0.05,
+        "solver": "liblinear",
+        "max_iter": 2000,
+        "tol": 0.0001,
+        "random_state": 42,
+        "n_jobs": 1
+      },
+      "aliases": [],
+      "historical_use": "New in Prompt 7. No historical result used this algorithm.",
+      "notes": ""
+    },
+    {
+      "method_id": "random_k",
+      "display_label": "Random-k control",
+      "implementation_id": "random_k_local_generator_v1",
+      "algorithm": "uniform_random_subset_without_replacement",
+      "supervised": false,
+      "selection_modes": [
+        "random_control"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": false,
+      "supports_fixed_budget": true,
+      "budget_kwarg": "k",
+      "import_path": "credit_risk_fs.selectors.lightweight.controls.RandomKSelector",
+      "default_kwargs": {
+        "k": 40,
+        "random_state": 42
+      },
+      "aliases": [],
+      "historical_use": "New in Prompt 7.",
+      "notes": ""
+    },
+    {
+      "method_id": "full_features",
+      "display_label": "Full candidate features",
+      "implementation_id": "full_candidate_features_v1",
+      "algorithm": "no_selection_over_eligible_candidates",
+      "supervised": false,
+      "selection_modes": [
+        "full_control"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": false,
+      "supports_fixed_budget": false,
+      "budget_kwarg": null,
+      "import_path": "credit_risk_fs.selectors.lightweight.controls.FullCandidateFeaturesSelector",
+      "default_kwargs": {
+        "random_state": 42
+      },
+      "aliases": [
+        "none_explicit"
+      ],
+      "historical_use": "Formalizes the pre-existing 'none' route, which stays available and continues to resolve to no selector object.",
+      "notes": ""
+    },
+    {
+      "method_id": "legacy_rf_relevance_corr",
+      "display_label": "Legacy RF relevance / correlation redundancy",
+      "implementation_id": "rf_relevance_correlation_redundancy",
+      "algorithm": "rf_impurity_relevance_over_mean_absolute_correlation",
+      "supervised": true,
+      "selection_modes": [
+        "matched_budget"
+      ],
+      "provides_ranking": true,
+      "provides_natural_support": false,
+      "supports_fixed_budget": true,
+      "budget_kwarg": "k",
+      "import_path": "credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector",
+      "default_kwargs": {
+        "k": 50,
+        "method": "mrmr",
+        "random_state": 42,
+        "n_jobs": 1
+      },
+      "aliases": [
+        "mrmr"
+      ],
+      "historical_use": "Every historical artifact naming 'mrmr' or 'rf_corr_mrmr' used this algorithm, including the rf_corr_mrmr voter and the reference arm of all 16 cross_dataset_rank_voting_v1 runs.",
+      "notes": "Preserved unchanged for historical parity. It is NOT canonical mutual-information mRMR; the class already declares canonical_mrmr = False."
+    }
+  ]
+}

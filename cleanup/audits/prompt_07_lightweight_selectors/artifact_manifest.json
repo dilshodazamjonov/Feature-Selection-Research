@@ -1,0 +1,255 @@
+{
+  "schema_version": "prompt_07_artifact_manifest_v1",
+  "deliverable_count": 27,
+  "missing_count": 0,
+  "excluded_from_commit": [
+    "src/credit_risk_fs/clip/checkpointing.py (pre-existing user change; already committed in e48a848, unchanged by Prompt 7)",
+    "results/ (git-ignored active results)",
+    "scratch fixture artifacts (written outside the repository)"
+  ],
+  "artifacts": [
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/baseline_and_preservation.md",
+      "size_bytes": 4402,
+      "sha256": "83bdb7b80642c338d844599cd6ba4add77cc55cf1f34d93ac69d65e76751de6a",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/changed_paths.txt",
+      "size_bytes": 1505,
+      "sha256": "965416c7b82bdddba2aedf8016dcd7a748027cda1fd69809a25294566b867e3d",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/method_identity_map.csv",
+      "size_bytes": 2453,
+      "sha256": "fa25d8797ed551e3b8107ec8c7a4bf459ae6e90caa7650bd7c013397d14b9da6",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/prompt_06_package_hashes_baseline.json",
+      "size_bytes": 4121,
+      "sha256": "883a4e3dabb9c569a631898fa7c1906ce772e83f42da040c14dfd8ec9e2c2cb6",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/selector_contract_v1.md",
+      "size_bytes": 5823,
+      "sha256": "f79ada70772bb9ef1554f27d3b6fa39ac8e30d31cb99b3ca89a98f83c08b8ec5",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/selector_layer_audit.md",
+      "size_bytes": 6343,
+      "sha256": "d40b9b1f231214b4fcda017bdb5118d5f199247821327c701118d7459ae50d8b",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/selector_registry_snapshot.json",
+      "size_bytes": 5630,
+      "sha256": "128f923d90818b1db4d3771b4bc03f562f77b6d2fa1672614459e9bee3142f1c",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/test_results.md",
+      "size_bytes": 5906,
+      "sha256": "772940079ee5c3a50eb8f84e11349c7e086094e50f94a6c5bb8423b10625cfe3",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "cleanup/audits/prompt_07_lightweight_selectors/tiny_fixture_results.json",
+      "size_bytes": 10411,
+      "sha256": "b1283345d25f6c12ed1aa344f110d4ed324958eaa1575d983dfc887961c0a76d",
+      "purpose": "audit / documentation evidence",
+      "classification": "generated",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "docs/research_extension/lightweight_selector_controls_v1.md",
+      "size_bytes": 9653,
+      "sha256": "3149af92986eee9febe7bd38cee11dd72d4b7bccda49d8926b33bbdbd9a4529c",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "scripts/verify_lightweight_selectors.py",
+      "size_bytes": 12424,
+      "sha256": "1a11d3ca60c21a6b5976c7a114078cb4a3e6c40c99e5eee600e561c1869d91b3",
+      "purpose": "tiny synthetic fixture integration pass",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/experiments/config.py",
+      "size_bytes": 14252,
+      "sha256": "a4a7a216736bd804de1107505f974c1870d8fae05472e9d98a7d4022d18b48b8",
+      "purpose": "feature-budget wiring for new method IDs",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": true
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/__init__.py",
+      "size_bytes": 1867,
+      "sha256": "e6b1b9aad45739dea1a6b0175e6df074369c460f46021d2650ab478258223508",
+      "purpose": "package exports",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/contract.py",
+      "size_bytes": 29533,
+      "sha256": "f7bf9bb8c7f9ed213d76b788d91dc7a6ced6146338d4bb8fc8223069a3a1c169",
+      "purpose": "shared selector contract, invariants, serialization",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/controls.py",
+      "size_bytes": 5735,
+      "sha256": "0d35aba12b9cfd319da2e437e1b4d62d7b4c8b34e7e457914135317ec1177197",
+      "purpose": "random-k and full-candidate controls",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/iv.py",
+      "size_bytes": 12543,
+      "sha256": "c271e1c3c30e4fd0155143dfe4e5b0131a3bb45215ad8213aca307dad1e19d8d",
+      "purpose": "standalone Information Value selector",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/lasso.py",
+      "size_bytes": 14294,
+      "sha256": "3c0a9f008626bfdf092c0e2530479db15f4557a51ffeb7a528ff61d819fd8ff7",
+      "purpose": "L1-penalized logistic regression selector",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/mi_mrmr.py",
+      "size_bytes": 12640,
+      "sha256": "8457e922058c7308321dea621e82e6b58411667a53baa0c6010b2ef2bb3693d8",
+      "purpose": "canonical mutual-information mRMR",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/lightweight/registry.py",
+      "size_bytes": 10209,
+      "sha256": "ff57b541c040898e38abee2bc63af57982b802820714369cfe4427af9e768583",
+      "purpose": "method descriptors / registry resolution",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "src/credit_risk_fs/selectors/registry.py",
+      "size_bytes": 5050,
+      "sha256": "4c5b2df451f396e83af53f2d7516bb5f61e86bc5d59a2dde66d89907867dae70",
+      "purpose": "method descriptors / registry resolution",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": true
+    },
+    {
+      "path": "tests/selectors/test_lightweight_contract.py",
+      "size_bytes": 12215,
+      "sha256": "2d780401a3b1dc1f5e0e6be5b195c80efc362c76fe14a56e47d42886ab5deaee",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_controls.py",
+      "size_bytes": 5900,
+      "sha256": "c75630c9569e0c3e8a97435f3ed3a210c448a65c30e61302b90ae9c206b813e4",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_integration.py",
+      "size_bytes": 6229,
+      "sha256": "bd9711f90d5a14999c5d8ec560b1faa513c7d3b08955fe27e975a4169b975f39",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_iv.py",
+      "size_bytes": 8117,
+      "sha256": "fcdd6f7c1a0ccbd8e52d6f047a8812d177316d4fee64bccbac796bddfdd95fd5",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_lasso.py",
+      "size_bytes": 11576,
+      "sha256": "86b7cf674768f9dcfd07b6a436ac07eba9f7ef47b991c761d840c27243be8611",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_mi_mrmr.py",
+      "size_bytes": 7789,
+      "sha256": "282f1992cfe87e99f1f67cc469552b58576e8c12be61d2013f670b8f53585f76",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    },
+    {
+      "path": "tests/selectors/test_lightweight_registry.py",
+      "size_bytes": 9547,
+      "sha256": "54ee213f9b38c124fca59e1437f3652de28979e1c6d51a4e9a14fd6524f21a5d",
+      "purpose": "audit / documentation evidence",
+      "classification": "source",
+      "commit_inclusion": "included",
+      "tracked_before_prompt_07": false
+    }
+  ]
+}
