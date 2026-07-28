@@ -1,0 +1,221 @@
+schema_version: cross_dataset_voting_inference_analysis_v1
+analysis_id: cross_dataset_voting_inference_v1
+version: 1.0.0
+roadmap_stage: prompt_06_voting_inference_and_evidence_package
+status: analysis_only_no_training_no_selection
+statement: >-
+  This configuration parameterises the Prompt 6 statistical-inference and
+  evidence-packaging analysis. It reads completed Prompt 5 run artifacts as
+  immutable inputs, recomputes every reported metric from saved applicant-level
+  predictions, and writes only into its own versioned package root. It never
+  fits a model, runs a selector, regenerates a voting ranking, or changes a
+  frozen definition.
+
+# ---------------------------------------------------------------------------
+# Frozen inputs that must authenticate before any metric is computed.
+# ---------------------------------------------------------------------------
+frozen_inputs:
+  scientific_protocol:
+    path: configs/protocols/credit_scoring_extension_v1.yaml
+    expected_sha256: f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0
+  row_alignment_contract:
+    path: configs/protocols/row_alignment_contract_v1.json
+    expected_sha256: fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0
+  voting_protocol:
+    path: configs/protocols/cross_dataset_rank_voting_v1.yaml
+    expected_sha256: 51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49
+  execution_policy:
+    path: configs/execution/local_laptop_safe_v1.yaml
+    expected_sha256: 1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012
+  run_matrix:
+    path: configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml
+    expected_sha256: 1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8
+  configuration_lock:
+    path: results/comparisons/cross_dataset_voting_configuration_lock.json
+    expected_sha256: null
+  completeness_summary:
+    path: results/comparisons/cross_dataset_voting_completeness_summary.json
+    expected_sha256: null
+  run_index:
+    path: results/run_index.csv
+    expected_sha256: null
+
+# ---------------------------------------------------------------------------
+# Immutable inputs and versioned outputs.
+# ---------------------------------------------------------------------------
+paths:
+  repository_root: .
+  active_results_root: results
+  run_root: results/runs
+  legacy_results_root: D:/ResearchFindings/results
+  legacy_manifest: cleanup/audits/foundation_protocol_freeze/legacy_artifact_manifest.csv
+  package_root: results/final_experiments/cross_dataset_voting_inference_v1
+  audit_root: cleanup/audits/prompt_06_voting_inference_evidence_package
+  figures_subdirectory: figures
+
+preservation:
+  legacy_expected_file_count: 359
+  legacy_expected_total_bytes: 110084164
+  legacy_manifest_sha256: 31ca80f026dc9169f14e3c518b49cd4ee0ad71074264daef4cf660263e1f2417
+  completed_run_directories_are_immutable: true
+  analysis_never_writes_into_run_directories: true
+
+# ---------------------------------------------------------------------------
+# Expected frozen experiment structure. Authenticated, never assumed.
+# ---------------------------------------------------------------------------
+expected_structure:
+  datasets: [homecredit, lendingclub_v2]
+  models: [lr, catboost]
+  configurations_per_cell: [reference, voting_k100, voting_k200, voting_k300]
+  total_runs: 16
+  dev_folds_per_run: 5
+  total_dev_fold_executions: 80
+  oot_prediction_artifacts: 16
+  aggregated_dev_prediction_artifacts: 16
+  final_feature_budgets: {lr: 20, catboost: 40}
+  primary_candidate_pool: 200
+  sensitivity_candidate_pools: [100, 300]
+  candidate_universe_size: {homecredit: 529, lendingclub_v2: 675}
+  dev_rows: {homecredit: 99092, lendingclub_v2: 598649}
+  oot_rows: {homecredit: 120053, lendingclub_v2: 293105}
+  row_identifier: {homecredit: SK_ID_CURR, lendingclub_v2: loan_id}
+  positive_class: 1
+  score_direction: higher_means_higher_default_risk
+  approved_exclusions: []
+
+# ---------------------------------------------------------------------------
+# Authenticated metric definitions. Every entry names the frozen source.
+# ---------------------------------------------------------------------------
+metric_definitions:
+  roc_auc:
+    implementation: sklearn.metrics.roc_auc_score
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.roc_auc
+  gini:
+    formula: 2 * ROC_AUC - 1
+    separately_tested: false
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.gini
+  ks:
+    implementation: credit_risk_fs.evaluation.paired_inference.ks_statistic
+    definition: maximum absolute positive/negative empirical-CDF separation
+    tie_rule: smallest score among equal maxima
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.ks
+  lift_at_10:
+    implementation: credit_risk_fs.evaluation.paired_inference.lift_at_fraction
+    fraction: 0.10
+    top_count_rule: ceil(0.10 * n)
+    top_group_meaning: highest predicted class-1 default risk
+    ratio_definition: top_decile_positive_rate_divided_by_overall_positive_rate
+    boundary_tie_rule: NFC-normalised casefolded stable row id ascending
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.lift_at_10
+  score_psi:
+    implementation: credit_risk_fs.pipelines.common.compute_score_psi
+    implementation_version: dev_oof_quantile_psi_v1
+    reference_scope: DEV_OOF
+    comparison_scope: OOT
+    requested_bin_count: 10
+    smoothing_epsilon: 1.0e-06
+    duplicate_edge_policy: sort_unique_candidate_quantile_edges
+    out_of_range_policy: reject_outside_closed_probability_interval_0_1
+    missing_value_policy: reject
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.score_psi
+  feature_psi:
+    frozen_numeric_implementation: credit_risk_fs.evaluation.drift.calculate_psi
+    frozen_numeric_bins: 10_expected_quantile_bins_with_unique_edges_and_infinite_outer_edges
+    frozen_numeric_epsilon: 1.0e-06
+    frozen_numeric_missing_policy: nonfinite_dropped
+    type_aware_extension: credit_risk_fs.analysis.voting_inference.psi.type_aware_feature_psi
+    type_aware_missing_policy: explicit_missing_state_retained
+    type_aware_categorical_policy: source_level_category_shares_with_explicit_unseen_state
+    reference_scope: DEV
+    comparison_scope: OOT
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.feature_psi
+  fold_selection_jaccard:
+    implementation: credit_risk_fs.evaluation.drift.jaccard_similarity
+    aggregation: all unordered fold pairs
+    empty_set_rule: 1.0 when both sets are empty
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.fold_selection_jaccard
+  kuncheva:
+    implementation: credit_risk_fs.evaluation.stability.kuncheva_stability
+    formula: mean((r*n - k_i*k_j) / (n*min(k_i,k_j) - k_i*k_j)) over fold pairs
+    zero_denominator_pairs: skipped
+    universe: frozen_per_dataset_leakage_safe_candidate_universe
+    universe_size: {homecredit: 529, lendingclub_v2: 675}
+    universe_authentication:
+      - configs/protocols/cross_dataset_rank_voting_v1.yaml#candidate_universe
+      - configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml#datasets.*.candidate_universe_size
+      - results/runs/*/*/folds/fold_*/voter_rankings.csv#candidate_universe_count
+    universe_alternatives_rejected:
+      method_specific_candidate_pool: >-
+        The frozen protocol names candidate_pool_budgets separately from
+        candidate_universe, and the four reference runs have no voting pool, so
+        their pool equals the final budget and every Kuncheva denominator would
+        be zero. That reading makes the descriptive metric structurally
+        unavailable for the reference arm.
+      fold_specific_eligible_universe: >-
+        Empirically identical to the frozen per-dataset universe: every saved
+        fold voter ranking records the same candidate_universe_count.
+    authenticated_by: configs/protocols/credit_scoring_extension_v1.yaml#evaluation.kuncheva
+
+# ---------------------------------------------------------------------------
+# Predeclared inference. Recovered from the frozen protocol, never rebuilt.
+# ---------------------------------------------------------------------------
+inference:
+  direction_convention: comparator_minus_reference
+  comparator_role: voting_pool_run
+  reference_role: rf_corr_mrmr_reference_run
+  split: OOT
+  paired_auc_test: two_sided_delong_on_identical_oot_rows
+  delong_implementation: credit_risk_fs.evaluation.paired_inference.paired_delong_test
+  bootstrap:
+    implementation: credit_risk_fs.evaluation.paired_inference.paired_stratified_bootstrap
+    accelerated_equivalent: credit_risk_fs.analysis.voting_inference.paired.fast_paired_stratified_bootstrap
+    type: paired_stratified_by_target
+    attempted_repetitions: 2000
+    minimum_valid_repetitions: 1900
+    seed: 20260721
+    confidence_interval: 95_percent_percentile
+    differences: [auc, ks, lift_at_10]
+    failure_policy: count_and_report_without_unlimited_replacement
+  holm:
+    implementation: credit_risk_fs.evaluation.paired_inference.holm_adjust
+    alpha: 0.05
+    scope: within_each_dataset_model_family_of_three_auc_tests
+    pooling_across_families: false
+    families:
+      - homecredit_lr
+      - homecredit_catboost
+      - lendingclub_v2_lr
+      - lendingclub_v2_catboost
+    comparisons_per_family: 3
+  effect_strength_labels_frozen: false
+  descriptive_only:
+    - voting_pool_budget_pairwise_contrasts
+    - score_psi
+    - feature_psi
+    - fold_jaccard
+    - kuncheva
+    - runtime
+    - peak_ram
+    - peak_gpu
+
+# ---------------------------------------------------------------------------
+# Independent recalculation gate.
+# ---------------------------------------------------------------------------
+independent_recalculation:
+  script: scripts/independently_verify_voting_metrics.py
+  metrics: [auc, gini, ks, lift_at_10, score_psi, aligned_row_count, target_mismatch_count]
+  absolute_tolerance: 1.0e-09
+  count_tolerance: 0
+  shares_primary_helpers: false
+
+# ---------------------------------------------------------------------------
+# Descriptive references only. Not frozen categories.
+# ---------------------------------------------------------------------------
+descriptive_psi_references: [0.10, 0.25]
+
+execution:
+  deterministic: true
+  seeds: {paired_bootstrap: 20260721, selector_master: 42}
+  csv_chunk_rows: 25000
+  overwrite_completed_package: false
+  success_marker: PROMPT_06_VOTING_INFERENCE_EVIDENCE_PACKAGE_PASS

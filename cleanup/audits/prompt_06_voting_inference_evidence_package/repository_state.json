@@ -1,0 +1,27 @@
+{
+  "schema_version": "prompt_06_repository_state_v1",
+  "recorded_at_utc": "2026-07-28T06:17:03.654599+00:00",
+  "git_status_short_branch": "## main...origin/main\n M src/credit_risk_fs/clip/checkpointing.py\n?? cleanup/audits/prompt_06_voting_inference_evidence_package/\n?? configs/analysis/\n?? docs/research_extension/cross_dataset_voting_inference_v1.md\n?? scripts/build_voting_inference_evidence.py\n?? scripts/independently_verify_voting_metrics.py\n?? src/credit_risk_fs/analysis/\n?? tests/test_voting_alignment.py\n?? tests/test_voting_evidence_provenance.py\n?? tests/test_voting_metrics.py\n?? tests/test_voting_paired_inference.py\n?? tests/test_voting_psi.py\n?? tests/test_voting_stability.py",
+  "git_head": "3bd9d0b93421a156c55f211aaea47f7aa71665fa",
+  "git_log_head": "3bd9d0b feat: make research run logging human-readable",
+  "git_tags_at_head": [
+    "cross-dataset-voting-observability-v2"
+  ],
+  "python_version": "3.13.5",
+  "python_executable": "D:\\python projects\\Research\\.venv\\Scripts\\python.exe",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "3.0.1",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.8.0",
+    "catboost": "1.2.10",
+    "statsmodels": null,
+    "joblib": "1.5.3",
+    "pyarrow": "24.0.0",
+    "psutil": "7.2.2",
+    "matplotlib": "3.10.8"
+  },
+  "statsmodels_available": false,
+  "statsmodels_required_by_analysis": false
+}
