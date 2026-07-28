@@ -312,8 +312,19 @@ def apply_feature_budget_to_selector_kwargs(
 
     if name in {"mrmr", "legacy_rf_relevance_corr"}:
         updated["k"] = feature_budget
-    elif name in {"iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "random_k"}:
-        # Prompt 7 lightweight controls all express a final feature budget as "k".
+    elif name in {
+        "iv_woe",
+        "mrmr_mutual_information",
+        "lasso_l1_logistic",
+        "random_k",
+        # Prompt 8 heavy methods use the same budget kwarg. boruta_random_forest is
+        # included because its two fixed-budget modes need k; its default
+        # natural_confirmed mode ignores the value and records that it did.
+        "rfe_catboost",
+        "boruta_random_forest",
+        "catboost_shap",
+    }:
+        # Contract-conformant selectors all express a final feature budget as "k".
         updated["k"] = feature_budget
     elif name in {"full_features", "none_explicit"}:
         # The full-candidate control ignores a final feature budget by design; the

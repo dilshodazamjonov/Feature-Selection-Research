@@ -10,6 +10,13 @@ _LIGHTWEIGHT_IDS = frozenset(
         "random_k",
         "full_features",
         "none_explicit",
+        # Prompt 8 heavy methods. They share the same contract and registry, so
+        # they resolve through the same descriptor path; only their cost class and
+        # estimator differ. The historical "rfe" and "boruta" routes above are
+        # untouched and continue to resolve to the legacy implementations.
+        "rfe_catboost",
+        "boruta_random_forest",
+        "catboost_shap",
     }
 )
 
@@ -142,5 +149,6 @@ def get_selector(selector_name: str):
         "Available: boruta, boruta_rfe, rfe, mrmr, legacy_rf_relevance_corr, pca, "
         "llm, llm_then_stat, llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
         "stable_core_llm_fill, iv_woe, mrmr_mutual_information, lasso_l1_logistic, "
-        "random_k, full_features, none"
+        "random_k, full_features, rfe_catboost, boruta_random_forest, catboost_shap, "
+        "none"
     )

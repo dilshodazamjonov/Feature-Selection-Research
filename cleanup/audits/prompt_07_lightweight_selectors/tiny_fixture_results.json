@@ -1,7 +1,7 @@
 {
   "schema_version": "prompt_07_tiny_fixture_results_v1",
   "status": "PASS",
-  "generated_at_utc": "2026-07-28T15:22:23.684891+00:00",
+  "generated_at_utc": "2026-07-28T16:21:47.800545+00:00",
   "environment": {
     "python": "3.13.5",
     "platform": "Windows-11-10.0.26200-SP0",
@@ -44,7 +44,7 @@
     "oot_data_loaded": false
   },
   "isolation": {
-    "scratch_directory": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp\\claude\\d--python-projects-Research\\a14d9b15-197d-46c5-a1ec-7419ec35a532\\scratchpad\\p07_fixture2",
+    "scratch_directory": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp\\claude\\d--python-projects-Research\\a14d9b15-197d-46c5-a1ec-7419ec35a532\\scratchpad\\p07_re",
     "inside_active_results_root": false,
     "inside_legacy_results_root": false
   },
@@ -82,7 +82,7 @@
       "artifacts": {
         "json": {
           "path": "iv_woe_selection_result.json",
-          "sha256": "f8af1ae0c77578234a25640bf25b7bcb7907dbc199e03085f6e6d37ce443c2c3"
+          "sha256": "e0a83b905a6a70dfa331272a7bbf7517a7877058468e75a193e4d212bb5951cf"
         },
         "csv": {
           "path": "iv_woe_selection_ranking.csv",
@@ -91,8 +91,8 @@
       },
       "warnings": [],
       "failure_reason": null,
-      "fit_seconds": 0.027944,
-      "elapsed_seconds": 0.071389
+      "fit_seconds": 0.026295,
+      "elapsed_seconds": 0.070469
     },
     {
       "method_id": "mrmr_mutual_information",
@@ -127,7 +127,7 @@
       "artifacts": {
         "json": {
           "path": "mrmr_mutual_information_selection_result.json",
-          "sha256": "825e92a32c9d780c7edf30d1cd69465d55fd92f1f41c4c06d82b6462f8f7bce3"
+          "sha256": "ede21fe04c039f2198a93b9d1d9e78fb17f2396d2300bc459c32debfbbacd762"
         },
         "csv": {
           "path": "mrmr_mutual_information_selection_ranking.csv",
@@ -136,8 +136,8 @@
       },
       "warnings": [],
       "failure_reason": null,
-      "fit_seconds": 0.010527,
-      "elapsed_seconds": 0.037459
+      "fit_seconds": 0.010989,
+      "elapsed_seconds": 0.037345
     },
     {
       "method_id": "lasso_l1_logistic",
@@ -169,7 +169,7 @@
       "artifacts": {
         "json": {
           "path": "lasso_l1_logistic_selection_result.json",
-          "sha256": "5cbe2b797b4e22ac38f3d946416c0b4c90920989aa8a0271c85103ab656e0d9b"
+          "sha256": "580f5ae6f1a0f8a9057d1a4c96f345a2e03c67ded91c539748380ba438965e04"
         },
         "csv": {
           "path": "lasso_l1_logistic_selection_ranking.csv",
@@ -181,8 +181,8 @@
         "L1 natural support holds 1 feature(s), fewer than the requested 4; zero-coefficient features were not used as filler because allow_zero_coefficient_fill is False"
       ],
       "failure_reason": null,
-      "fit_seconds": 0.003878,
-      "elapsed_seconds": 0.024699
+      "fit_seconds": 0.004181,
+      "elapsed_seconds": 0.023654
     },
     {
       "method_id": "random_k",
@@ -217,7 +217,7 @@
       "artifacts": {
         "json": {
           "path": "random_k_selection_result.json",
-          "sha256": "cfedfd510ff05e2a61dfc8e512dcc59adc7a0a84e6fb98bd9a81a07bb3dddb9a"
+          "sha256": "ee1485cdc384ccc0e777556faf3a9ec3e055a40f11fb40263c2df140005c680c"
         },
         "csv": {
           "path": "random_k_selection_ranking.csv",
@@ -226,8 +226,8 @@
       },
       "warnings": [],
       "failure_reason": null,
-      "fit_seconds": 0.000186,
-      "elapsed_seconds": 0.017456
+      "fit_seconds": 0.000194,
+      "elapsed_seconds": 0.01637
     },
     {
       "method_id": "full_features",
@@ -264,7 +264,7 @@
       "artifacts": {
         "json": {
           "path": "full_features_selection_result.json",
-          "sha256": "fefef7e0c150781ee4e0a7ba7a5e9fe5f1b64366ab65e306c8c029c3487575bd"
+          "sha256": "39355d8d9f240eec075a5a8ff11203dbed6be4479a306b6cef68b8b2f8d4a407"
         },
         "csv": {
           "path": "full_features_selection_ranking.csv",
@@ -273,11 +273,11 @@
       },
       "warnings": [],
       "failure_reason": null,
-      "fit_seconds": 0.000103,
-      "elapsed_seconds": 0.015758
+      "fit_seconds": 0.000107,
+      "elapsed_seconds": 0.016165
     }
   ],
   "failure_count": 0,
-  "total_elapsed_seconds": 0.192798,
-  "peak_process_rss_mb": 156.1
+  "total_elapsed_seconds": 0.19088,
+  "peak_process_rss_mb": 155.7
 }

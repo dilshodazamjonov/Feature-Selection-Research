@@ -12,6 +12,31 @@ from credit_risk_fs.experiments import manual_research
 
 ROOT = Path(__file__).resolve().parents[1]
 
+#: The frozen canonical cross_dataset_rank_voting_v1 matrix, written out in full so
+#: the preservation guard compares identities rather than a bare count. Cross-checked
+#: against results/comparisons/cross_dataset_voting_configuration_lock.json, whose
+#: status is `all_dev_validated_oot_configuration_locked`.
+CANONICAL_CDV1_RUN_IDS = frozenset(
+    {
+        "cdv1-001-homecredit-reference-rf-corr-mrmr-lr-s42",
+        "cdv1-002-homecredit-voting-k100-lr-s42",
+        "cdv1-003-homecredit-voting-k200-lr-s42",
+        "cdv1-004-homecredit-voting-k300-lr-s42",
+        "cdv1-005-homecredit-reference-rf-corr-mrmr-catboost-s42",
+        "cdv1-006-homecredit-voting-k100-catboost-s42",
+        "cdv1-007-homecredit-voting-k200-catboost-s42",
+        "cdv1-008-homecredit-voting-k300-catboost-s42",
+        "cdv1-009-lendingclub-v2-reference-rf-corr-mrmr-lr-s42",
+        "cdv1-010-lendingclub-v2-voting-k100-lr-s42",
+        "cdv1-011-lendingclub-v2-voting-k200-lr-s42",
+        "cdv1-012-lendingclub-v2-voting-k300-lr-s42",
+        "cdv1-013-lendingclub-v2-reference-rf-corr-mrmr-catboost-s42",
+        "cdv1-014-lendingclub-v2-voting-k100-catboost-s42",
+        "cdv1-015-lendingclub-v2-voting-k200-catboost-s42",
+        "cdv1-016-lendingclub-v2-voting-k300-catboost-s42",
+    }
+)
+
 
 def _provenance() -> manual_research.ReleaseProvenance:
     return manual_research.ReleaseProvenance(
@@ -337,4 +362,18 @@ def test_existing_pilots_and_isolated_capacity_evidence_remain_unchanged():
     validation = json.loads((capacity / "validation_summary.json").read_text(encoding="utf-8"))
     assert validation["final_gate"] == "PASS"
     assert len(list((capacity / "capacity_execution/runs/lendingclub_v2").glob("*"))) == 3
-    assert len(list((ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*"))) == 14
+
+    # The canonical matrix contains exactly these 16 runs. The expectation is
+    # written out literally rather than derived from the directory listing, so the
+    # guard still fails if a run directory is added, removed, or renamed. The
+    # frozen configuration lock is cross-checked against the literal set, so a
+    # divergence between this test and the authoritative registry also fails.
+    observed = {path.name for path in (ROOT / "results/runs").glob("*/cdv1-0[01][0-9]-*")}
+    assert observed == CANONICAL_CDV1_RUN_IDS
+    locked = json.loads(
+        (ROOT / "results/comparisons/cross_dataset_voting_configuration_lock.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert set(locked["run_ids"]) == CANONICAL_CDV1_RUN_IDS
+    assert len(locked["run_ids"]) == 16
