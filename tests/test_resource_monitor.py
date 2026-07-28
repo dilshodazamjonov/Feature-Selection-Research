@@ -90,6 +90,30 @@ def test_windows_spawn_safe_worker_startup(tmp_path):
     assert result.worker_exit_code == 0
 
 
+def test_duplicate_stage_and_supervisor_logging_context_is_safe(tmp_path):
+    spec = {
+        "cell_id": "01-homecredit-fold-1-catboost-shap",
+        "cell_index": 1,
+        "dataset": "homecredit",
+        "method_id": "catboost_shap",
+    }
+    result = supervise_worker(
+        worker_target=(
+            "credit_risk_fs.experiments.synthetic_execution:"
+            "duplicate_stage_context_worker"
+        ),
+        worker_kwargs={"spec": spec},
+        policy=_policy(),
+        results_root=tmp_path,
+        temp_root=tmp_path,
+        run_association=spec["cell_id"],
+    )
+    assert result.status == "completed"
+    assert result.return_value == {"ok": True}
+    assert result.final_stage == "pilot_dev_data_loading"
+    assert result.final_fold_id == 1
+
+
 def test_forced_low_memory_abort_records_warning_and_cleans_child(tmp_path):
     result = supervise_worker(
         worker_target="credit_risk_fs.experiments.synthetic_execution:bounded_memory_worker",

@@ -581,6 +581,31 @@ def emit_research_event(
     return bool(emitter.emit(payload, priority=priority))
 
 
+def emit_contextual_research_event(
+    event: str,
+    *contexts: Mapping[str, Any],
+    level: str = "INFO",
+    message: str = "",
+    priority: bool = False,
+    **fields: Any,
+) -> bool:
+    """Merge contextual fields with explicit precedence before event emission."""
+
+    merged: dict[str, Any] = {}
+    for context in contexts:
+        merged.update(context)
+    merged.update(fields)
+    for reserved in ("event", "level", "message", "priority"):
+        merged.pop(reserved, None)
+    return emit_research_event(
+        event,
+        level=level,
+        message=message,
+        priority=priority,
+        **merged,
+    )
+
+
 @contextmanager
 def bind_research_context(**fields: Any) -> Iterator[None]:
     context = dict(_CONTEXT.get())
@@ -607,8 +632,8 @@ def logged_stage(
     context = {"stage": stage, **fields}
     if component is not None:
         context["component"] = component
-    emit_research_event(
-        "stage_started", message=message, priority=True, **context
+    emit_contextual_research_event(
+        "stage_started", context, message=message, priority=True
     )
     heartbeat_stop = threading.Event()
     heartbeat_thread: threading.Thread | None = None
@@ -637,12 +662,12 @@ def logged_stage(
                 except (ImportError, OSError):
                     pass
                 with bind_research_context(**captured_context):
-                    emit_research_event(
+                    emit_contextual_research_event(
                         "stage_heartbeat",
+                        context,
+                        memory,
                         message=f"{message} remains active",
                         elapsed_stage_seconds=monotonic() - started,
-                        **context,
-                        **memory,
                     )
 
         heartbeat_thread = threading.Thread(
@@ -661,20 +686,21 @@ def logged_stage(
         yield
     except KeyboardInterrupt:
         stop_heartbeat()
-        emit_research_event(
+        emit_contextual_research_event(
             "stage_interrupted",
+            context,
             level="ERROR",
             message=f"{message} interrupted",
             priority=True,
             elapsed_stage_seconds=monotonic() - started,
             exception_class="KeyboardInterrupt",
-            **context,
         )
         raise
     except BaseException as exc:
         stop_heartbeat()
-        emit_research_event(
+        emit_contextual_research_event(
             "stage_failed",
+            context,
             level="ERROR",
             message=f"{message} failed: {type(exc).__name__}: {exc}",
             priority=True,
@@ -683,17 +709,16 @@ def logged_stage(
             traceback="".join(
                 traceback_module.format_exception(type(exc), exc, exc.__traceback__)
             ),
-            **context,
         )
         raise
     else:
         stop_heartbeat()
-        emit_research_event(
+        emit_contextual_research_event(
             "stage_completed",
+            context,
             message=f"{message} completed",
             priority=True,
             elapsed_stage_seconds=monotonic() - started,
-            **context,
         )
     finally:
         stop_heartbeat()
@@ -1101,6 +1126,7 @@ __all__ = [
     "active_worker_transport",
     "bind_research_context",
     "configure_worker_logging",
+    "emit_contextual_research_event",
     "emit_research_event",
     "logged_stage",
     "research_logging_active",

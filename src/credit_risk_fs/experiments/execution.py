@@ -12,7 +12,10 @@ from credit_risk_fs.experiments.atomic_io import inspect_artifact, sha256_file, 
 from credit_risk_fs.experiments.checkpointing import CheckpointManager, ResumeValidationError
 from credit_risk_fs.experiments.config import compute_config_hash
 from credit_risk_fs.experiments.resource_monitor import SupervisorResult, supervise_worker
-from credit_risk_fs.experiments.research_logging import emit_research_event, logged_stage
+from credit_risk_fs.experiments.research_logging import (
+    emit_contextual_research_event,
+    logged_stage,
+)
 from credit_risk_fs.experiments.resource_policy import ResolvedExecutionPolicy
 from credit_risk_fs.experiments.result_paths import (
     append_run_index_row,
@@ -282,13 +285,13 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         "seed": request.seed,
         "selector": request.selector,
     }
-    emit_research_event(
+    emit_contextual_research_event(
         "run_execution_started",
+        log_context,
         message="Registered research run execution started",
         priority=True,
         resume=request.resume,
         run_directory=repository_relative_path(run_dir, request.repository_root),
-        **log_context,
     )
 
     if request.resume:
@@ -313,8 +316,9 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             run_id,
             {"status": "running", "notes": "explicit validated resume"},
         )
-        emit_research_event(
+        emit_contextual_research_event(
             "run_resume_authenticated",
+            log_context,
             message="Existing run checkpoint authenticated for resume",
             priority=True,
             phase=str((request.worker_kwargs or {}).get("phase", "")).upper(),
@@ -323,7 +327,6 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             ),
             completed_fold_ids=checkpoint.load().get("completed_fold_ids", []),
             last_successful_stage=checkpoint.load().get("last_successful_stage"),
-            **log_context,
         )
     else:
         write_json_atomic(config_path, request.effective_config, overwrite=False)
@@ -390,12 +393,12 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             lock.write(f"pid={os.getpid()}\n")
             lock.flush()
             os.fsync(lock.fileno())
-        emit_research_event(
+        emit_contextual_research_event(
             "execution_lock_created",
+            log_context,
             message="Run execution lock created",
             priority=True,
             lock_path=repository_relative_path(lock_path, request.repository_root),
-            **log_context,
         )
         default_worker_kwargs = {
             "experiment_config": request.experiment_config,
@@ -420,19 +423,20 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
     finally:
         if lock_path.exists():
             lock_path.unlink()
-        emit_research_event(
+        emit_contextual_research_event(
             "execution_lock_released",
+            log_context,
             message="Run execution lock released",
             priority=True,
             lock_path=repository_relative_path(lock_path, request.repository_root),
-            **log_context,
         )
 
     resource_payload = _resource_payload(supervisor, request)
     resource_usage = write_resource_usage(run_dir, resource_payload)
     resource_artifact = inspect_artifact(run_dir / "resource_usage.json")
-    emit_research_event(
+    emit_contextual_research_event(
         "resource_artifact_written",
+        log_context,
         message="Resource usage artifact written and hash-validated",
         priority=True,
         artifact_path=repository_relative_path(
@@ -440,7 +444,6 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         ),
         artifact_size_bytes=resource_artifact.size_bytes,
         artifact_sha256=resource_artifact.sha256,
-        **log_context,
     )
     now = utc_timestamp()
     manifest["status"] = supervisor.status
@@ -552,8 +555,9 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         },
     )
     final_checkpoint = checkpoint.load()
-    emit_research_event(
+    emit_contextual_research_event(
         "run_finalized",
+        log_context,
         level="INFO" if published_status in {"completed", "dev_complete"} else "ERROR",
         message=f"Registered research run finalized as {published_status}",
         priority=True,
@@ -568,7 +572,6 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         completed_fold_ids=final_checkpoint.get("completed_fold_ids", []),
         last_successful_stage=final_checkpoint.get("last_successful_stage"),
         checkpoint_status=final_checkpoint.get("status"),
-        **log_context,
     )
     return ExecutionOutcome(
         run_id=run_id,

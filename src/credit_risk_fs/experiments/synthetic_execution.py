@@ -98,6 +98,30 @@ def immediate_success_worker(
     return {"ok": True}
 
 
+def duplicate_stage_context_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    spec: dict[str, Any],
+) -> dict[str, bool]:
+    """Publish stage metadata that intentionally overlaps supervisor context."""
+
+    if stop_event.is_set():
+        raise RuntimeError("unexpected stop")
+    stage_queue.put(
+        {
+            "stage": "pilot_dev_data_loading",
+            "fold_id": 1,
+            "component": "prepare_voting_pilot_dev_data",
+            "pilot_cell": spec["cell_id"],
+            "dataset": spec["dataset"],
+            "method_id": spec["method_id"],
+        }
+    )
+    time.sleep(0.06)
+    return {"ok": True}
+
+
 def uncooperative_wait_worker(
     *,
     stop_event: Any,

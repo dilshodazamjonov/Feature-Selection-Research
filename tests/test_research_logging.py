@@ -18,6 +18,7 @@ from credit_risk_fs.experiments.research_logging import (
     LOG_SCHEMA_VERSION,
     ResearchLogSession,
     bind_research_context,
+    emit_contextual_research_event,
     emit_research_event,
     logged_stage,
     suppress_third_party_output,
@@ -175,6 +176,39 @@ def test_human_format_append_audit_separation_and_immediate_flush(tmp_path):
         AUDIT_TIMESTAMP_PATTERN.match(str(item["timestamp_utc"]))
         for item in audit_records
     )
+
+
+def test_contextual_event_merge_has_safe_explicit_precedence(tmp_path):
+    log_path = tmp_path / "logs" / "runs.log"
+    with ResearchLogSession(
+        Path("logs/runs.log"),
+        repository_root=tmp_path,
+        command_arguments=[],
+        terminal_stream=io.StringIO(),
+    ) as session:
+        emitted = emit_contextual_research_event(
+            "stage_started",
+            {
+                "pilot_cell": "worker-stage-value",
+                "dataset": "worker-stage-value",
+                "message": "must-not-shadow-event-message",
+                "priority": False,
+            },
+            {
+                "pilot_cell": "authenticated-supervisor-value",
+                "dataset": "authenticated-supervisor-value",
+            },
+            message="Merged event emitted",
+            priority=True,
+            dataset="explicit-event-value",
+        )
+        assert emitted
+        session.finish("session_completed", message="Synthetic session completed")
+
+    event = next(item for item in _records(log_path) if item["event"] == "stage_started")
+    assert event["message"] == "Merged event emitted"
+    assert event["pilot_cell"] == "authenticated-supervisor-value"
+    assert event["dataset"] == "explicit-event-value"
 
 
 def test_existing_json_run_log_is_migrated_without_losing_audit_events(tmp_path):
