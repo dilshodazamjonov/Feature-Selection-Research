@@ -1,5 +1,18 @@
 from __future__ import annotations
 
+# Prompt 7 lightweight controls. Listed by name rather than imported eagerly so
+# resolving an unrelated selector does not pull in scikit-learn estimators.
+_LIGHTWEIGHT_IDS = frozenset(
+    {
+        "iv_woe",
+        "mrmr_mutual_information",
+        "lasso_l1_logistic",
+        "random_k",
+        "full_features",
+        "none_explicit",
+    }
+)
+
 
 def get_selector(selector_name: str):
     """Return a canonical selector class and deterministic default kwargs."""
@@ -36,7 +49,12 @@ def get_selector(selector_name: str):
             "thread_count": 1,
         }
 
-    if name == "mrmr":
+    # "mrmr" is a historical alias. It has always meant the random-forest
+    # relevance / absolute-correlation redundancy selector, so it keeps resolving
+    # there and every artifact written under that name stays truthful. Canonical
+    # mutual-information mRMR is a separate ID ("mrmr_mutual_information") and is
+    # deliberately unreachable from this alias.
+    if name in {"mrmr", "legacy_rf_relevance_corr"}:
         from credit_risk_fs.selectors.mrmr import RandomForestRelevanceMRMRSelector
 
         return RandomForestRelevanceMRMRSelector, {
@@ -45,6 +63,12 @@ def get_selector(selector_name: str):
             "random_state": 42,
             "n_jobs": 1,
         }
+
+    if name in _LIGHTWEIGHT_IDS:
+        from credit_risk_fs.selectors.lightweight.registry import get_method_descriptor
+
+        descriptor = get_method_descriptor(name)
+        return descriptor.load(), dict(descriptor.default_kwargs)
 
     if name == "pca":
         from credit_risk_fs.selectors.pca import PCASelector
@@ -115,7 +139,8 @@ def get_selector(selector_name: str):
 
     raise ValueError(
         f"Unsupported selector: {selector_name}. "
-        "Available: boruta, boruta_rfe, rfe, mrmr, pca, llm, llm_then_stat, "
-        "llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
-        "stable_core_llm_fill, none"
+        "Available: boruta, boruta_rfe, rfe, mrmr, legacy_rf_relevance_corr, pca, "
+        "llm, llm_then_stat, llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
+        "stable_core_llm_fill, iv_woe, mrmr_mutual_information, lasso_l1_logistic, "
+        "random_k, full_features, none"
     )

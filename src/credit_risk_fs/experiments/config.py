@@ -310,8 +310,16 @@ def apply_feature_budget_to_selector_kwargs(
     name = selector_name.lower()
     updated = copy.deepcopy(selector_kwargs)
 
-    if name == "mrmr":
+    if name in {"mrmr", "legacy_rf_relevance_corr"}:
         updated["k"] = feature_budget
+    elif name in {"iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "random_k"}:
+        # Prompt 7 lightweight controls all express a final feature budget as "k".
+        updated["k"] = feature_budget
+    elif name in {"full_features", "none_explicit"}:
+        # The full-candidate control ignores a final feature budget by design; the
+        # budget is not written into its kwargs so the ignore is explicit rather
+        # than an accident of argument passing.
+        pass
     elif name == "boruta":
         updated["n_features"] = feature_budget
     elif name == "boruta_rfe":

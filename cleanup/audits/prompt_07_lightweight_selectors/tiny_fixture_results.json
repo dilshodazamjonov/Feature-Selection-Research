@@ -1,0 +1,283 @@
+{
+  "schema_version": "prompt_07_tiny_fixture_results_v1",
+  "status": "PASS",
+  "generated_at_utc": "2026-07-28T15:22:23.684891+00:00",
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.4.2",
+    "pandas": "3.0.1"
+  },
+  "fixture": {
+    "kind": "deterministic_synthetic_only",
+    "seed": 20260728,
+    "rows": 600,
+    "candidate_order": [
+      "strong_signal",
+      "redundant_copy",
+      "weak_signal",
+      "pure_noise",
+      "constant_column",
+      "sparse_with_gaps"
+    ],
+    "candidate_count": 6,
+    "excluded_columns": [
+      "SK_ID_CURR",
+      "TARGET",
+      "split_label",
+      "time_index"
+    ],
+    "metadata_columns_supplied_separately": [
+      "SK_ID_CURR",
+      "TARGET",
+      "split_label",
+      "time_index"
+    ],
+    "target_positive_rate": 0.465,
+    "feature_budget": 4,
+    "contains_strong_signal": true,
+    "contains_redundant_copy": true,
+    "contains_noise": true,
+    "contains_constant": true,
+    "contains_missing_values": true,
+    "real_dataset_loaded": false,
+    "oot_data_loaded": false
+  },
+  "isolation": {
+    "scratch_directory": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp\\claude\\d--python-projects-Research\\a14d9b15-197d-46c5-a1ec-7419ec35a532\\scratchpad\\p07_fixture2",
+    "inside_active_results_root": false,
+    "inside_legacy_results_root": false
+  },
+  "selectors": [
+    {
+      "method_id": "iv_woe",
+      "status": "PASS",
+      "display_label": "Information Value (WOE binning)",
+      "implementation_id": "iv_woe_quantile_binned_v1",
+      "selection_mode": "matched_budget",
+      "supervised": true,
+      "fit_scope": "dev_fold_training_only",
+      "requested_budget": 4,
+      "actual_selected_count": 4,
+      "natural_selected_count": null,
+      "budget_status": "satisfied",
+      "selected_features": [
+        "strong_signal",
+        "redundant_copy",
+        "sparse_with_gaps",
+        "weak_signal"
+      ],
+      "ranking_length": 6,
+      "candidate_universe_count": 6,
+      "candidate_universe_sha256": "96d0b5da30381607ba9212b71d33d6bdda940f1e8dd8c2006d89a6dff0b1efdf",
+      "training_identity_sha256": "8f07b7473a2d2c19d27d9b032d122c24d0b195389021b97c75d30ef7739e41ca",
+      "training_row_count": 600,
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "score_orientation": "higher_is_better",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "selection_inside_candidate_universe": true,
+      "excluded_columns_absent_from_selection": true,
+      "artifacts": {
+        "json": {
+          "path": "iv_woe_selection_result.json",
+          "sha256": "f8af1ae0c77578234a25640bf25b7bcb7907dbc199e03085f6e6d37ce443c2c3"
+        },
+        "csv": {
+          "path": "iv_woe_selection_ranking.csv",
+          "sha256": "0ff4a691bbffc6061251cc79e9337a309c2ffd43e3f37bd638df70106d667575"
+        }
+      },
+      "warnings": [],
+      "failure_reason": null,
+      "fit_seconds": 0.027944,
+      "elapsed_seconds": 0.071389
+    },
+    {
+      "method_id": "mrmr_mutual_information",
+      "status": "PASS",
+      "display_label": "mRMR (mutual information)",
+      "implementation_id": "mrmr_mutual_information_discrete_plugin_v1",
+      "selection_mode": "matched_budget",
+      "supervised": true,
+      "fit_scope": "dev_fold_training_only",
+      "requested_budget": 4,
+      "actual_selected_count": 4,
+      "natural_selected_count": null,
+      "budget_status": "satisfied",
+      "selected_features": [
+        "strong_signal",
+        "pure_noise",
+        "weak_signal",
+        "sparse_with_gaps"
+      ],
+      "ranking_length": 4,
+      "candidate_universe_count": 6,
+      "candidate_universe_sha256": "96d0b5da30381607ba9212b71d33d6bdda940f1e8dd8c2006d89a6dff0b1efdf",
+      "training_identity_sha256": "8f07b7473a2d2c19d27d9b032d122c24d0b195389021b97c75d30ef7739e41ca",
+      "training_row_count": 600,
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "score_orientation": "rank_1_is_best",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "selection_inside_candidate_universe": true,
+      "excluded_columns_absent_from_selection": true,
+      "artifacts": {
+        "json": {
+          "path": "mrmr_mutual_information_selection_result.json",
+          "sha256": "825e92a32c9d780c7edf30d1cd69465d55fd92f1f41c4c06d82b6462f8f7bce3"
+        },
+        "csv": {
+          "path": "mrmr_mutual_information_selection_ranking.csv",
+          "sha256": "46c921d68d225a360415fc60685c2a556eae4bf3388a4910180bce5f0dfc5468"
+        }
+      },
+      "warnings": [],
+      "failure_reason": null,
+      "fit_seconds": 0.010527,
+      "elapsed_seconds": 0.037459
+    },
+    {
+      "method_id": "lasso_l1_logistic",
+      "status": "PASS",
+      "display_label": "LASSO (L1-penalized logistic regression)",
+      "implementation_id": "lasso_l1_logistic_v1",
+      "selection_mode": "matched_budget",
+      "supervised": true,
+      "fit_scope": "dev_fold_training_only",
+      "requested_budget": 4,
+      "actual_selected_count": 1,
+      "natural_selected_count": 1,
+      "budget_status": "infeasible_natural_support",
+      "selected_features": [
+        "strong_signal"
+      ],
+      "ranking_length": 6,
+      "candidate_universe_count": 6,
+      "candidate_universe_sha256": "96d0b5da30381607ba9212b71d33d6bdda940f1e8dd8c2006d89a6dff0b1efdf",
+      "training_identity_sha256": "8f07b7473a2d2c19d27d9b032d122c24d0b195389021b97c75d30ef7739e41ca",
+      "training_row_count": 600,
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "score_orientation": "higher_is_better",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "selection_inside_candidate_universe": true,
+      "excluded_columns_absent_from_selection": true,
+      "artifacts": {
+        "json": {
+          "path": "lasso_l1_logistic_selection_result.json",
+          "sha256": "5cbe2b797b4e22ac38f3d946416c0b4c90920989aa8a0271c85103ab656e0d9b"
+        },
+        "csv": {
+          "path": "lasso_l1_logistic_selection_ranking.csv",
+          "sha256": "521d9cce818d489d1919ab063f7cbf38b2f2ddc0c6f42f3e376857e1e37f6ea5"
+        }
+      },
+      "warnings": [
+        "requested budget 4 exceeds the algorithm's natural support; the budget was not padded",
+        "L1 natural support holds 1 feature(s), fewer than the requested 4; zero-coefficient features were not used as filler because allow_zero_coefficient_fill is False"
+      ],
+      "failure_reason": null,
+      "fit_seconds": 0.003878,
+      "elapsed_seconds": 0.024699
+    },
+    {
+      "method_id": "random_k",
+      "status": "PASS",
+      "display_label": "Random-k control",
+      "implementation_id": "random_k_local_generator_v1",
+      "selection_mode": "random_control",
+      "supervised": false,
+      "fit_scope": "dev_fold_training_only",
+      "requested_budget": 4,
+      "actual_selected_count": 4,
+      "natural_selected_count": null,
+      "budget_status": "satisfied",
+      "selected_features": [
+        "pure_noise",
+        "weak_signal",
+        "sparse_with_gaps",
+        "constant_column"
+      ],
+      "ranking_length": 6,
+      "candidate_universe_count": 6,
+      "candidate_universe_sha256": "96d0b5da30381607ba9212b71d33d6bdda940f1e8dd8c2006d89a6dff0b1efdf",
+      "training_identity_sha256": "bb15b41b764a8346a3824f01615a58f666531816423e35e6b2d6c10025578d3a",
+      "training_row_count": 600,
+      "seed": 42,
+      "tie_rule": "descending_score_then_ascending_feature_name",
+      "score_orientation": "rank_1_is_best",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "selection_inside_candidate_universe": true,
+      "excluded_columns_absent_from_selection": true,
+      "artifacts": {
+        "json": {
+          "path": "random_k_selection_result.json",
+          "sha256": "cfedfd510ff05e2a61dfc8e512dcc59adc7a0a84e6fb98bd9a81a07bb3dddb9a"
+        },
+        "csv": {
+          "path": "random_k_selection_ranking.csv",
+          "sha256": "fef003923ab4ab26907d87d7a6ab5a31ae13776edd586a28941d9d3050d045c8"
+        }
+      },
+      "warnings": [],
+      "failure_reason": null,
+      "fit_seconds": 0.000186,
+      "elapsed_seconds": 0.017456
+    },
+    {
+      "method_id": "full_features",
+      "status": "PASS",
+      "display_label": "Full candidate features",
+      "implementation_id": "full_candidate_features_v1",
+      "selection_mode": "full_control",
+      "supervised": false,
+      "fit_scope": "dev_fold_training_only",
+      "requested_budget": null,
+      "actual_selected_count": 6,
+      "natural_selected_count": null,
+      "budget_status": "not_applicable",
+      "selected_features": [
+        "strong_signal",
+        "redundant_copy",
+        "weak_signal",
+        "pure_noise",
+        "constant_column",
+        "sparse_with_gaps"
+      ],
+      "ranking_length": 6,
+      "candidate_universe_count": 6,
+      "candidate_universe_sha256": "96d0b5da30381607ba9212b71d33d6bdda940f1e8dd8c2006d89a6dff0b1efdf",
+      "training_identity_sha256": "bb15b41b764a8346a3824f01615a58f666531816423e35e6b2d6c10025578d3a",
+      "training_row_count": 600,
+      "seed": 42,
+      "tie_rule": "candidate_universe_order_preserved",
+      "score_orientation": "not_applicable",
+      "deterministic_on_refit": true,
+      "serialization_exact": true,
+      "selection_inside_candidate_universe": true,
+      "excluded_columns_absent_from_selection": true,
+      "artifacts": {
+        "json": {
+          "path": "full_features_selection_result.json",
+          "sha256": "fefef7e0c150781ee4e0a7ba7a5e9fe5f1b64366ab65e306c8c029c3487575bd"
+        },
+        "csv": {
+          "path": "full_features_selection_ranking.csv",
+          "sha256": "597f0b3fa910e2c8e60fbdc0757d2dbb6000e6883af7d5b2eb1a350c7769d555"
+        }
+      },
+      "warnings": [],
+      "failure_reason": null,
+      "fit_seconds": 0.000103,
+      "elapsed_seconds": 0.015758
+    }
+  ],
+  "failure_count": 0,
+  "total_elapsed_seconds": 0.192798,
+  "peak_process_rss_mb": 156.1
+}
