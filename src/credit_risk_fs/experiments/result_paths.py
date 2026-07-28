@@ -8,13 +8,13 @@ import json
 import os
 import re
 import unicodedata
+from collections.abc import Mapping
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from credit_risk_fs.experiments.atomic_io import atomic_publish
-
 
 RESULT_SUBDIRECTORIES = (
     "runs",
@@ -305,7 +305,7 @@ def build_run_id(
     """Build a readable, deterministic base run ID for one calendar day."""
 
     if run_date is None:
-        date_text = date.today().isoformat()
+        date_text = date.today().isoformat()  # noqa: DTZ011
     elif isinstance(run_date, date):
         date_text = run_date.isoformat()
     else:
