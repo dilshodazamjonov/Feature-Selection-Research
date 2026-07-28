@@ -35,8 +35,8 @@
     },
     {
       "path": "cleanup/audits/prompt_08_heavy_selectors/baseline_and_preservation.md",
-      "size_bytes": 3800,
-      "sha256": "38822bc365acb61921ddef4a3ed51e75d75e64494ebea3808a20699fcd535415",
+      "size_bytes": 4696,
+      "sha256": "ae8e8a6f2dbd036af114812de3d8e056781ed3cc7665c0955f1a1cf44872fb78",
       "purpose": "audit / documentation evidence",
       "classification": "source",
       "commit_inclusion": "included",

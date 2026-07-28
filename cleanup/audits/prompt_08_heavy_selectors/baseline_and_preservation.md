@@ -10,7 +10,7 @@ Authenticated before any Prompt 8 code was written.
 | HEAD | `4847085` | `4847085a6be9fb22345113767e936ebd552085ee` | yes |
 | Prompt 7 start | `e48a848` | `e48a848` (HEAD~1) | yes |
 | Prompt 6 checkpoint | `07777f3` | `07777f3` (HEAD~2) | yes |
-| Prompt 7 pushed | no | `main...origin/main [ahead 1]` | yes, local only |
+| Prompt 7 pushed | no (handoff) | `origin/main = 4847085` | **no — see discrepancy below** |
 | `git status --short` | — | empty | clean |
 | `git diff --stat` | — | empty | clean |
 | `git diff -- clip/checkpointing.py` | empty | empty | yes |
@@ -20,8 +20,23 @@ Authenticated before any Prompt 8 code was written.
 scripts, seven test files, the `prompt_07_lightweight_selectors/` audit root, and
 `docs/research_extension/lightweight_selector_controls_v1.md`.
 
-**No material starting fact disagreed with the handoff.** No discrepancy record
-was required.
+## Recorded discrepancy: Prompt 7 is on the remote
+
+The handoff states the Prompt 7 commit is "local only, not pushed". The repository
+disagrees: `git rev-parse origin/main` returns **`4847085`**, so the Prompt 7
+commit is present on `origin/main`. It was pushed outside the Prompt 8 session —
+Prompt 8 executed no `git push` and created no tag.
+
+This is recorded rather than smoothed over, per the Phase 0 rule. It is not a
+preservation problem: the commit content is unchanged and still cleanly separable,
+and `07777f3` (Prompt 6) and `e48a848` remain untouched ancestors. It does mean
+Prompt 7 can no longer be amended or rebased without a force-push, which is
+consistent with the instruction never to rewrite the Prompt 6 or Prompt 7 commits.
+
+After the Prompt 8 commit, `origin/main..HEAD` contains exactly one commit —
+`884c43f`, the Prompt 8 commit — which is local and unpushed as required.
+
+**No other material starting fact disagreed with the handoff.**
 
 `src/credit_risk_fs/clip/checkpointing.py` was confirmed to have no diff and was
 not modified, restored, stashed, or staged at any point in Prompt 8.
