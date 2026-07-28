@@ -1,0 +1,102 @@
+{
+  "schema_version": "prompt_10_prompt_9_pilot_review_v1",
+  "status": "authenticated_pass",
+  "review_scope": "six_prompt_9_dev_fold_1_capacity_configuration_pilots",
+  "reviewed_at_prompt": 10,
+  "prompt_8_baseline_commit": "b7baffc",
+  "prompt_9_pipeline_commit": "0972dfd",
+  "prompt_9_logging_fix_commit": "087d09a",
+  "pilot_configuration_path": "configs/experiments/heavy_selector_dev_pilots_v1.yaml",
+  "pilot_configuration_sha256": "a694d26d43d563d20ca1c8657770c298581a930792bf7d2fa2aee49806507f8a",
+  "full_baseline_configuration_path": "configs/experiments/full_baseline_v1.yaml",
+  "full_baseline_configuration_sha256": "a5ebd3776f1670d8327bb089f50e2a8d7e1a9eeede949c37f4455972b84b73a1",
+  "oot_accessed": false,
+  "oot_evaluated": false,
+  "predictive_performance_claimed": false,
+  "resource_controlled_stop_count": 0,
+  "cells": [
+    {
+      "cell_id": "01-homecredit-fold-1-catboost-shap",
+      "artifact_file_sha256": "c678c418219721fd2aecf9edd8db345fc3abd0f41fff9f176877069d62fbcf16",
+      "artifact_authentication_sha256": "56d8f49fce003180ce2db874c4167daf0a0a51678590110c83d869e87c1cca84",
+      "runtime_seconds": 170.24835349991918,
+      "peak_process_tree_rss_bytes": 2251649024,
+      "minimum_system_available_ram_bytes": 22272372736,
+      "requested_budget": 40,
+      "actual_selected_count": 40,
+      "budget_status": "satisfied"
+    },
+    {
+      "cell_id": "02-lendingclub_v2-fold-1-catboost-shap",
+      "artifact_file_sha256": "e6e3b62fd17152c738ab79467288e6531b3da0f65de0f30e06d7530f79a8291f",
+      "artifact_authentication_sha256": "480623aa0d27b4feba658874b39a8b77f730b364467adad38624fa05454eb363",
+      "runtime_seconds": 135.61417109996546,
+      "peak_process_tree_rss_bytes": 7246761984,
+      "minimum_system_available_ram_bytes": 17029558272,
+      "requested_budget": 40,
+      "actual_selected_count": 40,
+      "budget_status": "satisfied"
+    },
+    {
+      "cell_id": "03-homecredit-fold-1-boruta-random-forest",
+      "artifact_file_sha256": "1f64667a0bb515a1bfb2d5b21df3256ed26bc9fc249e772d8e5eb85391942d13",
+      "artifact_authentication_sha256": "752f9940ddc9ba57e45139a67a708ecd4bbc53ea11022d03a74f95dc22425ffe",
+      "runtime_seconds": 225.02224279998336,
+      "peak_process_tree_rss_bytes": 2254385152,
+      "minimum_system_available_ram_bytes": 21880508416,
+      "requested_budget": 40,
+      "actual_selected_count": 26,
+      "natural_selected_count": 26,
+      "confirmed_count": 26,
+      "tentative_count": 25,
+      "rejected_count": 478,
+      "budget_status": "infeasible_natural_support"
+    },
+    {
+      "cell_id": "04-lendingclub_v2-fold-1-boruta-random-forest",
+      "artifact_file_sha256": "abd3cd4e4c1748096a5cdd77ad26cc839f81b52d3bc7bebe209470f206f20cfe",
+      "artifact_authentication_sha256": "48e82a4363bb374f890092658918087757cc45c6e78ba6978f80dd0b39df42aa",
+      "runtime_seconds": 508.08133429999,
+      "peak_process_tree_rss_bytes": 7246594048,
+      "minimum_system_available_ram_bytes": 16922705920,
+      "requested_budget": 40,
+      "actual_selected_count": 40,
+      "natural_selected_count": 161,
+      "confirmed_count": 161,
+      "tentative_count": 9,
+      "rejected_count": 505,
+      "budget_status": "satisfied"
+    },
+    {
+      "cell_id": "05-homecredit-fold-1-rfe-catboost",
+      "artifact_file_sha256": "48b85ca58162dac311e2ec52087c4969992c867c9c2de275fcf63430157cf03e",
+      "artifact_authentication_sha256": "d85cb2a0505fa8d277153f57452ea2bbed3377c356d41a171a9a8259c239c059",
+      "runtime_seconds": 297.0501329000108,
+      "peak_process_tree_rss_bytes": 2251161600,
+      "minimum_system_available_ram_bytes": 21937876992,
+      "requested_budget": 40,
+      "actual_selected_count": 40,
+      "estimator_fit_count": 13,
+      "budget_status": "satisfied"
+    },
+    {
+      "cell_id": "06-lendingclub_v2-fold-1-rfe-catboost",
+      "artifact_file_sha256": "2f068dbbc5015cc623b2e02dd26345c99807efdd83e658964e2eb9bb73b11286",
+      "artifact_authentication_sha256": "0833d3fbd70e5528a0b669365e7b53cdcfed17b98550e39354c46372a2fb5594",
+      "runtime_seconds": 331.86377349996474,
+      "peak_process_tree_rss_bytes": 7246499840,
+      "minimum_system_available_ram_bytes": 16872562688,
+      "requested_budget": 40,
+      "actual_selected_count": 40,
+      "estimator_fit_count": 14,
+      "budget_status": "satisfied"
+    }
+  ],
+  "boruta_resolution": {
+    "selection_mode": "confirmed_top_k",
+    "natural_support_definition": "confirmed_only",
+    "homecredit_pilot_result": "26_confirmed_against_requested_40",
+    "decision": "retain_infeasible_natural_support_without_tentative_or_rejected_padding",
+    "pipeline_failure": false
+  }
+}
