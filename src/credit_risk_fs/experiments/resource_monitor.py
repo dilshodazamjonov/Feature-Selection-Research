@@ -27,6 +27,7 @@ from credit_risk_fs.experiments.research_logging import (
     STAGE_HEARTBEAT_INTERVAL_SECONDS,
     active_worker_transport,
     configure_worker_logging,
+    emit_contextual_research_event,
     emit_research_event,
 )
 
@@ -689,15 +690,15 @@ def _lifecycle_event(
         }
         else "INFO"
     )
-    emit_research_event(
+    emit_contextual_research_event(
         "supervisor_lifecycle",
+        dict(log_context or {}),
         level=level,
         message=f"Supervisor lifecycle state: {state} ({detail})",
         priority=True,
         lifecycle_state=state,
         elapsed_supervisor_seconds=elapsed,
         owned_pids=list(map(int, pids)),
-        **dict(log_context or {}),
     )
 
 
@@ -1061,22 +1062,22 @@ def supervise_worker(
         ),
         daemon=False,
     )
-    emit_research_event(
+    emit_contextual_research_event(
         "worker_spawn_requested",
+        supervisor_log_context,
         message="Starting supervised research worker",
         priority=True,
         worker_target=worker_target,
         parent_pid=os.getpid(),
-        **supervisor_log_context,
     )
     process.start()
-    emit_research_event(
+    emit_contextual_research_event(
         "worker_spawned",
+        supervisor_log_context,
         message="Supervised research worker spawned",
         priority=True,
         worker_pid=int(process.pid),
         parent_pid=os.getpid(),
-        **supervisor_log_context,
     )
     ownership = _OwnedProcessRegistry(process.pid, association=association)
     sampler = sampler_factory(results_root=results_root, temp_root=temp_root)
@@ -1117,8 +1118,9 @@ def supervise_worker(
             return
         now = monotonic()
         if previous_stage not in {None, "initialized"}:
-            emit_research_event(
+            emit_contextual_research_event(
                 "stage_completed",
+                supervisor_log_context,
                 message=f"Stage {previous_stage} completed",
                 priority=True,
                 fold_id=previous_fold,
@@ -1126,7 +1128,6 @@ def supervise_worker(
                 component=_STAGE_COMPONENTS.get(str(previous_stage), previous_stage),
                 elapsed_stage_seconds=now - stage_started_at,
                 worker_pid=int(process.pid),
-                **supervisor_log_context,
             )
         stage_started_at = now
         last_heartbeat_at = now
@@ -1138,16 +1139,16 @@ def supervise_worker(
         stage_component = details.pop(
             "component", _STAGE_COMPONENTS.get(str(next_stage), next_stage)
         )
-        emit_research_event(
+        emit_contextual_research_event(
             "stage_started",
+            details,
+            supervisor_log_context,
             message=_stage_activity_message(next_stage, heartbeat=False),
             priority=True,
             fold_id=next_fold,
             stage=next_stage,
             component=stage_component,
             worker_pid=int(process.pid),
-            **details,
-            **supervisor_log_context,
         )
 
     try:
@@ -1167,8 +1168,9 @@ def supervise_worker(
             samples.append(sample)
             for warning_message in _new_warnings(sample, policy, emitted_warnings):
                 warnings.append(warning_message)
-                logged = emit_research_event(
+                logged = emit_contextual_research_event(
                     "resource_warning",
+                    supervisor_log_context,
                     level="WARNING",
                     message=f"RESOURCE_WARNING {warning_message}",
                     priority=True,
@@ -1182,14 +1184,14 @@ def supervise_worker(
                     parent_rss_bytes=int(
                         psutil.Process(os.getpid()).memory_info().rss
                     ),
-                    **supervisor_log_context,
                 )
                 if not logged:
                     logger.warning("RESOURCE_WARNING %s", warning_message)
             now = monotonic()
             if now - last_heartbeat_at >= heartbeat_interval:
-                emit_research_event(
+                emit_contextual_research_event(
                     "stage_heartbeat",
+                    supervisor_log_context,
                     message=_stage_activity_message(stage, heartbeat=True),
                     fold_id=fold_id,
                     stage=stage,
@@ -1203,7 +1205,6 @@ def supervise_worker(
                     system_available_ram_bytes=sample.system_available_ram_bytes,
                     process_tree_cpu_percent=sample.process_tree_cpu_percent,
                     process_tree_cpu_seconds=sample.process_tree_cpu_seconds,
-                    **supervisor_log_context,
                 )
                 last_heartbeat_at = now
             threshold = _classify_threshold(sample, policy)
@@ -1469,8 +1470,9 @@ def supervise_worker(
         "timed_out": "stage_aborted",
         "failed": "stage_failed",
     }[status]
-    emit_research_event(
+    emit_contextual_research_event(
         terminal_stage_event,
+        supervisor_log_context,
         level="INFO" if status == "completed" else "ERROR",
         message=f"Stage {stage} ended with worker status {status}",
         priority=True,
@@ -1487,7 +1489,6 @@ def supervise_worker(
             else None
         ),
         traceback=worker_traceback,
-        **supervisor_log_context,
     )
 
     rss_values = [item.process_tree_rss_bytes for item in samples]
@@ -1518,8 +1519,9 @@ def supervise_worker(
     final_child_cleanup_confirmed = (
         child_cleanup_confirmed and not survivors and not process.is_alive()
     )
-    emit_research_event(
+    emit_contextual_research_event(
         "worker_finalized",
+        supervisor_log_context,
         level="INFO" if status == "completed" else "ERROR",
         message=f"Supervised worker finalized with status {status}",
         priority=True,
@@ -1534,7 +1536,6 @@ def supervise_worker(
         parent_rss_before_bytes=parent_rss_before,
         parent_rss_after_bytes=parent_rss_after,
         system_available_ram_after_bytes=system_available_after,
-        **supervisor_log_context,
     )
     if not process.is_alive():
         try:
