@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import pandas as pd
 
 from credit_risk_fs.experiments.full_baseline import (
     DATASET_ORDER,
@@ -31,6 +32,13 @@ from credit_risk_fs.experiments.resource_policy import (
     ResolvedExecutionPolicy,
 )
 from credit_risk_fs.pipelines.common import _resolve_selector
+from credit_risk_fs.models.registry import get_model_bundle
+from credit_risk_fs.models.training import run_kfold_training
+from credit_risk_fs.preprocessing.encoding import Preprocessor
+from credit_risk_fs.selectors.lightweight.controls import FullCandidateFeaturesSelector
+from credit_risk_fs.selectors.original_feature_adapter import (
+    OriginalFeatureSelectorAdapter,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -114,6 +122,8 @@ def test_every_frozen_selector_and_model_configuration_constructs_without_data(t
         selector_cls, selector_kwargs = _resolve_selector(experiment)
         selector = selector_cls(**selector_kwargs)
         assert selector is not None
+        assert isinstance(selector, OriginalFeatureSelectorAdapter)
+        assert selector.select_before_preprocessing is True
         assert experiment.n_splits == 5
         assert experiment.cv_gap_groups == 1
         assert experiment.estimator_threads == 4
@@ -122,6 +132,58 @@ def test_every_frozen_selector_and_model_configuration_constructs_without_data(t
             assert experiment.model_kwargs["thread_count"] == 4
         else:
             assert experiment.model_kwargs["solver"] == "liblinear"
+
+
+def test_full_features_stability_uses_original_not_fold_specific_encoded_universe(tmp_path):
+    rows = 72
+    frame = pd.DataFrame(
+        {
+            "recent_decision": list(range(-rows, 0)),
+            "amount": [float(index % 11) for index in range(rows)],
+            "grade": ["A" if index < 36 else ("B" if index % 2 else "C") for index in range(rows)],
+            "purpose": [f"p{index % 4}" for index in range(rows)],
+        }
+    )
+    target = pd.Series([index % 2 for index in range(rows)], name="TARGET")
+    get_model, train_model, predict_proba, save_model = get_model_bundle(
+        "lr",
+        {
+            "solver": "liblinear",
+            "max_iter": 100,
+            "class_weight": None,
+            "random_state": 42,
+        },
+    )
+    output = tmp_path / "full-original-boundary"
+    run_kfold_training(
+        X=frame,
+        y=target,
+        time_col="recent_decision",
+        get_model=get_model,
+        train_model=train_model,
+        predict_proba=predict_proba,
+        save_model=save_model,
+        preprocessor_cls=Preprocessor,
+        selector_cls=OriginalFeatureSelectorAdapter,
+        selector_kwargs={
+            "selector_cls": FullCandidateFeaturesSelector,
+            "selector_kwargs": {"random_state": 42},
+            "random_state": 42,
+        },
+        model_name="lr_full_features",
+        n_splits=2,
+        gap_groups=0,
+        experiment_output_dir=output,
+        selector_name="full_features",
+    )
+    selected = pd.read_csv(output / "features/fold_selected_features.csv")
+    assert selected.groupby("fold_id")["feature_name"].nunique().to_dict() == {
+        1: 3,
+        2: 3,
+    }
+    assert set(selected["feature_name"]) == {"amount", "grade", "purpose"}
+    stability = pd.read_csv(output / "features/feature_stability_metrics.csv")
+    assert stability["total_candidate_feature_count"].tolist() == [3]
 
 
 def test_protocol_mutations_fail_closed():
