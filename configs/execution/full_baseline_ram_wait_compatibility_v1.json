@@ -1,0 +1,79 @@
+{
+  "schema_version": "full_baseline_ram_wait_compatibility_v1",
+  "eligible_run_ids": [
+    "fbv1-003-lendingclub_v2-lr-full-features-s42"
+  ],
+  "eligible_stop_codes": [
+    "ram_system_headroom",
+    "ram_process_limit"
+  ],
+  "predecessor_commit": "a66f27f1481943c72293a93e6ada09e5f4b39ec1",
+  "full_baseline_configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+  "interrupted_identity": {
+    "run_id": "fbv1-003-lendingclub_v2-lr-full-features-s42",
+    "dataset": "lendingclub_v2",
+    "selector": "full_features",
+    "model": "lr",
+    "split_protocol": "grouped_time_series_cv_5_splits_gap_1_then_locked_oot",
+    "seed": 42,
+    "budgets": {
+      "lr": 20,
+      "catboost": 40
+    },
+    "resolved_config_hash": "b7bbb0ef5541a2734db18542a7e93ef164caba041ff3d043b2bc973d66c16c75",
+    "protocol_version": "1.1.0",
+    "protocol_hash": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "data_hash": "fbac7f9e2a854378b48086c60469fb70c5a276cf0c114910c17c6f6743e1f22f",
+    "row_alignment_hash": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "git_commit": "a66f27f1481943c72293a93e6ada09e5f4b39ec1",
+    "git_dirty": false
+  },
+  "frozen_scientific_files": {
+    "configs/experiments/full_baseline_v1.yaml": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+    "configs/experiments/homecredit_matrix.yaml": "6dc5380b6f9f6b2c1554e49c58a5bae7f7ebac5a62f5ff3acf7ed1fa6dd67c81",
+    "configs/experiments/lendingclub_v2_matrix.yaml": "d798832c4b04ac0719974e5f48d44330b115bdff9a3faee5fd53d5b43589fb46",
+    "configs/protocols/credit_scoring_extension_v1.yaml": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+    "configs/protocols/row_alignment_contract_v1.json": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+    "configs/execution/local_laptop_safe_v1.yaml": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+    "src/credit_risk_fs/experiments/checkpointing.py": "4cd030dfab9e6cb1097c18ff3572e7c77a97ba4893d500944bbd2d23479b72bd",
+    "src/credit_risk_fs/experiments/config.py": "dd6961e05f4d46764252b0acf4c0b651d102936729f42fa202cf2b6566002f31",
+    "src/credit_risk_fs/selectors/base.py": "8bfe672a7af56bad52c957ce1d926372634147dab89270c03946ca3c456a77a7",
+    "src/credit_risk_fs/selectors/registry.py": "beb165489585b9983657cccf73b10f86c9ed6a4dfd784e6efeffca8e8c012550",
+    "src/credit_risk_fs/selectors/lightweight/registry.py": "54b8f2eb3a769292d1a6f88aeb67f4060d555f37f12577c1e529209e8b34ae91",
+    "src/credit_risk_fs/selectors/lightweight/contract.py": "4cffcc94b32948a09f41f7afd8509a0abdf6a445651242b7c667765fc6150937",
+    "src/credit_risk_fs/selectors/lightweight/controls.py": "0d35aba12b9cfd319da2e437e1b4d62d7b4c8b34e7e457914135317ec1177197",
+    "src/credit_risk_fs/selectors/lightweight/iv.py": "c271e1c3c30e4fd0155143dfe4e5b0131a3bb45215ad8213aca307dad1e19d8d",
+    "src/credit_risk_fs/selectors/lightweight/mi_mrmr.py": "8457e922058c7308321dea621e82e6b58411667a53baa0c6010b2ef2bb3693d8",
+    "src/credit_risk_fs/selectors/lightweight/lasso.py": "3c0a9f008626bfdf092c0e2530479db15f4557a51ffeb7a528ff61d819fd8ff7",
+    "src/credit_risk_fs/selectors/heavy/catboost_shap.py": "278d005e37eb09498dbd72c182921397f320ae3cd51a487e213ce8fac61e5265",
+    "src/credit_risk_fs/selectors/heavy/boruta_rf.py": "f4076314c18484bf80a8b5eadccd10c5c28affd797cf57e563eb5883942e494d",
+    "src/credit_risk_fs/selectors/heavy/rfe_catboost.py": "37f37ebba0be0781be78078be8e7931ebfa6fef11e89e4f9dc7a89543f7c6545",
+    "src/credit_risk_fs/selectors/mrmr.py": "3f644edd5e86c7a0780fffecdbc546a59c96daa37dee4234a3b3388e62b13d61",
+    "src/credit_risk_fs/selectors/original_feature_adapter.py": "fb3cbb54e89b9c3b5357b5136abd181c7d8e081b5e6f438080b1c26d9e8db84f",
+    "src/credit_risk_fs/models/registry.py": "8b8be8cf5e075668b01ce585de52f77a264e2acd338127fedbf623c9c74f8654",
+    "src/credit_risk_fs/models/training.py": "a5893db5dfe4e42721f9326cae3ec64cde0c9834a27cc5a8c87bffd6f3df982f",
+    "src/credit_risk_fs/models/catboost_model.py": "4efae7a9eb7fb978942b56e5a67448fedd9e216b702815c4769c59f19761e88a",
+    "src/credit_risk_fs/models/logistic_regression.py": "3f8f0b3370c2c79cc60bf39f351f8dc0f5fb7dd99c3a92bb1bcdbe77a0a0f823",
+    "src/credit_risk_fs/preprocessing/encoding.py": "e2450a7155b06839092d1fb14c49f20fc57ddb2dc7957a7235d2cbfb777c90ed",
+    "src/credit_risk_fs/preprocessing/lendingclub.py": "6980f39b2598109f9db1f77c2509eb58ff77368556745ab927645cd865a392b2",
+    "src/credit_risk_fs/preprocessing/temporal_split.py": "ce9f8b2f84d57b5bfeb0fe5f5243b989d7a3a74e08254369ec472ee246f9f3a0",
+    "src/credit_risk_fs/pipelines/dataset_adapter.py": "aa9a9f934917e53c4b17459f548629c79b365778bd6c377bc49f5792f13cdd94",
+    "src/credit_risk_fs/feature_engineering/homecredit/assemble.py": "7465478801aead0a86e5030fee360a1e51b9223c1dcb677ca9ed29b9bd3b9a10",
+    "src/credit_risk_fs/feature_engineering/lendingclub/application.py": "b1e95f3072d66b6468233c9618c2ab80bdcdf596201a3ef7bf743aefbc87522e",
+    "src/credit_risk_fs/evaluation/metrics.py": "36f356ad80824c7ec7aedf41ad3d7e6e64fb3cda0e11a2b60cf626df6ae6ebec"
+  },
+  "runtime_mechanics_files": {
+    "configs/execution/ram_wait_resume_v1.yaml": "422aa5688fb9ac91b154963234caf0c98c4638500e4792f448b1755930852b19",
+    "src/credit_risk_fs/data/loaders.py": "d47257fb18f48e1ed8353e1d7073ea7baec534d2d8402e58ab3f72605fb15354",
+    "src/credit_risk_fs/experiments/execution.py": "6dbe03e4ec6e71ef66ef92df948cbda7adab9ff64ffad3c8ecdb2fcf786b809a",
+    "src/credit_risk_fs/experiments/full_baseline.py": "173486fa37902348cf3a3bb2c9d421c12a5bde6d884d0261a6b2f6aeaaf071a9",
+    "src/credit_risk_fs/experiments/full_baseline_ram_bridge.py": "b4957cf399d27cf8e39d5ca07120a70d9df67830bafc7c7fac4524ec7ff2c53c",
+    "src/credit_risk_fs/experiments/lendingclub_identity.py": "cbf9b5d26d9900f963594ebbfd292a5e6c74db4e00de3af0c569c963106dc383",
+    "src/credit_risk_fs/experiments/ram_control.py": "cfe94ca7274a488e9d0f45ad1fc299d6502d94e485054fd2759b8f347e348268",
+    "src/credit_risk_fs/experiments/research_logging.py": "32d5069fbfe3d1e74417e6767225a997ac1547c581a1205fb6b05c33cd5e0132",
+    "src/credit_risk_fs/experiments/resource_monitor.py": "2d1db287880ea4fa7ee3eafa512e9625f956f1121369f124b86ef814de4439c3",
+    "src/credit_risk_fs/experiments/resource_policy.py": "144e71b65706e7f1beffe0bbef90a03b24d36943af2bbd7d861dbdde3dbd17d5",
+    "src/credit_risk_fs/experiments/tracking.py": "9d6de1e1dbe628cd3949b971ba969092d1a95f2ba8b61b3b35115f5d06a5b6e5",
+    "src/credit_risk_fs/pipelines/common.py": "ea3bfc603a0d35032bc65848325edb5fcc7243d1de99cbef4308cb14ef7254a2"
+  }
+}

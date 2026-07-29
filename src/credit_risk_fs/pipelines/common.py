@@ -40,6 +40,7 @@ from credit_risk_fs.experiments.result_paths import (
     sanitize_component,
 )
 from credit_risk_fs.experiments.resource_policy import apply_estimator_parallelism
+from credit_risk_fs.experiments.ram_control import wait_for_ram_ready
 from credit_risk_fs.experiments.tracking import (
     build_data_version,
     write_resource_usage,
@@ -130,6 +131,10 @@ class ExperimentConfig:
     estimator_threads: int = 1
     stage_callback: Any | None = field(default=None, repr=False)
     cooperative_stop_event: Any | None = field(default=None, repr=False)
+    ram_ready_event: Any | None = field(default=None, repr=False)
+    ram_gate_poll_seconds: float = field(default=1.0, repr=False)
+    ram_recovery_threshold_bytes: int | None = field(default=None, repr=False)
+    ram_boundary_callback: Any | None = field(default=None, repr=False)
 
 
 @dataclass(slots=True)
@@ -222,10 +227,42 @@ def _report_execution_stage(
     stage: str,
     fold_id: str | int | None = None,
 ) -> None:
+    _wait_for_ram_boundary(config, f"stage:{stage}")
     if config.cooperative_stop_event is not None and config.cooperative_stop_event.is_set():
         raise RuntimeError(f"cooperative stop requested before stage {stage}")
     if config.stage_callback is not None:
         config.stage_callback(stage, fold_id)
+
+
+def _wait_for_ram_boundary(config: ExperimentConfig, boundary: str) -> None:
+    wait_for_ram_ready(
+        config.ram_ready_event,
+        config.cooperative_stop_event,
+        boundary=boundary,
+        poll_seconds=config.ram_gate_poll_seconds,
+    )
+    if (
+        config.ram_ready_event is None
+        or config.ram_boundary_callback is None
+        or config.ram_recovery_threshold_bytes is None
+    ):
+        return
+    # A direct worker-side reading closes the sampling race before an opaque
+    # stage or a loader allocation. The parent owns the stable-recovery state.
+    import psutil
+
+    if int(psutil.virtual_memory().available) >= int(
+        config.ram_recovery_threshold_bytes
+    ):
+        return
+    config.ram_ready_event.clear()
+    config.ram_boundary_callback(str(boundary))
+    wait_for_ram_ready(
+        config.ram_ready_event,
+        config.cooperative_stop_event,
+        boundary=boundary,
+        poll_seconds=config.ram_gate_poll_seconds,
+    )
 
 
 def create_run_output_dir(base_output_dir: str | Path, run_label: str) -> Path:
@@ -802,8 +839,21 @@ def prepare_voting_research_oot_data(
 
 def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
     logger.info("Loading datasets from %s", config.data_dir)
-    loader = DataLoader(config.data_dir)
+    def memory_gate(boundary: str) -> None:
+        allocation_boundary = str(boundary).endswith(
+            ("before_chunk_concat", "before_frame_alignment")
+        )
+        if config.stage_callback is not None:
+            config.stage_callback(
+                "data_loading_allocation" if allocation_boundary else "data_loading",
+                None,
+            )
+        _wait_for_ram_boundary(config, boundary)
+
+    loader = DataLoader(config.data_dir, memory_gate=memory_gate)
+    _wait_for_ram_boundary(config, "modeling_data:before_projection")
     projections = calculate_required_columns(config, loader)
+    _wait_for_ram_boundary(config, "modeling_data:before_projected_load")
     dfs = loader.load_all(
         projections,
         require_projection=True,
@@ -829,9 +879,12 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
             sidecar_path=config.identity_sidecar_path,
             manifest_path=config.identity_manifest_path,
             processed_frame=app_train,
+            memory_gate=memory_gate,
+            csv_chunk_rows=int(config.csv_chunk_rows or 25_000),
         )
         if config.stable_row_id_column != "loan_id":
             raise ValueError("lendingclub_v2 authenticated identity must use loan_id")
+        _wait_for_ram_boundary(config, "modeling_data:before_identity_projection")
         app_train.insert(0, "loan_id", identity_bundle.frame["loan_id"].to_numpy())
         identity_manifest = dict(identity_bundle.manifest)
         identity_manifest.update(
@@ -865,6 +918,7 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
         )
 
     if dataset_mode == "homecredit_multitable":
+        _wait_for_ram_boundary(config, "modeling_data:before_feature_engineering")
         logger.info("Building application-level time proxy")
         time_proxy_df = build_application_time_proxy(dfs)
         if time_proxy_df is not None:
@@ -919,6 +973,7 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
 
     source_row_count = int(len(merged_train))
     dropped_missing_time_row_count = int(merged_train[time_col].isna().sum())
+    _wait_for_ram_boundary(config, "modeling_data:before_temporal_filter")
     merged_train = merged_train[merged_train[time_col].notna()].copy()
     dropped_older_row_count = int((merged_train[time_col] < config.dev_start_day).sum())
     merged_train = merged_train[
@@ -927,6 +982,7 @@ def prepare_modeling_data(config: ExperimentConfig) -> PreparedExperimentData:
     ].copy()
     logger.info("Merged training shape after time filtering: %s", merged_train.shape)
 
+    _wait_for_ram_boundary(config, "modeling_data:before_dev_oot_split")
     cv_data = merged_train[
         (merged_train[time_col] >= config.dev_start_day)
         & (merged_train[time_col] < config.oot_start_day)

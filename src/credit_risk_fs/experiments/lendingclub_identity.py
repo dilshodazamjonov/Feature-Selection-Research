@@ -8,7 +8,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import pandas as pd
 
@@ -473,6 +473,8 @@ def load_lendingclub_identity_sidecar(
     sidecar_path: str | Path,
     manifest_path: str | Path,
     processed_frame: pd.DataFrame | None = None,
+    memory_gate: Callable[[str], None] | None = None,
+    csv_chunk_rows: int = 25_000,
 ) -> LendingClubIdentityBundle:
     """Load a sidecar and fail closed on schema, hashes, order, target, or time."""
 
@@ -486,12 +488,36 @@ def load_lendingclub_identity_sidecar(
     if manifest.get("manifest_sha256") != _manifest_hash(manifest):
         raise ValueError("LendingClub identity manifest hash mismatch")
     expected_sidecar = manifest.get("sidecar", {})
+    if memory_gate is not None:
+        memory_gate("lendingclub_identity:before_hash_validation")
     if expected_sidecar.get("sha256") != sha256_file(sidecar):
         raise ValueError("LendingClub identity sidecar hash mismatch")
-    identity = pd.read_csv(
-        sidecar,
-        dtype={"loan_id": "string", "split": "string", "issue_month": "string"},
+    if int(csv_chunk_rows) <= 0:
+        raise ValueError("csv_chunk_rows must be positive")
+    reader = iter(
+        pd.read_csv(
+            sidecar,
+            dtype={
+                "loan_id": "string",
+                "split": "string",
+                "issue_month": "string",
+            },
+            chunksize=int(csv_chunk_rows),
+        )
     )
+    chunks: list[pd.DataFrame] = []
+    chunk_index = 0
+    while True:
+        if memory_gate is not None:
+            memory_gate(f"lendingclub_identity:before_csv_chunk:{chunk_index}")
+        try:
+            chunks.append(next(reader))
+        except StopIteration:
+            break
+        chunk_index += 1
+    if memory_gate is not None:
+        memory_gate("lendingclub_identity:before_chunk_concat")
+    identity = pd.concat(chunks, ignore_index=True)
     if tuple(identity.columns) != SIDECAR_COLUMNS:
         raise ValueError("LendingClub identity sidecar columns mismatch")
     expected_rows = int(manifest.get("retained_row_count", -1))
@@ -505,6 +531,8 @@ def load_lendingclub_identity_sidecar(
     if _alignment_fingerprint(identity) != manifest["processed_dataset"]["alignment_fingerprint"]:
         raise ValueError("LendingClub identity alignment fingerprint mismatch")
     if processed_frame is not None:
+        if memory_gate is not None:
+            memory_gate("lendingclub_identity:before_frame_alignment")
         required = {"TARGET", "recent_decision", "issue_d"}
         missing = required - set(processed_frame.columns)
         if missing:

@@ -24,6 +24,7 @@ from credit_risk_fs.experiments.research_logging import (
     suppress_third_party_output,
 )
 from credit_risk_fs.experiments.resource_monitor import (
+    DISK_RESULTS_LIMIT,
     RAM_PROCESS_LIMIT,
     ResourceSample,
     _OwnedProcessRegistry,
@@ -97,7 +98,7 @@ class _DelayedHighMemorySampler:
             ),
             system_available_ram_bytes=10 * gib,
             process_gpu_bytes=None,
-            results_free_disk_bytes=100 * gib,
+            results_free_disk_bytes=(100 * gib if self.sample_count < 5 else 0),
             temp_free_disk_bytes=100 * gib,
             process_tree_cpu_percent=1.0,
             process_tree_cpu_seconds=0.01,
@@ -465,7 +466,7 @@ def test_model_fit_worker_exception_and_interrupt_are_durable(tmp_path):
     )
 
 
-def test_resource_abort_and_force_kill_lifecycle_are_human_and_durable(
+def test_non_ram_resource_abort_and_force_kill_lifecycle_are_human_and_durable(
     tmp_path, monkeypatch
 ):
     log_path = tmp_path / "runs.log"
@@ -492,7 +493,7 @@ def test_resource_abort_and_force_kill_lifecycle_are_human_and_durable(
         )
         session.finish("session_completed", message="done")
     assert result.status == "aborted_resource_limit"
-    assert result.stop_code == RAM_PROCESS_LIMIT
+    assert result.stop_code == DISK_RESULTS_LIMIT
     assert result.child_cleanup_confirmed
     records = _records(log_path)
     human = log_path.read_text(encoding="utf-8")
@@ -507,8 +508,8 @@ def test_resource_abort_and_force_kill_lifecycle_are_human_and_durable(
         "FORCE_KILL_REMAINDERS",
         "EXIT_CONFIRMED",
     } <= lifecycle_states
-    assert "WARN  | RAM safety limit reached" in human
-    assert "STOP  | RAM safety limit reached" in human
+    assert "WARN  | disk safety limit reached" in human
+    assert "STOP  | disk safety limit reached" in human
     assert "WARN  | Force-stopping remaining worker processes" in human
     assert "DONE  | Research worker cleanup confirmed" in human
 

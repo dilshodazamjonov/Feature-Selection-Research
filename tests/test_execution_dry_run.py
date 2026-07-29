@@ -13,6 +13,7 @@ from credit_risk_fs.experiments.checkpointing import CheckpointManager, ResumeVa
 from credit_risk_fs.experiments.config import compute_config_hash
 from credit_risk_fs.experiments.execution import RegisteredRunRequest, execute_registered_run
 from credit_risk_fs.experiments.resource_monitor import (
+    DISK_RESULTS_LIMIT,
     MANUAL_INTERRUPT,
     RAM_PROCESS_LIMIT,
     SupervisorResult,
@@ -157,12 +158,15 @@ def test_successful_synthetic_run_uses_real_registered_execution_contract(tmp_pa
     assert validate_active_results(tmp_path)["registered_runs"] == 1
 
 
-def test_forced_low_memory_registered_run_aborts_and_remains_resumable(tmp_path, monkeypatch):
+def test_terminal_disk_limit_registered_run_aborts_and_remains_resumable(tmp_path, monkeypatch):
     monkeypatch.delenv("CREDIT_RISK_LEGACY_RESULTS_ROOT", raising=False)
     request = _fixture(
         tmp_path,
         run_id="synthetic-abort",
-        policy=_policy(warn_ram=0.07, abort_ram=0.11),
+        policy=replace(
+            _policy(warn_ram=0.07, abort_ram=0.11),
+            disk=DiskPolicy(1_000_000_000, 0.001, 2.5),
+        ),
     )
     request = replace(
         request,
@@ -175,8 +179,8 @@ def test_forced_low_memory_registered_run_aborts_and_remains_resumable(tmp_path,
     )
     outcome = execute_registered_run(request)
     assert outcome.status == "aborted_resource_limit"
-    assert outcome.stop_code == RAM_PROCESS_LIMIT
-    assert outcome.supervisor.primary_stop_code == RAM_PROCESS_LIMIT
+    assert outcome.stop_code == DISK_RESULTS_LIMIT
+    assert outcome.supervisor.primary_stop_code == DISK_RESULTS_LIMIT
     assert outcome.supervisor.child_cleanup_confirmed
     assert outcome.supervisor.queue_cleanup_confirmed
     assert not outcome.supervisor.survivor_processes
@@ -190,7 +194,7 @@ def test_forced_low_memory_registered_run_aborts_and_remains_resumable(tmp_path,
     payload = checkpoint.load()
     assert payload["last_successful_stage"] == "initialized"
     assert payload["status"] == "aborted_resource_limit"
-    assert payload["primary_stop_code"] == RAM_PROCESS_LIMIT
+    assert payload["primary_stop_code"] == DISK_RESULTS_LIMIT
     assert payload["cleanup_evidence"]["child_cleanup_confirmed"] is True
     assert checkpoint.validate_resume(payload["identity"]).resumable
     assert validate_active_results(tmp_path)["registered_runs"] == 1

@@ -558,7 +558,6 @@ def estimate_run_size(
         (projected + dense_working * float(method_memory_multiplier))
         * policy.memory.estimated_peak_safety_factor
     )
-    limit = int(policy.memory.abort_process_tree_rss_gb * GIB)
     return {
         "status": "available",
         "projected_input_bytes": projected,
@@ -568,9 +567,9 @@ def estimate_run_size(
         "atomic_write_temporary_bytes": atomic_temp,
         "estimated_peak_bytes": peak,
         "safety_factor": policy.memory.estimated_peak_safety_factor,
-        "process_limit_bytes": limit,
-        "remaining_headroom_bytes": limit - peak,
-        "fits": peak < limit,
+        "termination_limit_bytes": None,
+        "fits": None,
+        "interpretation": "planning estimate only; process RSS is not a termination trigger",
     }
 
 
@@ -589,6 +588,7 @@ def run_preflight(
     estimate: dict[str, Any] | None = None,
     requested_run_directory: str | Path | None = None,
     capacity: HardwareCapacity | None = None,
+    ram_control_policy: Any | None = None,
 ) -> dict[str, Any]:
     """Run mechanical preflight checks and return a machine-readable report."""
 
@@ -598,6 +598,24 @@ def run_preflight(
     configured = load_execution_policy(root, config_path)
     detected = capacity or detect_hardware(active, temp)
     resolved = resolve_execution_policy(configured, detected)
+    if ram_control_policy is None:
+        from credit_risk_fs.experiments.ram_control import (
+            DEFAULT_RAM_CONTROL_PATH,
+            default_ram_control_policy,
+            load_ram_control_policy,
+        )
+
+        ram_path = root / DEFAULT_RAM_CONTROL_PATH
+        ram_control_policy = (
+            load_ram_control_policy(
+                root,
+                total_physical_ram_bytes=int(detected.total_ram_gb * GIB),
+            )
+            if ram_path.is_file()
+            else default_ram_control_policy(
+                total_physical_ram_bytes=int(detected.total_ram_gb * GIB)
+            )
+        )
     checks: list[dict[str, Any]] = []
     warnings = list(resolved.resolution_warnings)
 
@@ -635,8 +653,12 @@ def run_preflight(
     checks.append(
         _check(
             "system_available_ram",
-            detected.available_ram_gb > resolved.memory.abort_if_system_available_below_gb,
-            f"available={detected.available_ram_gb:.3f} GiB, minimum={resolved.memory.abort_if_system_available_below_gb:.3f} GiB",
+            True,
+            (
+                f"available={detected.available_ram_gb:.3f} GiB, "
+                f"emergency_margin={ram_control_policy.emergency_margin_bytes / GIB:.3f} GiB; "
+                "low RAM is handled by the nonterminal readiness wait"
+            ),
         )
     )
     checks.append(
@@ -694,7 +716,7 @@ def run_preflight(
         checks.append(
             _check(
                 "run_size_estimate",
-                status == "available" and bool(estimate.get("fits")),
+                status == "available",
                 json.dumps(estimate, sort_keys=True),
             )
         )
@@ -742,6 +764,7 @@ def run_preflight(
         "gpu_telemetry_override": bool(allow_gpu_without_telemetry),
         "configured_policy": configured.configured,
         "resolved_policy": resolved.to_dict(),
+        "ram_control_policy": ram_control_policy.to_dict(),
         "detected_capacity": asdict(detected),
         "run_size_estimate": resolved_estimate,
         "checks": checks,

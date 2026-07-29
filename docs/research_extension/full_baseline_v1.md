@@ -1,6 +1,6 @@
 # Full baseline v1
 
-Status: **frozen and implementation-tested; real execution not started**
+Status: **frozen; 2 authenticated cells completed by the user; cell 003 is resumable**
 
 ## Scope and scientific boundary
 
@@ -91,8 +91,12 @@ model class's constructor default.
 - CatBoost RFE: 500 iterations, depth 6, learning rate 0.05, fractional step 0.20.
 - CPU only; seed 42; four estimator threads; one cell, one fold, and zero data
   loader subprocesses at a time; no nested parallelism.
-- RAM, disk, graceful-stop, cleanup, and inter-run readiness limits come from
-  `configs/execution/local_laptop_safe_v1.yaml`.
+- Thread, GPU, disk, graceful-stop, cleanup, and historical capacity-planning
+  settings remain in `configs/execution/local_laptop_safe_v1.yaml`. Its fixed
+  RAM/RSS fields no longer terminate a run.
+- Operational RAM control comes from `configs/execution/ram_wait_resume_v1.yaml`:
+  wait at the larger of 1 GiB or 2% total physical RAM, recover at 4 GiB for
+  three consecutive 5-second checks, and log at wait entry/every 5 minutes/resume.
 - Per-cell wall limits: 3 h light/SHAP, 6 h Boruta, 8 h RFE.
 
 All nine selectors fit before final-model preprocessing. Within each training
@@ -126,7 +130,9 @@ Every cell has an immutable deterministic `fbv1-NNN-...` run ID. The runner:
 - resumes only a registered non-completed checkpoint with matching run, data,
   protocol, configuration, and artifact identity;
 - quarantines untracked partial artifacts through the existing checkpoint layer;
-- stops after the first manual, resource, wall-clock, or unexpected failure;
+- waits indefinitely and automatically resumes when RAM alone is low;
+- stops after a manual interruption, non-RAM resource limit, wall-clock limit,
+  or unexpected failure;
 - keeps completed runs immutable; and
 - uses the same command for the initial run and any later resume.
 
@@ -140,7 +146,9 @@ Run from `D:\python projects\Research`:
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
 ```
 
-If the command stops or the machine reboots, run the same execution command again:
+The authenticated compatibility bridge permits the existing pre-patch RAM stop
+for cell 003 to resume without changing its scientific identity. If the command
+is manually stopped or the machine reboots, run the same execution command again:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
@@ -163,8 +171,9 @@ budgets, and both datasets gives roughly 20–25 hours for the heavy selectors
 alone. Repeated data preparation, the six lighter methods, and 108 final CatBoost
 fold/full-DEV fits add substantial time.
 
-A practical uninterrupted expectation is **about 30–45 hours** on this machine
+A practical active-computation expectation is **about 30–45 hours** on this machine
 (roughly 1.5 days, with two days a sensible scheduling window). This is an
-engineering estimate, not a deadline. Resource stops, other machine load, disk
-speed, and resume attempts can extend it; the configured wall limits are safety
-ceilings per cell, not the expected duration.
+engineering estimate, not a deadline. Automatic RAM waiting is excluded from
+cell wall limits and adds directly to calendar time; other machine load, disk
+speed, and resume attempts can also extend it. The configured wall limits are
+active-computation safety ceilings per cell, not the expected duration.

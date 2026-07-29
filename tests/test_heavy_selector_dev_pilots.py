@@ -494,7 +494,7 @@ class _HighRamSampler:
         )
 
 
-def test_supervisor_wall_clock_and_ram_stops_are_bounded(tmp_path):
+def test_supervisor_wall_clock_stop_is_bounded_and_high_rss_is_nonterminal(tmp_path):
     timeout = supervise_worker(
         worker_target=(
             "credit_risk_fs.experiments.synthetic_execution:uncooperative_wait_worker"
@@ -512,7 +512,7 @@ def test_supervisor_wall_clock_and_ram_stops_are_bounded(tmp_path):
 
     ram = supervise_worker(
         worker_target=(
-            "credit_risk_fs.experiments.synthetic_execution:uncooperative_wait_worker"
+            "credit_risk_fs.experiments.synthetic_execution:immediate_success_worker"
         ),
         worker_kwargs={},
         policy=_policy(warn_ram=0.05, abort_ram=0.08),
@@ -521,6 +521,6 @@ def test_supervisor_wall_clock_and_ram_stops_are_bounded(tmp_path):
         sampler_factory=_HighRamSampler,
         heartbeat_interval_seconds=0.02,
     )
-    assert ram.status == "aborted_resource_limit"
-    assert ram.stop_code == RAM_PROCESS_LIMIT
+    assert ram.status == "completed"
+    assert ram.stop_code is None
     assert ram.child_cleanup_confirmed

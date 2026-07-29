@@ -4,6 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from credit_risk_fs.experiments.resource_monitor import (
+    DISK_RESULTS_LIMIT,
     GPU_PROCESS_LIMIT,
     MANUAL_INTERRUPT,
     RAM_PROCESS_LIMIT,
@@ -61,18 +62,18 @@ def _sample(*, rss_gb: float = 0.1, gpu_gb: float | None = None) -> ResourceSamp
     )
 
 
-def test_warning_is_emitted_once_per_resource():
+def test_process_rss_alone_emits_no_warning_or_stop():
     policy = _policy(warn_ram=0.05, abort_ram=1.0)
     emitted: set[str] = set()
     first = _new_warnings(_sample(rss_gb=0.1), policy, emitted)
     second = _new_warnings(_sample(rss_gb=0.2), policy, emitted)
-    assert len(first) == 1
+    assert first == []
     assert second == []
 
 
-def test_abort_reason_classification_for_ram_and_gpu():
+def test_abort_reason_classification_ignores_ram_rss_but_keeps_gpu():
     policy = _policy(warn_ram=0.05, abort_ram=0.1)
-    assert _classify_threshold(_sample(rss_gb=0.2), policy) == RAM_PROCESS_LIMIT
+    assert _classify_threshold(_sample(rss_gb=0.2), policy) is None
     gpu_policy = replace(policy, memory=replace(policy.memory, abort_process_tree_rss_gb=10))
     assert _classify_threshold(_sample(rss_gb=0.1, gpu_gb=3.0), gpu_policy) == GPU_PROCESS_LIMIT
 
@@ -114,23 +115,27 @@ def test_duplicate_stage_and_supervisor_logging_context_is_safe(tmp_path):
     assert result.final_fold_id == 1
 
 
-def test_forced_low_memory_abort_records_warning_and_cleans_child(tmp_path):
+def test_high_process_rss_alone_does_not_abort_worker(tmp_path):
     result = supervise_worker(
-        worker_target="credit_risk_fs.experiments.synthetic_execution:bounded_memory_worker",
-        worker_kwargs={
-            "chunk_mb": 4,
-            "maximum_allocation_mb": 160,
-            "spawn_child": True,
-        },
+        worker_target="credit_risk_fs.experiments.synthetic_execution:immediate_success_worker",
+        worker_kwargs={},
         policy=_policy(warn_ram=0.07, abort_ram=0.11),
         results_root=tmp_path,
         temp_root=tmp_path,
+        sampler_factory=_HighRssSampler,
     )
-    assert result.status == "aborted_resource_limit"
-    assert result.stop_code == RAM_PROCESS_LIMIT
-    assert any(message.startswith(RAM_PROCESS_LIMIT) for message in result.warnings)
-    assert any(sample.child_pids for sample in result.samples)
+    assert result.status == "completed"
+    assert result.stop_code is None
+    assert not any(message.startswith(RAM_PROCESS_LIMIT) for message in result.warnings)
     assert result.child_cleanup_confirmed
+
+
+class _HighRssSampler(ProcessTreeSampler):
+    def sample(self, *args, **kwargs):
+        return replace(
+            super().sample(*args, **kwargs),
+            process_tree_rss_bytes=100 * 1024**3,
+        )
 
 
 def test_unexpected_worker_exit_is_recorded(tmp_path):
@@ -184,17 +189,17 @@ def test_gpu_telemetry_mock_can_report_process_bytes():
 
 def test_first_stop_cause_is_immutable_and_secondary_events_are_retained():
     recorder = _StopCauseRecorder()
-    recorder.observe(RAM_PROCESS_LIMIT, elapsed_seconds=1.0, detail="threshold")
+    recorder.observe(DISK_RESULTS_LIMIT, elapsed_seconds=1.0, detail="threshold")
     recorder.observe(MANUAL_INTERRUPT, elapsed_seconds=2.0, detail="later interrupt")
     recorder.observe(WORKER_CRASH, elapsed_seconds=3.0, detail="later worker error")
-    assert recorder.primary == RAM_PROCESS_LIMIT
+    assert recorder.primary == DISK_RESULTS_LIMIT
     assert [item["code"] for item in recorder.secondary] == [
         MANUAL_INTERRUPT,
         WORKER_CRASH,
     ]
     manual_first = _StopCauseRecorder()
     manual_first.observe(MANUAL_INTERRUPT, elapsed_seconds=1.0, detail="interrupt")
-    manual_first.observe(RAM_PROCESS_LIMIT, elapsed_seconds=2.0, detail="late sample")
+    manual_first.observe(DISK_RESULTS_LIMIT, elapsed_seconds=2.0, detail="late sample")
     assert manual_first.primary == MANUAL_INTERRUPT
 
 
@@ -202,6 +207,7 @@ def test_uncooperative_worker_is_stopped_within_finite_bound(tmp_path):
     policy = replace(
         _policy(warn_ram=0.000001, abort_ram=0.000002),
         monitoring=MonitoringPolicy(0.01, 0.15, 0.2),
+        disk=DiskPolicy(1_000_000_000, 0.001, 2.5),
     )
     result = supervise_worker(
         worker_target=(
@@ -215,7 +221,7 @@ def test_uncooperative_worker_is_stopped_within_finite_bound(tmp_path):
         run_association="test:uncooperative",
     )
     assert result.status == "aborted_resource_limit"
-    assert result.primary_stop_code == RAM_PROCESS_LIMIT
+    assert result.primary_stop_code == DISK_RESULTS_LIMIT
     assert result.graceful_stop_completed is False
     assert result.shutdown_elapsed_seconds is not None
     assert result.shutdown_elapsed_seconds < 1.5
@@ -258,7 +264,7 @@ class _TriggerAfterChildSampler(ProcessTreeSampler):
         sample = super().sample(*args, **kwargs)
         return replace(
             sample,
-            process_tree_rss_bytes=(10 * 1024**3 if sample.child_pids else 0),
+            results_free_disk_bytes=(0 if sample.child_pids else sample.results_free_disk_bytes),
         )
 
 
@@ -313,7 +319,7 @@ def test_stubborn_process_reaches_force_kill_and_later_interrupt_is_secondary():
     process = _FakeProcess(interrupt_join=True)
     registry = _FakeOwnedRegistry(process)
     recorder = _StopCauseRecorder()
-    recorder.observe(RAM_PROCESS_LIMIT, elapsed_seconds=0.0, detail="threshold")
+    recorder.observe(DISK_RESULTS_LIMIT, elapsed_seconds=0.0, detail="threshold")
     lifecycle = []
     ok, survivors, condition, elapsed, graceful = _shutdown_owned_worker(
         process=process,
@@ -328,7 +334,7 @@ def test_stubborn_process_reaches_force_kill_and_later_interrupt_is_secondary():
     assert elapsed < 0.5
     assert graceful is False
     assert registry.force_kill_called
-    assert recorder.primary == RAM_PROCESS_LIMIT
+    assert recorder.primary == DISK_RESULTS_LIMIT
     assert recorder.secondary[0]["code"] == MANUAL_INTERRUPT
     assert any(item["state"] == "FORCE_KILL_REMAINDERS" for item in lifecycle)
 
@@ -398,7 +404,8 @@ def test_sequential_synthetic_runs_leave_no_owned_worker_or_large_payload(tmp_pa
 
 class _LowMemoryPsutil:
     class _Memory:
-        available = 1
+        available = 10 * 1024**3
+        total = 32 * 1024**3
 
     class _Info:
         rss = 1234
@@ -416,19 +423,21 @@ class _LowMemoryPsutil:
         return _LowMemoryPsutil._Memory()
 
 
-def test_inter_run_readiness_uses_unchanged_ram_floor_and_is_bounded(
+def test_inter_run_readiness_keeps_disk_failure_terminal(
     tmp_path, monkeypatch
 ):
     monkeypatch.setattr("multiprocessing.active_children", lambda: [])
     result = wait_for_inter_run_readiness(
-        policy=_policy(),
+        policy=replace(
+            _policy(), disk=DiskPolicy(1_000_000_000, 0.001, 2.5)
+        ),
         results_root=tmp_path,
         temp_root=tmp_path,
         timeout_seconds=0.0,
         psutil_module=_LowMemoryPsutil,
     )
     assert not result.ready
-    assert result.stop_code == "ram_system_headroom"
+    assert result.stop_code == DISK_RESULTS_LIMIT
     assert result.elapsed_seconds < 0.5
 
 

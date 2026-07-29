@@ -17,6 +17,11 @@ from credit_risk_fs.experiments.research_logging import (
     logged_stage,
 )
 from credit_risk_fs.experiments.resource_policy import ResolvedExecutionPolicy
+from credit_risk_fs.experiments.ram_control import (
+    ResolvedRamControlPolicy,
+    default_ram_control_policy,
+    load_ram_control_policy,
+)
 from credit_risk_fs.experiments.result_paths import (
     append_run_index_row,
     repository_relative_path,
@@ -62,6 +67,7 @@ class RegisteredRunRequest:
     checkpoint_identity_override: dict[str, Any] | None = None
     resume_metadata: dict[str, Any] | None = None
     max_wall_clock_seconds: float | None = None
+    ram_control_policy: ResolvedRamControlPolicy | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +158,8 @@ def experiment_worker(
     *,
     stop_event: Any,
     stage_queue: Any,
+    ram_ready_event: Any | None = None,
+    ram_recovery_threshold_bytes: int | None = None,
     experiment_config: ExperimentConfig,
     checkpoint_identity: Mapping[str, Any],
     run_directory: str,
@@ -166,10 +174,29 @@ def experiment_worker(
     def report_stage(stage: str, fold_id: str | int | None = None) -> None:
         stage_queue.put({"stage": stage, "fold_id": fold_id})
 
+    def report_ram_boundary(boundary: str) -> None:
+        stage_name = (
+            boundary.split(":", 1)[1]
+            if boundary.startswith("stage:")
+            else "data_loading_allocation"
+        )
+        stage_queue.put(
+            {
+                "stage": stage_name,
+                "fold_id": None,
+                "ram_recovery_barrier": True,
+                "ram_boundary": boundary,
+            }
+        )
+
     experiment_config.stage_callback = report_stage
     experiment_config.cooperative_stop_event = stop_event
+    experiment_config.ram_ready_event = ram_ready_event
+    experiment_config.ram_recovery_threshold_bytes = ram_recovery_threshold_bytes
+    experiment_config.ram_boundary_callback = report_ram_boundary
     if stop_event.is_set():
         raise RuntimeError("cooperative stop requested before data loading")
+    stage_queue.put({"stage": "data_loading", "fold_id": None})
     prepared = prepare_modeling_data(experiment_config)
     checkpoint.transition("data_validated")
     stage_queue.put({"stage": "data_validated", "fold_id": None})
@@ -219,6 +246,17 @@ def _resource_payload(
         "minimum_system_available_ram_bytes": supervisor.minimum_system_available_ram_bytes,
         "minimum_results_free_disk_bytes": supervisor.minimum_results_free_disk_bytes,
         "minimum_temp_free_disk_bytes": supervisor.minimum_temp_free_disk_bytes,
+        "active_computation_seconds": supervisor.active_computation_seconds,
+        "total_ram_wait_seconds": supervisor.total_ram_wait_seconds,
+        "ram_control": {
+            "emergency_margin_bytes": supervisor.emergency_ram_margin_bytes,
+            "recovery_threshold_bytes": supervisor.ram_recovery_threshold_bytes,
+            "check_interval_seconds": supervisor.ram_check_interval_seconds,
+            "log_interval_seconds": supervisor.ram_log_interval_seconds,
+            "recovery_consecutive_checks": supervisor.ram_recovery_consecutive_checks,
+            "wait_count": supervisor.ram_wait_count,
+            "wait_events": list(supervisor.ram_wait_events),
+        },
         "worker_exit_code": supervisor.worker_exit_code,
         "stop_code": supervisor.stop_code,
         "primary_stop_code": supervisor.primary_stop_code,
@@ -413,6 +451,17 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         )
         if request.worker_kwargs is not None and request.merge_default_worker_kwargs:
             resolved_worker_kwargs = {**default_worker_kwargs, **request.worker_kwargs}
+        if request.ram_control_policy is not None:
+            ram_control = request.ram_control_policy
+        else:
+            try:
+                ram_control = load_ram_control_policy(request.repository_root)
+            except FileNotFoundError:
+                import psutil
+
+                ram_control = default_ram_control_policy(
+                    total_physical_ram_bytes=int(psutil.virtual_memory().total)
+                )
         supervisor = supervise_worker(
             worker_target=request.worker_target,
             worker_kwargs=resolved_worker_kwargs,
@@ -421,6 +470,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
             temp_root=request.preflight_report["temporary_root"],
             run_association=f"{run_id}:{utc_timestamp()}",
             max_wall_clock_seconds=request.max_wall_clock_seconds,
+            ram_control_policy=ram_control,
         )
     finally:
         if lock_path.exists():
@@ -463,6 +513,7 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         "minimum_results_free_disk_bytes": supervisor.minimum_results_free_disk_bytes,
         "minimum_temp_free_disk_bytes": supervisor.minimum_temp_free_disk_bytes,
     }
+    manifest["ram_control"] = resource_payload["ram_control"]
     if supervisor.worker_error:
         manifest["error"] = supervisor.worker_error
 
