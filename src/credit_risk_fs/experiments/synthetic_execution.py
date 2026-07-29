@@ -98,6 +98,79 @@ def immediate_success_worker(
     return {"ok": True}
 
 
+def cooperative_ram_gate_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    ram_ready_event: Any,
+    active_duration_seconds: float = 0.08,
+) -> dict[str, bool]:
+    """Synthetic loader-like work that pauses only at cooperative boundaries."""
+
+    stage_queue.put({"stage": "data_loading", "fold_id": None})
+    active = 0.0
+    while active < float(active_duration_seconds):
+        if stop_event.is_set():
+            return {"completed": False}
+        if not ram_ready_event.is_set():
+            ram_ready_event.wait(0.01)
+            continue
+        started = time.monotonic()
+        stop_event.wait(0.005)
+        active += time.monotonic() - started
+    return {"completed": True}
+
+
+def opaque_ram_stage_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    ram_ready_event: Any,
+    duration_seconds: float = 0.08,
+) -> dict[str, bool]:
+    """Represent a library call that cannot inspect the cooperative RAM gate."""
+
+    del ram_ready_event
+    stage_queue.put({"stage": "final_model_fit", "fold_id": None})
+    stop_event.wait(float(duration_seconds))
+    if stop_event.is_set():
+        return {"completed": False}
+    return {"completed": True}
+
+
+def cooperative_recovery_boundary_worker(
+    *,
+    stop_event: Any,
+    stage_queue: Any,
+    ram_ready_event: Any,
+    ram_recovery_threshold_bytes: int,
+) -> dict[str, Any]:
+    """Synthetic opaque-stage barrier; it performs no memory allocation."""
+
+    del ram_recovery_threshold_bytes
+    ram_ready_event.clear()
+    stage_queue.put(
+        {
+            "stage": "final_model_fit",
+            "fold_id": None,
+            "ram_recovery_barrier": True,
+            "ram_boundary": "stage:final_model_fit",
+        }
+    )
+    while not ram_ready_event.wait(0.01):
+        if stop_event.is_set():
+            return {"completed": False}
+    return {"completed": True}
+
+
+def memory_error_worker(
+    *, stop_event: Any, stage_queue: Any, ram_ready_event: Any
+) -> None:
+    del stop_event, ram_ready_event
+    stage_queue.put({"stage": "synthetic_memory_error", "fold_id": None})
+    raise MemoryError("synthetic allocation failure")
+
+
 def duplicate_stage_context_worker(
     *,
     stop_event: Any,

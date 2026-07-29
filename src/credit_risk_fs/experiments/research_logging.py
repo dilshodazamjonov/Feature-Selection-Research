@@ -78,6 +78,7 @@ _STAGE_LABELS = {
     "oot_evaluation": "OOT evaluation",
     "oot_checkpoint_finalization": "OOT checkpoint",
     "checkpoint_resume_validation": "Checkpoint validation",
+    "data_loading": "Data loading",
     "pilot_dev_data_loading": "Pilot DEV data loading",
     "pilot_fold_projection": "Pilot fold-1 projection",
     "pilot_selection_encoding": "Pilot selection encoding",
@@ -361,6 +362,63 @@ def _human_line(
             parts.append(f"RAM {ram}")
         if available:
             parts.append(f"Available {available}")
+    elif event in {"ram_wait_started", "ram_wait_periodic"}:
+        action = "WAIT"
+        dataset = _dataset_label(payload.get("dataset"), payload.get("run_id"))
+        stage = str(payload.get("stage") or "")
+        if stage in {
+            "initialized",
+            "data_loading",
+            "dev_data_loading",
+            "pilot_dev_data_loading",
+            "full_dev_data_loading",
+            "locked_oot_data_loading",
+        }:
+            activity = f"{dataset or 'Dataset'} loading paused"
+        else:
+            activity = f"{dataset + ' ' if dataset else ''}{_stage_label(payload)} paused"
+        parts = [activity]
+        if event == "ram_wait_periodic":
+            try:
+                waiting_seconds = float(payload.get("waiting_seconds"))
+            except (TypeError, ValueError):
+                waiting_seconds = -1
+            waiting = (
+                f"{int(waiting_seconds // 60)}m"
+                if waiting_seconds >= 60 and waiting_seconds % 60 < 1e-9
+                else _duration(payload.get("waiting_seconds"))
+            )
+            if waiting:
+                parts.append(f"Waiting {waiting}")
+        ram = _gib(payload.get("process_tree_rss_bytes"))
+        available = _gib(payload.get("system_available_ram_bytes"))
+        if ram:
+            parts.append(f"Process RAM {ram}")
+        if available:
+            parts.append(f"Available {available}")
+    elif event == "ram_resumed":
+        action = "RESUME"
+        available = _gib(payload.get("system_available_ram_bytes"))
+        parts = [
+            f"Available RAM stable at {available}"
+            if available
+            else "Available RAM recovered stably"
+        ]
+        dataset = _dataset_label(payload.get("dataset"), payload.get("run_id"))
+        stage = str(payload.get("stage") or "")
+        if stage in {
+            "initialized",
+            "data_loading",
+            "dev_data_loading",
+            "pilot_dev_data_loading",
+            "full_dev_data_loading",
+            "locked_oot_data_loading",
+        }:
+            parts.append(f"Continuing {dataset or 'dataset'} loading")
+        else:
+            parts.append(
+                f"Continuing {dataset + ' ' if dataset else ''}{_stage_label(payload)}"
+            )
     elif event == "stage_completed":
         action = "DONE"
         parts = [item for item in (fold_label, f"{_stage_label(payload)} completed") if item]
@@ -467,7 +525,7 @@ def _human_line(
         return None
 
     rendered = " | ".join(part for part in parts if part)
-    action_spacing = " " * max(1, 6 - len(action))
+    action_spacing = "   " if action == "WAIT" else " " * max(1, 6 - len(action))
     return (
         f"[{_human_timestamp(payload.get('timestamp_utc'))}] "
         f"{action}{action_spacing}| {rendered}"

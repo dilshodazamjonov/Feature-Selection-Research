@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import gc
 import logging
 import multiprocessing
@@ -23,6 +24,11 @@ from credit_risk_fs.experiments.resource_policy import (
     ResolvedExecutionPolicy,
     apply_thread_environment,
 )
+from credit_risk_fs.experiments.ram_control import (
+    RamWaitState,
+    ResolvedRamControlPolicy,
+    default_ram_control_policy,
+)
 from credit_risk_fs.experiments.research_logging import (
     STAGE_HEARTBEAT_INTERVAL_SECONDS,
     active_worker_transport,
@@ -42,12 +48,16 @@ DISK_TEMP_LIMIT = "disk_temp_limit"
 MANUAL_INTERRUPT = "manual_interrupt"
 PREFLIGHT_REJECTED = "preflight_rejected"
 WORKER_CRASH = "worker_crash"
+MEMORY_ERROR = "memory_error"
+RAM_PAUSE_UNAVAILABLE = "ram_pause_unavailable"
 WORKER_TREE_TERMINATION_FAILED = "worker_tree_termination_failed"
 WALL_CLOCK_LIMIT = "wall_clock_limit"
 RESULT_PAYLOAD_LIMIT_BYTES = 1024 * 1024
 MAX_QUEUE_DRAIN_MESSAGES = 1024
 
 _STAGE_COMPONENTS = {
+    "data_loading": "data_loading",
+    "data_loading_allocation": "data_loading",
     "pilot_dev_data_loading": "prepare_voting_pilot_dev_data",
     "pilot_fold_projection": "canonical_fold_projection",
     "pilot_selection_encoding": "original_feature_numeric_encoder",
@@ -90,6 +100,16 @@ _STAGE_COMPONENTS = {
     "oot_artifact_writing": "artifact_writer",
     "oot_evaluation": "evaluation",
     "oot_checkpoint_finalization": "checkpoint",
+}
+
+_COOPERATIVE_RAM_STAGES = {
+    "data_loading",
+    "pilot_dev_data_loading",
+    "dev_data_loading",
+    "selected_projection_reload",
+    "full_dev_data_loading",
+    "full_dev_selected_projection_reload",
+    "locked_oot_data_loading",
 }
 
 
@@ -139,6 +159,15 @@ class SupervisorResult:
     system_available_ram_after_bytes: int | None = None
     queue_cleanup_confirmed: bool = True
     run_association: str | None = None
+    emergency_ram_margin_bytes: int | None = None
+    ram_recovery_threshold_bytes: int | None = None
+    ram_check_interval_seconds: float | None = None
+    ram_log_interval_seconds: float | None = None
+    ram_recovery_consecutive_checks: int | None = None
+    total_ram_wait_seconds: float = 0.0
+    active_computation_seconds: float = 0.0
+    ram_wait_count: int = 0
+    ram_wait_events: tuple[dict[str, Any], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -158,6 +187,8 @@ class InterRunReadiness:
     results_free_disk_bytes: int
     temp_free_disk_bytes: int
     active_child_pids: tuple[int, ...]
+    total_ram_wait_seconds: float = 0.0
+    ram_wait_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -345,6 +376,8 @@ def _worker_entry(
     stop_event: Any,
     result_queue: Any,
     stage_queue: Any,
+    ram_ready_event: Any,
+    ram_recovery_threshold_bytes: int,
     run_association: str,
     logging_transport: tuple[Any, str, Any, Any] | None,
     logging_context: Mapping[str, Any],
@@ -369,7 +402,21 @@ def _worker_entry(
             run_association=run_association,
         )
         function = _load_worker_target(target)
-        value = function(stop_event=stop_event, stage_queue=publisher, **kwargs)
+        controls = {"stop_event": stop_event, "stage_queue": publisher}
+        parameters = inspect.signature(function).parameters
+        if "ram_ready_event" in parameters or any(
+            item.kind is inspect.Parameter.VAR_KEYWORD
+            for item in parameters.values()
+        ):
+            controls["ram_ready_event"] = ram_ready_event
+        if "ram_recovery_threshold_bytes" in parameters or any(
+            item.kind is inspect.Parameter.VAR_KEYWORD
+            for item in parameters.values()
+        ):
+            controls["ram_recovery_threshold_bytes"] = int(
+                ram_recovery_threshold_bytes
+            )
+        value = function(**controls, **kwargs)
         encoded = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
         if len(encoded) > RESULT_PAYLOAD_LIMIT_BYTES:
             raise ValueError(
@@ -426,9 +473,10 @@ def _worker_entry(
         try:
             result_queue.put_nowait(
                 {
-                    "kind": "error",
-                    "error": f"{type(exc).__name__}: {exc}",
-                    "traceback": error_traceback,
+                "kind": "error",
+                "error": f"{type(exc).__name__}: {exc}",
+                "exception_class": type(exc).__name__,
+                "traceback": error_traceback,
                     "run_association": run_association,
                 }
             )
@@ -464,12 +512,6 @@ def _drain_stage_queue(
 
 
 def _classify_threshold(sample: ResourceSample, policy: ResolvedExecutionPolicy) -> str | None:
-    if sample.process_tree_rss_bytes >= int(policy.memory.abort_process_tree_rss_gb * GIB):
-        return RAM_PROCESS_LIMIT
-    if sample.system_available_ram_bytes <= int(
-        policy.memory.abort_if_system_available_below_gb * GIB
-    ):
-        return RAM_SYSTEM_HEADROOM
     if sample.process_gpu_bytes is not None and sample.process_gpu_bytes >= int(
         policy.gpu.abort_process_vram_gb * GIB
     ):
@@ -487,19 +529,10 @@ def _new_warnings(
     emitted: set[str],
 ) -> list[str]:
     candidates = {
-        RAM_PROCESS_LIMIT: (
-            sample.process_tree_rss_bytes >= int(policy.memory.warn_process_tree_rss_gb * GIB),
-            f"process tree RSS crossed warning threshold ({sample.process_tree_rss_bytes / GIB:.3f} GiB)",
-        ),
         GPU_PROCESS_LIMIT: (
             sample.process_gpu_bytes is not None
             and sample.process_gpu_bytes >= int(policy.gpu.warn_process_vram_gb * GIB),
             "process GPU memory crossed warning threshold",
-        ),
-        RAM_SYSTEM_HEADROOM: (
-            sample.system_available_ram_bytes
-            <= int(policy.memory.reserve_system_ram_gb * GIB),
-            "system-available RAM entered the configured reserve",
         ),
         DISK_RESULTS_LIMIT: (
             sample.results_free_disk_bytes
@@ -615,6 +648,36 @@ class _OwnedProcessRegistry:
 
     def _ordered(self, processes: list[Any]) -> list[Any]:
         return sorted(processes, key=lambda item: int(item.pid) == self.root_pid)
+
+    def suspend_phase(self) -> tuple[int, ...]:
+        processes = self._ordered(self.alive())
+        suspended: list[int] = []
+        for process in processes:
+            try:
+                process.suspend()
+                suspended.append(int(process.pid))
+            except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                for prior in reversed(processes):
+                    if int(prior.pid) not in suspended:
+                        continue
+                    try:
+                        prior.resume()
+                    except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                        pass
+                return ()
+        return tuple(suspended)
+
+    def resume_phase(self) -> tuple[int, ...]:
+        resumed: list[int] = []
+        # Resume the spawned root before its descendants.
+        processes = list(reversed(self._ordered(self.alive())))
+        for process in processes:
+            try:
+                process.resume()
+                resumed.append(int(process.pid))
+            except (self.psutil.NoSuchProcess, self.psutil.AccessDenied):
+                continue
+        return tuple(resumed)
 
     def terminate_phase(self, *, timeout_seconds: float) -> list[Any]:
         processes = self._ordered(self.alive())
@@ -894,17 +957,21 @@ def wait_for_inter_run_readiness(
     temp_root: str | Path,
     timeout_seconds: float | None = None,
     psutil_module: Any | None = None,
+    ram_control_policy: ResolvedRamControlPolicy | None = None,
+    monotonic_fn: Any = monotonic,
+    sleep_fn: Any = sleep,
 ) -> InterRunReadiness:
-    """Bounded readiness barrier using the existing, unchanged abort floors."""
+    """Wait indefinitely for RAM recovery; retain terminal disk/process checks."""
 
+    del timeout_seconds
     if psutil_module is None:
         import psutil as psutil_module
-    started = monotonic()
-    timeout = (
-        min(5.0, float(policy.monitoring.graceful_stop_timeout_seconds))
-        if timeout_seconds is None
-        else max(0.0, float(timeout_seconds))
+    memory = psutil_module.virtual_memory()
+    ram_control = ram_control_policy or default_ram_control_policy(
+        total_physical_ram_bytes=int(memory.total)
     )
+    started = monotonic_fn()
+    ram_state = RamWaitState(ram_control)
     samples = 0
     last_code: str | None = None
     while True:
@@ -923,20 +990,44 @@ def wait_for_inter_run_readiness(
         temp_free = int(shutil.disk_usage(temp_root).free)
         if active_children:
             last_code = WORKER_TREE_TERMINATION_FAILED
-        elif available <= int(
-            policy.memory.abort_if_system_available_below_gb * GIB
-        ):
-            last_code = RAM_SYSTEM_HEADROOM
         elif results_free <= int(policy.disk.minimum_free_results_gb * GIB):
             last_code = DISK_RESULTS_LIMIT
         elif temp_free <= int(policy.disk.minimum_free_temp_gb * GIB):
             last_code = DISK_TEMP_LIMIT
         else:
             last_code = None
-        elapsed = monotonic() - started
-        if last_code is None or elapsed >= timeout or active_children:
+        now = monotonic_fn()
+        transition = ram_state.observe(available, now=now)
+        if transition is not None:
+            event = {
+                "wait_started": "ram_wait_started",
+                "wait_periodic": "ram_wait_periodic",
+                "resumed": "ram_resumed",
+            }[transition.action]
+            emit_research_event(
+                event,
+                message=(
+                    "RAM recovered stably; pipeline readiness resumed"
+                    if transition.action == "resumed"
+                    else "Pipeline is waiting for RAM before the next worker"
+                ),
+                priority=True,
+                stage="inter_run_readiness",
+                pause_mode="parent_readiness_barrier",
+                waiting_seconds=transition.waiting_seconds,
+                process_tree_rss_bytes=parent_rss,
+                system_available_ram_bytes=available,
+                consecutive_recovery_checks=(
+                    transition.consecutive_recovery_checks
+                ),
+                emergency_ram_margin_bytes=ram_control.emergency_margin_bytes,
+                ram_recovery_threshold_bytes=ram_control.recovery_threshold_bytes,
+            )
+        elapsed = monotonic_fn() - started
+        ram_ready = not ram_state.waiting
+        if last_code is not None or (ram_ready and not active_children):
             result = InterRunReadiness(
-                ready=last_code is None,
+                ready=last_code is None and ram_ready,
                 stop_code=last_code,
                 elapsed_seconds=elapsed,
                 sample_count=samples,
@@ -946,6 +1037,10 @@ def wait_for_inter_run_readiness(
                 results_free_disk_bytes=results_free,
                 temp_free_disk_bytes=temp_free,
                 active_child_pids=active_children,
+                total_ram_wait_seconds=ram_state.waiting_seconds(
+                    now=monotonic_fn()
+                ),
+                ram_wait_count=ram_state.wait_count,
             )
             emit_research_event(
                 "inter_run_readiness_result",
@@ -968,12 +1063,7 @@ def wait_for_inter_run_readiness(
                 active_child_pids=result.active_child_pids,
             )
             return result
-        sleep(
-            min(
-                float(policy.monitoring.sample_interval_seconds),
-                max(0.0, timeout - elapsed),
-            )
-        )
+        sleep_fn(ram_control.check_interval_seconds)
 
 
 def _supervisor_logging_context(
@@ -1024,6 +1114,7 @@ def supervise_worker(
     run_association: str | None = None,
     heartbeat_interval_seconds: float = STAGE_HEARTBEAT_INTERVAL_SECONDS,
     max_wall_clock_seconds: float | None = None,
+    ram_control_policy: ResolvedRamControlPolicy | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
 
@@ -1043,9 +1134,15 @@ def supervise_worker(
     )
     import psutil
 
+    ram_control = ram_control_policy or default_ram_control_policy(
+        total_physical_ram_bytes=int(psutil.virtual_memory().total)
+    )
+    ram_state = RamWaitState(ram_control)
     parent_rss_before = int(psutil.Process(os.getpid()).memory_info().rss)
     context = multiprocessing.get_context("spawn")
     stop_event = context.Event()
+    ram_ready_event = context.Event()
+    ram_ready_event.set()
     result_queue = context.Queue(maxsize=1)
     stage_queue = context.Queue(maxsize=256)
     process = context.Process(
@@ -1056,6 +1153,8 @@ def supervise_worker(
             stop_event,
             result_queue,
             stage_queue,
+            ram_ready_event,
+            ram_control.recovery_threshold_bytes,
             association,
             worker_logging_transport,
             supervisor_log_context,
@@ -1088,6 +1187,7 @@ def supervise_worker(
     fold_id: str | int | None = None
     recorder = _StopCauseRecorder()
     lifecycle: list[dict[str, Any]] = []
+    ram_wait_events: list[dict[str, Any]] = []
     _lifecycle_event(
         lifecycle,
         "RUNNING",
@@ -1104,7 +1204,110 @@ def supervise_worker(
     graceful_stop_completed: bool | None = None
     message: Mapping[str, Any] | None = None
     stage_started_at = supervisor_started
+    stage_waiting_baseline = 0.0
     last_heartbeat_at = supervisor_started
+    opaque_tree_suspended = False
+    ram_boundary_pending = False
+    ram_pause_unavailable = False
+    computation_ended_at: float | None = None
+
+    def stage_active_elapsed(now: float) -> float:
+        waiting_since_stage = max(
+            0.0,
+            ram_state.waiting_seconds(now=now) - stage_waiting_baseline,
+        )
+        return max(0.0, now - stage_started_at - waiting_since_stage)
+
+    def handle_ram_transition(
+        transition: Any,
+        sample: ResourceSample,
+        *,
+        now: float,
+    ) -> None:
+        nonlocal opaque_tree_suspended, last_heartbeat_at
+        nonlocal ram_boundary_pending, ram_pause_unavailable
+        action = str(transition.action)
+        pause_mode = (
+            "worker_stage_boundary"
+            if ram_boundary_pending
+            else "cooperative_boundary"
+            if stage in _COOPERATIVE_RAM_STAGES
+            else "process_tree_suspend"
+        )
+        if action == "wait_started":
+            ram_ready_event.clear()
+            if pause_mode == "process_tree_suspend":
+                suspended = ownership.suspend_phase()
+                opaque_tree_suspended = bool(suspended)
+                _lifecycle_event(
+                    lifecycle,
+                    "OPAQUE_STAGE_PROCESS_TREE_SUSPENDED",
+                    supervisor_started=supervisor_started,
+                    detail=f"stage={stage}; pids={list(suspended)}",
+                    pids=suspended,
+                    log_context=supervisor_log_context,
+                )
+                if not suspended and process.is_alive():
+                    ram_pause_unavailable = True
+                    recorder.observe(
+                        RAM_PAUSE_UNAVAILABLE,
+                        elapsed_seconds=now - supervisor_started,
+                        detail=(
+                            "owned process tree could not be suspended safely "
+                            f"during opaque stage {stage}"
+                        ),
+                    )
+        elif action == "resumed":
+            if opaque_tree_suspended:
+                resumed = ownership.resume_phase()
+                opaque_tree_suspended = False
+                _lifecycle_event(
+                    lifecycle,
+                    "OPAQUE_STAGE_PROCESS_TREE_RESUMED",
+                    supervisor_started=supervisor_started,
+                    detail=f"stage={stage}; pids={list(resumed)}",
+                    pids=resumed,
+                    log_context=supervisor_log_context,
+                )
+            ram_ready_event.set()
+            ram_boundary_pending = False
+            last_heartbeat_at = now
+
+        event_name = {
+            "wait_started": "ram_wait_started",
+            "wait_periodic": "ram_wait_periodic",
+            "resumed": "ram_resumed",
+        }[action]
+        record = {
+            "action": action,
+            "timestamp_utc": _utc_now(),
+            "elapsed_supervisor_seconds": now - supervisor_started,
+            "waiting_seconds": float(transition.waiting_seconds),
+            "stage": stage,
+            "fold_id": fold_id,
+            "pause_mode": pause_mode,
+            "worker_pid": sample.worker_pid,
+            "process_tree_rss_bytes": sample.process_tree_rss_bytes,
+            "system_available_ram_bytes": sample.system_available_ram_bytes,
+            "consecutive_recovery_checks": (
+                transition.consecutive_recovery_checks
+            ),
+        }
+        ram_wait_events.append(record)
+        emit_contextual_research_event(
+            event_name,
+            supervisor_log_context,
+            message=(
+                "RAM recovered stably; supervised work resumed"
+                if action == "resumed"
+                else "Supervised work is waiting for RAM"
+            ),
+            priority=True,
+            **record,
+            emergency_ram_margin_bytes=ram_control.emergency_margin_bytes,
+            ram_recovery_threshold_bytes=ram_control.recovery_threshold_bytes,
+            ram_recovery_required_checks=ram_control.recovery_consecutive_checks,
+        )
 
     def on_stage_update(
         previous_stage: str | None,
@@ -1113,7 +1316,10 @@ def supervise_worker(
         next_fold: Any,
         update: Mapping[str, Any],
     ) -> None:
-        nonlocal stage_started_at, last_heartbeat_at
+        nonlocal stage_started_at, stage_waiting_baseline, last_heartbeat_at
+        nonlocal ram_boundary_pending
+        if bool(update.get("ram_recovery_barrier")):
+            ram_boundary_pending = True
         if next_stage == previous_stage and next_fold == previous_fold:
             return
         now = monotonic()
@@ -1126,10 +1332,11 @@ def supervise_worker(
                 fold_id=previous_fold,
                 stage=previous_stage,
                 component=_STAGE_COMPONENTS.get(str(previous_stage), previous_stage),
-                elapsed_stage_seconds=now - stage_started_at,
+                elapsed_stage_seconds=stage_active_elapsed(now),
                 worker_pid=int(process.pid),
             )
         stage_started_at = now
+        stage_waiting_baseline = ram_state.waiting_seconds(now=now)
         last_heartbeat_at = now
         details = {
             str(key): value
@@ -1166,6 +1373,58 @@ def supervise_worker(
                     pass
             sample = sampler.sample(process.pid, stage=stage, fold_id=fold_id)
             samples.append(sample)
+            now = monotonic()
+            ram_transition = None
+            if ram_boundary_pending and not ram_state.waiting:
+                if (
+                    sample.system_available_ram_bytes
+                    < ram_control.recovery_threshold_bytes
+                ):
+                    ram_transition = ram_state.begin_wait(now=now)
+                else:
+                    ram_ready_event.set()
+                    ram_boundary_pending = False
+                    _lifecycle_event(
+                        lifecycle,
+                        "RAM_RECOVERY_BOUNDARY_PASSED",
+                        supervisor_started=supervisor_started,
+                        detail=f"stage={stage}; no wait required",
+                        pids=(int(process.pid),),
+                        log_context=supervisor_log_context,
+                    )
+            if ram_transition is None:
+                ram_transition = ram_state.observe(
+                    sample.system_available_ram_bytes,
+                    now=now,
+                )
+            if ram_transition is not None:
+                handle_ram_transition(ram_transition, sample, now=now)
+            if ram_pause_unavailable:
+                computation_ended_at = monotonic()
+                ram_ready_event.set()
+                (
+                    child_cleanup_confirmed,
+                    survivors,
+                    termination_condition,
+                    shutdown_elapsed,
+                    graceful_stop_completed,
+                ) = _shutdown_owned_worker(
+                    process=process,
+                    stop_event=stop_event,
+                    ownership=ownership,
+                    policy=policy,
+                    recorder=recorder,
+                    lifecycle=lifecycle,
+                    supervisor_started=supervisor_started,
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": recorder.primary,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": int(process.pid),
+                    },
+                )
+                break
             for warning_message in _new_warnings(sample, policy, emitted_warnings):
                 warnings.append(warning_message)
                 logged = emit_contextual_research_event(
@@ -1187,8 +1446,10 @@ def supervise_worker(
                 )
                 if not logged:
                     logger.warning("RESOURCE_WARNING %s", warning_message)
-            now = monotonic()
-            if now - last_heartbeat_at >= heartbeat_interval:
+            if (
+                not ram_state.waiting
+                and now - last_heartbeat_at >= heartbeat_interval
+            ):
                 emit_contextual_research_event(
                     "stage_heartbeat",
                     supervisor_log_context,
@@ -1196,7 +1457,7 @@ def supervise_worker(
                     fold_id=fold_id,
                     stage=stage,
                     component=_STAGE_COMPONENTS.get(str(stage), stage),
-                    elapsed_stage_seconds=now - stage_started_at,
+                    elapsed_stage_seconds=stage_active_elapsed(now),
                     worker_pid=sample.worker_pid,
                     worker_rss_bytes=sample.process_tree_rss_bytes,
                     parent_rss_bytes=int(
@@ -1209,6 +1470,7 @@ def supervise_worker(
                 last_heartbeat_at = now
             threshold = _classify_threshold(sample, policy)
             if threshold is not None:
+                computation_ended_at = monotonic()
                 recorder.observe(
                     threshold,
                     elapsed_seconds=monotonic() - supervisor_started,
@@ -1232,6 +1494,10 @@ def supervise_worker(
                         "system_available_ram_bytes": sample.system_available_ram_bytes,
                     },
                 )
+                if opaque_tree_suspended:
+                    ownership.resume_phase()
+                    opaque_tree_suspended = False
+                ram_ready_event.set()
                 (
                     child_cleanup_confirmed,
                     survivors,
@@ -1257,11 +1523,17 @@ def supervise_worker(
                 break
             if (
                 max_wall_clock_seconds is not None
-                and monotonic() - supervisor_started >= float(max_wall_clock_seconds)
+                and ram_state.active_seconds(
+                    started=supervisor_started, now=monotonic()
+                )
+                >= float(max_wall_clock_seconds)
             ):
+                computation_ended_at = monotonic()
                 recorder.observe(
                     WALL_CLOCK_LIMIT,
-                    elapsed_seconds=monotonic() - supervisor_started,
+                    elapsed_seconds=ram_state.active_seconds(
+                        started=supervisor_started, now=monotonic()
+                    ),
                     detail=(
                         "per-worker wall-clock limit reached: "
                         f"{float(max_wall_clock_seconds):.3f} seconds"
@@ -1284,6 +1556,10 @@ def supervise_worker(
                         "max_wall_clock_seconds": float(max_wall_clock_seconds),
                     },
                 )
+                if opaque_tree_suspended:
+                    ownership.resume_phase()
+                    opaque_tree_suspended = False
+                ram_ready_event.set()
                 (
                     child_cleanup_confirmed,
                     survivors,
@@ -1307,13 +1583,38 @@ def supervise_worker(
                     },
                 )
                 break
-            stop_event.wait(policy.monitoring.sample_interval_seconds)
+            sleep_seconds = float(ram_control.check_interval_seconds)
+            if not ram_state.waiting:
+                sleep_seconds = min(
+                    sleep_seconds,
+                    max(
+                        0.001,
+                        heartbeat_interval - (monotonic() - last_heartbeat_at),
+                    ),
+                )
+                if max_wall_clock_seconds is not None:
+                    remaining_active = (
+                        float(max_wall_clock_seconds)
+                        - ram_state.active_seconds(
+                            started=supervisor_started,
+                            now=monotonic(),
+                        )
+                    )
+                    sleep_seconds = min(
+                        sleep_seconds, max(0.001, remaining_active)
+                    )
+            process.join(timeout=sleep_seconds)
     except KeyboardInterrupt:
+        computation_ended_at = monotonic()
         recorder.observe(
             MANUAL_INTERRUPT,
             elapsed_seconds=monotonic() - supervisor_started,
             detail="user KeyboardInterrupt in supervisor",
         )
+        if opaque_tree_suspended:
+            ownership.resume_phase()
+            opaque_tree_suspended = False
+        ram_ready_event.set()
         (
             child_cleanup_confirmed,
             survivors,
@@ -1337,6 +1638,12 @@ def supervise_worker(
             },
         )
     finally:
+        if computation_ended_at is None:
+            computation_ended_at = monotonic()
+        if opaque_tree_suspended:
+            ownership.resume_phase()
+            opaque_tree_suspended = False
+        ram_ready_event.set()
         ownership.refresh()
         if shutdown_elapsed is None and (process.is_alive() or ownership.alive()):
             if recorder.primary is None:
@@ -1420,8 +1727,13 @@ def supervise_worker(
             detail="worker reported KeyboardInterrupt",
         )
     elif message and message.get("kind") == "error":
+        error_code = (
+            MEMORY_ERROR
+            if message.get("exception_class") == "MemoryError"
+            else WORKER_CRASH
+        )
         recorder.observe(
-            WORKER_CRASH,
+            error_code,
             elapsed_seconds=monotonic() - supervisor_started,
             detail=worker_error or "worker exception",
         )
@@ -1479,7 +1791,7 @@ def supervise_worker(
         fold_id=fold_id,
         stage=stage,
         component=_STAGE_COMPONENTS.get(str(stage), stage),
-        elapsed_stage_seconds=monotonic() - stage_started_at,
+        elapsed_stage_seconds=stage_active_elapsed(monotonic()),
         worker_pid=int(process.pid),
         worker_exit_code=worker_exit_code,
         stop_code=stop_code,
@@ -1571,4 +1883,17 @@ def supervise_worker(
         system_available_ram_after_bytes=system_available_after,
         queue_cleanup_confirmed=queue_cleanup_confirmed,
         run_association=association,
+        emergency_ram_margin_bytes=ram_control.emergency_margin_bytes,
+        ram_recovery_threshold_bytes=ram_control.recovery_threshold_bytes,
+        ram_check_interval_seconds=ram_control.check_interval_seconds,
+        ram_log_interval_seconds=ram_control.log_interval_seconds,
+        ram_recovery_consecutive_checks=ram_control.recovery_consecutive_checks,
+        total_ram_wait_seconds=ram_state.waiting_seconds(
+            now=computation_ended_at
+        ),
+        active_computation_seconds=ram_state.active_seconds(
+            started=supervisor_started, now=computation_ended_at
+        ),
+        ram_wait_count=ram_state.wait_count,
+        ram_wait_events=tuple(ram_wait_events),
     )

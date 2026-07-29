@@ -1,0 +1,12 @@
+schema_version: ram_wait_resume_policy_v1
+profile_name: ram_wait_resume_v1
+
+# Runtime supervision only. This file is intentionally separate from the
+# authenticated scientific experiment and legacy capacity-planning policies.
+emergency_min_available_ram_gb: 1
+emergency_total_ram_fraction: 0.02
+recovery_available_ram_gb: 4
+recovery_consecutive_checks: 3
+check_interval_seconds: 5
+log_interval_seconds: 300
+opaque_stage_pause_mode: process_tree_suspend

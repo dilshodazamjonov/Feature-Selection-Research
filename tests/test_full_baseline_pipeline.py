@@ -261,7 +261,7 @@ def test_runner_stops_at_first_controlled_failure(tmp_path):
 
     def execute(_plan, cell, _policy, _preflight, _resume):
         calls.append(cell.cell_id)
-        return SimpleNamespace(status="aborted_resource_limit", stop_code="ram_process_limit")
+        return SimpleNamespace(status="aborted_resource_limit", stop_code="disk_results_limit")
 
     outcome = execute_full_baseline(
         plan,

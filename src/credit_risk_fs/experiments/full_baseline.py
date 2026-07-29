@@ -24,10 +24,14 @@ import yaml
 
 from credit_risk_fs.experiments._common import build_experiment_config
 from credit_risk_fs.experiments.atomic_io import sha256_file, write_json_atomic
+from credit_risk_fs.experiments.checkpointing import CheckpointManager
 from credit_risk_fs.experiments.execution import (
     ExecutionOutcome,
     RegisteredRunRequest,
     execute_registered_run,
+)
+from credit_risk_fs.experiments.full_baseline_ram_bridge import (
+    authenticate_full_baseline_ram_bridge,
 )
 from credit_risk_fs.experiments.heavy_selector_pilots import (
     cell_artifact_path,
@@ -39,11 +43,16 @@ from credit_risk_fs.experiments.resource_monitor import (
     wait_for_inter_run_readiness,
 )
 from credit_risk_fs.experiments.resource_policy import (
+    GIB,
     ResolvedExecutionPolicy,
     detect_hardware,
     load_execution_policy,
     resolve_execution_policy,
     run_preflight,
+)
+from credit_risk_fs.experiments.ram_control import (
+    ResolvedRamControlPolicy,
+    load_ram_control_policy,
 )
 from credit_risk_fs.experiments.research_logging import ResearchLogSession
 from credit_risk_fs.experiments.result_paths import (
@@ -593,6 +602,10 @@ def _resolve_policy_and_preflight(
     configured = load_execution_policy(plan.repository_root, plan.policy_path)
     capacity = detect_hardware(plan.results_root, temp_root)
     resolved = resolve_execution_policy(configured, capacity)
+    ram_control = load_ram_control_policy(
+        plan.repository_root,
+        total_physical_ram_bytes=int(capacity.total_ram_gb * GIB),
+    )
     report = run_preflight(
         repository_root=plan.repository_root,
         config_path=plan.policy_path,
@@ -600,6 +613,7 @@ def _resolve_policy_and_preflight(
         temp_root=temp_root,
         requested_accelerator="cpu",
         capacity=capacity,
+        ram_control_policy=ram_control,
     )
     parallel = resolved.parallelism
     if (
@@ -720,6 +734,20 @@ def _execute_real_cell(
     experiment_config = _experiment_configuration(
         plan, cell, run_dir, effective
     )
+    checkpoint_identity_override = None
+    resume_metadata = None
+    if resume:
+        checkpoint_payload = CheckpointManager(run_dir).load()
+        checkpoint_commit = checkpoint_payload.get("identity", {}).get("git_commit")
+        live_commit = preflight.get("git_commit")
+        if checkpoint_commit != live_commit:
+            resume_metadata = authenticate_full_baseline_ram_bridge(
+                plan.repository_root,
+                run_id=cell.cell_id,
+                checkpoint=checkpoint_payload,
+                full_baseline_configuration_sha256=plan.configuration_sha256,
+            )
+            checkpoint_identity_override = dict(checkpoint_payload["identity"])
     return execute_registered_run(
         RegisteredRunRequest(
             repository_root=plan.repository_root,
@@ -746,6 +774,11 @@ def _execute_real_cell(
                 "configuration_adaptation_after_oot": "forbidden",
             },
             max_wall_clock_seconds=cell.wall_clock_limit_seconds,
+            checkpoint_identity_override=checkpoint_identity_override,
+            resume_metadata=resume_metadata,
+            ram_control_policy=ResolvedRamControlPolicy(
+                **dict(preflight["ram_control_policy"])
+            ),
         )
     )
 
@@ -778,6 +811,9 @@ def execute_full_baseline(
     if authenticate_pilots:
         authenticate_prompt_9_evidence(plan)
     policy, preflight = policy_preflight(plan)
+    ram_control = ResolvedRamControlPolicy(
+        **dict(preflight["ram_control_policy"])
+    ) if preflight.get("ram_control_policy") else None
     initialize_results_layout(plan.repository_root, results_root=plan.results_root)
     completed = 0
     for cell in plan.cells:
@@ -797,6 +833,7 @@ def execute_full_baseline(
             policy=policy,
             results_root=plan.results_root,
             temp_root=preflight["temporary_root"],
+            ram_control_policy=ram_control,
         )
         if not readiness.ready:
             progress_writer(plan)

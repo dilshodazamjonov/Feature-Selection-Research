@@ -58,7 +58,12 @@ class DataLoader:
     Class for loading, merging, and preparing datasets for modeling.
     """
 
-    def __init__(self, data_dir: str | Path):
+    def __init__(
+        self,
+        data_dir: str | Path,
+        *,
+        memory_gate: Callable[[str], None] | None = None,
+    ):
         """
         Parameters:
             data_dir: path to folder containing all CSVs
@@ -67,6 +72,11 @@ class DataLoader:
         self.dataframes = {}
         self.load_errors = []
         self.last_load_report: dict[str, dict[str, object]] = {}
+        self.memory_gate = memory_gate
+
+    def _wait_for_memory(self, boundary: str) -> None:
+        if self.memory_gate is not None:
+            self.memory_gate(str(boundary))
 
     def available_tables(self) -> dict[str, Path]:
         if not self.data_dir.exists():
@@ -165,6 +175,7 @@ class DataLoader:
             retained_row_count += len(chunk)
             return chunk
 
+        self._wait_for_memory(f"{table_name}:before_source_read")
         if path.suffix.lower() == ".parquet":
             frame = pd.read_parquet(path, columns=requested)
             source_row_count = len(frame)
@@ -181,8 +192,24 @@ class DataLoader:
                     source_row_count = len(frame)
                     retained_row_count = len(frame)
                 else:
-                    chunks = pd.read_csv(path, chunksize=int(csv_chunk_rows), **read_kwargs)
-                    retained = [retain_chunk(chunk) for chunk in chunks]
+                    chunks = iter(
+                        pd.read_csv(
+                            path, chunksize=int(csv_chunk_rows), **read_kwargs
+                        )
+                    )
+                    retained = []
+                    chunk_index = 0
+                    while True:
+                        self._wait_for_memory(
+                            f"{table_name}:before_csv_chunk:{chunk_index}"
+                        )
+                        try:
+                            chunk = next(chunks)
+                        except StopIteration:
+                            break
+                        retained.append(retain_chunk(chunk))
+                        chunk_index += 1
+                    self._wait_for_memory(f"{table_name}:before_chunk_concat")
                     frame = pd.concat(retained, ignore_index=True)
             except UnicodeDecodeError:
                 read_kwargs["encoding"] = "latin1"
@@ -193,10 +220,27 @@ class DataLoader:
                     source_row_count = len(frame)
                     retained_row_count = len(frame)
                 else:
-                    chunks = pd.read_csv(path, chunksize=int(csv_chunk_rows), **read_kwargs)
-                    retained = [retain_chunk(chunk) for chunk in chunks]
+                    chunks = iter(
+                        pd.read_csv(
+                            path, chunksize=int(csv_chunk_rows), **read_kwargs
+                        )
+                    )
+                    retained = []
+                    chunk_index = 0
+                    while True:
+                        self._wait_for_memory(
+                            f"{table_name}:before_csv_chunk:{chunk_index}"
+                        )
+                        try:
+                            chunk = next(chunks)
+                        except StopIteration:
+                            break
+                        retained.append(retain_chunk(chunk))
+                        chunk_index += 1
+                    self._wait_for_memory(f"{table_name}:before_chunk_concat")
                     frame = pd.concat(retained, ignore_index=True)
 
+        self._wait_for_memory(f"{table_name}:before_normalization")
         frame = normalize_home_credit_sentinel_dates(frame, table_name)
         dtype_bytes = int(frame.memory_usage(index=True, deep=True).sum())
         self.last_load_report[table_name] = {
@@ -242,16 +286,26 @@ class DataLoader:
             raise ValueError("streaming group aggregation currently requires CSV input")
         maxima: pd.Series | None = None
         source_rows = 0
-        for chunk in pd.read_csv(
+        chunks = iter(pd.read_csv(
             path,
             usecols=requested,
             encoding="utf-8",
             chunksize=int(csv_chunk_rows),
-        ):
+        ))
+        chunk_index = 0
+        while True:
+            self._wait_for_memory(
+                f"{table_name}:before_aggregate_chunk:{chunk_index}"
+            )
+            try:
+                chunk = next(chunks)
+            except StopIteration:
+                break
             source_rows += len(chunk)
             chunk = normalize_home_credit_sentinel_dates(chunk, table_name)
             current = chunk.groupby(group_column, sort=False)[value_column].max()
             maxima = current if maxima is None else pd.concat([maxima, current], axis=1).max(axis=1)
+            chunk_index += 1
         if maxima is None:
             maxima = pd.Series(dtype="float64", name=value_column)
         maxima.name = value_column
@@ -288,6 +342,7 @@ class DataLoader:
             raise ValueError(f"projection contains unknown tables: {sorted(unknown_tables)}")
         pbar = tqdm(selected_names, desc="Loading projected tables")
         for name in pbar:
+            self._wait_for_memory(f"{name}:before_table")
             pbar.set_description(f"Reading {tables[name].name}")
             try:
                 self.load_table(

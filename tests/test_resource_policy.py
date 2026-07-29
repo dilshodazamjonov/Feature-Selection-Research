@@ -106,7 +106,7 @@ def test_nested_parallelism_is_rejected(tmp_path):
         load_execution_policy(tmp_path, config)
 
 
-def test_ram_limits_scale_down_and_never_up(tmp_path):
+def test_legacy_ram_capacity_estimates_remain_parseable_for_artifact_identity(tmp_path):
     config, _ = _repository(tmp_path)
     resolved = resolve_execution_policy(load_execution_policy(tmp_path, config), _capacity(total_ram=24))
     assert resolved.memory.abort_process_tree_rss_gb < 28
@@ -142,12 +142,13 @@ def test_preflight_ram_and_disk_pass_and_fail(tmp_path, monkeypatch):
         config_path=config,
         results_root=results,
         temp_root=tmp_path,
-        capacity=_capacity(available_ram=2, result_disk=1, temp_disk=1),
+        capacity=_capacity(available_ram=0.5, result_disk=1, temp_disk=1),
     )
     assert failed["status"] == "fail"
-    assert {"system_available_ram", "results_disk_free", "temp_disk_free"}.issubset(
+    assert {"results_disk_free", "temp_disk_free"}.issubset(
         failed["blocking_reasons"]
     )
+    assert "system_available_ram" not in failed["blocking_reasons"]
 
 
 def test_gpu_run_requires_process_telemetry_unless_recorded_override(tmp_path, monkeypatch):
@@ -207,7 +208,8 @@ def test_run_size_estimate_requires_explicit_method_multiplier(tmp_path):
         policy=resolved,
     )
     assert oversized["status"] == "available"
-    assert oversized["fits"] is False
+    assert oversized["fits"] is None
+    assert oversized["termination_limit_bytes"] is None
 
 
 def test_explicit_root_resolution_is_independent_of_cwd(tmp_path, monkeypatch):

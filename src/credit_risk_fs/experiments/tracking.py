@@ -359,6 +359,9 @@ def write_resource_usage(
         "preflight_status",
         "checkpoint_path",
         "resumability_status",
+        "active_computation_seconds",
+        "total_ram_wait_seconds",
+        "ram_control",
     ):
         if key in runtime_payload:
             payload[key] = runtime_payload[key]
