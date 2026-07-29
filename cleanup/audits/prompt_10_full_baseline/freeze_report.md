@@ -8,10 +8,14 @@ identity, terminal-state, selector-evidence, and DEV-only checks.
 
 The final configuration is `configs/experiments/full_baseline_v1.yaml`, schema
 `full_baseline_config_v1`, SHA-256
-`a5ebd3776f1670d8327bb089f50e2a8d7e1a9eeede949c37f4455972b84b73a1`.
+`f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f`.
 It freezes 36 cells, seed 42, LR-20, CatBoost-40, nine canonical method IDs,
 five time folds with gap one, the established final model parameters, all selector
 parameters, CPU/thread limits, memory/disk controls, and per-family wall limits.
+Selectors fit a training-only, one-column-per-original-feature numeric encoding
+before the final-model preprocessor; this preserves the authenticated 529/675
+candidate identities and prevents fold-specific one-hot columns from becoming
+selector candidates.
 
 Home Credit Boruta's 26 confirmed features are preserved as an honest
 `infeasible_natural_support` result. Neither its 25 tentative nor 478 rejected

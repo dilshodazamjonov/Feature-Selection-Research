@@ -95,6 +95,26 @@ model class's constructor default.
   `configs/execution/local_laptop_safe_v1.yaml`.
 - Per-cell wall limits: 3 h light/SHAP, 6 h Boruta, 8 h RFE.
 
+All nine selectors fit before final-model preprocessing. Within each training
+boundary, `OriginalFeatureNumericEncoder` produces exactly one numeric column per
+authenticated original candidate (529 for Home Credit, 675 for LendingClub v2).
+The selector returns original feature names, and only those raw columns are then
+handed to the fold-local final-model preprocessor. One-hot columns can therefore
+never enter a selector ranking or change the stability denominator between folds.
+
+## First-attempt correction
+
+The first manual cell stopped after five DEV folds, before final-DEV fitting or
+OOT evaluation, with `selected set is larger than the candidate universe`. The
+initial orchestration had placed the explicit `full_features` selector after
+one-hot preprocessing, so it correctly retained 646–655 encoded columns while
+the stability contract correctly expected the 529 original candidates.
+
+The correction uses the same original-feature numeric selection boundary as the
+authenticated Prompt 9 pilots for every matrix method. The failed attempt is
+retained under the results root's `incomplete/superseded` area, and cell 001 must
+restart rather than resume across the changed configuration identity.
+
 ## Resumption and integrity
 
 Every cell has an immutable deterministic `fbv1-NNN-...` run ID. The runner:

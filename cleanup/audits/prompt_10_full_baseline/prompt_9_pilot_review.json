@@ -9,7 +9,7 @@
   "pilot_configuration_path": "configs/experiments/heavy_selector_dev_pilots_v1.yaml",
   "pilot_configuration_sha256": "a694d26d43d563d20ca1c8657770c298581a930792bf7d2fa2aee49806507f8a",
   "full_baseline_configuration_path": "configs/experiments/full_baseline_v1.yaml",
-  "full_baseline_configuration_sha256": "a5ebd3776f1670d8327bb089f50e2a8d7e1a9eeede949c37f4455972b84b73a1",
+  "full_baseline_configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
   "oot_accessed": false,
   "oot_evaluated": false,
   "predictive_performance_claimed": false,

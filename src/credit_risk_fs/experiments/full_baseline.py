@@ -53,6 +53,9 @@ from credit_risk_fs.experiments.result_paths import (
 )
 from credit_risk_fs.experiments.tracking import is_completed_run
 from credit_risk_fs.selectors.lightweight.registry import get_method_descriptor
+from credit_risk_fs.selectors.original_feature_adapter import (
+    OriginalFeatureSelectorAdapter,
+)
 
 
 CONFIG_SCHEMA_VERSION = "full_baseline_config_v1"
@@ -164,6 +167,9 @@ def _validate_protocol(configuration: Mapping[str, Any]) -> None:
         "cv_gap_groups": 1,
         "concurrent_cells": 1,
         "concurrent_folds": 1,
+        "selector_fit_boundary": "fold_training_original_feature_candidates",
+        "selector_numeric_encoder": "OriginalFeatureNumericEncoder",
+        "final_model_preprocessing_order": "after_original_feature_selection",
         "oot_policy": "locked_final_evaluation_after_configuration_freeze",
         "configuration_adaptation_after_oot": "forbidden",
         "frozen_voting_protocol_changes": "forbidden",
@@ -640,6 +646,12 @@ def _effective_configuration(
         "cell_id": cell.cell_id,
     }
     config["selector_configuration"] = copy.deepcopy(cell.selector_kwargs)
+    config["selector_fit_boundary"] = plan.configuration["protocol"][
+        "selector_fit_boundary"
+    ]
+    config["selector_numeric_encoder"] = plan.configuration["protocol"][
+        "selector_numeric_encoder"
+    ]
     config["full_baseline_configuration_sha256"] = plan.configuration_sha256
     config["full_baseline_configuration_path"] = plan.config_path.relative_to(
         plan.repository_root
@@ -677,8 +689,12 @@ def _experiment_configuration(
         experiments_dir=run_dir,
         experiment_name=cell.method_id,
         selector_name=cell.method_id,
-        selector_cls=selector_cls,
-        selector_kwargs=copy.deepcopy(cell.selector_kwargs),
+        selector_cls=OriginalFeatureSelectorAdapter,
+        selector_kwargs={
+            "selector_cls": selector_cls,
+            "selector_kwargs": copy.deepcopy(cell.selector_kwargs),
+            "random_state": cell.seed,
+        },
         experiment_output_dir=run_dir,
     )
 

@@ -36,6 +36,9 @@ protocol:
   cv_gap_groups: 1
   concurrent_cells: 1
   concurrent_folds: 1
+  selector_fit_boundary: fold_training_original_feature_candidates
+  selector_numeric_encoder: OriginalFeatureNumericEncoder
+  final_model_preprocessing_order: after_original_feature_selection
   oot_policy: locked_final_evaluation_after_configuration_freeze
   configuration_adaptation_after_oot: forbidden
   frozen_voting_protocol_changes: forbidden
