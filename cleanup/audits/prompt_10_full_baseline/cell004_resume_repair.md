@@ -2,6 +2,9 @@
 
 Status: **implementation validated; real pipeline not run or resumed**
 
+This audit covers the first recovery. The later Windows-sleep accounting incident
+and second recovery are documented in `cell004_sleep_timeout_repair.md`.
+
 ## Before-edit authentication
 
 - branch: `main`

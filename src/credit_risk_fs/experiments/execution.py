@@ -248,6 +248,14 @@ def _resource_payload(
         "minimum_results_free_disk_bytes": supervisor.minimum_results_free_disk_bytes,
         "minimum_temp_free_disk_bytes": supervisor.minimum_temp_free_disk_bytes,
         "active_computation_seconds": supervisor.active_computation_seconds,
+        "active_clock_source": supervisor.active_clock_source,
+        "system_suspend_seconds": supervisor.system_suspend_seconds,
+        "system_suspend_excluded_from_active_time": (
+            supervisor.system_suspend_excluded_from_active_time
+        ),
+        "supervisor_awake_elapsed_seconds": (
+            supervisor.supervisor_awake_elapsed_seconds
+        ),
         "total_ram_wait_seconds": supervisor.total_ram_wait_seconds,
         "ram_control": {
             "emergency_margin_bytes": supervisor.emergency_ram_margin_bytes,

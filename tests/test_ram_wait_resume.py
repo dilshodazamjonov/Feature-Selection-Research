@@ -223,18 +223,21 @@ def test_waiting_time_does_not_consume_worker_wall_limit(tmp_path):
             "credit_risk_fs.experiments.synthetic_execution:"
             "cooperative_ram_gate_worker"
         ),
-        worker_kwargs={"active_duration_seconds": 0.2},
+        worker_kwargs={"active_duration_seconds": 0.5},
         policy=_legacy_policy(),
         ram_control_policy=_ram_policy(),
         results_root=tmp_path,
         temp_root=tmp_path,
         sampler_factory=_sampler_factory([8, 0.5, 4.5, 4.5, 4.5, 8]),
-        max_wall_clock_seconds=0.06,
+        max_wall_clock_seconds=0.2,
     )
     assert result.status == "timed_out"
     assert result.total_ram_wait_seconds > 0
-    assert result.active_computation_seconds >= 0.06
-    assert result.samples[-1].elapsed_seconds > result.active_computation_seconds
+    assert result.active_computation_seconds >= 0.2
+    assert (
+        result.supervisor_awake_elapsed_seconds
+        > result.active_computation_seconds
+    )
 
 
 class _FakeEvent:

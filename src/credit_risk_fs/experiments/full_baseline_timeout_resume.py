@@ -13,12 +13,12 @@ from typing import Any, Iterable, Mapping
 from credit_risk_fs.experiments.atomic_io import sha256_file
 
 
-AUTHORIZATION_SCHEMA_VERSION = "full_baseline_timeout_recovery_v1"
-VALIDATOR_VERSION = "full_baseline_timeout_resume_validator_v1"
+AUTHORIZATION_SCHEMA_VERSION = "full_baseline_timeout_recovery_v2"
+VALIDATOR_VERSION = "full_baseline_timeout_resume_validator_v2"
 RESUMABLE_FROM_CELL_BOUNDARY = "RESUMABLE_FROM_CELL_BOUNDARY"
 NOT_RESUMABLE = "NOT_RESUMABLE"
 DEFAULT_AUTHORIZATION_PATH = Path(
-    "configs/execution/full_baseline_timeout_recovery_cell_004_v1.json"
+    "configs/execution/full_baseline_timeout_recovery_cell_004_attempt_02_v1.json"
 )
 
 
@@ -179,6 +179,30 @@ def _unfinalized_artifacts(
     return tuple(found)
 
 
+def _largest_resource_sample_gap(resource: Mapping[str, Any]) -> dict[str, float]:
+    samples = resource.get("samples", [])
+    if not isinstance(samples, list) or len(samples) < 2:
+        return {}
+    largest: dict[str, float] = {}
+    for before, after in zip(samples, samples[1:]):
+        try:
+            before_elapsed = float(before["elapsed_seconds"])
+            after_elapsed = float(after["elapsed_seconds"])
+            before_cpu = float(before["process_tree_cpu_seconds"])
+            after_cpu = float(after["process_tree_cpu_seconds"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        gap = after_elapsed - before_elapsed
+        if gap > largest.get("gap_seconds", -1.0):
+            largest = {
+                "gap_seconds": gap,
+                "cpu_growth_seconds": max(0.0, after_cpu - before_cpu),
+                "before_elapsed_seconds": before_elapsed,
+                "after_elapsed_seconds": after_elapsed,
+            }
+    return largest
+
+
 def validate_timeout_resume_authorization(
     *,
     repository_root: str | Path,
@@ -306,9 +330,74 @@ def validate_timeout_resume_authorization(
     )
     old_limit = float(authorization.get("historical_wall_clock_limit_seconds", 0) or 0)
     active_seconds = float(resource.get("active_computation_seconds", 0) or 0)
+    suspension = authorization.get("historical_suspension_evidence")
+    suspension_authenticated = False
+    if isinstance(suspension, Mapping) and suspension:
+        def evidence_number(value: Any) -> float:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return float("nan")
+
+        observed_gap = _largest_resource_sample_gap(resource)
+        corrected_active = active_seconds - float(observed_gap.get("gap_seconds", 0.0))
+        expected_values = {
+            "gap_seconds": suspension.get("largest_sample_gap_seconds"),
+            "cpu_growth_seconds": suspension.get("cpu_growth_during_gap_seconds"),
+            "before_elapsed_seconds": suspension.get("before_elapsed_seconds"),
+            "after_elapsed_seconds": suspension.get("after_elapsed_seconds"),
+        }
+        exact_evidence = bool(observed_gap) and all(
+            abs(
+                evidence_number(observed_gap.get(key))
+                - evidence_number(expected)
+            )
+            <= 0.001
+            for key, expected in expected_values.items()
+        )
+        suspension_authenticated = (
+            suspension.get("accounting_defect")
+            == "windows_sleep_counted_as_active_v1"
+            and exact_evidence
+            and float(observed_gap.get("gap_seconds", 0.0)) >= 300.0
+            and float(observed_gap.get("cpu_growth_seconds", float("inf"))) <= 60.0
+            and float(observed_gap.get("before_elapsed_seconds", float("inf")))
+            < old_limit
+            <= float(observed_gap.get("after_elapsed_seconds", 0.0))
+            and corrected_active < old_limit
+            and abs(
+                corrected_active
+                - evidence_number(
+                    suspension.get("corrected_active_computation_seconds")
+                )
+            )
+            <= 0.001
+            and abs(
+                active_seconds
+                - evidence_number(
+                    authorization.get(
+                        "historical_reported_active_computation_seconds"
+                    )
+                )
+            )
+            <= 0.001
+        )
+        check(
+            "historical_suspension_evidence",
+            suspension_authenticated,
+            (
+                f"gap={observed_gap.get('gap_seconds')}; "
+                f"cpu_growth={observed_gap.get('cpu_growth_seconds')}; "
+                f"corrected_active={corrected_active}"
+            ),
+        )
     check(
         "timeout_reached_configured_limit",
-        old_limit > 0 and old_limit <= active_seconds <= old_limit + 60,
+        old_limit > 0
+        and (
+            old_limit <= active_seconds <= old_limit + 60
+            or suspension_authenticated
+        ),
         f"active={active_seconds}; limit={old_limit}",
     )
     completed_stages = set(map(str, checkpoint.get("completed_stages", [])))

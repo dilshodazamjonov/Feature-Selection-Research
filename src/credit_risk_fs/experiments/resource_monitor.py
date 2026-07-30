@@ -16,8 +16,14 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from time import monotonic, sleep
+from time import monotonic as suspension_inclusive_monotonic
+from time import sleep
 from typing import Any, Mapping
+
+from credit_risk_fs.experiments.active_clock import (
+    ACTIVE_CLOCK_SOURCE,
+    awake_monotonic as monotonic,
+)
 
 from credit_risk_fs.experiments.resource_policy import (
     GIB,
@@ -168,6 +174,10 @@ class SupervisorResult:
     active_computation_seconds: float = 0.0
     ram_wait_count: int = 0
     ram_wait_events: tuple[dict[str, Any], ...] = ()
+    active_clock_source: str = ACTIVE_CLOCK_SOURCE
+    system_suspend_seconds: float = 0.0
+    system_suspend_excluded_from_active_time: bool = True
+    supervisor_awake_elapsed_seconds: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -1121,7 +1131,6 @@ def supervise_worker(
     apply_thread_environment(policy.parallelism.estimator_threads)
     if max_wall_clock_seconds is not None and float(max_wall_clock_seconds) <= 0:
         raise ValueError("max_wall_clock_seconds must be positive or None")
-    supervisor_started = monotonic()
     association = run_association or f"supervised-worker:{uuid.uuid4()}"
     resolved_worker_kwargs = dict(worker_kwargs or {})
     supervisor_log_context = _supervisor_logging_context(
@@ -1170,6 +1179,8 @@ def supervise_worker(
         parent_pid=os.getpid(),
     )
     process.start()
+    suspension_inclusive_started = suspension_inclusive_monotonic()
+    supervisor_started = monotonic()
     emit_contextual_research_event(
         "worker_spawned",
         supervisor_log_context,
@@ -1210,6 +1221,7 @@ def supervise_worker(
     ram_boundary_pending = False
     ram_pause_unavailable = False
     computation_ended_at: float | None = None
+    suspension_inclusive_computation_ended_at: float | None = None
 
     def stage_active_elapsed(now: float) -> float:
         waiting_since_stage = max(
@@ -1401,6 +1413,9 @@ def supervise_worker(
                 handle_ram_transition(ram_transition, sample, now=now)
             if ram_pause_unavailable:
                 computation_ended_at = monotonic()
+                suspension_inclusive_computation_ended_at = (
+                    suspension_inclusive_monotonic()
+                )
                 ram_ready_event.set()
                 (
                     child_cleanup_confirmed,
@@ -1471,6 +1486,9 @@ def supervise_worker(
             threshold = _classify_threshold(sample, policy)
             if threshold is not None:
                 computation_ended_at = monotonic()
+                suspension_inclusive_computation_ended_at = (
+                    suspension_inclusive_monotonic()
+                )
                 recorder.observe(
                     threshold,
                     elapsed_seconds=monotonic() - supervisor_started,
@@ -1529,6 +1547,9 @@ def supervise_worker(
                 >= float(max_wall_clock_seconds)
             ):
                 computation_ended_at = monotonic()
+                suspension_inclusive_computation_ended_at = (
+                    suspension_inclusive_monotonic()
+                )
                 recorder.observe(
                     WALL_CLOCK_LIMIT,
                     elapsed_seconds=ram_state.active_seconds(
@@ -1606,6 +1627,9 @@ def supervise_worker(
             process.join(timeout=sleep_seconds)
     except KeyboardInterrupt:
         computation_ended_at = monotonic()
+        suspension_inclusive_computation_ended_at = (
+            suspension_inclusive_monotonic()
+        )
         recorder.observe(
             MANUAL_INTERRUPT,
             elapsed_seconds=monotonic() - supervisor_started,
@@ -1640,6 +1664,9 @@ def supervise_worker(
     finally:
         if computation_ended_at is None:
             computation_ended_at = monotonic()
+            suspension_inclusive_computation_ended_at = (
+                suspension_inclusive_monotonic()
+            )
         if opaque_tree_suspended:
             ownership.resume_phase()
             opaque_tree_suspended = False
@@ -1896,4 +1923,17 @@ def supervise_worker(
         ),
         ram_wait_count=ram_state.wait_count,
         ram_wait_events=tuple(ram_wait_events),
+        active_clock_source=ACTIVE_CLOCK_SOURCE,
+        system_suspend_seconds=max(
+            0.0,
+            (
+                suspension_inclusive_computation_ended_at
+                - suspension_inclusive_started
+                - max(0.0, computation_ended_at - supervisor_started)
+            ),
+        ),
+        system_suspend_excluded_from_active_time=True,
+        supervisor_awake_elapsed_seconds=max(
+            0.0, computation_ended_at - supervisor_started
+        ),
     )

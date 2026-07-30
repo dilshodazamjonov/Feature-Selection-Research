@@ -1,6 +1,6 @@
 # Full-baseline Cell 004 safe resume
 
-Status: **prepared; real resume not started by the agent**
+Status: **second boundary restart prepared; real resume not started by the agent**
 
 ## Authenticated stopped state
 
@@ -24,8 +24,11 @@ lock. No dataset was opened for these checks.
 
 ## Recovery authorization
 
-`configs/execution/full_baseline_timeout_recovery_cell_004_v1.json` is an
-append-only authorization record. It records the historical state, stop reason,
+The first attempt remains authenticated by
+`configs/execution/full_baseline_timeout_recovery_cell_004_v1.json`. The latest
+attempt is separately authenticated by
+`configs/execution/full_baseline_timeout_recovery_cell_004_attempt_02_v1.json`.
+The new append-only record includes the historical state, stop reason,
 checkpoint identity, frozen scientific hashes, current recovery-code hashes,
 Cells 001-003 artifact hashes, the exact 15-file partial inventory, workload
 policy, validator version, timestamp, checks, and the decision
@@ -39,11 +42,24 @@ is dirty. `timed_out` is never made generically resumable.
 
 At execution time the checkpoint layer independently requires the complete
 passing validation result. The restarted attempt begins at the Cell 004 boundary,
-not Fold 5 or the interrupted CatBoost fit. Before new work, it moves unfinalized
-outputs and snapshots the prior manifest, checkpoint, and resource evidence under
-`incomplete/attempt_history/attempt_01`. The prior 10,800.025 active seconds stay
-in history; the new attempt receives a fresh active timeout. All new outputs
-continue to use atomic artifact/checkpoint handling.
+not Fold 5 or the interrupted CatBoost fit. The original stopped attempt is
+already preserved under `incomplete/attempt_history/attempt_01`. Before new work,
+the latest stopped attempt and its current 15 partials will be preserved under
+the deterministic `attempt_02` recovery boundary. All new outputs continue to use
+atomic artifact/checkpoint handling.
+
+## Second timeout and Windows sleep correction
+
+The six-hour retry began at 05:16 UTC. Resource samples jump from 12,579.584 to
+28,817.480 elapsed seconds while process-tree CPU increases by only 8.25 seconds.
+The 16,237.896-second gap authenticates a Windows sleep/hibernate interval. The
+old Windows monotonic clock counted that interval, so the supervisor stopped on
+wake even though corrected active time was only 12,579.645 seconds.
+
+The supervisor now uses Windows `QueryUnbiasedInterruptTime`, which is monotonic
+but excludes sleep and hibernation. Resource evidence records the clock identity,
+total supervisor-awake time, detected suspended time, and that suspension was
+excluded. RAM-wait time is still excluded separately.
 
 ## Workload and timeout correction
 
@@ -60,9 +76,11 @@ For Cell 004:
 - effective cost: `heavy`;
 - fresh active-computation wall-clock limit: 21,600 seconds (6 hours).
 
-Six hours reuses the repository's established Boruta heavy ceiling and adds a
-three-hour margin beyond the observed attempt. RAM waiting remains excluded from
-active-computation time.
+Cell 004 spent roughly 2.5 hours reaching final-model fitting, and CatBoost's
+observed initial estimate was another 6 hours 40 minutes. The CatBoost-final
+component therefore receives a 43,200-second (12-hour) active ceiling, leaving a
+practical margin while preserving controlled-stop protection. Selector and
+scientific model settings are unchanged.
 
 ## Exact operator commands
 
@@ -73,7 +91,7 @@ From `D:\python projects\Research`, inspect the data-free plan first:
 ```
 
 It must report 001-003 `SKIP`, Cell 004 `RESTART`, boundary `cell_boundary`,
-effective cost `heavy`, and timeout `21600s (6h)`. Then, and only when ready to
+effective cost `heavy`, and timeout `43200s (12h)`. Then, and only when ready to
 start the real workload, use:
 
 ```powershell
