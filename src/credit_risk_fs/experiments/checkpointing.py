@@ -321,7 +321,7 @@ class CheckpointManager:
                 or authorization.get("run_id") != payload.get("run_id")
                 or authorization.get("intended_restart_boundary") != "cell_boundary"
                 or authorization.get("validator_version")
-                != "full_baseline_timeout_resume_validator_v1"
+                != "full_baseline_timeout_resume_validator_v2"
                 or authorization.get("historical_terminal_state") != "timed_out"
                 or authorization.get("historical_stop_reason") != "wall_clock_limit"
                 or authorization.get("reasons")

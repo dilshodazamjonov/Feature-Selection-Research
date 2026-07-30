@@ -19,6 +19,7 @@ final_model_components:
     wall_clock_limit_seconds: 10800
   catboost:
     cost_class: heavy
-    # Six hours reuses the existing Boruta heavy ceiling and provides a
-    # three-hour margin beyond the observed Cell 004 attempt.
-    wall_clock_limit_seconds: 21600
+    # Cell 004 needs roughly 2.5 h before its final CatBoost fit; CatBoost's
+    # observed initial ETA was another 6 h 40 m. Twelve active hours preserves
+    # a practical margin without weakening the controlled-stop ceiling.
+    wall_clock_limit_seconds: 43200

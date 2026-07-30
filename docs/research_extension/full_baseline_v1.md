@@ -99,7 +99,7 @@ model class's constructor default.
   three consecutive 5-second checks, and log at wait entry/every 5 minutes/resume.
 - Runtime cost is the conservative maximum across dataset scale, selector, and
   final-model family. The active-computation timeout is the maximum of those
-  component limits. Light cells retain 3 h, CatBoost-final cells receive 6 h,
+  component limits. Light cells retain 3 h, CatBoost-final cells receive 12 h,
   Boruta receives 6 h, and CatBoost RFE receives 8 h. A light selector therefore
   cannot downgrade a heavy final model, and a light final model cannot downgrade
   a heavy selector.
@@ -157,12 +157,13 @@ Run from `D:\python projects\Research`:
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
 ```
 
-The recovery authorization preserves Cells 001-003 as authenticated complete and
-permits Cell 004 to restart only from its authenticated cell boundary. Its
-previous three-hour timed-out attempt remains historical evidence; the fresh
-attempt receives a six-active-hour limit. If the command is manually stopped or
-the machine reboots, inspect `--plan-resume`, then run the same execution command
-again after any required validation succeeds:
+The recovery authorizations preserve Cells 001-003 as authenticated complete and
+permit Cell 004 to restart only from its authenticated cell boundary. Its prior
+timed-out attempts remain historical evidence. The current recovery uses the
+Windows unbiased-interrupt clock so system sleep is excluded and gives the fresh
+attempt a 12-active-hour limit. If the command is manually stopped or the machine
+reboots, inspect `--plan-resume`, then run the same execution command again after
+any required validation succeeds:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
