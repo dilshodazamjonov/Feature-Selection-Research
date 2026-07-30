@@ -1,0 +1,24 @@
+schema_version: full_baseline_runtime_policy_v1
+profile_name: full_baseline_runtime_v1
+
+# Runtime mechanics only. Scientific settings remain frozen in
+# configs/experiments/full_baseline_v1.yaml.
+cost_order: [light, heavy]
+
+dataset_components:
+  homecredit:
+    cost_class: light
+    wall_clock_limit_seconds: 10800
+  lendingclub_v2:
+    cost_class: light
+    wall_clock_limit_seconds: 10800
+
+final_model_components:
+  lr:
+    cost_class: light
+    wall_clock_limit_seconds: 10800
+  catboost:
+    cost_class: heavy
+    # Six hours reuses the existing Boruta heavy ceiling and provides a
+    # three-hour margin beyond the observed Cell 004 attempt.
+    wall_clock_limit_seconds: 21600

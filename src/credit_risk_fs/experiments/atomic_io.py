@@ -352,11 +352,21 @@ def partial_artifacts(directory: str | Path) -> list[Path]:
     return sorted(path for path in root.rglob(f"*{PARTIAL_SUFFIX}") if path.is_file())
 
 
-def quarantine_partial_artifacts(run_directory: str | Path) -> list[Path]:
+def quarantine_partial_artifacts(
+    run_directory: str | Path,
+    *,
+    destination_directory: str | Path | None = None,
+) -> list[Path]:
     """Move only known partial files into the run-local incomplete directory."""
 
     run_root = Path(run_directory).resolve()
-    incomplete = run_root / "incomplete"
+    incomplete = (
+        Path(destination_directory).resolve()
+        if destination_directory is not None
+        else run_root / "incomplete"
+    )
+    if not incomplete.is_relative_to(run_root / "incomplete"):
+        raise ValueError("partial-artifact quarantine must stay under run/incomplete")
     moved: list[Path] = []
     for source in partial_artifacts(run_root):
         if source.is_relative_to(incomplete):

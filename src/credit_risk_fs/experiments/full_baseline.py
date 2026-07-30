@@ -33,6 +33,20 @@ from credit_risk_fs.experiments.execution import (
 from credit_risk_fs.experiments.full_baseline_ram_bridge import (
     authenticate_full_baseline_ram_bridge,
 )
+from credit_risk_fs.experiments.full_baseline_runtime import (
+    DEFAULT_RUNTIME_POLICY_PATH,
+    FullBaselineRuntimePolicy,
+    WorkloadClassification,
+    classify_full_baseline_workload,
+    load_full_baseline_runtime_policy,
+)
+from credit_risk_fs.experiments.full_baseline_timeout_resume import (
+    DEFAULT_AUTHORIZATION_PATH,
+    NOT_RESUMABLE,
+    RESUMABLE_FROM_CELL_BOUNDARY,
+    TimeoutResumeValidation,
+    validate_timeout_resume_authorization,
+)
 from credit_risk_fs.experiments.heavy_selector_pilots import (
     cell_artifact_path,
     load_pilot_plan,
@@ -122,6 +136,7 @@ class FullBaselinePlan:
     results_root: Path
     log_path: Path
     policy_path: Path
+    runtime_policy: FullBaselineRuntimePolicy
     cells: tuple[FullBaselineCell, ...]
 
 
@@ -194,10 +209,12 @@ def _validate_protocol(configuration: Mapping[str, Any]) -> None:
 def load_full_baseline_plan(
     repository_root: str | Path,
     config_path: str | Path = DEFAULT_CONFIG_PATH,
+    runtime_policy_path: str | Path = DEFAULT_RUNTIME_POLICY_PATH,
 ) -> FullBaselinePlan:
     """Load the exact 36-cell plan without importing or opening research data."""
 
     root = Path(repository_root).resolve()
+    runtime_policy = load_full_baseline_runtime_policy(root, runtime_policy_path)
     path = _safe_repository_file(root, config_path, "full-baseline config path")
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -315,6 +332,7 @@ def load_full_baseline_plan(
         results_root=results_root,
         log_path=Path(str(execution.get("log_path", "logs/runs.log"))),
         policy_path=Path(str(execution.get("policy_path", ""))),
+        runtime_policy=runtime_policy,
         cells=tuple(cells),
     )
 
@@ -457,7 +475,13 @@ def _validate_manifest_artifacts(run_dir: Path, manifest: Mapping[str, Any]) -> 
             raise FullBaselineArtifactError(f"artifact hash mismatch: {relative}")
 
 
-def inspect_cell(plan: FullBaselinePlan, cell: FullBaselineCell) -> CellInspection:
+def workload_classification(
+    plan: FullBaselinePlan, cell: FullBaselineCell
+) -> WorkloadClassification:
+    return classify_full_baseline_workload(cell, plan.runtime_policy)
+
+
+def _inspect_cell_control(plan: FullBaselinePlan, cell: FullBaselineCell) -> CellInspection:
     """Inspect only run control/artifact files; no dataset path is opened."""
 
     path = run_directory(plan, cell)
@@ -539,13 +563,99 @@ def inspect_cell(plan: FullBaselinePlan, cell: FullBaselineCell) -> CellInspecti
     )
 
 
+def validate_cell_timeout_resume(
+    plan: FullBaselinePlan,
+    cell: FullBaselineCell,
+    *,
+    authorization_path: str | Path = DEFAULT_AUTHORIZATION_PATH,
+    process_records: Sequence[Mapping[str, Any]] | None = None,
+    repository_state: Mapping[str, Any] | None = None,
+) -> TimeoutResumeValidation:
+    earlier = {
+        prior.cell_id: _inspect_cell_control(plan, prior).valid_completed
+        for prior in plan.cells
+        if prior.cell_index < cell.cell_index
+    }
+    return validate_timeout_resume_authorization(
+        repository_root=plan.repository_root,
+        run_directory=run_directory(plan, cell),
+        cell={
+            "cell_id": cell.cell_id,
+            "dataset": cell.dataset,
+            "model": cell.model,
+            "method_id": cell.method_id,
+            "seed": cell.seed,
+        },
+        full_baseline_configuration_sha256=plan.configuration_sha256,
+        workload_classification=workload_classification(plan, cell).to_dict(),
+        earlier_cells_authenticated=earlier,
+        authorization_path=authorization_path,
+        process_records=process_records,
+        repository_state=repository_state,
+    )
+
+
+def _inspect_cell_with_validation(
+    plan: FullBaselinePlan,
+    cell: FullBaselineCell,
+    *,
+    timeout_validator: Callable[
+        [FullBaselinePlan, FullBaselineCell], TimeoutResumeValidation
+    ] = validate_cell_timeout_resume,
+) -> tuple[CellInspection, TimeoutResumeValidation | None]:
+    historical = _inspect_cell_control(plan, cell)
+    if historical.state != "timed_out":
+        return historical, None
+    try:
+        validation = timeout_validator(plan, cell)
+    except Exception as exc:
+        return (
+            CellInspection(
+                "timed_out",
+                False,
+                False,
+                f"timeout resume validation error: {type(exc).__name__}: {exc}",
+            ),
+            None,
+        )
+    return (
+        CellInspection(
+            "timed_out",
+            False,
+            validation.resumable,
+            (
+                "explicitly authorized restart from cell boundary"
+                if validation.resumable
+                else "; ".join(validation.reasons)
+            ),
+        ),
+        validation,
+    )
+
+
+def inspect_cell(
+    plan: FullBaselinePlan,
+    cell: FullBaselineCell,
+    *,
+    timeout_validator: Callable[
+        [FullBaselinePlan, FullBaselineCell], TimeoutResumeValidation
+    ] = validate_cell_timeout_resume,
+) -> CellInspection:
+    """Inspect controls only and authorize a timeout only after explicit validation."""
+
+    return _inspect_cell_with_validation(
+        plan, cell, timeout_validator=timeout_validator
+    )[0]
+
+
 def build_status_report(plan: FullBaselinePlan) -> dict[str, Any]:
     """Build a data-free matrix status report."""
 
     rows: list[dict[str, Any]] = []
     first_pending: str | None = None
     for cell in plan.cells:
-        inspection = inspect_cell(plan, cell)
+        inspection, timeout_validation = _inspect_cell_with_validation(plan, cell)
+        classification = workload_classification(plan, cell)
         if first_pending is None and not inspection.valid_completed:
             first_pending = cell.cell_id
         rows.append(
@@ -560,6 +670,22 @@ def build_status_report(plan: FullBaselinePlan) -> dict[str, Any]:
                 "valid_completed": inspection.valid_completed,
                 "resumable": inspection.resumable,
                 "reason": inspection.reason,
+                "resume_validation_decision": (
+                    timeout_validation.decision
+                    if timeout_validation is not None
+                    else None
+                ),
+                "restart_boundary": (
+                    timeout_validation.intended_restart_boundary
+                    if timeout_validation is not None
+                    else None
+                ),
+                "partial_artifacts_exist": bool(
+                    timeout_validation.partial_artifacts
+                    if timeout_validation is not None
+                    else ()
+                ),
+                "workload_classification": classification.to_dict(),
             }
         )
     completed = sum(bool(row["valid_completed"]) for row in rows)
@@ -567,6 +693,7 @@ def build_status_report(plan: FullBaselinePlan) -> dict[str, Any]:
         "schema_version": STATUS_SCHEMA_VERSION,
         "configuration_status": plan.configuration["configuration_status"],
         "configuration_sha256": plan.configuration_sha256,
+        "runtime_policy_sha256": plan.runtime_policy.source_sha256,
         "matrix_cell_count": len(rows),
         "completed_authenticated": completed,
         "remaining": len(rows) - completed,
@@ -589,8 +716,197 @@ def format_status_report(report: Mapping[str, Any]) -> str:
     for row in report["cells"]:
         lines.append(
             f"{int(row['cell_index']):02d} | {row['dataset']} | {row['model']} | "
-            f"{row['method_id']} | {row['state']}"
+            f"{row['method_id']} | {row['state']} | "
+            f"cost={row['workload_classification']['effective_cost_class']} | "
+            f"timeout={int(row['workload_classification']['effective_wall_clock_limit_seconds'])}s"
         )
+    return "\n".join(lines)
+
+
+def build_resume_plan_report(
+    plan: FullBaselinePlan,
+    *,
+    timeout_validator: Callable[
+        [FullBaselinePlan, FullBaselineCell], TimeoutResumeValidation
+    ] = validate_cell_timeout_resume,
+) -> dict[str, Any]:
+    """Build an execution plan from control metadata without opening a dataset."""
+
+    head = _git(plan.repository_root, "rev-parse", "HEAD")
+    branch = _git(plan.repository_root, "branch", "--show-current")
+    dirty = bool(
+        _git(
+            plan.repository_root,
+            "status",
+            "--porcelain",
+            "--untracked-files=normal",
+        )
+    )
+    actions: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    first_execute: str | None = None
+    first_validation: TimeoutResumeValidation | None = None
+    for cell in plan.cells:
+        inspection, validation = _inspect_cell_with_validation(
+            plan, cell, timeout_validator=timeout_validator
+        )
+        classification = workload_classification(plan, cell)
+        if inspection.valid_completed:
+            action = "SKIP"
+            skipped.append(cell.cell_id)
+        elif first_execute is None:
+            if inspection.state == "timed_out" and inspection.resumable:
+                action = "RESTART"
+                first_execute = cell.cell_id
+                first_validation = validation
+            elif inspection.state == "missing":
+                action = "EXECUTE"
+                first_execute = cell.cell_id
+            else:
+                action = "BLOCKED"
+                first_execute = cell.cell_id
+                first_validation = validation
+        else:
+            action = "PENDING"
+        actions.append(
+            {
+                "cell_index": cell.cell_index,
+                "cell_id": cell.cell_id,
+                "action": action,
+                "historical_state": inspection.state,
+                "reason": inspection.reason,
+                "resume_validation_decision": (
+                    validation.decision if validation is not None else None
+                ),
+                "restart_boundary": (
+                    validation.intended_restart_boundary
+                    if validation is not None
+                    else None
+                ),
+                "partial_artifacts_exist": bool(
+                    validation.partial_artifacts if validation is not None else ()
+                ),
+                "workload_classification": classification.to_dict(),
+            }
+        )
+    return {
+        "schema_version": "full_baseline_resume_plan_v1",
+        "run_identity": "full_baseline_v1",
+        "repository_commit": head,
+        "repository_branch": branch,
+        "repository_dirty": dirty,
+        "configuration_sha256": plan.configuration_sha256,
+        "runtime_policy_sha256": plan.runtime_policy.source_sha256,
+        "completed_authenticated": len(skipped),
+        "skipped_cell_ids": skipped,
+        "earliest_incomplete_cell": first_execute,
+        "first_cell_to_execute": first_execute,
+        "historical_terminal_state": (
+            first_validation.historical_terminal_state
+            if first_validation is not None
+            else None
+        ),
+        "historical_stop_reason": (
+            first_validation.historical_stop_reason
+            if first_validation is not None
+            else None
+        ),
+        "resume_validation_decision": (
+            first_validation.decision
+            if first_validation is not None
+            else NOT_RESUMABLE
+            if first_execute is not None
+            and next(
+                row for row in actions if row["cell_id"] == first_execute
+            )["action"]
+            == "BLOCKED"
+            else None
+        ),
+        "restart_boundary": (
+            first_validation.intended_restart_boundary
+            if first_validation is not None
+            else None
+        ),
+        "partial_artifacts_exist": bool(
+            first_validation.partial_artifacts
+            if first_validation is not None
+            else ()
+        ),
+        "active_processes": list(
+            first_validation.active_processes
+            if first_validation is not None
+            else ()
+        ),
+        "lock_paths": list(
+            first_validation.lock_paths if first_validation is not None else ()
+        ),
+        "actions": actions,
+        "oot_accessed_by_plan": False,
+        "worker_started_by_plan": False,
+    }
+
+
+def format_resume_plan_report(report: Mapping[str, Any]) -> str:
+    first_id = report.get("first_cell_to_execute")
+    first = next(
+        (row for row in report["actions"] if row["cell_id"] == first_id), None
+    )
+    lines = [
+        "Full baseline v1 | safe resume plan",
+        (
+            f"Repository: {report['repository_branch']}@{report['repository_commit']} | "
+            f"clean={'yes' if not report['repository_dirty'] else 'no'}"
+        ),
+        f"Configuration SHA-256: {report['configuration_sha256']}",
+        f"Authenticated completed: {report['completed_authenticated']}/36",
+        f"Earliest incomplete: {report['earliest_incomplete_cell']}",
+        f"Resume decision: {report['resume_validation_decision']}",
+        f"Restart boundary: {report['restart_boundary']}",
+        (
+            "Active worker: no | Execution lock: no"
+            if not report["active_processes"] and not report["lock_paths"]
+            else "Active worker or execution lock blocks resume"
+        ),
+    ]
+    if first is not None:
+        profile = first["workload_classification"]
+        lines.extend(
+            [
+                (
+                    f"Workload: selector={profile['selector_cost_class']} | "
+                    f"final_model={profile['final_model_cost_class']} | "
+                    f"dataset={profile['dataset_cost_class']} | "
+                    f"effective={profile['effective_cost_class']}"
+                ),
+                (
+                    "Effective active-computation wall-clock limit: "
+                    f"{int(profile['effective_wall_clock_limit_seconds'])}s "
+                    f"({profile['effective_wall_clock_limit_seconds'] / 3600:g}h)"
+                ),
+                f"Partial attempt artifacts preserved: {'yes' if first['partial_artifacts_exist'] else 'no'}",
+            ]
+        )
+    lines.append("Plan:")
+    for row in report["actions"]:
+        if row["action"] not in {"SKIP", "RESTART", "EXECUTE", "BLOCKED"}:
+            continue
+        detail = (
+            "authenticated complete"
+            if row["action"] == "SKIP"
+            else "resumable from authenticated cell boundary"
+            if row["action"] == "RESTART"
+            else row["reason"]
+        )
+        lines.append(
+            f"{int(row['cell_index']):03d} {row['action']} — {detail}"
+        )
+    lines.extend(
+        [
+            "Continuation inside a fold or CatBoost fit: no",
+            "Plan inspection accessed OOT: no",
+            "Plan inspection started a worker: no",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -734,13 +1050,29 @@ def _execute_real_cell(
     experiment_config = _experiment_configuration(
         plan, cell, run_dir, effective
     )
+    classification = workload_classification(plan, cell)
     checkpoint_identity_override = None
     resume_metadata = None
+    resume_authorization = None
     if resume:
         checkpoint_payload = CheckpointManager(run_dir).load()
         checkpoint_commit = checkpoint_payload.get("identity", {}).get("git_commit")
         live_commit = preflight.get("git_commit")
-        if checkpoint_commit != live_commit:
+        if checkpoint_payload.get("stop_code") == "wall_clock_limit":
+            validation = validate_cell_timeout_resume(plan, cell)
+            if not validation.resumable:
+                raise FullBaselineArtifactError(
+                    "controlled timeout is not authorized for resume: "
+                    + "; ".join(validation.reasons)
+                )
+            resume_authorization = validation.to_dict()
+            resume_metadata = {
+                "timeout_recovery_authorization": validation.to_dict(),
+                "workload_classification": classification.to_dict(),
+                "historical_terminal_state_preserved": True,
+            }
+            checkpoint_identity_override = dict(checkpoint_payload["identity"])
+        elif checkpoint_commit != live_commit:
             resume_metadata = authenticate_full_baseline_ram_bridge(
                 plan.repository_root,
                 run_id=cell.cell_id,
@@ -772,10 +1104,17 @@ def _execute_real_cell(
                 "feature_budget": cell.feature_budget,
                 "oot_policy": plan.configuration["protocol"]["oot_policy"],
                 "configuration_adaptation_after_oot": "forbidden",
+                "workload_classification": classification.to_dict(),
+                "effective_wall_clock_limit_seconds": (
+                    classification.effective_wall_clock_limit_seconds
+                ),
             },
-            max_wall_clock_seconds=cell.wall_clock_limit_seconds,
+            max_wall_clock_seconds=(
+                classification.effective_wall_clock_limit_seconds
+            ),
             checkpoint_identity_override=checkpoint_identity_override,
             resume_metadata=resume_metadata,
+            resume_authorization=resume_authorization,
             ram_control_policy=ResolvedRamControlPolicy(
                 **dict(preflight["ram_control_policy"])
             ),
@@ -874,9 +1213,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     parser.add_argument(
+        "--runtime-policy", type=Path, default=DEFAULT_RUNTIME_POLICY_PATH
+    )
+    parser.add_argument(
         "--status",
         action="store_true",
         help="Read only frozen config and run artifacts; never load a dataset.",
+    )
+    parser.add_argument(
+        "--plan-resume",
+        action="store_true",
+        help="Validate and print the exact data-free resume plan; start no worker.",
     )
     parser.add_argument(
         "--audit-pilots",
@@ -889,12 +1236,15 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = args.repository_root.resolve()
-    plan = load_full_baseline_plan(root, args.config)
+    plan = load_full_baseline_plan(root, args.config, args.runtime_policy)
     if args.audit_pilots:
         print(json.dumps(authenticate_prompt_9_evidence(plan), indent=2, sort_keys=True))
         return 0
     if args.status:
         print(format_status_report(build_status_report(plan)))
+        return 0
+    if args.plan_resume:
+        print(format_resume_plan_report(build_resume_plan_report(plan)))
         return 0
 
     command_arguments = list(sys.argv[1:] if argv is None else argv)
@@ -967,10 +1317,14 @@ __all__ = [
     "MODEL_ORDER",
     "PipelineOutcome",
     "authenticate_prompt_9_evidence",
+    "build_resume_plan_report",
     "build_status_report",
     "execute_full_baseline",
+    "format_resume_plan_report",
     "format_status_report",
     "inspect_cell",
     "load_full_baseline_plan",
     "run_directory",
+    "validate_cell_timeout_resume",
+    "workload_classification",
 ]

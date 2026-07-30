@@ -11,6 +11,7 @@ from typing import Any, Iterable, Mapping
 
 from credit_risk_fs.experiments.atomic_io import (
     ArtifactMetadata,
+    copy_atomic,
     inspect_artifact,
     quarantine_partial_artifacts,
     sha256_file,
@@ -297,6 +298,7 @@ class CheckpointManager:
         expected_identity: Mapping[str, Any],
         *,
         quarantine_partials: bool = True,
+        resume_authorization: Mapping[str, Any] | None = None,
     ) -> ResumeValidation:
         payload = self.load()
         emit_research_event(
@@ -312,6 +314,30 @@ class CheckpointManager:
         )
         if payload.get("status") == "completed" or "completed" in payload.get("completed_stages", []):
             raise ResumeValidationError("completed_run_immutable", "completed runs cannot be resumed")
+        if payload.get("stop_code") == "wall_clock_limit":
+            authorization = dict(resume_authorization or {})
+            if (
+                authorization.get("decision") != "RESUMABLE_FROM_CELL_BOUNDARY"
+                or authorization.get("run_id") != payload.get("run_id")
+                or authorization.get("intended_restart_boundary") != "cell_boundary"
+                or authorization.get("validator_version")
+                != "full_baseline_timeout_resume_validator_v1"
+                or authorization.get("historical_terminal_state") != "timed_out"
+                or authorization.get("historical_stop_reason") != "wall_clock_limit"
+                or authorization.get("reasons")
+                or authorization.get("active_processes")
+                or authorization.get("lock_paths")
+                or authorization.get("checkpoint_identity") != payload.get("identity")
+                or not authorization.get("checks")
+                or not all(
+                    item.get("passed") is True
+                    for item in authorization.get("checks", [])
+                )
+            ):
+                raise ResumeValidationError(
+                    "timeout_resume_authorization_required",
+                    "a controlled timeout requires explicit cell-boundary authorization",
+                )
         expected = _validate_identity(expected_identity)
         actual = payload["identity"]
         for field in IDENTITY_FIELDS:
@@ -352,8 +378,18 @@ class CheckpointManager:
                         f"artifact provenance mismatch for {relative}: {field}",
                     )
 
+        attempt_number = len(payload.get("attempt_history", [])) + 1
+        attempt_directory = (
+            self.run_directory
+            / "incomplete"
+            / "attempt_history"
+            / f"attempt_{attempt_number:02d}"
+        )
         quarantined = (
-            quarantine_partial_artifacts(self.run_directory)
+            quarantine_partial_artifacts(
+                self.run_directory,
+                destination_directory=attempt_directory / "partial_artifacts",
+            )
             if quarantine_partials
             else []
         )
@@ -369,7 +405,7 @@ class CheckpointManager:
                 "run.log",
                 ".execution.lock",
             }
-            untracked_root = self.run_directory / "incomplete" / "untracked"
+            untracked_root = attempt_directory / "partial_artifacts"
             for path in sorted(self.run_directory.rglob("*")):
                 if not path.is_file() or path.is_relative_to(self.run_directory / "incomplete"):
                     continue
@@ -406,27 +442,71 @@ class CheckpointManager:
         )
         return validation
 
-    def begin_resume_attempt(self) -> dict[str, Any]:
+    def begin_resume_attempt(
+        self,
+        *,
+        historical_manifest_path: str | Path | None = None,
+        resume_authorization: Mapping[str, Any] | None = None,
+        new_active_timeout_seconds: float | None = None,
+    ) -> dict[str, Any]:
         """Archive prior terminal resource evidence before a validated retry."""
 
         payload = self.load()
         if payload.get("status") == "completed":
             raise ResumeValidationError("completed_run_immutable", "completed runs cannot be resumed")
         history = list(payload.get("attempt_history", []))
+        attempt_number = len(history) + 1
+        attempt_dir = (
+            self.run_directory
+            / "incomplete"
+            / "attempt_history"
+            / f"attempt_{attempt_number:02d}"
+        )
+        attempt_dir.mkdir(parents=True, exist_ok=True)
         prior_status = payload.get("status")
         finalized = dict(payload.get("finalized_artifacts", {}))
         resource = finalized.pop("resource_usage.json", None)
         archived_resource = None
         resource_path = self.run_directory / "resource_usage.json"
+        archived_manifest = None
+        historical_manifest_status = None
+        historical_manifest_sha256 = None
+        if historical_manifest_path is not None:
+            manifest_path = Path(historical_manifest_path).resolve()
+            if not manifest_path.is_relative_to(self.run_directory):
+                raise ResumeValidationError(
+                    "historical_manifest_path_escape",
+                    "historical manifest path escapes run directory",
+                )
+            historical_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            historical_manifest_status = historical_manifest.get("status")
+            historical_manifest_sha256 = sha256_file(manifest_path)
+            archived_path = attempt_dir / "manifest.json"
+            copy_atomic(manifest_path, archived_path, overwrite=False)
+            archived_manifest = archived_path.relative_to(self.run_directory).as_posix()
+        checkpoint_snapshot = attempt_dir / "checkpoint_before_resume.json"
+        copy_atomic(self.path, checkpoint_snapshot, overwrite=False)
         if resource is not None and resource_path.is_file():
-            attempt_dir = self.run_directory / "incomplete" / "attempt_history"
-            attempt_dir.mkdir(parents=True, exist_ok=True)
-            archived = attempt_dir / f"attempt_{len(history) + 1:02d}_resource_usage.json"
+            archived = attempt_dir / "resource_usage.json"
             os.replace(resource_path, archived)
             archived_resource = archived.relative_to(self.run_directory).as_posix()
+        prior_active_seconds = None
+        if archived_resource is not None:
+            try:
+                resource_payload = json.loads(
+                    (self.run_directory / archived_resource).read_text(encoding="utf-8")
+                )
+                prior_active_seconds = resource_payload.get(
+                    "active_computation_seconds",
+                    resource_payload.get("timings_seconds", {}).get("total"),
+                )
+            except (OSError, json.JSONDecodeError, AttributeError):
+                prior_active_seconds = None
         history.append(
             {
+                "attempt_id": f"attempt_{attempt_number:02d}",
                 "status": prior_status,
+                "historical_manifest_status": historical_manifest_status,
                 "stop_code": payload.get("stop_code"),
                 "primary_stop_code": payload.get(
                     "primary_stop_code", payload.get("stop_code")
@@ -439,6 +519,19 @@ class CheckpointManager:
                 "ended_at_utc": payload.get("updated_at_utc"),
                 "resource_metadata": resource,
                 "archived_resource_path": archived_resource,
+                "archived_manifest_path": archived_manifest,
+                "archived_manifest_sha256": historical_manifest_sha256,
+                "archived_checkpoint_path": checkpoint_snapshot.relative_to(
+                    self.run_directory
+                ).as_posix(),
+                "prior_active_computation_seconds": prior_active_seconds,
+                "resume_authorization": dict(resume_authorization or {}),
+                "restart_boundary": (
+                    dict(resume_authorization or {}).get(
+                        "intended_restart_boundary", "checkpoint"
+                    )
+                ),
+                "new_active_timeout_seconds": new_active_timeout_seconds,
             }
         )
         payload.update(
