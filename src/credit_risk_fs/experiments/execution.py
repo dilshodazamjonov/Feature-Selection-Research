@@ -66,6 +66,7 @@ class RegisteredRunRequest:
     deferred_success_status: str = "dev_complete"
     checkpoint_identity_override: dict[str, Any] | None = None
     resume_metadata: dict[str, Any] | None = None
+    resume_authorization: dict[str, Any] | None = None
     max_wall_clock_seconds: float | None = None
     ram_control_policy: ResolvedRamControlPolicy | None = None
 
@@ -332,23 +333,50 @@ def execute_registered_run(request: RegisteredRunRequest) -> ExecutionOutcome:
         resume=request.resume,
         run_directory=repository_relative_path(run_dir, request.repository_root),
     )
+    workload = dict((request.manifest_metadata or {}).get("workload_classification", {}))
+    if workload:
+        emit_contextual_research_event(
+            "workload_classification_resolved",
+            log_context,
+            message="Effective workload classification and timeout resolved",
+            priority=True,
+            selector_cost_class=workload.get("selector_cost_class"),
+            final_model_cost_class=workload.get("final_model_cost_class"),
+            dataset_cost_class=workload.get("dataset_cost_class"),
+            effective_cost_class=workload.get("effective_cost_class"),
+            effective_wall_clock_limit_seconds=workload.get(
+                "effective_wall_clock_limit_seconds"
+            ),
+        )
 
     if request.resume:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         with logged_stage(
             "checkpoint_resume_validation",
             message="Validate checkpoint identity and finalized artifact hashes",
             component="checkpoint_manager",
             **log_context,
         ):
-            checkpoint.validate_resume(identity)
-        checkpoint.begin_resume_attempt()
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            checkpoint.validate_resume(
+                identity,
+                resume_authorization=request.resume_authorization,
+            )
+        resumed_checkpoint = checkpoint.begin_resume_attempt(
+            historical_manifest_path=manifest_path,
+            resume_authorization=request.resume_authorization,
+            new_active_timeout_seconds=request.max_wall_clock_seconds,
+        )
         if manifest.get("status") == "completed":
             raise ResumeValidationError("completed_run_immutable", "completed runs cannot be resumed")
         manifest["status"] = "running"
         manifest["resumed_at_utc"] = utc_timestamp()
+        manifest["active_attempt_id"] = resumed_checkpoint["attempt_history"][-1][
+            "attempt_id"
+        ]
         if request.resume_metadata:
             manifest["resume_mechanics_provenance"] = dict(request.resume_metadata)
+        if request.manifest_metadata:
+            manifest.update(dict(request.manifest_metadata))
         write_run_manifest(run_dir, manifest)
         update_run_index_row(
             request.results_root,

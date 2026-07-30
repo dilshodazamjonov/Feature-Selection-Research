@@ -1,6 +1,6 @@
 # Full baseline v1
 
-Status: **frozen; 2 authenticated cells completed by the user; cell 003 is resumable**
+Status: **frozen; 3 authenticated cells completed by the user; cell 004 is authorized for a cell-boundary restart**
 
 ## Scope and scientific boundary
 
@@ -97,7 +97,12 @@ model class's constructor default.
 - Operational RAM control comes from `configs/execution/ram_wait_resume_v1.yaml`:
   wait at the larger of 1 GiB or 2% total physical RAM, recover at 4 GiB for
   three consecutive 5-second checks, and log at wait entry/every 5 minutes/resume.
-- Per-cell wall limits: 3 h light/SHAP, 6 h Boruta, 8 h RFE.
+- Runtime cost is the conservative maximum across dataset scale, selector, and
+  final-model family. The active-computation timeout is the maximum of those
+  component limits. Light cells retain 3 h, CatBoost-final cells receive 6 h,
+  Boruta receives 6 h, and CatBoost RFE receives 8 h. A light selector therefore
+  cannot downgrade a heavy final model, and a light final model cannot downgrade
+  a heavy selector.
 
 All nine selectors fit before final-model preprocessing. Within each training
 boundary, `OriginalFeatureNumericEncoder` produces exactly one numeric column per
@@ -129,7 +134,12 @@ Every cell has an immutable deterministic `fbv1-NNN-...` run ID. The runner:
   declared artifact hashes authenticate;
 - resumes only a registered non-completed checkpoint with matching run, data,
   protocol, configuration, and artifact identity;
-- quarantines untracked partial artifacts through the existing checkpoint layer;
+- keeps `timed_out` as historical terminal state and permits a restart only after
+  the versioned recovery authorization and live fail-closed checks all pass;
+- restarts an authorized timeout at the cell boundary, never inside a fold or
+  model fit;
+- archives prior manifests, checkpoints, resource evidence, and unfinalized
+  outputs under deterministic `incomplete/attempt_history/attempt_NN` paths;
 - waits indefinitely and automatically resumes when RAM alone is low;
 - stops after a manual interruption, non-RAM resource limit, wall-clock limit,
   or unexpected failure;
@@ -142,13 +152,17 @@ Run from `D:\python projects\Research`:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py --status
+.\.venv\Scripts\python.exe scripts\run_full_baseline.py --plan-resume
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py --audit-pilots
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
 ```
 
-The authenticated compatibility bridge permits the existing pre-patch RAM stop
-for cell 003 to resume without changing its scientific identity. If the command
-is manually stopped or the machine reboots, run the same execution command again:
+The recovery authorization preserves Cells 001-003 as authenticated complete and
+permits Cell 004 to restart only from its authenticated cell boundary. Its
+previous three-hour timed-out attempt remains historical evidence; the fresh
+attempt receives a six-active-hour limit. If the command is manually stopped or
+the machine reboots, inspect `--plan-resume`, then run the same execution command
+again after any required validation succeeds:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_full_baseline.py
@@ -160,8 +174,9 @@ Optional live log view in another PowerShell window:
 Get-Content logs\runs.log -Wait -Tail 40
 ```
 
-Do not add flags or edit the frozen YAML between attempts. `--status` and
-`--audit-pilots` are read-only and do not start a real baseline worker.
+Do not add flags or edit the frozen YAML between attempts. `--status`,
+`--plan-resume`, and `--audit-pilots` are read-only and do not start a real
+baseline worker.
 
 ## Expected elapsed time on the pilot machine
 

@@ -335,6 +335,18 @@ def _human_line(
             )
             if item
         ]
+    elif event == "workload_classification_resolved":
+        timeout = _duration(payload.get("effective_wall_clock_limit_seconds"))
+        parts = [
+            (
+                f"Workload selector={payload.get('selector_cost_class')} "
+                f"final-model={payload.get('final_model_cost_class')} "
+                f"dataset={payload.get('dataset_cost_class')} "
+                f"effective={payload.get('effective_cost_class')}"
+            )
+        ]
+        if timeout:
+            parts.append(f"Active timeout {timeout}")
     elif event in {"run_resume_decision", "run_resume_authenticated"}:
         parts = [
             item
