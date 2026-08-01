@@ -1,0 +1,56 @@
+{
+  "schema_version": "selector_combination_method_registry_v1",
+  "methods": [
+    {
+      "method_id": "iv_then_boruta",
+      "implementation_id": "iv_quantile_pool_then_boruta_rf_confirmed_only_v1",
+      "hypothesis": "A credit-specific univariate IV screen may reduce Boruta cost while preserving useful nonlinear all-relevant signal.",
+      "stages": ["iv_woe_quantile_binned_v1", "boruta_random_forest_confirmed_tentative_v1"],
+      "candidate_pool_budgets": [100, 200, 300],
+      "final_budget_semantics": "boruta_confirmed_only_natural_support",
+      "intermediate_artifact": "ordered_iv_pool",
+      "final_artifact": "ordered_boruta_confirmed_support",
+      "direct_comparators": ["iv_woe", "boruta_random_forest"],
+      "cost_class": "heavy"
+    },
+    {
+      "method_id": "boruta_then_rfe_catboost",
+      "implementation_id": "boruta_rf_confirmed_then_catboost_rfe_v1",
+      "hypothesis": "Boruta may identify an all-relevant pool that CatBoost RFE can refine into a compact predictive subset.",
+      "stages": ["boruta_random_forest_confirmed_tentative_v1", "rfe_catboost_fractional_step_v1"],
+      "candidate_pool_budgets": null,
+      "final_budgets": {"lr": 20, "catboost": 40},
+      "support_rules": ["infeasible_natural_support", "no_refinement_possible", "refine_when_support_is_larger"],
+      "intermediate_artifact": "ordered_boruta_confirmed_support",
+      "final_artifact": "ordered_catboost_rfe_subset",
+      "direct_comparators": ["boruta_random_forest", "rfe_catboost"],
+      "cost_class": "heavy"
+    },
+    {
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "implementation_id": "boruta_rf_confirmed_then_mi_mrmr_v1",
+      "hypothesis": "Boruta may identify an all-relevant pool that canonical MI-mRMR can reduce while explicitly controlling redundancy.",
+      "stages": ["boruta_random_forest_confirmed_tentative_v1", "mrmr_mutual_information_discrete_plugin_v1"],
+      "candidate_pool_budgets": null,
+      "final_budgets": {"lr": 20, "catboost": 40},
+      "mrmr_configuration": {"n_bins": 10, "objective": "mid", "random_state": 42},
+      "support_rules": ["infeasible_natural_support", "no_refinement_possible", "refine_when_support_is_larger"],
+      "intermediate_artifact": "ordered_boruta_confirmed_support",
+      "final_artifact": "ordered_mi_mrmr_subset",
+      "direct_comparators": ["boruta_random_forest", "mrmr_mutual_information"],
+      "cost_class": "heavy"
+    },
+    {
+      "method_id": "statistical_normalized_average_rank",
+      "implementation_id": "equal_weight_five_selector_normalized_average_rank_v1",
+      "hypothesis": "Equal-weight heterogeneous statistical/model-based ranking may identify robust features without semantic input and can isolate generic ensembling from semantic voting.",
+      "components": ["iv_woe", "lasso_l1_logistic", "rfe_catboost", "boruta_random_forest", "catboost_shap"],
+      "weights": [0.2, 0.2, 0.2, 0.2, 0.2],
+      "final_budgets": {"lr": 20, "catboost": 40},
+      "ranking_contract": "midrank_then_q_then_equal_arithmetic_mean_then_candidate_universe_order",
+      "missing_evidence": "invalidates_cell",
+      "direct_comparators": ["iv_woe", "lasso_l1_logistic", "rfe_catboost", "boruta_random_forest", "catboost_shap", "mrmr_mutual_information", "cross_dataset_rank_voting_v1"],
+      "cost_class": "heavy"
+    }
+  ]
+}
