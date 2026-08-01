@@ -1,0 +1,1862 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Prompt 11 baseline results audit",
+    "description": "Authenticated Prompt 10 evidence and preregistered combination readiness",
+    "generatedAt": "2026-08-01T07:10:57+00:00",
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "# Prompt 11 baseline results audit\n\nAuthenticated individual-selector evidence and outcome-blind combination readiness."
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "authentication",
+        "body": "## Audit result\n\nAll 36 frozen baseline cells authenticated complete. All 396 supported saved-prediction metric checks reconciled, with zero discrepancies. The completed matrix contains 36 locked OOT evaluation units."
+      },
+      {
+        "id": "method-title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Evidence boundary\n\nAll results come from authenticated Prompt 10 artifacts. OOT paired inference is supported; DEV fold prediction inference is not, because fold prediction vectors were not persisted."
+      },
+      {
+        "id": "paired-title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Scoped paired OOT comparisons\n\nExact deltas, paired bootstrap intervals, Holm-adjusted p-values, count comparability, and conservative evidence labels are shown together. Non-significance is not equivalence."
+      },
+      {
+        "id": "full-delta-chart-block",
+        "type": "chart",
+        "layout": "full",
+        "chartId": "full-delta-chart"
+      },
+      {
+        "id": "paired-table-block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "paired"
+      },
+      {
+        "id": "dev-title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## DEV temporal robustness\n\nEach row summarizes five ordered expanding-window folds without pooling."
+      },
+      {
+        "id": "dev-table-block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "dev"
+      },
+      {
+        "id": "resource-title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Runtime and resources\n\nActive computation, RAM waiting, peak RSS, and minimum available RAM are feasibility evidence only."
+      },
+      {
+        "id": "resource-table-block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "runtime"
+      },
+      {
+        "id": "limits",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Limitations and next step\n\nFold predictions and score-PSI bin edges were not persisted. Natural-support shortfalls are not method failures. The next scientific step is the unchanged 24-evaluation pilot backed by 18 unique selection identities; DEV and OOT remain gated."
+      }
+    ],
+    "cards": [],
+    "charts": [
+      {
+        "id": "full-delta-chart",
+        "title": "Locked OOT AUC difference versus full features",
+        "subtitle": "Method minus full-features AUC; 28 predeclared dataset/model contrasts; zero is the reference",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "How do the seven preregistered selector baselines differ from full features across both datasets and final models?",
+        "rationale": "Grouped bars preserve the seven method categories and expose the four required dataset/model scopes without implying a universal rank.",
+        "comparisonContext": {
+          "baseline": "full_features",
+          "grain": "selector by dataset and final model",
+          "normalization": "paired method A AUC minus full-features AUC on identical OOT rows",
+          "semanticFamily": "predeclared_baseline_vs_full_features",
+          "unit": "AUC difference"
+        },
+        "type": "bar",
+        "dataset": "full_feature_deltas",
+        "sourceId": "oot_full_delta",
+        "encodings": {
+          "x": {
+            "field": "method_a",
+            "type": "nominal",
+            "label": "Selector"
+          },
+          "y": {
+            "field": "delta_auc",
+            "type": "quantitative",
+            "format": "number",
+            "label": "Delta AUC"
+          },
+          "color": {
+            "field": "dataset_model",
+            "type": "nominal",
+            "label": "Dataset / model"
+          },
+          "tooltip": [
+            {
+              "field": "dataset_model",
+              "type": "text",
+              "label": "Dataset / model"
+            },
+            {
+              "field": "delta_auc",
+              "type": "quantitative",
+              "format": "number",
+              "label": "Delta AUC"
+            },
+            {
+              "field": "bootstrap_ci95_lower",
+              "type": "quantitative",
+              "format": "number",
+              "label": "95% CI lower"
+            },
+            {
+              "field": "bootstrap_ci95_upper",
+              "type": "quantitative",
+              "format": "number",
+              "label": "95% CI upper"
+            }
+          ]
+        },
+        "xAxisTitle": "Selector",
+        "yAxisTitle": "AUC difference (method minus full features)",
+        "valueFormat": "number",
+        "layout": "full",
+        "palette": {
+          "kind": "categorical",
+          "name": "approved_four_scope"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0,
+            "label": "Full-features reference",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "settings": {
+          "groupMode": "grouped",
+          "orientation": "vertical",
+          "sort": "none",
+          "categoryLabelPolicy": "rotate",
+          "showValues": false
+        },
+        "surface": {
+          "surface": "explorer",
+          "viewMode": "both",
+          "interactiveLegend": true,
+          "showControls": true
+        },
+        "maxRows": 28,
+        "compatibleTypes": [
+          "bar"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "id": "paired",
+        "title": "Predeclared paired OOT contrasts",
+        "subtitle": "Method A minus frozen reference; first 20 rows ordered by evidence label and Holm p",
+        "showDescription": true,
+        "dataset": "paired",
+        "sourceId": "oot_pair_preview",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "holm_adjusted_p",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "Model",
+            "type": "text"
+          },
+          {
+            "field": "method_a",
+            "label": "Method A",
+            "type": "text"
+          },
+          {
+            "field": "method_b",
+            "label": "Reference",
+            "type": "text"
+          },
+          {
+            "field": "delta_auc",
+            "label": "Delta AUC",
+            "format": "number"
+          },
+          {
+            "field": "bootstrap_ci95_lower",
+            "label": "CI lower",
+            "format": "number"
+          },
+          {
+            "field": "bootstrap_ci95_upper",
+            "label": "CI upper",
+            "format": "number"
+          },
+          {
+            "field": "holm_adjusted_p",
+            "label": "Holm p",
+            "format": "number"
+          },
+          {
+            "field": "evidence_strength",
+            "label": "Strength",
+            "type": "text"
+          },
+          {
+            "field": "feature_count_comparability",
+            "label": "Counts",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "dev",
+        "title": "Five-fold DEV robustness",
+        "subtitle": "Mean and spread across ordered expanding folds; no prediction pooling",
+        "showDescription": true,
+        "dataset": "dev",
+        "sourceId": "dev",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "dataset",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "Model",
+            "type": "text"
+          },
+          {
+            "field": "method_id",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "auc_mean",
+            "label": "AUC mean",
+            "format": "number"
+          },
+          {
+            "field": "auc_std",
+            "label": "AUC sd",
+            "format": "number"
+          },
+          {
+            "field": "auc_min",
+            "label": "AUC min",
+            "format": "number"
+          },
+          {
+            "field": "auc_max",
+            "label": "AUC max",
+            "format": "number"
+          },
+          {
+            "field": "selected_feature_count_mean",
+            "label": "Features",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "runtime",
+        "title": "Completed-cell resource evidence",
+        "subtitle": "Active runtime excludes RAM waiting",
+        "showDescription": true,
+        "dataset": "runtime",
+        "sourceId": "resources",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "active_computation_seconds",
+          "direction": "desc"
+        },
+        "columns": [
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "Model",
+            "type": "text"
+          },
+          {
+            "field": "method_id",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "active_computation_seconds",
+            "label": "Active sec",
+            "format": "number"
+          },
+          {
+            "field": "ram_wait_seconds",
+            "label": "RAM wait sec",
+            "format": "number"
+          },
+          {
+            "field": "peak_process_rss_gib",
+            "label": "Peak RSS GiB",
+            "format": "number"
+          },
+          {
+            "field": "minimum_available_ram_gib",
+            "label": "Min avail GiB",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "filters": [],
+    "sources": [
+      {
+        "id": "authentication",
+        "label": "Baseline completion authentication",
+        "path": "baseline_completion_authentication.json"
+      },
+      {
+        "id": "reconciliation",
+        "label": "Metric reconciliation",
+        "path": "baseline_metric_reconciliation.csv"
+      },
+      {
+        "id": "dev",
+        "label": "DEV fold summaries",
+        "path": "baseline_dev_fold_summary.csv",
+        "query": {
+          "engine": "SQLite",
+          "sql": "SELECT dataset, model, method_id, auc_mean, auc_std, auc_min, auc_max, selected_feature_count_mean FROM baseline_dev_fold_summary ORDER BY dataset, model, method_id",
+          "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+          "executed_at": "2026-08-01T07:10:57+00:00",
+          "language": "sql",
+          "tables_used": [
+            "baseline_dev_fold_summary"
+          ],
+          "filters": [
+            "Artifact-only authenticated Prompt 10 evidence"
+          ]
+        }
+      },
+      {
+        "id": "oot_pair_preview",
+        "label": "Paired OOT comparison preview",
+        "path": "baseline_pairwise_comparisons.csv",
+        "query": {
+          "engine": "SQLite",
+          "sql": "SELECT dataset, model, method_a, method_b, delta_auc, bootstrap_ci95_lower, bootstrap_ci95_upper, holm_adjusted_p, evidence_strength, feature_count_comparability FROM baseline_pairwise_comparisons ORDER BY evidence_strength, holm_adjusted_p, dataset, model LIMIT 20",
+          "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+          "executed_at": "2026-08-01T07:10:57+00:00",
+          "language": "sql",
+          "tables_used": [
+            "baseline_pairwise_comparisons"
+          ],
+          "filters": [
+            "Artifact-only authenticated Prompt 10 evidence"
+          ]
+        }
+      },
+      {
+        "id": "oot_full_delta",
+        "label": "OOT deltas against full features",
+        "path": "baseline_pairwise_comparisons.csv",
+        "query": {
+          "engine": "SQLite",
+          "sql": "SELECT dataset, model, dataset || ' / ' || model AS dataset_model, method_a, method_b, delta_auc, bootstrap_ci95_lower, bootstrap_ci95_upper, holm_adjusted_p, feature_count_a, feature_count_b, evidence_strength FROM baseline_pairwise_comparisons WHERE method_b = 'full_features' ORDER BY method_a, dataset, model",
+          "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+          "executed_at": "2026-08-01T07:10:57+00:00",
+          "language": "sql",
+          "tables_used": [
+            "baseline_pairwise_comparisons"
+          ],
+          "filters": [
+            "Artifact-only authenticated Prompt 10 evidence"
+          ]
+        }
+      },
+      {
+        "id": "resources",
+        "label": "Runtime and resource evidence",
+        "path": "baseline_runtime_resources.csv",
+        "query": {
+          "engine": "SQLite",
+          "sql": "SELECT dataset, model, method_id, active_computation_seconds, ram_wait_seconds, peak_process_rss_gib, minimum_available_ram_gib FROM baseline_runtime_resources ORDER BY active_computation_seconds DESC",
+          "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+          "executed_at": "2026-08-01T07:10:57+00:00",
+          "language": "sql",
+          "tables_used": [
+            "baseline_runtime_resources"
+          ],
+          "filters": [
+            "Artifact-only authenticated Prompt 10 evidence"
+          ]
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-01T07:10:57+00:00",
+    "status": "ready",
+    "accessIssues": [],
+    "datasets": {
+      "headline": [
+        {
+          "authenticated_cells": 36,
+          "metric_checks": 396,
+          "metric_failures": 0,
+          "oot_units": 36
+        }
+      ],
+      "paired": [
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_a": "rfe_catboost",
+          "method_b": "random_k",
+          "delta_auc": 0.0960322617007105,
+          "bootstrap_ci95_lower": 0.0915434736026164,
+          "bootstrap_ci95_upper": 0.1007968047797219,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "random_k",
+          "delta_auc": 0.1169283005104864,
+          "bootstrap_ci95_lower": 0.1113243789132748,
+          "bootstrap_ci95_upper": 0.1226322340638809,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_a": "catboost_shap",
+          "method_b": "random_k",
+          "delta_auc": 0.1223060779072769,
+          "bootstrap_ci95_lower": 0.1165367800372543,
+          "bootstrap_ci95_upper": 0.1283497379234296,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.020300546554716,
+          "bootstrap_ci95_lower": -0.0211619891899738,
+          "bootstrap_ci95_upper": -0.0194308955964157,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "full_features",
+          "delta_auc": -0.020949614852644,
+          "bootstrap_ci95_lower": -0.0219528252415279,
+          "bootstrap_ci95_upper": -0.0199014673284214,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "full_features",
+          "delta_auc": -0.0157795465747904,
+          "bootstrap_ci95_lower": -0.0165391003810612,
+          "bootstrap_ci95_upper": -0.015024366692199,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0372261413920005,
+          "bootstrap_ci95_lower": -0.0387933817604765,
+          "bootstrap_ci95_upper": -0.0356752070999981,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "random_k",
+          "delta_auc": 0.0377811179236748,
+          "bootstrap_ci95_lower": 0.0358576127525107,
+          "bootstrap_ci95_upper": 0.0396861918891699,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "random_k",
+          "delta_auc": 0.0353479978783218,
+          "bootstrap_ci95_lower": 0.0334930022931813,
+          "bootstrap_ci95_upper": 0.0372520507344747,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "catboost_shap",
+          "method_b": "random_k",
+          "delta_auc": 0.0433032971853332,
+          "bootstrap_ci95_lower": 0.0414337326908236,
+          "bootstrap_ci95_upper": 0.0451240724083906,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_a": "rfe_catboost",
+          "method_b": "random_k",
+          "delta_auc": 0.0471159677911238,
+          "bootstrap_ci95_lower": 0.0453298639336159,
+          "bootstrap_ci95_upper": 0.0489557301858477,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.0287773793988104,
+          "bootstrap_ci95_lower": -0.0301453481422966,
+          "bootstrap_ci95_upper": -0.0273358852831223,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0551395840494969,
+          "bootstrap_ci95_lower": -0.0571599725116235,
+          "bootstrap_ci95_upper": -0.0528811319765242,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "different_counts"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "iv_woe",
+          "method_b": "random_k",
+          "delta_auc": 0.0782881036282782,
+          "bootstrap_ci95_lower": 0.0755848127528753,
+          "bootstrap_ci95_upper": 0.0809821170673875,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "random_k",
+          "delta_auc": 0.0821018535563768,
+          "bootstrap_ci95_lower": 0.0793995942803791,
+          "bootstrap_ci95_upper": 0.0846171224946207,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "random_k",
+          "delta_auc": 0.0772817569704482,
+          "bootstrap_ci95_lower": 0.0744755914493958,
+          "bootstrap_ci95_upper": 0.0800761925992368,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "random_k",
+          "delta_auc": 0.0877239529833973,
+          "bootstrap_ci95_lower": 0.0851277534233081,
+          "bootstrap_ci95_upper": 0.0902835814372578,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "catboost_shap",
+          "method_b": "random_k",
+          "delta_auc": 0.0927203927132646,
+          "bootstrap_ci95_lower": 0.0900488343128281,
+          "bootstrap_ci95_upper": 0.0954102826609225,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "boruta_random_forest",
+          "method_b": "random_k",
+          "delta_auc": 0.0519258989775917,
+          "bootstrap_ci95_lower": 0.0496643453337608,
+          "bootstrap_ci95_upper": 0.0542429628994811,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_a": "rfe_catboost",
+          "method_b": "random_k",
+          "delta_auc": 0.0950588170827312,
+          "bootstrap_ci95_lower": 0.0924739374358193,
+          "bootstrap_ci95_upper": 0.097648481699416,
+          "holm_adjusted_p": 0.0,
+          "evidence_strength": "strong",
+          "feature_count_comparability": "matched"
+        }
+      ],
+      "full_feature_deltas": [
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0318295132064768,
+          "bootstrap_ci95_lower": -0.0345040379312011,
+          "bootstrap_ci95_upper": -0.0289779865630486,
+          "holm_adjusted_p": 4.3311404058452045e-112,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0317575156058751,
+          "bootstrap_ci95_lower": -0.0351483467859747,
+          "bootstrap_ci95_upper": -0.0283454605327815,
+          "holm_adjusted_p": 9.118933386120566e-73,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0372261413920005,
+          "bootstrap_ci95_lower": -0.0387933817604765,
+          "bootstrap_ci95_upper": -0.0356752070999981,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "boruta_random_forest",
+          "method_b": "full_features",
+          "delta_auc": -0.0551395840494969,
+          "bootstrap_ci95_lower": -0.0571599725116235,
+          "bootstrap_ci95_upper": -0.0528811319765242,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "catboost_shap",
+          "method_b": "full_features",
+          "delta_auc": -0.0064968129849202,
+          "bootstrap_ci95_lower": -0.0082595331085531,
+          "bootstrap_ci95_upper": -0.0048071312328367,
+          "holm_adjusted_p": 9.593129954607461e-14,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "catboost_shap",
+          "method_b": "full_features",
+          "delta_auc": -0.0213659085443158,
+          "bootstrap_ci95_lower": -0.0244100328437214,
+          "bootstrap_ci95_upper": -0.018328302077781,
+          "holm_adjusted_p": 1.7998593645845027e-40,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "catboost_shap",
+          "method_b": "full_features",
+          "delta_auc": -0.007824247267779,
+          "bootstrap_ci95_lower": -0.0083803344298624,
+          "bootstrap_ci95_upper": -0.0072183402847411,
+          "holm_adjusted_p": 5.664721224184199e-147,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "catboost_shap",
+          "method_b": "full_features",
+          "delta_auc": -0.014345090313824,
+          "bootstrap_ci95_lower": -0.0154988190819836,
+          "bootstrap_ci95_upper": -0.0131237408415745,
+          "holm_adjusted_p": 2.232817848893176e-124,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.0174613021933091,
+          "bootstrap_ci95_lower": -0.0193834384105195,
+          "bootstrap_ci95_upper": -0.0153899254493002,
+          "holm_adjusted_p": 9.237449505390596e-61,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.0333489305677494,
+          "bootstrap_ci95_lower": -0.0366793658602422,
+          "bootstrap_ci95_upper": -0.0299044112668745,
+          "holm_adjusted_p": 1.077500566932898e-76,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.020300546554716,
+          "bootstrap_ci95_lower": -0.0211619891899738,
+          "bootstrap_ci95_upper": -0.0194308955964157,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "iv_woe",
+          "method_b": "full_features",
+          "delta_auc": -0.0287773793988104,
+          "bootstrap_ci95_lower": -0.0301453481422966,
+          "bootstrap_ci95_upper": -0.0273358852831223,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "full_features",
+          "delta_auc": -0.0118058013721562,
+          "bootstrap_ci95_lower": -0.0135847682977208,
+          "bootstrap_ci95_upper": -0.0099757770411035,
+          "holm_adjusted_p": 3.7958911881192127e-35,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "full_features",
+          "delta_auc": -0.0261463995099912,
+          "bootstrap_ci95_lower": -0.0293185755084263,
+          "bootstrap_ci95_upper": -0.0228503929854596,
+          "holm_adjusted_p": 3.8634670004882244e-55,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "full_features",
+          "delta_auc": -0.0133464265294374,
+          "bootstrap_ci95_lower": -0.0141392960208969,
+          "bootstrap_ci95_upper": -0.0125662987949056,
+          "holm_adjusted_p": 2.7583198679945783e-246,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "lasso_l1_logistic",
+          "method_b": "full_features",
+          "delta_auc": -0.0297837260566403,
+          "bootstrap_ci95_lower": -0.0312662690741394,
+          "bootstrap_ci95_upper": -0.0282288277003122,
+          "holm_adjusted_p": 5.702406433115072e-308,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "full_features",
+          "delta_auc": -0.0162274588458524,
+          "bootstrap_ci95_lower": -0.0181391571754652,
+          "bootstrap_ci95_upper": -0.0143539820817835,
+          "holm_adjusted_p": 4.5397485096346366e-61,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "full_features",
+          "delta_auc": -0.0267436859411064,
+          "bootstrap_ci95_lower": -0.0299348587255779,
+          "bootstrap_ci95_upper": -0.0234928196642991,
+          "holm_adjusted_p": 2.221298699581505e-55,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "full_features",
+          "delta_auc": -0.0157795465747904,
+          "bootstrap_ci95_lower": -0.0165391003810612,
+          "bootstrap_ci95_upper": -0.015024366692199,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "legacy_rf_relevance_corr",
+          "method_b": "full_features",
+          "delta_auc": -0.0193415300436913,
+          "bootstrap_ci95_lower": -0.0206197746663669,
+          "bootstrap_ci95_upper": -0.0180001374340439,
+          "holm_adjusted_p": 3.997066645329213e-189,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "full_features",
+          "delta_auc": -0.026133228502534,
+          "bootstrap_ci95_lower": -0.0286488592515626,
+          "bootstrap_ci95_upper": -0.023636320701417,
+          "holm_adjusted_p": 1.586451075225453e-95,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "full_features",
+          "delta_auc": -0.0363799981130866,
+          "bootstrap_ci95_lower": -0.0398318858271661,
+          "bootstrap_ci95_upper": -0.0330776385162571,
+          "holm_adjusted_p": 6.495661125269168e-89,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "full_features",
+          "delta_auc": -0.020949614852644,
+          "bootstrap_ci95_lower": -0.0219528252415279,
+          "bootstrap_ci95_upper": -0.0199014673284214,
+          "holm_adjusted_p": 0.0,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "mrmr_mutual_information",
+          "method_b": "full_features",
+          "delta_auc": -0.0249636294707117,
+          "bootstrap_ci95_lower": -0.0263529882308993,
+          "bootstrap_ci95_upper": -0.0235575508813433,
+          "holm_adjusted_p": 1.3627246066399721e-260,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "dataset_model": "homecredit / catboost",
+          "method_a": "rfe_catboost",
+          "method_b": "full_features",
+          "delta_auc": -0.0046064887438125,
+          "bootstrap_ci95_lower": -0.0060539499753408,
+          "bootstrap_ci95_upper": -0.0032312785150108,
+          "holm_adjusted_p": 2.0196971130365743e-10,
+          "feature_count_a": 40,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "dataset_model": "homecredit / lr",
+          "method_a": "rfe_catboost",
+          "method_b": "full_features",
+          "delta_auc": -0.0249496596403955,
+          "bootstrap_ci95_lower": -0.0282750699653362,
+          "bootstrap_ci95_upper": -0.0217380382262837,
+          "holm_adjusted_p": 1.4683682480240075e-49,
+          "feature_count_a": 20,
+          "feature_count_b": 529,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "dataset_model": "lendingclub_v2 / catboost",
+          "method_a": "rfe_catboost",
+          "method_b": "full_features",
+          "delta_auc": -0.0040115766619884,
+          "bootstrap_ci95_lower": -0.0044993908529437,
+          "bootstrap_ci95_upper": -0.0035200664225583,
+          "holm_adjusted_p": 3.3170536566163315e-57,
+          "feature_count_a": 40,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "dataset_model": "lendingclub_v2 / lr",
+          "method_a": "rfe_catboost",
+          "method_b": "full_features",
+          "delta_auc": -0.0120066659443573,
+          "bootstrap_ci95_lower": -0.0131464183976196,
+          "bootstrap_ci95_upper": -0.0108416543386607,
+          "holm_adjusted_p": 3.4764355551526266e-91,
+          "feature_count_a": 20,
+          "feature_count_b": 675,
+          "evidence_strength": "strong"
+        }
+      ],
+      "dev": [
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "boruta_random_forest",
+          "auc_mean": 0.7369243708178838,
+          "auc_std": 0.0089809599522457,
+          "auc_min": 0.7280028786652581,
+          "auc_max": 0.7464450042615289,
+          "selected_feature_count_mean": 37.2
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "catboost_shap",
+          "auc_mean": 0.7638542180844813,
+          "auc_std": 0.0139290348883947,
+          "auc_min": 0.7461487594955281,
+          "auc_max": 0.7782808793111943,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "full_features",
+          "auc_mean": 0.7716615882985325,
+          "auc_std": 0.0102045762530383,
+          "auc_min": 0.7578637933292209,
+          "auc_max": 0.7801128649949731,
+          "selected_feature_count_mean": 529.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "iv_woe",
+          "auc_mean": 0.7505299399747939,
+          "auc_std": 0.0106971979141384,
+          "auc_min": 0.735287384578211,
+          "auc_max": 0.7624082827768186,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "lasso_l1_logistic",
+          "auc_mean": 0.76156434716017,
+          "auc_std": 0.0105735485304129,
+          "auc_min": 0.7461618098142452,
+          "auc_max": 0.770722614828024,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "legacy_rf_relevance_corr",
+          "auc_mean": 0.7522743942122128,
+          "auc_std": 0.0124679803735299,
+          "auc_min": 0.7351096234187179,
+          "auc_max": 0.7634478232655368,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "mrmr_mutual_information",
+          "auc_mean": 0.7384897068930701,
+          "auc_std": 0.0060783319767235,
+          "auc_min": 0.7299366550382065,
+          "auc_max": 0.7451343089246795,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "random_k",
+          "auc_mean": 0.6624554644284345,
+          "auc_std": 0.0208095014116248,
+          "auc_min": 0.632796039188723,
+          "auc_max": 0.687435544048789,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "rfe_catboost",
+          "auc_mean": 0.762960625378043,
+          "auc_std": 0.0149345359315831,
+          "auc_min": 0.7415754137136408,
+          "auc_max": 0.7752487988568828,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "boruta_random_forest",
+          "auc_mean": 0.7267203301056346,
+          "auc_std": 0.0082079638196208,
+          "auc_min": 0.7148203818889062,
+          "auc_max": 0.734744303022488,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "catboost_shap",
+          "auc_mean": 0.743327157429894,
+          "auc_std": 0.0100603284094769,
+          "auc_min": 0.7314019487783887,
+          "auc_max": 0.7562030668331441,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "full_features",
+          "auc_mean": 0.7491696380967157,
+          "auc_std": 0.0198834029386762,
+          "auc_min": 0.7171027541066364,
+          "auc_max": 0.7650797844180052,
+          "selected_feature_count_mean": 529.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "iv_woe",
+          "auc_mean": 0.7248392917942452,
+          "auc_std": 0.0083535823749133,
+          "auc_min": 0.7135121863035818,
+          "auc_max": 0.7370129774825633,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "lasso_l1_logistic",
+          "auc_mean": 0.7451174047975078,
+          "auc_std": 0.0097866657658572,
+          "auc_min": 0.7364333524271514,
+          "auc_max": 0.7583751885713448,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "legacy_rf_relevance_corr",
+          "auc_mean": 0.7342675799488416,
+          "auc_std": 0.0103668084572903,
+          "auc_min": 0.72009463853855,
+          "auc_max": 0.7480747114688069,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "mrmr_mutual_information",
+          "auc_mean": 0.7245332273606258,
+          "auc_std": 0.009144373408996,
+          "auc_min": 0.7120054676880783,
+          "auc_max": 0.736341144563851,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "random_k",
+          "auc_mean": 0.6203018673706652,
+          "auc_std": 0.0181129402120863,
+          "auc_min": 0.598748232704024,
+          "auc_max": 0.637246234601099,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "rfe_catboost",
+          "auc_mean": 0.7372156763774645,
+          "auc_std": 0.0084993199554722,
+          "auc_min": 0.7250786244627928,
+          "auc_max": 0.7470324452789283,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "boruta_random_forest",
+          "auc_mean": 0.7006441345507275,
+          "auc_std": 0.0091599134341972,
+          "auc_min": 0.6920201683478636,
+          "auc_max": 0.7136736380757001,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "catboost_shap",
+          "auc_mean": 0.7320285396761441,
+          "auc_std": 0.0113570349534561,
+          "auc_min": 0.7172006635744202,
+          "auc_max": 0.7436088751992388,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "full_features",
+          "auc_mean": 0.7372043236935173,
+          "auc_std": 0.0122105082829623,
+          "auc_min": 0.7208312096593247,
+          "auc_max": 0.7501635936535282,
+          "selected_feature_count_mean": 675.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "iv_woe",
+          "auc_mean": 0.7216340994631656,
+          "auc_std": 0.0105900742476844,
+          "auc_min": 0.707891781313621,
+          "auc_max": 0.7322081529474821,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "lasso_l1_logistic",
+          "auc_mean": 0.7299407028485662,
+          "auc_std": 0.0099616874516604,
+          "auc_min": 0.7170053683956322,
+          "auc_max": 0.7410185366998899,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "legacy_rf_relevance_corr",
+          "auc_mean": 0.7261076332237754,
+          "auc_std": 0.009222247855656,
+          "auc_min": 0.7144414597168739,
+          "auc_max": 0.7350405545479686,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "mrmr_mutual_information",
+          "auc_mean": 0.7203292609686585,
+          "auc_std": 0.0112140108663236,
+          "auc_min": 0.7049512251917848,
+          "auc_max": 0.7309086459322194,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "random_k",
+          "auc_mean": 0.6719504070360727,
+          "auc_std": 0.0130779898901738,
+          "auc_min": 0.6549212255916517,
+          "auc_max": 0.6857704114625052,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "rfe_catboost",
+          "auc_mean": 0.7347423319611869,
+          "auc_std": 0.0114697656690213,
+          "auc_min": 0.7192512612222958,
+          "auc_max": 0.7472948319638393,
+          "selected_feature_count_mean": 40.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "boruta_random_forest",
+          "auc_mean": 0.6574010203845271,
+          "auc_std": 0.0034550601726657,
+          "auc_min": 0.6540396841237645,
+          "auc_max": 0.6619845507687978,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "catboost_shap",
+          "auc_mean": 0.7185730868266694,
+          "auc_std": 0.0089403998839943,
+          "auc_min": 0.7091137558714218,
+          "auc_max": 0.7292409247871179,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "full_features",
+          "auc_mean": 0.7319632593152103,
+          "auc_std": 0.0110085133449422,
+          "auc_min": 0.7169435398857743,
+          "auc_max": 0.7430171821709857,
+          "selected_feature_count_mean": 675.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "iv_woe",
+          "auc_mean": 0.7010830436202105,
+          "auc_std": 0.0135382192151533,
+          "auc_min": 0.6873449079907527,
+          "auc_max": 0.7159393121206202,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "lasso_l1_logistic",
+          "auc_mean": 0.7187182667753295,
+          "auc_std": 0.0070111815763961,
+          "auc_min": 0.7120282104106381,
+          "auc_max": 0.7296585936167524,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "legacy_rf_relevance_corr",
+          "auc_mean": 0.7155802277944121,
+          "auc_std": 0.0066932681063197,
+          "auc_min": 0.7079272552543884,
+          "auc_max": 0.7235241692010974,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "mrmr_mutual_information",
+          "auc_mean": 0.7044367644470642,
+          "auc_std": 0.0098811992880331,
+          "auc_min": 0.692036838900028,
+          "auc_max": 0.7157180296485153,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "random_k",
+          "auc_mean": 0.5934072674382754,
+          "auc_std": 0.0069872038413674,
+          "auc_min": 0.5832980090268163,
+          "auc_max": 0.5994358457278152,
+          "selected_feature_count_mean": 20.0
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "rfe_catboost",
+          "auc_mean": 0.7211322571465768,
+          "auc_std": 0.0081056735720298,
+          "auc_min": 0.7113253813841947,
+          "auc_max": 0.7301184080208222,
+          "selected_feature_count_mean": 20.0
+        }
+      ],
+      "runtime": [
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "full_features",
+          "active_computation_seconds": 14654.651616400006,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 20.57247543334961,
+          "minimum_available_ram_gib": 7.130462646484375
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "boruta_random_forest",
+          "active_computation_seconds": 10925.2643598,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 24.32920455932617,
+          "minimum_available_ram_gib": 4.931980133056641
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "boruta_random_forest",
+          "active_computation_seconds": 9776.028963799996,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 20.80652618408203,
+          "minimum_available_ram_gib": 7.971336364746094
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "full_features",
+          "active_computation_seconds": 6964.255931599997,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 22.56481170654297,
+          "minimum_available_ram_gib": 3.947418212890625
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "lasso_l1_logistic",
+          "active_computation_seconds": 5784.314165799995,
+          "ram_wait_seconds": 3114.3601440000057,
+          "peak_process_rss_gib": 28.26582717895508,
+          "minimum_available_ram_gib": 0.3631935119628906
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "rfe_catboost",
+          "active_computation_seconds": 4420.073640199989,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 23.28092193603516,
+          "minimum_available_ram_gib": 5.818374633789063
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "lasso_l1_logistic",
+          "active_computation_seconds": 3296.3518974000035,
+          "ram_wait_seconds": 904.262487,
+          "peak_process_rss_gib": 28.349166870117188,
+          "minimum_available_ram_gib": 0.2546882629394531
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "rfe_catboost",
+          "active_computation_seconds": 3191.1085504000075,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 20.93954849243164,
+          "minimum_available_ram_gib": 6.934268951416016
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "mrmr_mutual_information",
+          "active_computation_seconds": 3098.527769399996,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 21.808055877685547,
+          "minimum_available_ram_gib": 6.242103576660156
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "legacy_rf_relevance_corr",
+          "active_computation_seconds": 2482.805767999991,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 18.612403869628903,
+          "minimum_available_ram_gib": 10.35845184326172
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "iv_woe",
+          "active_computation_seconds": 2189.832045999996,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 24.440418243408203,
+          "minimum_available_ram_gib": 3.484119415283203
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "legacy_rf_relevance_corr",
+          "active_computation_seconds": 2008.9727562000044,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 8.572521209716797,
+          "minimum_available_ram_gib": 6.948833465576172
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "catboost_shap",
+          "active_computation_seconds": 1860.0032035999905,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 23.593677520751957,
+          "minimum_available_ram_gib": 5.030559539794922
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "boruta_random_forest",
+          "active_computation_seconds": 1792.593071700001,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.948005676269531,
+          "minimum_available_ram_gib": 20.818012237548828
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "legacy_rf_relevance_corr",
+          "active_computation_seconds": 1735.0974403,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 8.860675811767578,
+          "minimum_available_ram_gib": 8.049022674560547
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "boruta_random_forest",
+          "active_computation_seconds": 1634.0049351000052,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.9321136474609375,
+          "minimum_available_ram_gib": 21.01412582397461
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "legacy_rf_relevance_corr",
+          "active_computation_seconds": 1534.392534499988,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 22.941734313964844,
+          "minimum_available_ram_gib": 6.128334045410156
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "mrmr_mutual_information",
+          "active_computation_seconds": 1327.5359159000072,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 23.827831268310547,
+          "minimum_available_ram_gib": 3.988269805908203
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method_id": "random_k",
+          "active_computation_seconds": 1297.4817389999953,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 19.576950073242188,
+          "minimum_available_ram_gib": 8.13845443725586
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "rfe_catboost",
+          "active_computation_seconds": 1229.1710830999946,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.942543029785156,
+          "minimum_available_ram_gib": 20.050033569335938
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "rfe_catboost",
+          "active_computation_seconds": 1192.3337299000125,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.913097381591797,
+          "minimum_available_ram_gib": 19.93292999267578
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "iv_woe",
+          "active_computation_seconds": 829.5514819000091,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 23.14508438110352,
+          "minimum_available_ram_gib": 4.725883483886719
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "catboost_shap",
+          "active_computation_seconds": 710.1681345999968,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 22.36400985717773,
+          "minimum_available_ram_gib": 6.437789916992188
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "mrmr_mutual_information",
+          "active_computation_seconds": 616.9911934999982,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.941749572753906,
+          "minimum_available_ram_gib": 19.97822570800781
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "lasso_l1_logistic",
+          "active_computation_seconds": 569.9616796999908,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.94232177734375,
+          "minimum_available_ram_gib": 19.841537475585938
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "catboost_shap",
+          "active_computation_seconds": 509.4367613000068,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.931484222412109,
+          "minimum_available_ram_gib": 20.94228744506836
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "lasso_l1_logistic",
+          "active_computation_seconds": 402.8792689999973,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.937934875488281,
+          "minimum_available_ram_gib": 19.728485107421875
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "iv_woe",
+          "active_computation_seconds": 347.0224307000026,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.267284393310547,
+          "minimum_available_ram_gib": 20.476821899414062
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "mrmr_mutual_information",
+          "active_computation_seconds": 277.0491084000096,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.947971343994141,
+          "minimum_available_ram_gib": 19.967090606689453
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "catboost_shap",
+          "active_computation_seconds": 259.1260685000016,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.933174133300781,
+          "minimum_available_ram_gib": 20.86617660522461
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method_id": "random_k",
+          "active_computation_seconds": 247.9892802999966,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 24.09133529663086,
+          "minimum_available_ram_gib": 3.898456573486328
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "random_k",
+          "active_computation_seconds": 240.5346368000028,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.949802398681641,
+          "minimum_available_ram_gib": 19.4705810546875
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "iv_woe",
+          "active_computation_seconds": 173.79296089999843,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.932334899902344,
+          "minimum_available_ram_gib": 19.56692123413086
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "random_k",
+          "active_computation_seconds": 107.38028349999512,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 7.937736511230469,
+          "minimum_available_ram_gib": 19.471649169921875
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method_id": "full_features",
+          "active_computation_seconds": null,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 9.027095794677734,
+          "minimum_available_ram_gib": 18.385860443115234
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method_id": "full_features",
+          "active_computation_seconds": null,
+          "ram_wait_seconds": 0.0,
+          "peak_process_rss_gib": 10.453445434570312,
+          "minimum_available_ram_gib": 14.970687866210938
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "authentication",
+      "label": "Baseline completion authentication",
+      "path": "baseline_completion_authentication.json"
+    },
+    {
+      "id": "reconciliation",
+      "label": "Metric reconciliation",
+      "path": "baseline_metric_reconciliation.csv"
+    },
+    {
+      "id": "dev",
+      "label": "DEV fold summaries",
+      "path": "baseline_dev_fold_summary.csv",
+      "query": {
+        "engine": "SQLite",
+        "sql": "SELECT dataset, model, method_id, auc_mean, auc_std, auc_min, auc_max, selected_feature_count_mean FROM baseline_dev_fold_summary ORDER BY dataset, model, method_id",
+        "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+        "executed_at": "2026-08-01T07:10:57+00:00",
+        "language": "sql",
+        "tables_used": [
+          "baseline_dev_fold_summary"
+        ],
+        "filters": [
+          "Artifact-only authenticated Prompt 10 evidence"
+        ]
+      }
+    },
+    {
+      "id": "oot_pair_preview",
+      "label": "Paired OOT comparison preview",
+      "path": "baseline_pairwise_comparisons.csv",
+      "query": {
+        "engine": "SQLite",
+        "sql": "SELECT dataset, model, method_a, method_b, delta_auc, bootstrap_ci95_lower, bootstrap_ci95_upper, holm_adjusted_p, evidence_strength, feature_count_comparability FROM baseline_pairwise_comparisons ORDER BY evidence_strength, holm_adjusted_p, dataset, model LIMIT 20",
+        "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+        "executed_at": "2026-08-01T07:10:57+00:00",
+        "language": "sql",
+        "tables_used": [
+          "baseline_pairwise_comparisons"
+        ],
+        "filters": [
+          "Artifact-only authenticated Prompt 10 evidence"
+        ]
+      }
+    },
+    {
+      "id": "oot_full_delta",
+      "label": "OOT deltas against full features",
+      "path": "baseline_pairwise_comparisons.csv",
+      "query": {
+        "engine": "SQLite",
+        "sql": "SELECT dataset, model, dataset || ' / ' || model AS dataset_model, method_a, method_b, delta_auc, bootstrap_ci95_lower, bootstrap_ci95_upper, holm_adjusted_p, feature_count_a, feature_count_b, evidence_strength FROM baseline_pairwise_comparisons WHERE method_b = 'full_features' ORDER BY method_a, dataset, model",
+        "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+        "executed_at": "2026-08-01T07:10:57+00:00",
+        "language": "sql",
+        "tables_used": [
+          "baseline_pairwise_comparisons"
+        ],
+        "filters": [
+          "Artifact-only authenticated Prompt 10 evidence"
+        ]
+      }
+    },
+    {
+      "id": "resources",
+      "label": "Runtime and resource evidence",
+      "path": "baseline_runtime_resources.csv",
+      "query": {
+        "engine": "SQLite",
+        "sql": "SELECT dataset, model, method_id, active_computation_seconds, ram_wait_seconds, peak_process_rss_gib, minimum_available_ram_gib FROM baseline_runtime_resources ORDER BY active_computation_seconds DESC",
+        "description": "Read-only report projection executed against the authenticated audit CSV loaded as the named in-memory table.",
+        "executed_at": "2026-08-01T07:10:57+00:00",
+        "language": "sql",
+        "tables_used": [
+          "baseline_runtime_resources"
+        ],
+        "filters": [
+          "Artifact-only authenticated Prompt 10 evidence"
+        ]
+      }
+    }
+  ]
+}

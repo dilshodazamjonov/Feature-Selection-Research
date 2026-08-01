@@ -1,0 +1,28 @@
+{
+  "schema_version": "prompt_11_baseline_results_audit_v1",
+  "matrix_id": "full_baseline_v1",
+  "configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+  "runtime_policy_sha256": "d3bc00778fce57c33ef52a6c4ff28f6ec47f0348ab3695265bd402dfbaa3226d",
+  "expected_cells": 36,
+  "authenticated_cells": 36,
+  "cell_036": "fbv1-036-lendingclub_v2-catboost-rfe-catboost-s42",
+  "cell_036_completed": true,
+  "success_marker_present": true,
+  "success_marker_path": "results/full_baseline_v1/runs/lendingclub_v2/fbv1-036-lendingclub_v2-catboost-rfe-catboost-s42/_SUCCESS",
+  "success_marker_sha256": "09bdb47e7fa41dbe5a2c122726c5e0736024e31f451dc3a80a80ff4cd432a9b1",
+  "phase_composition": {
+    "dev_expanding_window_fold_evaluations": 180,
+    "full_dev_refit_diagnostics": 36,
+    "oot_evaluations": 36,
+    "total_evaluation_units": 252
+  },
+  "prediction_identity_families": {
+    "homecredit__dev": "1f68b49d4420e943a3833cb62b917c5e1093562281807d9047a11ffc2626aebc",
+    "homecredit__oot": "f5045e863d8debb0b80a5f67d62dcc27f62d80660b6395d4a41b1e05b07b07be",
+    "lendingclub_v2__dev": "5060f17d16fffb4665fbfba4d80331db0b56744cad19516a0913ef91b28032d4",
+    "lendingclub_v2__oot": "e455f6dae0c55f6bd47aaeefde05ef6ad1468aa1053f9be7013b109c2b94c162"
+  },
+  "metric_reconciliation_failures": 0,
+  "raw_dataset_paths_resolved": false,
+  "baseline_refit_performed": false
+}
