@@ -1,0 +1,11 @@
+{
+  "schema_version": "prompt_10_baseline_preservation_verification_v1",
+  "status": "byte_hash_identical",
+  "expected_cells": 36,
+  "identical_cells": 36,
+  "mismatches": [],
+  "success_marker_identical": true,
+  "phase_0_aggregate_snapshot_sha256": "86da68c461a3f868948bacad639cc60b739a7a2a7bba511d623679dceefcf33e",
+  "raw_dataset_paths_resolved": false,
+  "prompt_10_workload_executed": false
+}

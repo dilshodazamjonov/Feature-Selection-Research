@@ -1,0 +1,98 @@
+schema_version: selector_combination_research_config_v1
+configuration_status: preregistered_outcome_blind
+protocol_lock_path: configs/protocols/selector_combinations_v1/combination_protocol_lock.json
+prompt_10_config_path: configs/experiments/full_baseline_v1.yaml
+execution_policy_path: configs/execution/local_laptop_safe_v1.yaml
+results_root: results/selector_combinations_v1
+log_path: logs/runs.log
+
+protocol:
+  datasets: [homecredit, lendingclub_v2]
+  models: [lr, catboost]
+  seed: 42
+  pilot_fold_ids: [1]
+  dev_fold_ids: [1, 2, 3, 4, 5]
+  pilot_oot_access: forbidden
+  final_feature_budgets: {lr: 20, catboost: 40}
+  iv_pool_budgets: [100, 200, 300]
+  iv_pool_primary: 200
+  execution_order:
+    - statistical_normalized_average_rank
+    - iv_then_boruta
+    - boruta_then_mrmr_mutual_information
+    - boruta_then_rfe_catboost
+  expected_pilot_selection_count: 18
+  expected_pilot_evaluation_count: 24
+  concurrent_cells: 1
+  concurrent_folds: 1
+  data_loader_workers: 0
+  estimator_threads_maximum: 4
+
+selector_settings:
+  iv_woe:
+    n_bins: 10
+    binning_strategy: quantile
+    zero_count_smoothing: 0.5
+  lasso_l1_logistic:
+    C: 0.05
+    solver: liblinear
+    max_iter: 2000
+    tol: 0.0001
+    n_jobs: 1
+    allow_zero_coefficient_fill: false
+  mrmr_mutual_information:
+    n_bins: 10
+    objective: mid
+  boruta_random_forest:
+    n_jobs: 4
+    forest_params:
+      n_estimators: 500
+      max_depth: 6
+      class_weight: null
+    boruta_params:
+      n_estimators: auto
+      max_iter: 10
+      perc: 100
+      alpha: 0.05
+      two_step: true
+      verbose: 0
+  rfe_catboost:
+    step_fraction: 0.20
+    thread_count: 4
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+  catboost_shap:
+    explanation_sample_size: 10000
+    explanation_sample_seed: 42
+    thread_count: 4
+    catboost_params:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+      verbose: false
+      allow_writing_files: false
+      task_type: CPU
+
+execution:
+  csv_chunk_rows: 25000
+  lendingclub_csv_low_memory: false
+  heartbeat_interval_seconds: 30
+  wall_clock_limits_seconds:
+    statistical_normalized_average_rank: 43200
+    iv_then_boruta: 21600
+    boruta_then_mrmr_mutual_information: 21600
+    boruta_then_rfe_catboost: 43200
+    final_lr: 10800
+    final_catboost: 43200
+
+gates:
+  pilot_approval_lock_path: configs/protocols/selector_combinations_v1/pilot_approval_lock.json
+  dev_completion_lock_path: results/selector_combinations_v1/dev_completion_lock.json
+  approval_lock_created_in_prompt_11: false
+  dev_requires_authenticated_pilot_approval: true
+  oot_requires_authenticated_pilot_approval_complete_dev_and_prompt_10: true

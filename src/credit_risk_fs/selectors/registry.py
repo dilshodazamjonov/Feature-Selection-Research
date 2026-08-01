@@ -46,6 +46,20 @@ def get_selector(selector_name: str):
             "n_features": 40,
         }
 
+    if name in {
+        "iv_then_boruta",
+        "boruta_then_rfe_catboost",
+        "boruta_then_mrmr_mutual_information",
+        "statistical_normalized_average_rank",
+    }:
+        from credit_risk_fs.selectors.combinations import COMBINATION_CLASSES
+
+        # Scientific parameters are intentionally not defaulted here: callers
+        # must supply the committed protocol-lock hash and the applicable frozen
+        # candidate/final budget.  That prevents an ad-hoc registry lookup from
+        # creating an unauthenticated combination configuration.
+        return COMBINATION_CLASSES[name], {}
+
     if name == "rfe":
         from credit_risk_fs.selectors.rfe import RFESelector
 
@@ -150,5 +164,7 @@ def get_selector(selector_name: str):
         "llm, llm_then_stat, llm_then_mrmr, llm_then_boruta, domain_rule_baseline, "
         "stable_core_llm_fill, iv_woe, mrmr_mutual_information, lasso_l1_logistic, "
         "random_k, full_features, rfe_catboost, boruta_random_forest, catboost_shap, "
+        "iv_then_boruta, boruta_then_rfe_catboost, "
+        "boruta_then_mrmr_mutual_information, statistical_normalized_average_rank, "
         "none"
     )
