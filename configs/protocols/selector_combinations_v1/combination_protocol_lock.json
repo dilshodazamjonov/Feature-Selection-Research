@@ -1,0 +1,117 @@
+{
+  "schema_version": "selector_combination_protocol_lock_v1",
+  "protocol_id": "selector_combinations_v1",
+  "status": "preregistered_before_predictive_outcome_inspection",
+  "frozen_at_utc": "2026-08-01T06:12:13.9784534Z",
+  "configuration_hash_algorithm": "sha256_of_canonical_json_excluding_configuration_hash",
+  "configuration_hash": "ec5ecb7ab82dba84c6d20ad9307aab4f9104edc84fc07138fcaf99c881983ef1",
+  "baseline_dependency": {
+    "matrix_id": "full_baseline_v1",
+    "expected_cells": 36,
+    "configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+    "runtime_policy_sha256": "d3bc00778fce57c33ef52a6c4ff28f6ec47f0348ab3695265bd402dfbaa3226d",
+    "authenticated_code_head": "545d217acd632dd0ecc989180e2fc7774ab8b569",
+    "predictive_outcomes_opened_before_freeze": false
+  },
+  "scientific_boundary": {
+    "datasets": ["homecredit", "lendingclub_v2"],
+    "dev_folds": 5,
+    "cv_gap_groups": 1,
+    "training_window": "expanding",
+    "seed": 42,
+    "selector_fit_boundary": "fold_training_original_feature_candidates_only",
+    "full_dev_refit_boundary": "dev_only",
+    "oot_policy": "transform_and_evaluate_only_after_pilot_and_complete_dev_gates",
+    "post_oot_adaptation": "forbidden"
+  },
+  "budgets": {
+    "final_selected_features": {"lr": 20, "catboost": 40},
+    "iv_then_boruta_candidate_pool": {
+      "primary": 200,
+      "bounded_sensitivity": [100, 300],
+      "complete_existing_grid": [100, 200, 300],
+      "role": "intermediate_candidate_pool_not_final_feature_budget"
+    },
+    "other_combination_candidate_pool": null
+  },
+  "combination_ids": [
+    "iv_then_boruta",
+    "boruta_then_rfe_catboost",
+    "boruta_then_mrmr_mutual_information",
+    "statistical_normalized_average_rank"
+  ],
+  "statistical_voting": {
+    "voters_in_order": [
+      "iv_woe",
+      "lasso_l1_logistic",
+      "rfe_catboost",
+      "boruta_random_forest",
+      "catboost_shap"
+    ],
+    "weights": {
+      "iv_woe": 0.2,
+      "lasso_l1_logistic": 0.2,
+      "rfe_catboost": 0.2,
+      "boruta_random_forest": 0.2,
+      "catboost_shap": 0.2
+    },
+    "normalization": "q = 1 - (r - 1) / (p - 1) for p > 1; q = 1 for p = 1",
+    "rank_ties": "midrank_before_normalization",
+    "aggregate": "arithmetic_mean_of_five_normalized_qualities",
+    "aggregate_tie_break": "canonical_candidate_universe_order",
+    "output": "exact_model_specific_top_k_without_tie_expansion",
+    "missing_evidence": "invalidates_cell",
+    "legitimate_unsupported_feature": "declared_worst_normalized_quality",
+    "lasso_adapter": "absolute_coefficient_magnitude_with_zero_coefficients_as_valid_tied_block",
+    "boruta_adapter": "ordered_confirmed_tentative_rejected_state_blocks_with_tied_midranks_when_no_authentic_within_state_rank",
+    "outcome_based_weighting": "forbidden"
+  },
+  "natural_support_rules": {
+    "boruta_support": "confirmed_only",
+    "padding": "forbidden",
+    "stage_1_support_below_final_budget": "infeasible_natural_support",
+    "stage_1_support_equals_final_budget": "no_refinement_possible",
+    "stage_1_support_above_final_budget": "run_frozen_stage_2"
+  },
+  "pilot": {
+    "datasets": ["homecredit", "lendingclub_v2"],
+    "dev_fold_ids": [1],
+    "evaluation_models": ["lr", "catboost"],
+    "combination_order": [
+      "statistical_normalized_average_rank",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "unique_selection_identities": 18,
+    "evaluation_cells": 24,
+    "first_evaluation_cell": "scv1-pilot-001-homecredit-statistical-normalized-average-rank-lr-k20-s42",
+    "duplicate_model_independent_fit_policy": "reuse_only_after_exact_identity_authentication"
+  },
+  "gates": {
+    "pilot_execution_by_prompt_11_agent": "forbidden",
+    "dev_requires": "authenticated_user_run_pilot_plus_separate_pilot_approval_lock",
+    "oot_requires": "pilot_approval_lock_plus_complete_authenticated_retained_dev_matrix_plus_prompt_10_completion_lock",
+    "approval_lock_created_in_prompt_11": false
+  },
+  "explicit_exclusions": [
+    "generic_arbitrary_selector_chaining",
+    "all_pairwise_or_order_search",
+    "outcome_tuned_membership_or_weights",
+    "mrmr_as_statistical_voter",
+    "semantic_or_llm_as_statistical_voter",
+    "random_k_as_statistical_voter",
+    "pca_as_statistical_voter",
+    "full_features_as_statistical_voter",
+    "legacy_rf_relevance_corr_as_statistical_voter",
+    "tentative_or_rejected_boruta_padding"
+  ],
+  "decision_sources": [
+    {"path": "README.md", "sha256": "976eb225fc0dd149f68b58a6b7859568bb8b10455bfbdf2128d3cf51a00c72be", "role": "pre_existing_research_roadmap"},
+    {"path": "configs/protocols/credit_scoring_extension_v1.yaml", "sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0", "role": "frozen_datasets_budgets_and_method_contracts"},
+    {"path": "configs/protocols/cross_dataset_rank_voting_v1.yaml", "sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49", "role": "existing_candidate_pool_grid_and_inference_conventions"},
+    {"path": "configs/experiments/full_baseline_v1.yaml", "sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f", "role": "prompt_10_selectors_models_seeds_and_final_budgets"},
+    {"path": "cleanup/audits/prompt_07_lightweight_selectors/selector_contract_v1.md", "sha256": "f79ada70772bb9ef1554f27d3b6fa39ac8e30d31cb99b3ca89a98f83c08b8ec5", "role": "lightweight_selector_artifact_contract"},
+    {"path": "cleanup/audits/prompt_08_heavy_selectors/heavy_selector_contract_v1.md", "sha256": "5f5bf1ec10938ab8b54a0013ee9fef95f5fb09658c4a52ca626764c239f86c0d", "role": "heavy_selector_rank_support_and_resource_contract"}
+  ]
+}

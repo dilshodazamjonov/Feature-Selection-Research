@@ -1,0 +1,34 @@
+{
+  "schema_version": "selector_combination_comparison_registry_v1",
+  "inference": {
+    "primary_split": "oot_when_authenticated",
+    "paired_auc_test": "two_sided_delong_on_identical_rows",
+    "bootstrap": {"type": "paired_stratified_by_target", "attempted_repetitions": 2000, "minimum_valid_repetitions": 1900, "seed": 20260721, "confidence_interval": "95_percent_percentile"},
+    "holm_scope": "within_named_dataset_model_reference_family",
+    "gini": "2 * auc - 1; not separately tested"
+  },
+  "baseline_families": [
+    {
+      "family_template": "baseline_vs_full_features__{dataset}__{model}",
+      "reference": "full_features",
+      "methods": ["iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "legacy_rf_relevance_corr", "catboost_shap", "boruta_random_forest", "rfe_catboost"]
+    },
+    {
+      "family_template": "baseline_vs_random_k__{dataset}__{model}",
+      "reference": "random_k",
+      "methods": ["iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "legacy_rf_relevance_corr", "catboost_shap", "boruta_random_forest", "rfe_catboost"]
+    }
+  ],
+  "pending_combination_families": [
+    {"method": "iv_then_boruta", "comparators": ["iv_woe", "boruta_random_forest"]},
+    {"method": "boruta_then_rfe_catboost", "comparators": ["boruta_random_forest", "rfe_catboost"]},
+    {"method": "boruta_then_mrmr_mutual_information", "comparators": ["boruta_random_forest", "mrmr_mutual_information"]},
+    {"method": "statistical_normalized_average_rank", "comparators": ["iv_woe", "lasso_l1_logistic", "rfe_catboost", "boruta_random_forest", "catboost_shap", "mrmr_mutual_information", "cross_dataset_rank_voting_v1"]}
+  ],
+  "restrictions": [
+    "no_all_pairs_search",
+    "same_dataset_split_model_and_ordered_rows_required",
+    "natural_support_count_mismatch_must_be_labelled",
+    "random_k_replicates_must_be_aggregated_not_selected_by_performance"
+  ]
+}
