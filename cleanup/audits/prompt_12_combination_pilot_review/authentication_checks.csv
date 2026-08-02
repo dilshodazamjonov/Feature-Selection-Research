@@ -1,0 +1,8 @@
+check_order,check,expected,observed,status
+1,Evaluation cells,24 authenticated,24 authenticated,pass
+2,Unique selector fits,18 authenticated,18 authenticated,pass
+3,Active inventory,168 files,168 files,pass
+4,Unexpected or invalid active state,0,0,pass
+5,Final cell,completed / exit 0 / no stop,completed / exit 0 / no stop,pass
+6,"Workers, locks, and partials",0,0,pass
+7,Approval lock,absent before user approval,absent,pass

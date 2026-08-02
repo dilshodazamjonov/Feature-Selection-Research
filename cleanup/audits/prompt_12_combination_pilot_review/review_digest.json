@@ -1,0 +1,97 @@
+{
+  "schema_version": "selector_combination_pilot_review_digest_v1",
+  "generated_at": "2026-08-02T18:56:31.096Z",
+  "source_branch": "main",
+  "source_commit": "fd4044ae072c4cb7a134f8b70535b9404304eaf8",
+  "approval_status": "awaiting_explicit_user_approval",
+  "approved": false,
+  "pilot_authenticated": true,
+  "pilot_completion": {
+    "evaluation_cells": "24/24",
+    "unique_selector_fits": "18/18",
+    "active_inventory": "168/168",
+    "invalid_active_cells": 0,
+    "active_tree_sha256": "ec34e5ad4cd7542ccf74cc851c76367589261a8a88ed0588f1e88aa8cb31903f"
+  },
+  "review_boundary": {
+    "predictive_outcomes_used_for_retention": false,
+    "raw_research_datasets_accessed": false,
+    "pilot_started_or_resumed": false,
+    "dev_started": false,
+    "oot_started": false,
+    "pilot_approval_lock_created": false
+  },
+  "proposed_retained_method_ids": [
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "retention_scope_notes": [
+    "All four preregistered method families are proposed for retention.",
+    "boruta_then_mrmr_mutual_information and boruta_then_rfe_catboost must retain the natural-support label where Home Credit realizes 26 features against requested K=40.",
+    "No retained method is approved until the user explicitly approves this digest and the exact ordered scope."
+  ],
+  "review_package_validation": {
+    "schema_validation": "passed",
+    "packaging": "passed",
+    "verification": "structural_only",
+    "browser_interaction_verified": false,
+    "browser_limitation": "No compatible preinstalled Chromium headless-shell; no browser was downloaded."
+  },
+  "package_file_count_excluding_digest": 10,
+  "package_files": [
+    {
+      "path": "artifact.json",
+      "size_bytes": 36385,
+      "sha256": "0af85dc35dd66887ec05a6412b2970172a3e2dc12a27e81df740bfe59d1c334b"
+    },
+    {
+      "path": "authentication_checks.csv",
+      "size_bytes": 427,
+      "sha256": "d03822b62f482230594f94ced6b4fd4da3aa1d173532843c988f88f6029a69a7"
+    },
+    {
+      "path": "pilot_authentication.json",
+      "size_bytes": 5088,
+      "sha256": "0424e90db24469eeb705ce06640b3d7ac4cd650a220c57ab31d14e54b860987d"
+    },
+    {
+      "path": "report.html",
+      "size_bytes": 467207,
+      "sha256": "2394c1f780a8e6360835a8946f011db98ec59ff8bce00b54a52df6d2baa67073"
+    },
+    {
+      "path": "retention_recommendation.json",
+      "size_bytes": 3421,
+      "sha256": "50c8fa8121dbe8bc115c68b5c757ea6ae26e5278b01eb5566a4d68cefe054db4"
+    },
+    {
+      "path": "retention_scope.csv",
+      "size_bytes": 665,
+      "sha256": "f0bb804c55e868ecdd4c3b3fcc8efb91aaf51047ceebaf004c0b1c7c22097776"
+    },
+    {
+      "path": "review_report.md",
+      "size_bytes": 5519,
+      "sha256": "5ac96e059b15ebb40af3aca4c145eb5d685ad77acbdba9c4f809d54d890b3d25"
+    },
+    {
+      "path": "runtime_resource_review.csv",
+      "size_bytes": 920,
+      "sha256": "11815146b073e8fb6cee2bdf051ed17a81da6eb723043ffc550f6c48b1b9576f"
+    },
+    {
+      "path": "source_notes.md",
+      "size_bytes": 3673,
+      "sha256": "24126935ae65698c0b05aade9448f44c42a3cbf8073612c41e03d0be1e251473"
+    },
+    {
+      "path": "stage_support_review.csv",
+      "size_bytes": 2464,
+      "sha256": "d6af53298a4e24fb4c10db76ec3d7474a8001ce94243349f6ba3a36f4becddfd"
+    }
+  ],
+  "review_digest_algorithm": "sha256(canonical_json_without_review_digest_sha256)",
+  "review_digest_sha256": "a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09"
+}
