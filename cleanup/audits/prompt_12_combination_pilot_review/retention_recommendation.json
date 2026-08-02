@@ -1,0 +1,63 @@
+{
+  "schema_version": "selector_combination_pilot_retention_recommendation_v1",
+  "generated_at_utc": "2026-08-02T18:43:18.107Z",
+  "review_status": "awaiting_explicit_user_approval",
+  "approved": false,
+  "recommendation_basis": [
+    "authenticated_completion",
+    "protocol_declared_stage_support",
+    "runtime_and_resource_evidence"
+  ],
+  "predictive_outcomes_extracted_for_retention": false,
+  "predictive_outcomes_compared_for_retention": false,
+  "predictive_outcomes_used_for_configuration": false,
+  "proposed_retained_method_ids": [
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "proposed_dev_matrix": {
+    "retained_method_count": 4,
+    "evaluation_cells": 120,
+    "unique_selector_fits": 90,
+    "derivation": "five DEV folds multiplied by the frozen 24-cell and 18-fit pilot identities"
+  },
+  "method_recommendations": [
+    {
+      "method_order": 1,
+      "method_id": "statistical_normalized_average_rank",
+      "recommendation": "retain",
+      "reason": "All four selector fits and evaluation cells completed with exact requested support, no warnings, and wide wall-clock and memory margins.",
+      "caveat": "This was the largest observed selector-fit RSS and elapsed-time method, but remained far below configured warning and wall limits."
+    },
+    {
+      "method_order": 2,
+      "method_id": "iv_then_boruta",
+      "recommendation": "retain",
+      "reason": "All three preregistered IV pool sensitivities completed in both datasets; natural Boruta support increased monotonically with pool size and no supervisor warning or stop occurred.",
+      "caveat": "Final support is deliberately natural rather than fixed-K, so support-count differences must remain labelled in comparisons."
+    },
+    {
+      "method_order": 3,
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "recommendation": "retain_with_natural_support_label",
+      "reason": "All four fits and cells completed. Three requested budgets were met; the Home Credit CatBoost branch correctly preserved the protocol-declared 26-feature natural support instead of padding to 40.",
+      "caveat": "The Home Credit CatBoost comparison is a 26-versus-40 support mismatch and must be labelled; later folds may realize different natural support."
+    },
+    {
+      "method_order": 4,
+      "method_id": "boruta_then_rfe_catboost",
+      "recommendation": "retain_with_natural_support_label",
+      "reason": "All four fits and cells completed. Three requested budgets were met; the Home Credit CatBoost branch correctly preserved the protocol-declared 26-feature natural support instead of padding to 40.",
+      "caveat": "The Home Credit CatBoost comparison is a 26-versus-40 support mismatch and must be labelled; later folds may realize different natural support."
+    }
+  ],
+  "decision_rationale": "No preregistered method failed authentication, its declared stage-support contract, or the runtime-resource gate. Retaining the complete frozen method set avoids outcome-driven attrition and preserves the registered comparison families.",
+  "approval_boundary": {
+    "this_file_is_not_user_approval": true,
+    "pilot_approval_lock_must_not_be_created_without_later_explicit_digest_and_scope_approval": true,
+    "dev_must_not_start_in_this_stage": true,
+    "oot_must_not_start_in_this_stage": true
+  }
+}

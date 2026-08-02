@@ -1,0 +1,111 @@
+{
+  "schema_version": "selector_combination_pilot_authentication_review_v1",
+  "generated_at_utc": "2026-08-02T18:43:18.107Z",
+  "audit_mode": "artifact_only_no_raw_research_dataset_access",
+  "repository": {
+    "branch": "main",
+    "head_before_review_package": "fd4044ae072c4cb7a134f8b70535b9404304eaf8",
+    "expected_head": "fd4044ae072c4cb7a134f8b70535b9404304eaf8",
+    "head_matches_expected": true,
+    "worktree_clean_before_review_package": true,
+    "upstream": "origin/main",
+    "ahead": 0,
+    "behind": 0
+  },
+  "frozen_identity": {
+    "configuration_path": "configs/experiments/selector_combination_research_v1.yaml",
+    "configuration_sha256": "432a24c0a12e2a134522e981effe0b151c02f9c98c03cb34af6916f77d5e86ab",
+    "protocol_lock_path": "configs/protocols/selector_combinations_v1/combination_protocol_lock.json",
+    "protocol_lock_sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9"
+  },
+  "pilot_completion": {
+    "expected_evaluation_cells": 24,
+    "authenticated_evaluation_cells": 24,
+    "unique_evaluation_ids": 24,
+    "expected_unique_selector_fits": 18,
+    "authenticated_unique_selector_fits": 18,
+    "unique_selection_ids": 18,
+    "first_incomplete_cell": null,
+    "missing_active_cells": 0,
+    "partial_active_cells": 0,
+    "failed_active_cells": 0,
+    "timed_out_active_cells": 0,
+    "interrupted_active_cells": 0,
+    "duplicate_active_cells": 0,
+    "unexpected_active_files": 0,
+    "hash_invalid_active_cells_or_fits": 0,
+    "status": "authenticated_complete"
+  },
+  "active_inventory": {
+    "root": "results/selector_combinations_v1/pilot",
+    "expected_files": 168,
+    "observed_files": 168,
+    "unexpected_files": 0,
+    "canonical_line_format": "relative_path|size_bytes|sha256<LF>",
+    "canonical_tree_sha256": "ec34e5ad4cd7542ccf74cc851c76367589261a8a88ed0588f1e88aa8cb31903f"
+  },
+  "final_cell": {
+    "cell_id": "scv1-pilot-024-lendingclub_v2-boruta-then-rfe-catboost-catboost-k40-s42",
+    "state_path": "results/selector_combinations_v1/pilot/evaluations/scv1-pilot-024-lendingclub_v2-boruta-then-rfe-catboost-catboost-k40-s42.json",
+    "terminal_state": "completed",
+    "supervisor_status": "completed",
+    "worker_exit_code": 0,
+    "stop_code": null,
+    "worker_error": null,
+    "final_stage": "final_prediction",
+    "artifact_authentication_sha256": "8701e61330498c79e7cb9befd39d17568c5173d2433160457594b559bb230f02",
+    "state_file_sha256": "0a012809a7cb216dbd081a2a2a715af187e56f6d5ef02db509433a9b3e1a93ed"
+  },
+  "cell_001_latest_attempt": {
+    "cell_id": "scv1-pilot-001-homecredit-statistical-normalized-average-rank-lr-k20-s42",
+    "state_path": "results/selector_combinations_v1/pilot/evaluations/scv1-pilot-001-homecredit-statistical-normalized-average-rank-lr-k20-s42.json",
+    "terminal_state": "completed",
+    "supervisor_status": "completed",
+    "worker_exit_code": 0,
+    "stop_code": null,
+    "artifact_authentication_sha256": "d3bf9629ee5db86e64445f9185d8c6ca7a5f4df2ae0f589fcbf1b19ff82476d6",
+    "state_file_sha256": "696cc54f0a80d5209baf193821b31e5aa8618615b6467d6b05e6125e5d65cd4f"
+  },
+  "historical_attempt": {
+    "classification": "historical_superseded_manual_interrupt",
+    "selection_id": "scv1-homecredit-fold-1-statistical-normalized-average-rank-k20-s42",
+    "archived_state_path": "results/selector_combinations_v1/incomplete/attempt_history/selections/scv1-homecredit-fold-1-statistical-normalized-average-rank-k20-s42.f16e01d487c2cffea287a27e46f8326fbbcc1bd0044cb83914b87027113c8552.json",
+    "archived_state_file_sha256": "f16e01d487c2cffea287a27e46f8326fbbcc1bd0044cb83914b87027113c8552",
+    "terminal_state": "interrupted",
+    "stop_code": "manual_interrupt",
+    "latest_historical_stop_utc": "2026-08-01T11:22:45.490Z",
+    "invalidates_latest_attempt": false
+  },
+  "latest_successful_session": {
+    "session_id": "4c0c2b0c-6335-4df0-a1ec-f6c79399d750",
+    "started_at_utc": "2026-08-01T11:23:07.447Z",
+    "completed_at_utc": "2026-08-01T13:35:58.021Z",
+    "terminal_event": "session_completed",
+    "terminal_message": "Combination pilot phase completed and authenticated",
+    "errors_in_session": 0,
+    "finalized_work_associations": 42
+  },
+  "runtime_state_after_authentication": {
+    "active_experiment_workers": 0,
+    "orphan_processes": 0,
+    "execution_locks": 0,
+    "stale_locks": 0,
+    "partial_files": 0
+  },
+  "completion_contract": {
+    "conventional_manifest_json_present": false,
+    "conventional_checkpoint_json_present": false,
+    "success_marker_present": false,
+    "absence_is_by_design": true,
+    "completion_checkpoints": "authenticated_per_selection_and_per_cell_state_json",
+    "safe_status_raw_dataset_paths_resolved": false,
+    "safe_status_workers_started": 0
+  },
+  "gates": {
+    "pilot_approval_lock_present": false,
+    "dev_completion_lock_present": false,
+    "dev_gate": "closed_pending_explicit_user_approval_and_authenticated_pilot_approval_lock",
+    "oot_gate": "closed_pending_pilot_approval_complete_dev_and_prompt_10_dependency"
+  },
+  "raw_research_datasets_accessed": false
+}

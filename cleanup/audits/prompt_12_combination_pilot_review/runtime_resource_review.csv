@@ -1,0 +1,9 @@
+work_unit,method_order,method_id,unit_count,completed_count,max_elapsed_seconds,max_wall_fraction_pct,max_peak_rss_gib,minimum_system_available_ram_gib,supervisor_resource_warnings,stop_count,nonzero_exit_count,review
+selector_fit,1,statistical_normalized_average_rank,4,4,547.407,1.2671,6.984,22.201,0,0,0,pass
+selector_fit,2,iv_then_boruta,6,6,291.861,1.3512,5.083,24.160,0,0,0,pass
+selector_fit,3,boruta_then_mrmr_mutual_information,4,4,352.589,1.6324,5.444,23.692,0,0,0,pass
+selector_fit,4,boruta_then_rfe_catboost,4,4,398.592,0.9227,5.445,23.580,0,0,0,pass
+evaluation_cell,1,statistical_normalized_average_rank,4,4,115.891,0.9600,1.811,26.898,0,0,0,pass
+evaluation_cell,2,iv_then_boruta,12,12,144.685,0.9623,2.103,27.147,0,0,0,pass
+evaluation_cell,3,boruta_then_mrmr_mutual_information,4,4,116.802,0.9628,2.099,26.988,0,0,0,pass
+evaluation_cell,4,boruta_then_rfe_catboost,4,4,114.117,0.9607,1.805,27.330,0,0,0,pass

@@ -1,0 +1,934 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Prompt 12 combination pilot retention review",
+    "description": "Technical authentication, stage-support, runtime-resource, and outcome-blind retention review.",
+    "generatedAt": "2026-08-02T18:43:18.107Z",
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Prompt 12 combination pilot retention review"
+      },
+      {
+        "id": "technical-summary",
+        "type": "markdown",
+        "body": "## All four methods are operationally eligible, but no approval has been given\n\nThe pilot re-authenticates at **24/24 evaluation cells**, **18/18 unique selector fits**, and **168/168 active files**. No active cell is missing, partial, failed, timed out, interrupted, duplicated, unexpected, or hash-invalid. The outcome-blind recommendation is to retain all four preregistered methods. This report is not user approval: the approval lock is absent and DEV and OOT remain closed.",
+        "sourceId": "authentication"
+      },
+      {
+        "id": "authentication-finding",
+        "type": "markdown",
+        "body": "## The live completion boundary supersedes the historical interrupt\n\nCell 001's latest state is completed and authenticated; its archived manual interrupt remains historical. The final Cell 024 completed at final_prediction with worker exit 0, no stop or error, and authentication SHA-256 8701e61330498c79e7cb9befd39d17568c5173d2433160457594b559bb230f02. No experiment worker, orphan, execution lock, stale lock, or partial file remains. Conventional manifest, checkpoint, and success-marker files are intentionally not part of this pilot's completion contract.",
+        "sourceId": "authentication"
+      },
+      {
+        "id": "authentication-table-block",
+        "type": "table",
+        "tableId": "authentication-table"
+      },
+      {
+        "id": "support-finding",
+        "type": "markdown",
+        "body": "## Stage support passes with two protocol-declared natural-support bounds\n\nSixteen selection identities completed their requested or natural support directly. The Home Credit CatBoost branches for both Boruta-first refiners requested 40 features but correctly retained the 26 confirmed features, emitted infeasible_natural_support, and did not pad. Those are valid completed states that require a visible support-mismatch label, not method failures.",
+        "sourceId": "stage-support"
+      },
+      {
+        "id": "support-table-block",
+        "type": "table",
+        "tableId": "stage-support-table"
+      },
+      {
+        "id": "runtime-finding",
+        "type": "markdown",
+        "body": "## Every latest-session work unit cleared runtime and resource controls\n\nAll 42 supervised work units completed with exit 0, no stop, and no supervisor resource warning. The highest process-tree RSS was 6.984 GiB versus 24 GiB warning and 28 GiB abort thresholds. The lowest system-available RAM was 22.201 GiB, 14.201 GiB above the 8 GiB abort floor. The largest observed wall-limit fraction was 1.6324%.",
+        "sourceId": "runtime-review"
+      },
+      {
+        "id": "runtime-chart-block",
+        "type": "chart",
+        "chartId": "selector-rss-chart"
+      },
+      {
+        "id": "runtime-table-block",
+        "type": "table",
+        "tableId": "runtime-table"
+      },
+      {
+        "id": "scope-definitions",
+        "type": "markdown",
+        "body": "## Scope and decision definitions\n\nThe review covers authenticated DEV-fold-1 pilot artifacts only. completed means the declared selection path published a valid terminal artifact. infeasible_natural_support means stage-one Boruta support was below the requested fixed budget, so the protocol forbade padding and refinement. Retention eligibility is based only on authentication, declared support behavior, and runtime-resource evidence. Predictive outcomes were not extracted, ranked, compared, or used for retention."
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## Authentication and aggregation method\n\nThe runner's safe status validator recomputed canonical artifact authentication, checked identity and terminal state, and verified every referenced file's size and SHA-256 without resolving raw dataset paths or starting workers. A deterministic active-tree digest independently reconciled all 168 files. Selection support came from the 18 authenticated selection checkpoints. Runtime maxima and minima came from authenticated supervisor fields and the latest successful session's finalization events."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## One fold does not guarantee later-fold cost or support\n\nThe pilot establishes operability, not constant scaling. Expanding DEV folds may realize different Boruta support and higher resource use. Natural-support mismatches must remain labelled, and DEV must preserve sequential execution, thread caps, monitoring, wall limits, warning thresholds, and abort floors. No predictive claim or method ranking is made here."
+      },
+      {
+        "id": "retention-finding",
+        "type": "markdown",
+        "body": "## Retain the complete frozen method set\n\nNo method failed an admissible gate, so the recommendation is to retain all four methods in the exact runner order. This preserves the registered comparison families and avoids outcome-driven attrition. With all four retained, full DEV contains 120 evaluation cells backed by 90 selector fits across five folds.",
+        "sourceId": "retention"
+      },
+      {
+        "id": "retention-table-block",
+        "type": "table",
+        "tableId": "retention-table"
+      },
+      {
+        "id": "next-step",
+        "type": "markdown",
+        "body": "## Explicit digest-and-scope approval is the only next step\n\nThe user must approve the committed review digest and exact four-method scope in a later message. Until that happens, do not create pilot_approval_lock.json, do not run or resume the pilot, do not start DEV, and do not access OOT."
+      },
+      {
+        "id": "further-question",
+        "type": "markdown",
+        "body": "## Decision requested\n\nDoes the user approve the identified review digest and the proposed retained method IDs exactly as ordered in this report?"
+      }
+    ],
+    "cards": [],
+    "charts": [
+      {
+        "id": "selector-rss-chart",
+        "title": "Peak selector-fit process-tree RSS",
+        "subtitle": "Observed fold-1 maxima by method; configured warning threshold is 24 GiB",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "How do the four retained methods compare on peak selector-fit memory?",
+        "rationale": "Four method-level maxima support a direct bar comparison while the adjacent table preserves exact timing and RAM-floor evidence.",
+        "type": "bar",
+        "dataset": "selection_peak_rss",
+        "sourceId": "runtime-chart",
+        "encodings": {
+          "x": {
+            "field": "method_label",
+            "type": "nominal",
+            "label": "Method"
+          },
+          "y": {
+            "field": "peak_rss_gib",
+            "type": "quantitative",
+            "format": "number",
+            "label": "Peak RSS GiB"
+          },
+          "tooltip": [
+            {
+              "field": "peak_rss_gib",
+              "type": "quantitative",
+              "format": "number",
+              "label": "Peak RSS GiB"
+            },
+            {
+              "field": "warning_threshold_gib",
+              "type": "quantitative",
+              "format": "number",
+              "label": "Warning threshold GiB"
+            }
+          ]
+        },
+        "xAxisTitle": "Method",
+        "yAxisTitle": "Peak process-tree RSS (GiB)",
+        "valueFormat": "number",
+        "layout": "full",
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 24,
+            "label": "Warning threshold",
+            "color": "neutral",
+            "lineStyle": "solid"
+          }
+        ],
+        "settings": {
+          "groupMode": "grouped",
+          "orientation": "horizontal",
+          "sort": "descending",
+          "showValues": true
+        },
+        "maxRows": 4,
+        "compatibleTypes": [
+          "bar"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "id": "authentication-table",
+        "title": "Pilot authentication checks",
+        "subtitle": "Expected and observed active completion evidence at the Stage 1 boundary",
+        "dataset": "authentication_checks",
+        "sourceId": "authentication-table",
+        "defaultSort": {
+          "field": "check_order",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "check_order",
+            "label": "#",
+            "format": "number"
+          },
+          {
+            "field": "check",
+            "label": "Check",
+            "type": "text"
+          },
+          {
+            "field": "expected",
+            "label": "Expected",
+            "type": "text"
+          },
+          {
+            "field": "observed",
+            "label": "Observed",
+            "type": "text"
+          },
+          {
+            "field": "status",
+            "label": "Status",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "stage-support-table",
+        "title": "Selection-stage support review",
+        "subtitle": "All 18 fold-1 selector identities; exact and natural support shown without predictive outcomes",
+        "dataset": "stage_support",
+        "sourceId": "stage-support",
+        "defaultSort": {
+          "field": "selection_index",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "selection_index",
+            "label": "#",
+            "format": "number"
+          },
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "method_id",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "requested",
+            "label": "Requested",
+            "type": "text"
+          },
+          {
+            "field": "intermediate_count",
+            "label": "Stage-1 support",
+            "type": "text"
+          },
+          {
+            "field": "realized_budget",
+            "label": "Realized",
+            "format": "number"
+          },
+          {
+            "field": "feasibility_state",
+            "label": "Feasibility",
+            "type": "text"
+          },
+          {
+            "field": "recommendation",
+            "label": "Review",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "runtime-table",
+        "title": "Runtime and resource review",
+        "subtitle": "Method-level maxima and minima across 18 selector fits and 24 evaluation cells",
+        "dataset": "runtime_summary",
+        "sourceId": "runtime-table",
+        "defaultSort": {
+          "field": "max_peak_rss_gib",
+          "direction": "desc"
+        },
+        "columns": [
+          {
+            "field": "work_unit",
+            "label": "Unit",
+            "type": "text"
+          },
+          {
+            "field": "method_id",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "unit_count",
+            "label": "Count",
+            "format": "number"
+          },
+          {
+            "field": "max_elapsed_seconds",
+            "label": "Max sec",
+            "format": "number"
+          },
+          {
+            "field": "max_wall_fraction_pct",
+            "label": "Max wall %",
+            "format": "number"
+          },
+          {
+            "field": "max_peak_rss_gib",
+            "label": "Peak RSS GiB",
+            "format": "number"
+          },
+          {
+            "field": "minimum_system_available_ram_gib",
+            "label": "Min avail GiB",
+            "format": "number"
+          },
+          {
+            "field": "review",
+            "label": "Review",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "retention-table",
+        "title": "Proposed retained method scope",
+        "subtitle": "Exact runner order; recommendation awaits explicit user approval",
+        "dataset": "retention_scope",
+        "sourceId": "retention-table",
+        "defaultSort": {
+          "field": "method_order",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "method_order",
+            "label": "#",
+            "format": "number"
+          },
+          {
+            "field": "method_id",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "recommendation",
+            "label": "Recommendation",
+            "type": "text"
+          },
+          {
+            "field": "evidence",
+            "label": "Evidence",
+            "type": "text"
+          },
+          {
+            "field": "caveat",
+            "label": "Caveat",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "filters": [],
+    "sources": [
+      {
+        "id": "authentication",
+        "label": "Pilot authentication review",
+        "path": "pilot_authentication.json"
+      },
+      {
+        "id": "authentication-table",
+        "label": "Pilot authentication check table",
+        "path": "authentication_checks.csv",
+        "query": {
+          "sql": "SELECT CAST(check_order AS INTEGER) AS check_order, \"check\", expected, observed, status FROM authentication_checks ORDER BY CAST(check_order AS INTEGER)",
+          "description": "Project the seven pilot authentication checks in their declared review order.",
+          "engine": "SQLite in-memory",
+          "language": "sql",
+          "id": "prompt12-authentication-table-v1",
+          "executed_at": "2026-08-02T18:54:26.480Z",
+          "tables_used": [
+            "authentication_checks"
+          ]
+        }
+      },
+      {
+        "id": "stage-support",
+        "label": "Stage-support review",
+        "path": "stage_support_review.csv",
+        "query": {
+          "sql": "SELECT CAST(selection_index AS INTEGER) AS selection_index, dataset, method_id, CASE WHEN iv_pool_budget <> '' THEN 'pool=' || iv_pool_budget || ' / natural' WHEN requested_final_budget <> '' THEN 'K=' || requested_final_budget ELSE 'natural' END AS requested, CASE WHEN intermediate_count = '' THEN 'not applicable' ELSE intermediate_count END AS intermediate_count, CAST(realized_budget AS INTEGER) AS realized_budget, feasibility_state, CASE WHEN retention_recommendation = 'retain_with_natural_support_label' THEN 'retain / label support' ELSE 'retain' END AS recommendation FROM stage_support_review ORDER BY CAST(selection_index AS INTEGER)",
+          "description": "Project requested, intermediate, and realized support for all 18 authenticated selector identities.",
+          "engine": "SQLite in-memory",
+          "language": "sql",
+          "id": "prompt12-stage-support-table-v1",
+          "executed_at": "2026-08-02T18:54:26.480Z",
+          "tables_used": [
+            "stage_support_review"
+          ]
+        }
+      },
+      {
+        "id": "runtime-review",
+        "label": "Runtime-resource review",
+        "path": "runtime_resource_review.csv"
+      },
+      {
+        "id": "runtime-chart",
+        "label": "Selector-fit RSS chart projection",
+        "path": "runtime_resource_review.csv",
+        "query": {
+          "sql": "SELECT CASE method_id WHEN 'statistical_normalized_average_rank' THEN 'Statistical average rank' WHEN 'iv_then_boruta' THEN 'IV then Boruta' WHEN 'boruta_then_mrmr_mutual_information' THEN 'Boruta then MI-mRMR' WHEN 'boruta_then_rfe_catboost' THEN 'Boruta then CatBoost RFE' END AS method_label, method_id, CAST(max_peak_rss_gib AS REAL) AS peak_rss_gib, 24.0 AS warning_threshold_gib, 28.0 AS abort_threshold_gib, CAST(unit_count AS INTEGER) AS fit_count FROM runtime_resource_review WHERE work_unit = 'selector_fit' ORDER BY CAST(method_order AS INTEGER)",
+          "description": "Compare observed selector-fit peak RSS against the configured warning and abort thresholds.",
+          "engine": "SQLite in-memory",
+          "language": "sql",
+          "id": "prompt12-runtime-chart-v1",
+          "executed_at": "2026-08-02T18:54:26.480Z",
+          "tables_used": [
+            "runtime_resource_review"
+          ],
+          "filters": [
+            "work_unit = selector_fit"
+          ]
+        }
+      },
+      {
+        "id": "runtime-table",
+        "label": "Runtime-resource table projection",
+        "path": "runtime_resource_review.csv",
+        "query": {
+          "sql": "SELECT REPLACE(work_unit, '_', ' ') AS work_unit, method_id, CAST(unit_count AS INTEGER) AS unit_count, CAST(max_elapsed_seconds AS REAL) AS max_elapsed_seconds, CAST(max_wall_fraction_pct AS REAL) AS max_wall_fraction_pct, CAST(max_peak_rss_gib AS REAL) AS max_peak_rss_gib, CAST(minimum_system_available_ram_gib AS REAL) AS minimum_system_available_ram_gib, review FROM runtime_resource_review ORDER BY CAST(max_peak_rss_gib AS REAL) DESC",
+          "description": "Project exact method-level runtime and resource extrema for selector fits and evaluation cells.",
+          "engine": "SQLite in-memory",
+          "language": "sql",
+          "id": "prompt12-runtime-table-v1",
+          "executed_at": "2026-08-02T18:54:26.480Z",
+          "tables_used": [
+            "runtime_resource_review"
+          ]
+        }
+      },
+      {
+        "id": "retention",
+        "label": "Retention recommendation",
+        "path": "retention_recommendation.json"
+      },
+      {
+        "id": "retention-table",
+        "label": "Retention scope table",
+        "path": "retention_scope.csv",
+        "query": {
+          "sql": "SELECT CAST(method_order AS INTEGER) AS method_order, method_id, recommendation, evidence, caveat FROM retention_scope ORDER BY CAST(method_order AS INTEGER)",
+          "description": "Project the outcome-blind proposed retention scope in the runner's exact method order.",
+          "engine": "SQLite in-memory",
+          "language": "sql",
+          "id": "prompt12-retention-table-v1",
+          "executed_at": "2026-08-02T18:54:26.480Z",
+          "tables_used": [
+            "retention_scope"
+          ]
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-02T18:43:18.107Z",
+    "status": "ready",
+    "datasets": {
+      "authentication_checks": [
+        {
+          "check_order": 1,
+          "check": "Evaluation cells",
+          "expected": "24 authenticated",
+          "observed": "24 authenticated",
+          "status": "pass"
+        },
+        {
+          "check_order": 2,
+          "check": "Unique selector fits",
+          "expected": "18 authenticated",
+          "observed": "18 authenticated",
+          "status": "pass"
+        },
+        {
+          "check_order": 3,
+          "check": "Active inventory",
+          "expected": "168 files",
+          "observed": "168 files",
+          "status": "pass"
+        },
+        {
+          "check_order": 4,
+          "check": "Unexpected or invalid active state",
+          "expected": "0",
+          "observed": "0",
+          "status": "pass"
+        },
+        {
+          "check_order": 5,
+          "check": "Final cell",
+          "expected": "completed / exit 0 / no stop",
+          "observed": "completed / exit 0 / no stop",
+          "status": "pass"
+        },
+        {
+          "check_order": 6,
+          "check": "Workers, locks, and partials",
+          "expected": "0",
+          "observed": "0",
+          "status": "pass"
+        },
+        {
+          "check_order": 7,
+          "check": "Approval lock",
+          "expected": "absent before user approval",
+          "observed": "absent",
+          "status": "pass"
+        }
+      ],
+      "stage_support": [
+        {
+          "selection_index": 1,
+          "dataset": "homecredit",
+          "method_id": "statistical_normalized_average_rank",
+          "requested": "K=20",
+          "intermediate_count": "not applicable",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 2,
+          "dataset": "homecredit",
+          "method_id": "statistical_normalized_average_rank",
+          "requested": "K=40",
+          "intermediate_count": "not applicable",
+          "realized_budget": 40,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 3,
+          "dataset": "lendingclub_v2",
+          "method_id": "statistical_normalized_average_rank",
+          "requested": "K=20",
+          "intermediate_count": "not applicable",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 4,
+          "dataset": "lendingclub_v2",
+          "method_id": "statistical_normalized_average_rank",
+          "requested": "K=40",
+          "intermediate_count": "not applicable",
+          "realized_budget": 40,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 5,
+          "dataset": "homecredit",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=100 / natural",
+          "intermediate_count": "100",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 6,
+          "dataset": "lendingclub_v2",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=100 / natural",
+          "intermediate_count": "100",
+          "realized_budget": 86,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 7,
+          "dataset": "homecredit",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=200 / natural",
+          "intermediate_count": "200",
+          "realized_budget": 25,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 8,
+          "dataset": "lendingclub_v2",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=200 / natural",
+          "intermediate_count": "200",
+          "realized_budget": 118,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 9,
+          "dataset": "homecredit",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=300 / natural",
+          "intermediate_count": "300",
+          "realized_budget": 28,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 10,
+          "dataset": "lendingclub_v2",
+          "method_id": "iv_then_boruta",
+          "requested": "pool=300 / natural",
+          "intermediate_count": "300",
+          "realized_budget": 134,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 11,
+          "dataset": "homecredit",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "requested": "K=20",
+          "intermediate_count": "26",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 12,
+          "dataset": "homecredit",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "requested": "K=40",
+          "intermediate_count": "26",
+          "realized_budget": 26,
+          "feasibility_state": "infeasible_natural_support",
+          "recommendation": "retain / label support"
+        },
+        {
+          "selection_index": 13,
+          "dataset": "lendingclub_v2",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "requested": "K=20",
+          "intermediate_count": "161",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 14,
+          "dataset": "lendingclub_v2",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "requested": "K=40",
+          "intermediate_count": "161",
+          "realized_budget": 40,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 15,
+          "dataset": "homecredit",
+          "method_id": "boruta_then_rfe_catboost",
+          "requested": "K=20",
+          "intermediate_count": "26",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 16,
+          "dataset": "homecredit",
+          "method_id": "boruta_then_rfe_catboost",
+          "requested": "K=40",
+          "intermediate_count": "26",
+          "realized_budget": 26,
+          "feasibility_state": "infeasible_natural_support",
+          "recommendation": "retain / label support"
+        },
+        {
+          "selection_index": 17,
+          "dataset": "lendingclub_v2",
+          "method_id": "boruta_then_rfe_catboost",
+          "requested": "K=20",
+          "intermediate_count": "161",
+          "realized_budget": 20,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        },
+        {
+          "selection_index": 18,
+          "dataset": "lendingclub_v2",
+          "method_id": "boruta_then_rfe_catboost",
+          "requested": "K=40",
+          "intermediate_count": "161",
+          "realized_budget": 40,
+          "feasibility_state": "completed",
+          "recommendation": "retain"
+        }
+      ],
+      "runtime_summary": [
+        {
+          "work_unit": "selector fit",
+          "method_id": "statistical_normalized_average_rank",
+          "unit_count": 4,
+          "max_elapsed_seconds": 547.407,
+          "max_wall_fraction_pct": 1.2671,
+          "max_peak_rss_gib": 6.984,
+          "minimum_system_available_ram_gib": 22.201,
+          "review": "pass"
+        },
+        {
+          "work_unit": "selector fit",
+          "method_id": "iv_then_boruta",
+          "unit_count": 6,
+          "max_elapsed_seconds": 291.861,
+          "max_wall_fraction_pct": 1.3512,
+          "max_peak_rss_gib": 5.083,
+          "minimum_system_available_ram_gib": 24.16,
+          "review": "pass"
+        },
+        {
+          "work_unit": "selector fit",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "unit_count": 4,
+          "max_elapsed_seconds": 352.589,
+          "max_wall_fraction_pct": 1.6324,
+          "max_peak_rss_gib": 5.444,
+          "minimum_system_available_ram_gib": 23.692,
+          "review": "pass"
+        },
+        {
+          "work_unit": "selector fit",
+          "method_id": "boruta_then_rfe_catboost",
+          "unit_count": 4,
+          "max_elapsed_seconds": 398.592,
+          "max_wall_fraction_pct": 0.9227,
+          "max_peak_rss_gib": 5.445,
+          "minimum_system_available_ram_gib": 23.58,
+          "review": "pass"
+        },
+        {
+          "work_unit": "evaluation cell",
+          "method_id": "statistical_normalized_average_rank",
+          "unit_count": 4,
+          "max_elapsed_seconds": 115.891,
+          "max_wall_fraction_pct": 0.96,
+          "max_peak_rss_gib": 1.811,
+          "minimum_system_available_ram_gib": 26.898,
+          "review": "pass"
+        },
+        {
+          "work_unit": "evaluation cell",
+          "method_id": "iv_then_boruta",
+          "unit_count": 12,
+          "max_elapsed_seconds": 144.685,
+          "max_wall_fraction_pct": 0.9623,
+          "max_peak_rss_gib": 2.103,
+          "minimum_system_available_ram_gib": 27.147,
+          "review": "pass"
+        },
+        {
+          "work_unit": "evaluation cell",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "unit_count": 4,
+          "max_elapsed_seconds": 116.802,
+          "max_wall_fraction_pct": 0.9628,
+          "max_peak_rss_gib": 2.099,
+          "minimum_system_available_ram_gib": 26.988,
+          "review": "pass"
+        },
+        {
+          "work_unit": "evaluation cell",
+          "method_id": "boruta_then_rfe_catboost",
+          "unit_count": 4,
+          "max_elapsed_seconds": 114.117,
+          "max_wall_fraction_pct": 0.9607,
+          "max_peak_rss_gib": 1.805,
+          "minimum_system_available_ram_gib": 27.33,
+          "review": "pass"
+        }
+      ],
+      "selection_peak_rss": [
+        {
+          "method_label": "Statistical average rank",
+          "method_id": "statistical_normalized_average_rank",
+          "peak_rss_gib": 6.984,
+          "warning_threshold_gib": 24,
+          "abort_threshold_gib": 28,
+          "fit_count": 4
+        },
+        {
+          "method_label": "IV then Boruta",
+          "method_id": "iv_then_boruta",
+          "peak_rss_gib": 5.083,
+          "warning_threshold_gib": 24,
+          "abort_threshold_gib": 28,
+          "fit_count": 6
+        },
+        {
+          "method_label": "Boruta then MI-mRMR",
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "peak_rss_gib": 5.444,
+          "warning_threshold_gib": 24,
+          "abort_threshold_gib": 28,
+          "fit_count": 4
+        },
+        {
+          "method_label": "Boruta then CatBoost RFE",
+          "method_id": "boruta_then_rfe_catboost",
+          "peak_rss_gib": 5.445,
+          "warning_threshold_gib": 24,
+          "abort_threshold_gib": 28,
+          "fit_count": 4
+        }
+      ],
+      "retention_scope": [
+        {
+          "method_order": 1,
+          "method_id": "statistical_normalized_average_rank",
+          "recommendation": "retain",
+          "evidence": "4/4 fits and cells; exact support; wide runtime margin",
+          "caveat": "largest observed selector-fit RSS and elapsed time"
+        },
+        {
+          "method_order": 2,
+          "method_id": "iv_then_boruta",
+          "recommendation": "retain",
+          "evidence": "all pool sensitivities completed; no resource warnings",
+          "caveat": "natural support counts must remain labelled"
+        },
+        {
+          "method_order": 3,
+          "method_id": "boruta_then_mrmr_mutual_information",
+          "recommendation": "retain with support label",
+          "evidence": "4/4 completed; declared support-bound behavior preserved",
+          "caveat": "Home Credit CatBoost realized 26 versus requested 40"
+        },
+        {
+          "method_order": 4,
+          "method_id": "boruta_then_rfe_catboost",
+          "recommendation": "retain with support label",
+          "evidence": "4/4 completed; declared support-bound behavior preserved",
+          "caveat": "Home Credit CatBoost realized 26 versus requested 40"
+        }
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "authentication",
+      "label": "Pilot authentication review",
+      "path": "pilot_authentication.json"
+    },
+    {
+      "id": "authentication-table",
+      "label": "Pilot authentication check table",
+      "path": "authentication_checks.csv",
+      "query": {
+        "sql": "SELECT CAST(check_order AS INTEGER) AS check_order, \"check\", expected, observed, status FROM authentication_checks ORDER BY CAST(check_order AS INTEGER)",
+        "description": "Project the seven pilot authentication checks in their declared review order.",
+        "engine": "SQLite in-memory",
+        "language": "sql",
+        "id": "prompt12-authentication-table-v1",
+        "executed_at": "2026-08-02T18:54:26.480Z",
+        "tables_used": [
+          "authentication_checks"
+        ]
+      }
+    },
+    {
+      "id": "stage-support",
+      "label": "Stage-support review",
+      "path": "stage_support_review.csv",
+      "query": {
+        "sql": "SELECT CAST(selection_index AS INTEGER) AS selection_index, dataset, method_id, CASE WHEN iv_pool_budget <> '' THEN 'pool=' || iv_pool_budget || ' / natural' WHEN requested_final_budget <> '' THEN 'K=' || requested_final_budget ELSE 'natural' END AS requested, CASE WHEN intermediate_count = '' THEN 'not applicable' ELSE intermediate_count END AS intermediate_count, CAST(realized_budget AS INTEGER) AS realized_budget, feasibility_state, CASE WHEN retention_recommendation = 'retain_with_natural_support_label' THEN 'retain / label support' ELSE 'retain' END AS recommendation FROM stage_support_review ORDER BY CAST(selection_index AS INTEGER)",
+        "description": "Project requested, intermediate, and realized support for all 18 authenticated selector identities.",
+        "engine": "SQLite in-memory",
+        "language": "sql",
+        "id": "prompt12-stage-support-table-v1",
+        "executed_at": "2026-08-02T18:54:26.480Z",
+        "tables_used": [
+          "stage_support_review"
+        ]
+      }
+    },
+    {
+      "id": "runtime-review",
+      "label": "Runtime-resource review",
+      "path": "runtime_resource_review.csv"
+    },
+    {
+      "id": "runtime-chart",
+      "label": "Selector-fit RSS chart projection",
+      "path": "runtime_resource_review.csv",
+      "query": {
+        "sql": "SELECT CASE method_id WHEN 'statistical_normalized_average_rank' THEN 'Statistical average rank' WHEN 'iv_then_boruta' THEN 'IV then Boruta' WHEN 'boruta_then_mrmr_mutual_information' THEN 'Boruta then MI-mRMR' WHEN 'boruta_then_rfe_catboost' THEN 'Boruta then CatBoost RFE' END AS method_label, method_id, CAST(max_peak_rss_gib AS REAL) AS peak_rss_gib, 24.0 AS warning_threshold_gib, 28.0 AS abort_threshold_gib, CAST(unit_count AS INTEGER) AS fit_count FROM runtime_resource_review WHERE work_unit = 'selector_fit' ORDER BY CAST(method_order AS INTEGER)",
+        "description": "Compare observed selector-fit peak RSS against the configured warning and abort thresholds.",
+        "engine": "SQLite in-memory",
+        "language": "sql",
+        "id": "prompt12-runtime-chart-v1",
+        "executed_at": "2026-08-02T18:54:26.480Z",
+        "tables_used": [
+          "runtime_resource_review"
+        ],
+        "filters": [
+          "work_unit = selector_fit"
+        ]
+      }
+    },
+    {
+      "id": "runtime-table",
+      "label": "Runtime-resource table projection",
+      "path": "runtime_resource_review.csv",
+      "query": {
+        "sql": "SELECT REPLACE(work_unit, '_', ' ') AS work_unit, method_id, CAST(unit_count AS INTEGER) AS unit_count, CAST(max_elapsed_seconds AS REAL) AS max_elapsed_seconds, CAST(max_wall_fraction_pct AS REAL) AS max_wall_fraction_pct, CAST(max_peak_rss_gib AS REAL) AS max_peak_rss_gib, CAST(minimum_system_available_ram_gib AS REAL) AS minimum_system_available_ram_gib, review FROM runtime_resource_review ORDER BY CAST(max_peak_rss_gib AS REAL) DESC",
+        "description": "Project exact method-level runtime and resource extrema for selector fits and evaluation cells.",
+        "engine": "SQLite in-memory",
+        "language": "sql",
+        "id": "prompt12-runtime-table-v1",
+        "executed_at": "2026-08-02T18:54:26.480Z",
+        "tables_used": [
+          "runtime_resource_review"
+        ]
+      }
+    },
+    {
+      "id": "retention",
+      "label": "Retention recommendation",
+      "path": "retention_recommendation.json"
+    },
+    {
+      "id": "retention-table",
+      "label": "Retention scope table",
+      "path": "retention_scope.csv",
+      "query": {
+        "sql": "SELECT CAST(method_order AS INTEGER) AS method_order, method_id, recommendation, evidence, caveat FROM retention_scope ORDER BY CAST(method_order AS INTEGER)",
+        "description": "Project the outcome-blind proposed retention scope in the runner's exact method order.",
+        "engine": "SQLite in-memory",
+        "language": "sql",
+        "id": "prompt12-retention-table-v1",
+        "executed_at": "2026-08-02T18:54:26.480Z",
+        "tables_used": [
+          "retention_scope"
+        ]
+      }
+    }
+  ]
+}

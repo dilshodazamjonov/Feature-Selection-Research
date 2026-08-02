@@ -1,0 +1,5 @@
+method_order,method_id,recommendation,evidence,caveat
+1,statistical_normalized_average_rank,retain,4/4 fits and cells; exact support; wide runtime margin,largest observed selector-fit RSS and elapsed time
+2,iv_then_boruta,retain,all pool sensitivities completed; no resource warnings,natural support counts must remain labelled
+3,boruta_then_mrmr_mutual_information,retain with support label,4/4 completed; declared support-bound behavior preserved,Home Credit CatBoost realized 26 versus requested 40
+4,boruta_then_rfe_catboost,retain with support label,4/4 completed; declared support-bound behavior preserved,Home Credit CatBoost realized 26 versus requested 40
