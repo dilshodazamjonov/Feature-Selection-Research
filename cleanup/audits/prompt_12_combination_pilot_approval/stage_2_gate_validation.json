@@ -1,0 +1,78 @@
+{
+  "schema_version": "selector_combination_pilot_approval_stage_2_audit_v1",
+  "generated_at_utc": "2026-08-03T07:05:44.376Z",
+  "source_branch": "main",
+  "source_commit": "aa11424496f6340b2c3e50da922306228ed9efcc",
+  "approved_review_digest_sha256": "a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09",
+  "approved_retained_method_ids": [
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "precreation_checks": {
+    "review_digest_matches": true,
+    "retention_order_matches": true,
+    "natural_support_labels_preserved": true,
+    "pilot_evaluations_authenticated": "24/24",
+    "pilot_selections_authenticated": "18/18",
+    "active_inventory": "168/168",
+    "active_tree_sha256": "ec34e5ad4cd7542ccf74cc851c76367589261a8a88ed0588f1e88aa8cb31903f",
+    "stage_1_commit_is_ancestor": true,
+    "unrelated_worktree_changes": 0,
+    "active_experiment_workers": 0,
+    "execution_locks": 0
+  },
+  "approval_lock": {
+    "path": "configs/protocols/selector_combinations_v1/pilot_approval_lock.json",
+    "schema_version": "selector_combination_pilot_approval_lock_v1",
+    "artifact_authentication_sha256": "29d44d6e84930d52b2978db79621c90b33d7c5bb13b2302d163be86b5387ab95",
+    "file_sha256": "9d0fcdc2b0f2f036dc5b38f888772cdfaf64f7e06fc788f055230ea5600fab2e",
+    "runner_authentication": "passed"
+  },
+  "gate_validation": {
+    "dev_gate": "open_authenticated_pilot_approval",
+    "approved_dev_selector_fits": 90,
+    "approved_dev_evaluation_cells": 120,
+    "oot_gate": "closed:combination OOT is gated pending complete authenticated DEV",
+    "dev_completion_lock_present": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0
+  },
+  "required_natural_support_labels": [
+    {
+      "dataset": "homecredit",
+      "model": "catboost",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "requested_features": 40,
+      "realized_features": 26,
+      "feasibility_state": "infeasible_natural_support"
+    },
+    {
+      "dataset": "homecredit",
+      "model": "catboost",
+      "method_id": "boruta_then_rfe_catboost",
+      "requested_features": 40,
+      "realized_features": 26,
+      "feasibility_state": "infeasible_natural_support"
+    }
+  ],
+  "validation_results": [
+    "canonical approval-lock authentication passed",
+    "runner _validate_approval_lock passed for all 18 selections and 24 evaluations",
+    "enforce_phase_gate(dev) passed",
+    "enforce_phase_gate(oot) returned the expected pending-DEV gate",
+    "safe --status reported raw_dataset_paths_resolved=false and workers_started=0",
+    "safe --validate returned status=valid with DEV open and OOT closed pending authenticated DEV",
+    "five targeted data-free selector-combination contract tests passed"
+  ],
+  "manual_dev_command": "$env:PYTHONDONTWRITEBYTECODE='1'; .\\.venv\\Scripts\\python.exe -B scripts\\run_selector_combination_research.py --repository-root . --phase dev",
+  "manual_dev_command_executed": false,
+  "execution_boundary": {
+    "pilot_started_or_resumed": false,
+    "dev_started": false,
+    "oot_started": false,
+    "raw_research_datasets_accessed": false
+  },
+  "artifact_authentication_sha256": "b3dd9de36811722dd78e5b57a91d512c6226a0b5b8d8b9d85b8d70655b19cd68"
+}

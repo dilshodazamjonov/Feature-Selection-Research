@@ -1,0 +1,154 @@
+{
+  "schema_version": "selector_combination_pilot_approval_lock_v1",
+  "created_at_utc": "2026-08-03T07:02:54.477Z",
+  "configuration_sha256": "432a24c0a12e2a134522e981effe0b151c02f9c98c03cb34af6916f77d5e86ab",
+  "protocol_lock_sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9",
+  "approved": true,
+  "pilot_artifacts_valid": true,
+  "approved_review_digest_sha256": "a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09",
+  "review_digest_file_sha256": "6e362a3c7aebae5fea7d0310993ee65c79792082ac2fb6085d350df6a6c9d3e3",
+  "stage_1_review_commit": "aa11424496f6340b2c3e50da922306228ed9efcc",
+  "active_pilot_inventory": {
+    "expected_files": 168,
+    "observed_files": 168,
+    "unexpected_files": 0,
+    "canonical_tree_sha256": "ec34e5ad4cd7542ccf74cc851c76367589261a8a88ed0588f1e88aa8cb31903f"
+  },
+  "completed_pilot_evaluation_ids": [
+    "scv1-pilot-001-homecredit-statistical-normalized-average-rank-lr-k20-s42",
+    "scv1-pilot-002-homecredit-statistical-normalized-average-rank-catboost-k40-s42",
+    "scv1-pilot-003-lendingclub_v2-statistical-normalized-average-rank-lr-k20-s42",
+    "scv1-pilot-004-lendingclub_v2-statistical-normalized-average-rank-catboost-k40-s42",
+    "scv1-pilot-005-homecredit-iv-then-boruta-lr-pool100-s42",
+    "scv1-pilot-006-homecredit-iv-then-boruta-catboost-pool100-s42",
+    "scv1-pilot-007-lendingclub_v2-iv-then-boruta-lr-pool100-s42",
+    "scv1-pilot-008-lendingclub_v2-iv-then-boruta-catboost-pool100-s42",
+    "scv1-pilot-009-homecredit-iv-then-boruta-lr-pool200-s42",
+    "scv1-pilot-010-homecredit-iv-then-boruta-catboost-pool200-s42",
+    "scv1-pilot-011-lendingclub_v2-iv-then-boruta-lr-pool200-s42",
+    "scv1-pilot-012-lendingclub_v2-iv-then-boruta-catboost-pool200-s42",
+    "scv1-pilot-013-homecredit-iv-then-boruta-lr-pool300-s42",
+    "scv1-pilot-014-homecredit-iv-then-boruta-catboost-pool300-s42",
+    "scv1-pilot-015-lendingclub_v2-iv-then-boruta-lr-pool300-s42",
+    "scv1-pilot-016-lendingclub_v2-iv-then-boruta-catboost-pool300-s42",
+    "scv1-pilot-017-homecredit-boruta-then-mrmr-mutual-information-lr-k20-s42",
+    "scv1-pilot-018-homecredit-boruta-then-mrmr-mutual-information-catboost-k40-s42",
+    "scv1-pilot-019-lendingclub_v2-boruta-then-mrmr-mutual-information-lr-k20-s42",
+    "scv1-pilot-020-lendingclub_v2-boruta-then-mrmr-mutual-information-catboost-k40-s42",
+    "scv1-pilot-021-homecredit-boruta-then-rfe-catboost-lr-k20-s42",
+    "scv1-pilot-022-homecredit-boruta-then-rfe-catboost-catboost-k40-s42",
+    "scv1-pilot-023-lendingclub_v2-boruta-then-rfe-catboost-lr-k20-s42",
+    "scv1-pilot-024-lendingclub_v2-boruta-then-rfe-catboost-catboost-k40-s42"
+  ],
+  "completed_pilot_selection_ids": [
+    "scv1-homecredit-fold-1-statistical-normalized-average-rank-k20-s42",
+    "scv1-homecredit-fold-1-statistical-normalized-average-rank-k40-s42",
+    "scv1-lendingclub_v2-fold-1-statistical-normalized-average-rank-k20-s42",
+    "scv1-lendingclub_v2-fold-1-statistical-normalized-average-rank-k40-s42",
+    "scv1-homecredit-fold-1-iv-then-boruta-pool100-s42",
+    "scv1-lendingclub_v2-fold-1-iv-then-boruta-pool100-s42",
+    "scv1-homecredit-fold-1-iv-then-boruta-pool200-s42",
+    "scv1-lendingclub_v2-fold-1-iv-then-boruta-pool200-s42",
+    "scv1-homecredit-fold-1-iv-then-boruta-pool300-s42",
+    "scv1-lendingclub_v2-fold-1-iv-then-boruta-pool300-s42",
+    "scv1-homecredit-fold-1-boruta-then-mrmr-mutual-information-k20-s42",
+    "scv1-homecredit-fold-1-boruta-then-mrmr-mutual-information-k40-s42",
+    "scv1-lendingclub_v2-fold-1-boruta-then-mrmr-mutual-information-k20-s42",
+    "scv1-lendingclub_v2-fold-1-boruta-then-mrmr-mutual-information-k40-s42",
+    "scv1-homecredit-fold-1-boruta-then-rfe-catboost-k20-s42",
+    "scv1-homecredit-fold-1-boruta-then-rfe-catboost-k40-s42",
+    "scv1-lendingclub_v2-fold-1-boruta-then-rfe-catboost-k20-s42",
+    "scv1-lendingclub_v2-fold-1-boruta-then-rfe-catboost-k40-s42"
+  ],
+  "retained_method_ids": [
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "predictive_outcomes_used_for_configuration": false,
+  "user_approval_record": {
+    "approval_kind": "explicit_user_approval",
+    "approval_stage": "Prompt 12 Stage 2",
+    "recorded_at_utc": "2026-08-03T07:02:54.477Z",
+    "approved_review_digest_sha256": "a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09",
+    "approved_retained_method_ids": [
+      "statistical_normalized_average_rank",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "approval_statement": "I explicitly approve review digest a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09 and the exact four-method retention scope listed in the review."
+  },
+  "stage_support_review": {
+    "status": "passed_with_required_natural_support_labels",
+    "evidence_path": "cleanup/audits/prompt_12_combination_pilot_review/stage_support_review.csv",
+    "evidence_sha256": "d6af53298a4e24fb4c10db76ec3d7474a8001ce94243349f6ba3a36f4becddfd",
+    "selection_identities_reviewed": 18,
+    "required_natural_support_labels": [
+      {
+        "dataset": "homecredit",
+        "model": "catboost",
+        "method_id": "boruta_then_mrmr_mutual_information",
+        "requested_features": 40,
+        "realized_features": 26,
+        "feasibility_state": "infeasible_natural_support"
+      },
+      {
+        "dataset": "homecredit",
+        "model": "catboost",
+        "method_id": "boruta_then_rfe_catboost",
+        "requested_features": 40,
+        "realized_features": 26,
+        "feasibility_state": "infeasible_natural_support"
+      }
+    ]
+  },
+  "runtime_resource_review": {
+    "status": "passed",
+    "evidence_path": "cleanup/audits/prompt_12_combination_pilot_review/runtime_resource_review.csv",
+    "evidence_sha256": "11815146b073e8fb6cee2bdf051ed17a81da6eb723043ffc550f6c48b1b9576f",
+    "supervised_work_units_completed": 42,
+    "resource_warnings": 0,
+    "stop_count": 0,
+    "nonzero_exit_count": 0
+  },
+  "retention_decisions": {
+    "status": "explicitly_approved",
+    "evidence_path": "cleanup/audits/prompt_12_combination_pilot_review/retention_recommendation.json",
+    "evidence_sha256": "50c8fa8121dbe8bc115c68b5c757ea6ae26e5278b01eb5566a4d68cefe054db4",
+    "method_count": 4,
+    "exact_runner_order": true,
+    "method_decisions": [
+      {
+        "method_id": "statistical_normalized_average_rank",
+        "decision": "retain",
+        "natural_support_label": "not_applicable"
+      },
+      {
+        "method_id": "iv_then_boruta",
+        "decision": "retain",
+        "natural_support_label": "required_for_natural_boruta_support"
+      },
+      {
+        "method_id": "boruta_then_mrmr_mutual_information",
+        "decision": "retain",
+        "natural_support_label": "required_for_homecredit_catboost_26_of_requested_40"
+      },
+      {
+        "method_id": "boruta_then_rfe_catboost",
+        "decision": "retain",
+        "natural_support_label": "required_for_homecredit_catboost_26_of_requested_40"
+      }
+    ]
+  },
+  "execution_boundary": {
+    "raw_research_datasets_accessed": false,
+    "pilot_started_or_resumed": false,
+    "dev_started": false,
+    "oot_started": false,
+    "workers_started": 0,
+    "oot_gate_must_remain_closed_until_authenticated_dev_completion": true
+  },
+  "artifact_authentication_sha256": "29d44d6e84930d52b2978db79621c90b33d7c5bb13b2302d163be86b5387ab95"
+}
