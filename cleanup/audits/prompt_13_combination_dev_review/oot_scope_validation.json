@@ -1,0 +1,27 @@
+{
+  "schema_version": "selector_combination_prompt_13_dev_audit_v1",
+  "created_at_utc": "2026-08-04T15:30:01.424Z",
+  "status": "validated_exact_ordered_scope",
+  "scope_path": "configs/protocols/selector_combinations_v1/oot_scope_freeze.json",
+  "scope_file_sha256": "c7ea3a4cb53043e30cde27c9cc8799450cc930c280a65ba8be31986b85763686",
+  "scope_internal_authentication_sha256": "827d3aff47d963c5cabd07dd3b09f8f439dfdc817a59c3f3f414b9be47decfed",
+  "plan_raw_dataset_paths_resolved": false,
+  "plan_workers_started": 0,
+  "expected_oot_selection_refits": 18,
+  "observed_oot_selection_refits": 18,
+  "expected_oot_evaluations": 24,
+  "observed_oot_evaluations": 24,
+  "selection_order_matches": true,
+  "evaluation_order_matches": true,
+  "combination_oot_directory_present": false,
+  "combination_oot_scientific_artifact_count": 0,
+  "combination_oot_accessed": false,
+  "all_iv_pools_retained": [
+    100,
+    200,
+    300
+  ],
+  "no_dev_based_selection_removal_tuning_or_reordering": true,
+  "natural_support_no_padding_verified": true,
+  "artifact_authentication_sha256": "6df35b4cad856f26591bfb42a3ce8e7cd6d997b1881893bb26da4dfda4bb80e4"
+}

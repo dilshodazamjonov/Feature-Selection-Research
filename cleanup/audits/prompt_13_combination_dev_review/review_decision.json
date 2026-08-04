@@ -1,0 +1,62 @@
+{
+  "schema_version": "selector_combination_prompt_13_dev_audit_v1",
+  "created_at_utc": "2026-08-04T15:30:01.424Z",
+  "decision": "ready_for_manual_oot",
+  "decision_standard": {
+    "authentication_passed": true,
+    "complete_frozen_24_cell_scope_feasible": true,
+    "scientific_defect_requires_stop": false,
+    "contamination_detected": false,
+    "preservation_passed": true,
+    "runtime_locking_resume_controls_safe": true
+  },
+  "scope_authorized": {
+    "selection_refit_count": 18,
+    "evaluation_count": 24,
+    "ordered_evaluation_ids": [
+      "scv1-oot-001-homecredit-statistical-normalized-average-rank-lr-full-dev-k20-s42",
+      "scv1-oot-002-homecredit-statistical-normalized-average-rank-catboost-full-dev-k40-s42",
+      "scv1-oot-003-lendingclub_v2-statistical-normalized-average-rank-lr-full-dev-k20-s42",
+      "scv1-oot-004-lendingclub_v2-statistical-normalized-average-rank-catboost-full-dev-k40-s42",
+      "scv1-oot-005-homecredit-iv-then-boruta-lr-full-dev-pool100-s42",
+      "scv1-oot-006-homecredit-iv-then-boruta-catboost-full-dev-pool100-s42",
+      "scv1-oot-007-lendingclub_v2-iv-then-boruta-lr-full-dev-pool100-s42",
+      "scv1-oot-008-lendingclub_v2-iv-then-boruta-catboost-full-dev-pool100-s42",
+      "scv1-oot-009-homecredit-iv-then-boruta-lr-full-dev-pool200-s42",
+      "scv1-oot-010-homecredit-iv-then-boruta-catboost-full-dev-pool200-s42",
+      "scv1-oot-011-lendingclub_v2-iv-then-boruta-lr-full-dev-pool200-s42",
+      "scv1-oot-012-lendingclub_v2-iv-then-boruta-catboost-full-dev-pool200-s42",
+      "scv1-oot-013-homecredit-iv-then-boruta-lr-full-dev-pool300-s42",
+      "scv1-oot-014-homecredit-iv-then-boruta-catboost-full-dev-pool300-s42",
+      "scv1-oot-015-lendingclub_v2-iv-then-boruta-lr-full-dev-pool300-s42",
+      "scv1-oot-016-lendingclub_v2-iv-then-boruta-catboost-full-dev-pool300-s42",
+      "scv1-oot-017-homecredit-boruta-then-mrmr-mutual-information-lr-full-dev-k20-s42",
+      "scv1-oot-018-homecredit-boruta-then-mrmr-mutual-information-catboost-full-dev-k40-s42",
+      "scv1-oot-019-lendingclub_v2-boruta-then-mrmr-mutual-information-lr-full-dev-k20-s42",
+      "scv1-oot-020-lendingclub_v2-boruta-then-mrmr-mutual-information-catboost-full-dev-k40-s42",
+      "scv1-oot-021-homecredit-boruta-then-rfe-catboost-lr-full-dev-k20-s42",
+      "scv1-oot-022-homecredit-boruta-then-rfe-catboost-catboost-full-dev-k40-s42",
+      "scv1-oot-023-lendingclub_v2-boruta-then-rfe-catboost-lr-full-dev-k20-s42",
+      "scv1-oot-024-lendingclub_v2-boruta-then-rfe-catboost-catboost-full-dev-k40-s42"
+    ],
+    "retained_method_ids": [
+      "statistical_normalized_average_rank",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "iv_pool_budgets": [
+      100,
+      200,
+      300
+    ],
+    "natural_support_policy": "preserve the authenticated 26-of-requested-40 reference label; future full-DEV refit reports its own support and padding is forbidden"
+  },
+  "dev_evidence_use": "diagnostic_only_no_winner_pruning_tuning_or_reordering",
+  "baseline_alignment": "not_supported_missing_held_out_fold_prediction_vectors_and_ordered_row_target_hashes",
+  "technical_gate": "open_authenticated_dev_complete",
+  "scientific_gate": "ready_authenticated_prompt_13_review_lock_required",
+  "oot_has_run": false,
+  "manual_oot_command_not_executed": "$env:PYTHONDONTWRITEBYTECODE='1'; .\\.venv\\Scripts\\python.exe -B scripts\\run_selector_combination_research.py --repository-root . --phase oot",
+  "artifact_authentication_sha256": "97eb4c4939d2e01c9592d5b0d282b98742e75a4acb5a097e5189b995924cdbcf"
+}

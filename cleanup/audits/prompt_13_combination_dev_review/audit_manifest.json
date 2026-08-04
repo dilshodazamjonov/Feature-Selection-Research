@@ -1,0 +1,119 @@
+{
+  "schema_version": "selector_combination_prompt_13_dev_audit_v1",
+  "created_at_utc": "2026-08-04T15:30:01.424Z",
+  "status": "authenticated_review_package",
+  "decision": "ready_for_manual_oot",
+  "file_count": 15,
+  "files": [
+    {
+      "path": "preservation_snapshot_pre_review.json",
+      "size_bytes": 26441,
+      "sha256": "9431fa4d6b2265e2a69e06f2345d90785aafe3caf5ce9427031077c1be9012db"
+    },
+    {
+      "path": "dev_authentication.json",
+      "size_bytes": 2977,
+      "sha256": "c0774016b1ee090a9cd82989dd11b3c51ed0b58450226825fa111e7d0d51980a"
+    },
+    {
+      "path": "dev_fold_results.csv",
+      "size_bytes": 83114,
+      "sha256": "2f03788575466edfaf75003418a6c931edce60b4a2004e9842d058b99605318f"
+    },
+    {
+      "path": "dev_configuration_summary.csv",
+      "size_bytes": 36974,
+      "sha256": "08136f226bf5a10d25fff36f81e769d8226044c62065c9033da1910dc0fc6e76"
+    },
+    {
+      "path": "aligned_baseline_comparisons.csv",
+      "size_bytes": 47770,
+      "sha256": "74467165325d3baa2d71e693758422aa3b8408d80d205067c75c95d80ca7979c"
+    },
+    {
+      "path": "selection_stability.csv",
+      "size_bytes": 538546,
+      "sha256": "ec54a3207275c80c6031c9a2a4d5da4c7653d8aeab73e65e10ea8ea8db4a3baa"
+    },
+    {
+      "path": "stage_support_audit.csv",
+      "size_bytes": 30526,
+      "sha256": "b0e922f601a072e2a4793525afb8ded629bb59a618b390e4ba87ee142fc48674"
+    },
+    {
+      "path": "resource_summary.csv",
+      "size_bytes": 4571,
+      "sha256": "8187c857bbffd1e74235a13a61b501a272f475af895affe2c7000940c9111b9a"
+    },
+    {
+      "path": "oot_scope_validation.json",
+      "size_bytes": 1145,
+      "sha256": "413ba0e4fc34801c63e97c3a6c5cb53c8816af6b5d7235a15396c108cb0e1c0f"
+    },
+    {
+      "path": "preservation_check.json",
+      "size_bytes": 6783,
+      "sha256": "1d9a8c3bac2e3fd4fc4d48240e3a6d0359cdd382cc9c4b47cb97cc4075d641d6"
+    },
+    {
+      "path": "review_decision.json",
+      "size_bytes": 3622,
+      "sha256": "32c5dcd9aba621601cdc4609e92240c2334f32394a9591d5b0f04e5354046927"
+    },
+    {
+      "path": "review_report.md",
+      "size_bytes": 10376,
+      "sha256": "4c06b971366bf51e4b6213c2a38f270f95b6248f554fe0903aaebaec0dcd667a"
+    },
+    {
+      "path": "artifact.json",
+      "size_bytes": 36790,
+      "sha256": "96cd6e6d9f50345c80f17a810530779b163c3fa6c57e3a0f408281de26ca6d4f"
+    },
+    {
+      "path": "report.html",
+      "size_bytes": 468833,
+      "sha256": "eca3adfe2e6f8d7aa1cf854d6c32d61baf887ebb3d10262dd8f1264b5663d024"
+    },
+    {
+      "path": "validation_results.json",
+      "size_bytes": 1755,
+      "sha256": "943118dbb58eeacbe7ae3f61376246d635c1df4735f8a45fc3b227f6eaf917d3"
+    }
+  ],
+  "report_packaging": {
+    "ok": true,
+    "html": "D:\\python projects\\Research\\cleanup\\audits\\prompt_13_combination_dev_review\\report.html",
+    "stages": {
+      "validation": "passed",
+      "package": "passed",
+      "verification": "structural_only"
+    },
+    "browserWarning": {
+      "code": "browser_unavailable",
+      "message": "No installed Chromium headless-shell executable was found. Set CHROMIUM_EXECUTABLE_PATH (or the legacy PLAYWRIGHT_EXECUTABLE_PATH) or preinstall Chromium headless-shell under PLAYWRIGHT_BROWSERS_PATH; portable tooling never downloads browsers."
+    },
+    "counts": {
+      "blocks": 14,
+      "charts": 1,
+      "html": 0,
+      "metrics": 0,
+      "tables": 2
+    },
+    "sourceDialog": "not_verified",
+    "sourceInteraction": "not_verified",
+    "viewports": [],
+    "timings": {
+      "validateAndPackageMs": 76.2,
+      "staticChartExtractionMs": 1.5,
+      "structuralVerificationMs": 3.7,
+      "totalMs": 90.7
+    }
+  },
+  "raw_dataset_paths_resolved": false,
+  "workers_started": 0,
+  "real_workloads_executed": 0,
+  "combination_oot_accessed": false,
+  "baseline_oot_evidence_used": false,
+  "artifact_authentication_sha256": "6d681e3adb34dc11005117447de9a28e94a7cace164f87949da1c68ca7666ddf"
+}
