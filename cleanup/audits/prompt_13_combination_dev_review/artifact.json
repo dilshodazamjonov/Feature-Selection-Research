@@ -1,0 +1,1007 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Combination DEV Authentication and OOT-Readiness Review",
+    "description": "Authenticated Prompt 13 technical review of saved five-fold combination DEV evidence.",
+    "generatedAt": "2026-08-04T15:30:01.424Z",
+    "filters": [],
+    "cards": [],
+    "charts": [
+      {
+        "id": "stability_performance",
+        "title": "DEV stability and held-out discrimination",
+        "subtitle": "Each point is one frozen configuration; AUC is diagnostic and does not rank OOT scope.",
+        "type": "scatter",
+        "dataset": "configuration_evidence",
+        "sourceId": "dev_summary",
+        "source": {
+          "id": "dev_summary",
+          "label": "Authenticated DEV configuration summary",
+          "path": "dev_configuration_summary.csv",
+          "query": {
+            "engine": "duckdb",
+            "language": "sql",
+            "sql": "SELECT dataset, final_model, method, variant, auc_mean, ks_mean, mean_pairwise_jaccard, stage_support_label FROM read_csv_auto('dev_configuration_summary.csv')",
+            "description": "Selects all 24 frozen configuration summaries without performance-based filtering."
+          }
+        },
+        "encodings": {
+          "x": {
+            "field": "mean_jaccard",
+            "type": "quantitative",
+            "label": "Mean pairwise Jaccard"
+          },
+          "y": {
+            "field": "mean_auc",
+            "type": "quantitative",
+            "label": "Mean held-out AUC"
+          },
+          "color": {
+            "field": "dataset",
+            "type": "nominal",
+            "label": "Dataset"
+          },
+          "label": {
+            "field": "configuration",
+            "type": "nominal",
+            "label": "Configuration"
+          },
+          "tooltip": [
+            {
+              "field": "method",
+              "type": "nominal",
+              "label": "Method"
+            },
+            {
+              "field": "variant",
+              "type": "nominal",
+              "label": "Variant"
+            },
+            {
+              "field": "model",
+              "type": "nominal",
+              "label": "Model"
+            },
+            {
+              "field": "mean_ks",
+              "type": "quantitative",
+              "label": "Mean KS"
+            },
+            {
+              "field": "support",
+              "type": "nominal",
+              "label": "Stage support"
+            }
+          ]
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "authentication_table",
+        "title": "Authentication and OOT-absence checks",
+        "subtitle": "Expected and observed authenticated counts from persisted state.",
+        "dataset": "authentication_checks",
+        "sourceId": "dev_auth",
+        "defaultSort": {
+          "field": "check",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "check",
+            "label": "Check",
+            "type": "text"
+          },
+          {
+            "field": "expected",
+            "label": "Expected",
+            "format": "number"
+          },
+          {
+            "field": "authenticated",
+            "label": "Authenticated",
+            "format": "number"
+          },
+          {
+            "field": "status",
+            "label": "Status",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "configuration_table",
+        "title": "Frozen configuration evidence",
+        "subtitle": "Five-fold held-out means and ranges; natural support remains separate from requested K.",
+        "dataset": "configuration_summary",
+        "sourceId": "dev_summary",
+        "defaultSort": {
+          "field": "dataset",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "Model",
+            "type": "text"
+          },
+          {
+            "field": "method",
+            "label": "Method",
+            "type": "text"
+          },
+          {
+            "field": "variant",
+            "label": "Variant",
+            "type": "text"
+          },
+          {
+            "field": "support",
+            "label": "Support",
+            "type": "text"
+          },
+          {
+            "field": "selected_range",
+            "label": "Selected range",
+            "type": "text"
+          },
+          {
+            "field": "auc_mean",
+            "label": "Mean AUC",
+            "format": "number"
+          },
+          {
+            "field": "auc_min",
+            "label": "Min AUC",
+            "format": "number"
+          },
+          {
+            "field": "auc_max",
+            "label": "Max AUC",
+            "format": "number"
+          },
+          {
+            "field": "ks_mean",
+            "label": "Mean KS",
+            "format": "number"
+          },
+          {
+            "field": "jaccard",
+            "label": "Mean Jaccard",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "dev_auth",
+        "label": "Prompt 13 DEV authentication",
+        "path": "dev_authentication.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "sql": "SELECT * FROM (VALUES ('Pilot selector fits',18,18,'pass'),('Pilot evaluations',24,24,'pass'),('DEV selector fits',90,90,'pass'),('DEV evaluations',120,120,'pass'),('DEV active files',840,840,'pass'),('Combination OOT evaluations',24,0,'untouched')) AS t(check_name,expected,authenticated,status)",
+          "description": "Materializes the authenticated count checks bound by dev_authentication.json."
+        }
+      },
+      {
+        "id": "dev_summary",
+        "label": "Authenticated DEV configuration summary",
+        "path": "dev_configuration_summary.csv",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "sql": "SELECT dataset, final_model, method, variant, auc_mean, ks_mean, mean_pairwise_jaccard, stage_support_label FROM read_csv_auto('dev_configuration_summary.csv')",
+          "description": "Selects the authenticated configuration-level DEV metrics and stability fields used by the report chart and table.",
+          "tables_used": [
+            "dev_configuration_summary.csv"
+          ],
+          "filters": [
+            "All 24 frozen configurations; no performance-based filtering"
+          ],
+          "metric_definitions": {
+            "auc_mean": "Arithmetic mean of five authenticated held-out expanding-window fold ROC AUC values.",
+            "mean_pairwise_jaccard": "Mean Jaccard index across the ten fold-pair selected-feature set comparisons."
+          }
+        }
+      },
+      {
+        "id": "baseline_alignment",
+        "label": "Prompt 10 DEV alignment audit",
+        "path": "aligned_baseline_comparisons.csv"
+      },
+      {
+        "id": "stability",
+        "label": "Selection stability audit",
+        "path": "selection_stability.csv"
+      },
+      {
+        "id": "resources",
+        "label": "Persisted runtime and resource audit",
+        "path": "resource_summary.csv"
+      },
+      {
+        "id": "decision",
+        "label": "Prompt 13 OOT-readiness decision",
+        "path": "review_decision.json"
+      },
+      {
+        "id": "tests_validation",
+        "label": "Prompt 13 validation results",
+        "path": "validation_results.json"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Combination DEV Authentication and OOT-Readiness Review"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "sourceId": "decision",
+        "body": "## The frozen 24-cell scope is ready for manual OOT\n\n**90/90 selector fits and 120/120 held-out DEV cells authenticate.** Combination OOT is still 0/24. Each Home Credit CatBoost Boruta-first configuration has an unpadded fold-1 natural-support result of 26 against requested K=40; the frozen OOT label preserves that authenticated reference. DEV is diagnostic: no winner or pool was selected."
+      },
+      {
+        "id": "auth_intro",
+        "type": "markdown",
+        "body": "## Content-level authentication passed\n\nThe audit verified state digests, contract-file hashes, prediction/target validity and ordering, selection lineage, feature-universe identities, worker exits, and leakage flags—not only completion counts."
+      },
+      {
+        "id": "auth_table_block",
+        "type": "table",
+        "tableId": "authentication_table"
+      },
+      {
+        "id": "dev_intro",
+        "type": "markdown",
+        "body": "## DEV evidence varies but does not alter scope\n\nThe table exposes all 24 frozen configuration summaries. Every value is from held-out expanding-window folds; weak folds remain in the detailed CSV and weak DEV results remain eligible for OOT."
+      },
+      {
+        "id": "config_table_block",
+        "type": "table",
+        "tableId": "configuration_table"
+      },
+      {
+        "id": "stability_intro",
+        "type": "markdown",
+        "body": "## Stability is evidence, not a winner rule\n\nRead points horizontally for cross-fold feature-set stability and vertically for descriptive held-out AUC. Different datasets are not directly comparable, and the chart does not authorize pruning."
+      },
+      {
+        "id": "stability_chart_block",
+        "type": "chart",
+        "chartId": "stability_performance"
+      },
+      {
+        "id": "baseline",
+        "type": "markdown",
+        "sourceId": "baseline_alignment",
+        "body": "## Baseline effects and paired inference are not supported\n\nPrompt 10 authenticates at 36/36, but held-out fold prediction vectors and ordered row/target hashes were not saved. Exact evaluation-row alignment cannot be proved, so standalone-component, full-feature, random-k, row-level, and fold-significance comparisons are all reported `not_supported`; baseline OOT is excluded."
+      },
+      {
+        "id": "support",
+        "type": "markdown",
+        "sourceId": "stability",
+        "body": "## All stage-support policies remain feasible\n\nAll 90 selector fits completed under the authenticated support policy. Each Home Credit CatBoost Boruta-first configuration realized an unpadded 26 of requested 40 on fold 1, while folds 2–5 reached 40. The 26-feature cases are not matched-budget K=40; the future refit must report its own realized support."
+      },
+      {
+        "id": "resources",
+        "type": "markdown",
+        "sourceId": "resources",
+        "body": "## Sequential runtime controls are adequate\n\nThe run reused 90 selector fits across 120 model evaluations, ended without timeouts or stop codes, and left no worker, survivor, partial file, or execution lock. Active compute, RAM waiting, session span, RSS, available RAM, and artifact bytes are reported separately."
+      },
+      {
+        "id": "tests",
+        "type": "markdown",
+        "sourceId": "tests_validation",
+        "body": "## Validation passed at every required level\n\nFocused Prompt 13 tests passed 16/16, relevant runner and scientific-contract tests passed 134/134, and the complete repository suite passed 969 tests with 31 skips. Portable schema and packaging checks passed; browser QA was structural-only because no installed Chromium headless shell was available, and no browser was downloaded."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## Limits and uncertainty\n\n- DEV is diagnostic; OOT is final evidence.\n- Five expanding-window folds are dependent partitions, not independent experiments.\n- Baseline row-level alignment is not reconstructable from summaries.\n- The review lock is a provenance authorization; the runner's existing completion lock is the technical gate."
+      },
+      {
+        "id": "next",
+        "type": "markdown",
+        "sourceId": "decision",
+        "body": "## Next step\n\nThe user may manually run only the exact frozen OOT command recorded in the decision artifact. This report does not claim that OOT ran and does not authorize any scope change."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-04T15:30:01.424Z",
+    "status": "ready",
+    "datasets": {
+      "authentication_checks": [
+        {
+          "check": "Pilot selector fits",
+          "expected": 18,
+          "authenticated": 18,
+          "status": "pass"
+        },
+        {
+          "check": "Pilot evaluations",
+          "expected": 24,
+          "authenticated": 24,
+          "status": "pass"
+        },
+        {
+          "check": "DEV selector fits",
+          "expected": 90,
+          "authenticated": 90,
+          "status": "pass"
+        },
+        {
+          "check": "DEV evaluations",
+          "expected": 120,
+          "authenticated": 120,
+          "status": "pass"
+        },
+        {
+          "check": "DEV active files",
+          "expected": 840,
+          "authenticated": 840,
+          "status": "pass"
+        },
+        {
+          "check": "Combination OOT evaluations",
+          "expected": 24,
+          "authenticated": 0,
+          "status": "untouched"
+        }
+      ],
+      "configuration_summary": [
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_40",
+          "support": "mixed_fold_support_natural_26_of_40_and_matched_k40",
+          "selected_range": "26–40",
+          "auc_mean": 0.7514236892731893,
+          "auc_min": 0.7282033354340721,
+          "auc_max": 0.7686971567791857,
+          "ks_mean": 0.3819537440273105,
+          "jaccard": 0.42042681366988094
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "boruta then rfe catboost",
+          "variant": "k_40",
+          "support": "mixed_fold_support_natural_26_of_40_and_matched_k40",
+          "selected_range": "26–40",
+          "auc_mean": 0.7542860972591622,
+          "auc_min": 0.7282033354340721,
+          "auc_max": 0.7698970418803982,
+          "ks_mean": 0.3848670587503554,
+          "jaccard": 0.44106397889154025
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "support": "natural_support",
+          "selected_range": "20–66",
+          "auc_mean": 0.7477249995393417,
+          "auc_min": 0.7226127568546181,
+          "auc_max": 0.7632371580162348,
+          "ks_mean": 0.3738732147114254,
+          "jaccard": 0.5221276130828344
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "support": "natural_support",
+          "selected_range": "25–99",
+          "auc_mean": 0.7508565024592089,
+          "auc_min": 0.7271749802057808,
+          "auc_max": 0.7629523760426009,
+          "ks_mean": 0.3800991422794499,
+          "jaccard": 0.5145038957335922
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "support": "natural_support",
+          "selected_range": "28–109",
+          "auc_mean": 0.7531741422901356,
+          "auc_min": 0.7271654396318703,
+          "auc_max": 0.7688519975720294,
+          "ks_mean": 0.384512945175356,
+          "jaccard": 0.5326808634194815
+        },
+        {
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "statistical normalized average rank",
+          "variant": "k_40",
+          "support": "matched_budget",
+          "selected_range": "40–40",
+          "auc_mean": 0.7610098179163001,
+          "auc_min": 0.744755786271569,
+          "auc_max": 0.7722277784592031,
+          "ks_mean": 0.39880288184390417,
+          "jaccard": 0.4692690814229871
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.7327898103127278,
+          "auc_min": 0.7218150066900184,
+          "auc_max": 0.7433111808670592,
+          "ks_mean": 0.35430135706031524,
+          "jaccard": 0.35925200601245877
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "boruta then rfe catboost",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.7358722795120457,
+          "auc_min": 0.7204884220192292,
+          "auc_max": 0.7479719735019913,
+          "ks_mean": 0.3571813224397939,
+          "jaccard": 0.410660603764052
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "support": "natural_support",
+          "selected_range": "20–66",
+          "auc_mean": 0.7395275103143126,
+          "auc_min": 0.7197648213927943,
+          "auc_max": 0.7534829219097101,
+          "ks_mean": 0.3648332175987749,
+          "jaccard": 0.5221276130828344
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "support": "natural_support",
+          "selected_range": "25–99",
+          "auc_mean": 0.743540353606645,
+          "auc_min": 0.719468223240136,
+          "auc_max": 0.7545961881580149,
+          "ks_mean": 0.37000186626679826,
+          "jaccard": 0.5145038957335922
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "support": "natural_support",
+          "selected_range": "28–109",
+          "auc_mean": 0.7446867217270631,
+          "auc_min": 0.719972786130833,
+          "auc_max": 0.7610650362780341,
+          "ks_mean": 0.37060063360918843,
+          "jaccard": 0.5326808634194815
+        },
+        {
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "statistical normalized average rank",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.743883800882492,
+          "auc_min": 0.7305214971622229,
+          "auc_max": 0.7557588823786565,
+          "ks_mean": 0.37211979461137495,
+          "jaccard": 0.49947800214666777
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_40",
+          "support": "matched_budget",
+          "selected_range": "40–40",
+          "auc_mean": 0.7293695530735563,
+          "auc_min": 0.7149302241425244,
+          "auc_max": 0.7390108240598092,
+          "ks_mean": 0.3323797837348887,
+          "jaccard": 0.4339039049220592
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "boruta then rfe catboost",
+          "variant": "k_40",
+          "support": "matched_budget",
+          "selected_range": "40–40",
+          "auc_mean": 0.7321446524182416,
+          "auc_min": 0.7160149970221565,
+          "auc_max": 0.7448128047306415,
+          "ks_mean": 0.3369784991106539,
+          "jaccard": 0.47528533109466575
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "support": "natural_support",
+          "selected_range": "86–99",
+          "auc_mean": 0.7283426538379394,
+          "auc_min": 0.7123140544871647,
+          "auc_max": 0.7418843363721559,
+          "ks_mean": 0.3305963050098386,
+          "jaccard": 0.843748811894335
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "support": "natural_support",
+          "selected_range": "118–179",
+          "auc_mean": 0.731929817958722,
+          "auc_min": 0.7150799106041869,
+          "auc_max": 0.7453403781178871,
+          "ks_mean": 0.33719049566264786,
+          "jaccard": 0.8073185541957617
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "support": "natural_support",
+          "selected_range": "134–214",
+          "auc_mean": 0.7336229846427191,
+          "auc_min": 0.7161161387401165,
+          "auc_max": 0.7481963092128938,
+          "ks_mean": 0.3401469200313767,
+          "jaccard": 0.790052968123312
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "statistical normalized average rank",
+          "variant": "k_40",
+          "support": "matched_budget",
+          "selected_range": "40–40",
+          "auc_mean": 0.7298614110639685,
+          "auc_min": 0.7139309038667708,
+          "auc_max": 0.742912141051763,
+          "ks_mean": 0.3336500038219261,
+          "jaccard": 0.5560287522239963
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.7146889952741073,
+          "auc_min": 0.7066900827320209,
+          "auc_max": 0.7242764765387872,
+          "ks_mean": 0.31171364710850247,
+          "jaccard": 0.396634629738078
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "boruta then rfe catboost",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.7202064899009094,
+          "auc_min": 0.7107277922588869,
+          "auc_max": 0.7284792219923564,
+          "ks_mean": 0.3210659060975867,
+          "jaccard": 0.4333124988964811
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "support": "natural_support",
+          "selected_range": "86–99",
+          "auc_mean": 0.7239530467872437,
+          "auc_min": 0.7136426554305467,
+          "auc_max": 0.7338197433443456,
+          "ks_mean": 0.32484209253383006,
+          "jaccard": 0.843748811894335
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "support": "natural_support",
+          "selected_range": "118–179",
+          "auc_mean": 0.7280300076047734,
+          "auc_min": 0.7154660628280178,
+          "auc_max": 0.7387488880696896,
+          "ks_mean": 0.33113121210753776,
+          "jaccard": 0.8073185541957617
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "support": "natural_support",
+          "selected_range": "134–214",
+          "auc_mean": 0.7296761985608192,
+          "auc_min": 0.7165127987965267,
+          "auc_max": 0.7410419086673605,
+          "ks_mean": 0.3336464226306518,
+          "jaccard": 0.790052968123312
+        },
+        {
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "statistical normalized average rank",
+          "variant": "k_20",
+          "support": "matched_budget",
+          "selected_range": "20–20",
+          "auc_mean": 0.7172036396477223,
+          "auc_min": 0.7087404517571984,
+          "auc_max": 0.7272013153183341,
+          "ks_mean": 0.31639891225489003,
+          "jaccard": 0.5825769721421895
+        }
+      ],
+      "configuration_evidence": [
+        {
+          "configuration": "homecredit | catboost | boruta then mrmr mutual information | k_40",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_40",
+          "mean_auc": 0.7514236892731893,
+          "mean_ks": 0.3819537440273105,
+          "mean_jaccard": 0.42042681366988094,
+          "support": "mixed_fold_support_natural_26_of_40_and_matched_k40"
+        },
+        {
+          "configuration": "homecredit | catboost | boruta then rfe catboost | k_40",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "boruta then rfe catboost",
+          "variant": "k_40",
+          "mean_auc": 0.7542860972591622,
+          "mean_ks": 0.3848670587503554,
+          "mean_jaccard": 0.44106397889154025,
+          "support": "mixed_fold_support_natural_26_of_40_and_matched_k40"
+        },
+        {
+          "configuration": "homecredit | catboost | iv then boruta | iv_pool_100",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "mean_auc": 0.7477249995393417,
+          "mean_ks": 0.3738732147114254,
+          "mean_jaccard": 0.5221276130828344,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | catboost | iv then boruta | iv_pool_200",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "mean_auc": 0.7508565024592089,
+          "mean_ks": 0.3800991422794499,
+          "mean_jaccard": 0.5145038957335922,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | catboost | iv then boruta | iv_pool_300",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "mean_auc": 0.7531741422901356,
+          "mean_ks": 0.384512945175356,
+          "mean_jaccard": 0.5326808634194815,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | catboost | statistical normalized average rank | k_40",
+          "dataset": "homecredit",
+          "model": "catboost",
+          "method": "statistical normalized average rank",
+          "variant": "k_40",
+          "mean_auc": 0.7610098179163001,
+          "mean_ks": 0.39880288184390417,
+          "mean_jaccard": 0.4692690814229871,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "homecredit | lr | boruta then mrmr mutual information | k_20",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_20",
+          "mean_auc": 0.7327898103127278,
+          "mean_ks": 0.35430135706031524,
+          "mean_jaccard": 0.35925200601245877,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "homecredit | lr | boruta then rfe catboost | k_20",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "boruta then rfe catboost",
+          "variant": "k_20",
+          "mean_auc": 0.7358722795120457,
+          "mean_ks": 0.3571813224397939,
+          "mean_jaccard": 0.410660603764052,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "homecredit | lr | iv then boruta | iv_pool_100",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "mean_auc": 0.7395275103143126,
+          "mean_ks": 0.3648332175987749,
+          "mean_jaccard": 0.5221276130828344,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | lr | iv then boruta | iv_pool_200",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "mean_auc": 0.743540353606645,
+          "mean_ks": 0.37000186626679826,
+          "mean_jaccard": 0.5145038957335922,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | lr | iv then boruta | iv_pool_300",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "mean_auc": 0.7446867217270631,
+          "mean_ks": 0.37060063360918843,
+          "mean_jaccard": 0.5326808634194815,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "homecredit | lr | statistical normalized average rank | k_20",
+          "dataset": "homecredit",
+          "model": "lr",
+          "method": "statistical normalized average rank",
+          "variant": "k_20",
+          "mean_auc": 0.743883800882492,
+          "mean_ks": 0.37211979461137495,
+          "mean_jaccard": 0.49947800214666777,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | boruta then mrmr mutual information | k_40",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_40",
+          "mean_auc": 0.7293695530735563,
+          "mean_ks": 0.3323797837348887,
+          "mean_jaccard": 0.4339039049220592,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | boruta then rfe catboost | k_40",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "boruta then rfe catboost",
+          "variant": "k_40",
+          "mean_auc": 0.7321446524182416,
+          "mean_ks": 0.3369784991106539,
+          "mean_jaccard": 0.47528533109466575,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | iv then boruta | iv_pool_100",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "mean_auc": 0.7283426538379394,
+          "mean_ks": 0.3305963050098386,
+          "mean_jaccard": 0.843748811894335,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | iv then boruta | iv_pool_200",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "mean_auc": 0.731929817958722,
+          "mean_ks": 0.33719049566264786,
+          "mean_jaccard": 0.8073185541957617,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | iv then boruta | iv_pool_300",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "mean_auc": 0.7336229846427191,
+          "mean_ks": 0.3401469200313767,
+          "mean_jaccard": 0.790052968123312,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | catboost | statistical normalized average rank | k_40",
+          "dataset": "lendingclub_v2",
+          "model": "catboost",
+          "method": "statistical normalized average rank",
+          "variant": "k_40",
+          "mean_auc": 0.7298614110639685,
+          "mean_ks": 0.3336500038219261,
+          "mean_jaccard": 0.5560287522239963,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | boruta then mrmr mutual information | k_20",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "boruta then mrmr mutual information",
+          "variant": "k_20",
+          "mean_auc": 0.7146889952741073,
+          "mean_ks": 0.31171364710850247,
+          "mean_jaccard": 0.396634629738078,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | boruta then rfe catboost | k_20",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "boruta then rfe catboost",
+          "variant": "k_20",
+          "mean_auc": 0.7202064899009094,
+          "mean_ks": 0.3210659060975867,
+          "mean_jaccard": 0.4333124988964811,
+          "support": "matched_budget"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | iv then boruta | iv_pool_100",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_100",
+          "mean_auc": 0.7239530467872437,
+          "mean_ks": 0.32484209253383006,
+          "mean_jaccard": 0.843748811894335,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | iv then boruta | iv_pool_200",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_200",
+          "mean_auc": 0.7280300076047734,
+          "mean_ks": 0.33113121210753776,
+          "mean_jaccard": 0.8073185541957617,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | iv then boruta | iv_pool_300",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "iv then boruta",
+          "variant": "iv_pool_300",
+          "mean_auc": 0.7296761985608192,
+          "mean_ks": 0.3336464226306518,
+          "mean_jaccard": 0.790052968123312,
+          "support": "natural_support"
+        },
+        {
+          "configuration": "lendingclub_v2 | lr | statistical normalized average rank | k_20",
+          "dataset": "lendingclub_v2",
+          "model": "lr",
+          "method": "statistical normalized average rank",
+          "variant": "k_20",
+          "mean_auc": 0.7172036396477223,
+          "mean_ks": 0.31639891225489003,
+          "mean_jaccard": 0.5825769721421895,
+          "support": "matched_budget"
+        }
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "dev_auth",
+      "label": "Prompt 13 DEV authentication",
+      "path": "dev_authentication.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM (VALUES ('Pilot selector fits',18,18,'pass'),('Pilot evaluations',24,24,'pass'),('DEV selector fits',90,90,'pass'),('DEV evaluations',120,120,'pass'),('DEV active files',840,840,'pass'),('Combination OOT evaluations',24,0,'untouched')) AS t(check_name,expected,authenticated,status)",
+        "description": "Materializes the authenticated count checks bound by dev_authentication.json."
+      }
+    },
+    {
+      "id": "dev_summary",
+      "label": "Authenticated DEV configuration summary",
+      "path": "dev_configuration_summary.csv",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT dataset, final_model, method, variant, auc_mean, ks_mean, mean_pairwise_jaccard, stage_support_label FROM read_csv_auto('dev_configuration_summary.csv')",
+        "description": "Selects the authenticated configuration-level DEV metrics and stability fields used by the report chart and table.",
+        "tables_used": [
+          "dev_configuration_summary.csv"
+        ],
+        "filters": [
+          "All 24 frozen configurations; no performance-based filtering"
+        ],
+        "metric_definitions": {
+          "auc_mean": "Arithmetic mean of five authenticated held-out expanding-window fold ROC AUC values.",
+          "mean_pairwise_jaccard": "Mean Jaccard index across the ten fold-pair selected-feature set comparisons."
+        }
+      }
+    },
+    {
+      "id": "baseline_alignment",
+      "label": "Prompt 10 DEV alignment audit",
+      "path": "aligned_baseline_comparisons.csv"
+    },
+    {
+      "id": "stability",
+      "label": "Selection stability audit",
+      "path": "selection_stability.csv"
+    },
+    {
+      "id": "resources",
+      "label": "Persisted runtime and resource audit",
+      "path": "resource_summary.csv"
+    },
+    {
+      "id": "decision",
+      "label": "Prompt 13 OOT-readiness decision",
+      "path": "review_decision.json"
+    },
+    {
+      "id": "tests_validation",
+      "label": "Prompt 13 validation results",
+      "path": "validation_results.json"
+    }
+  ]
+}

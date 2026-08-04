@@ -1,0 +1,76 @@
+{
+  "schema_version": "selector_combination_prompt_13_dev_audit_v1",
+  "created_at_utc": "2026-08-04T15:30:01.424Z",
+  "authentication_status": "authenticated_complete",
+  "raw_dataset_paths_resolved": false,
+  "research_data_loaders_invoked": 0,
+  "workers_started": 0,
+  "pilot": {
+    "selector_fits": "18/18",
+    "evaluation_cells": "24/24",
+    "first_incomplete": null
+  },
+  "dev": {
+    "selector_fits": "90/90",
+    "evaluation_cells": "120/120",
+    "folds_per_configuration": 5,
+    "frozen_configurations": 24,
+    "active_files": "840/840",
+    "missing": 0,
+    "extra": 0,
+    "duplicate": 0,
+    "partial": 0,
+    "interrupted": 0,
+    "failed": 0,
+    "timed_out": 0,
+    "hash_invalid": 0
+  },
+  "approval_lock": {
+    "path": "configs/protocols/selector_combinations_v1/pilot_approval_lock.json",
+    "file_sha256": "9d0fcdc2b0f2f036dc5b38f888772cdfaf64f7e06fc788f055230ea5600fab2e",
+    "artifact_authentication_sha256": "29d44d6e84930d52b2978db79621c90b33d7c5bb13b2302d163be86b5387ab95",
+    "review_digest_sha256": "a5e5c592d26029a0bbe79b93ed23b140989f83e36d6bfd2500668311cca4af09"
+  },
+  "dev_completion_lock": {
+    "path": "results/selector_combinations_v1/dev_completion_lock.json",
+    "file_sha256": "87fc9c7a08f6115229d8f0997c6db399c688a02277762e73b2c05bf97c536009",
+    "artifact_authentication_sha256": "4ccdcca351b7878beb5d89302657e874007929bc48f867c192475c76d8e9cc94",
+    "ordered_evaluation_count": 120,
+    "ordered_selection_count": 90
+  },
+  "prediction_contract": {
+    "authenticated_files": 120,
+    "row_count_order_identity_target_probability_checks_passed": true,
+    "within_dataset_fold_ordered_row_target_alignment_passed": true,
+    "validation_target_used_for_fit_any": false,
+    "opened_oot_paths_any": false,
+    "oot_rows_retained_total": 0
+  },
+  "selection_contract": {
+    "authenticated_files": 90,
+    "candidate_selected_intermediate_stage_hashes_passed": true,
+    "natural_support_26_of_40_fold_rows": 2,
+    "natural_support_configuration_count": 2,
+    "padding_detected": false
+  },
+  "baseline": {
+    "status": "authenticated_complete",
+    "expected_cells": 36,
+    "authenticated_cells": 36,
+    "configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+    "runtime_policy_sha256": "d3bc00778fce57c33ef52a6c4ff28f6ec47f0348ab3695265bd402dfbaa3226d",
+    "cell_036": "fbv1-036-lendingclub_v2-catboost-rfe-catboost-s42",
+    "success_marker_sha256": "09bdb47e7fa41dbe5a2c122726c5e0736024e31f451dc3a80a80ff4cd432a9b1",
+    "raw_dataset_paths_resolved": false,
+    "baseline_refit_performed": false,
+    "held_out_fold_prediction_vectors_saved": false,
+    "ordered_fold_row_target_identity_hashes_saved": false,
+    "baseline_oot_evidence_used": false
+  },
+  "oot": {
+    "authenticated_evaluations": 0,
+    "expected_evaluations": 24,
+    "scientific_artifacts": 0
+  },
+  "artifact_authentication_sha256": "dc862cb40a80864a31a75ee3d356d64f07b6e40a970d97f0ea504e7f09b15fe9"
+}

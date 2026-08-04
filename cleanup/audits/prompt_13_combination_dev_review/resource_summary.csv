@@ -1,0 +1,26 @@
+dataset,method,stage,association_count,active_compute_seconds,reported_compute_seconds,ram_wait_seconds,peak_process_rss_bytes,minimum_available_ram_bytes,timeout_or_stop_events,artifact_bytes,selector_fit_reuse
+homecredit,statistical_normalized_average_rank,selector_fit,10,5712.024,4625.022112799983,0.0,3554222080,25073201152,0,24050388,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+lendingclub_v2,statistical_normalized_average_rank,selector_fit,10,20012.289,19107.259828499926,0.0,21340454912,10514657280,0,30558277,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+homecredit,iv_then_boruta,selector_fit,15,3696.163,2079.603869699873,0.0,2258612224,25471516672,0,1959363,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+lendingclub_v2,iv_then_boruta,selector_fit,15,13414.052,12026.6130824,0.0,11030880256,16660553728,0,2258161,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+homecredit,boruta_then_mrmr_mutual_information,selector_fit,10,3670.602,2528.7049742000527,0.0,2260209664,25684205568,0,2087058,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+lendingclub_v2,boruta_then_mrmr_mutual_information,selector_fit,10,14160.357,13225.766552999848,0.0,13186125824,15107911680,0,2732397,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+homecredit,boruta_then_rfe_catboost,selector_fit,10,3825.462,2679.465267200023,0.0,2260144128,24837525504,0,2215962,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+lendingclub_v2,boruta_then_rfe_catboost,selector_fit,10,14819.289,13851.989305299998,0.0,13187252224,16853905408,0,2983693,one authenticated selector fit reused by both final-model evaluations where matrix identities share selection_id
+homecredit,statistical_normalized_average_rank,final_lr_evaluation,5,521.709,521.709,0.0,2256003072,25832595456,0,13540346,not_applicable
+homecredit,statistical_normalized_average_rank,final_catboost_evaluation,5,657.586,657.586,0.0,2112679936,25818959872,0,14559208,not_applicable
+lendingclub_v2,statistical_normalized_average_rank,final_lr_evaluation,5,195.76,195.76,0.0,1006739456,26859114496,0,86510811,not_applicable
+lendingclub_v2,statistical_normalized_average_rank,final_catboost_evaluation,5,682.983,682.983,0.0,1182126080,26686459904,0,92535115,not_applicable
+homecredit,iv_then_boruta,final_lr_evaluation,15,1662.606,1662.606,0.0,2258911232,25510293504,0,31194960,not_applicable
+homecredit,iv_then_boruta,final_catboost_evaluation,15,2214.095,2214.095,0.0,2262212608,25411760128,0,34248447,not_applicable
+lendingclub_v2,iv_then_boruta,final_lr_evaluation,15,2578.8849999999998,2578.8849999999998,0.0,5920301056,23299162112,0,202641963,not_applicable
+lendingclub_v2,iv_then_boruta,final_catboost_evaluation,15,5436.052,5436.052,0.0,4452048896,24725209088,0,220706192,not_applicable
+homecredit,boruta_then_mrmr_mutual_information,final_lr_evaluation,5,558.2660000000001,558.2660000000001,0.0,2260697088,25703796736,0,13538364,not_applicable
+homecredit,boruta_then_mrmr_mutual_information,final_catboost_evaluation,5,697.971,697.971,0.0,2261057536,25665724416,0,14557335,not_applicable
+lendingclub_v2,boruta_then_mrmr_mutual_information,final_lr_evaluation,5,197.50900000000001,197.50900000000001,0.0,1000349696,27551580160,0,86514241,not_applicable
+lendingclub_v2,boruta_then_mrmr_mutual_information,final_catboost_evaluation,5,663.92,663.92,0.0,1112662016,25767399424,0,92536430,not_applicable
+homecredit,boruta_then_rfe_catboost,final_lr_evaluation,5,556.146,556.146,0.0,2258829312,25208074240,0,11720849,not_applicable
+homecredit,boruta_then_rfe_catboost,final_catboost_evaluation,5,694.645,694.645,0.0,2259197952,24970756096,0,12738859,not_applicable
+lendingclub_v2,boruta_then_rfe_catboost,final_lr_evaluation,5,209.895,209.895,0.0,991723520,26893176832,0,75533396,not_applicable
+lendingclub_v2,boruta_then_rfe_catboost,final_catboost_evaluation,5,693.548,693.548,0.0,1183010816,26797871104,0,81553860,not_applicable
+all,all,overall,210,97531.814,88346.0009930997,0.03787940010079183,21340454912,10514657280,0,1153475675,90 selector fits authenticated for 120 evaluation cells; 30 shared fit identities avoid duplicate model-family fits
