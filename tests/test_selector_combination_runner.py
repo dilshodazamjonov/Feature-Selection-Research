@@ -60,14 +60,22 @@ def test_prompt_10_dependency_is_exactly_authenticated_without_refit() -> None:
     assert result["baseline_refit_performed"] is False
 
 
-def test_dev_and_oot_are_technically_gated_before_pilot_approval() -> None:
+def test_dev_and_oot_gates_follow_authenticated_lifecycle_state() -> None:
     plan = load_combination_plan(ROOT)
     approval = ROOT / plan.configuration["gates"]["pilot_approval_lock_path"]
-    assert not approval.exists()
-    with pytest.raises(CombinationGateClosed, match="pilot review"):
+    if approval.exists():
         enforce_phase_gate(plan, "dev")
-    with pytest.raises(CombinationGateClosed, match="pilot review"):
-        enforce_phase_gate(plan, "oot")
+        completion = ROOT / plan.configuration["gates"]["dev_completion_lock_path"]
+        if completion.exists():
+            enforce_phase_gate(plan, "oot")
+        else:
+            with pytest.raises(CombinationGateClosed, match="complete authenticated DEV"):
+                enforce_phase_gate(plan, "oot")
+    else:
+        with pytest.raises(CombinationGateClosed, match="pilot review"):
+            enforce_phase_gate(plan, "dev")
+        with pytest.raises(CombinationGateClosed, match="pilot review"):
+            enforce_phase_gate(plan, "oot")
 
 
 def test_protocol_lock_keeps_exact_four_and_exact_five_voters() -> None:

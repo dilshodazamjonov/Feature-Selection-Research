@@ -370,7 +370,7 @@ def load_combination_plan(repository_root: str | Path, config_path: str | Path =
 
 
 def render_plan(plan: CombinationPlan) -> dict[str, Any]:
-    return {
+    rendered = {
         "schema_version": "selector_combination_plan_v1",
         "configuration_sha256": plan.configuration_sha256,
         "protocol_lock_sha256": plan.protocol_lock_sha256,
@@ -385,6 +385,38 @@ def render_plan(plan: CombinationPlan) -> dict[str, Any]:
         "dev_gate": "closed_pending_authenticated_pilot_approval_lock",
         "oot_gate": "closed_pending_pilot_approval_and_complete_authenticated_dev",
     }
+    try:
+        approval = _validate_approval_lock(plan)
+    except CombinationGateClosed:
+        return rendered
+
+    retained = tuple(approval["retained_method_ids"])
+    dev_selections, dev_evaluations = build_phase_matrix(
+        plan, phase="dev", retained_method_ids=retained
+    )
+    oot_selections, oot_evaluations = build_phase_matrix(
+        plan, phase="oot", retained_method_ids=retained
+    )
+    rendered.update(
+        {
+            "approved_retained_method_ids": list(retained),
+            "dev_selection_count": len(dev_selections),
+            "dev_evaluation_count": len(dev_evaluations),
+            "dev_selections": [asdict(item) for item in dev_selections],
+            "dev_evaluations": [asdict(item) for item in dev_evaluations],
+            "oot_selection_count": len(oot_selections),
+            "oot_evaluation_count": len(oot_evaluations),
+            "oot_selections": [asdict(item) for item in oot_selections],
+            "oot_evaluations": [asdict(item) for item in oot_evaluations],
+            "dev_gate": "open_authenticated_pilot_approval",
+        }
+    )
+    try:
+        _validate_dev_completion_lock(plan, approval)
+        rendered["oot_gate"] = "open_authenticated_dev_complete"
+    except CombinationGateClosed as exc:
+        rendered["oot_gate"] = f"closed:{exc}"
+    return rendered
 
 
 def validate_prompt_10_baselines(plan: CombinationPlan) -> dict[str, Any]:
