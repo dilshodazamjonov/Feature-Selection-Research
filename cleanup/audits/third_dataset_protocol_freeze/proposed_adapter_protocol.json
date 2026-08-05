@@ -1,0 +1,154 @@
+{
+  "schema_version": "homecredit_model_stability_2024_adapter_proposal_v1",
+  "status": "specification_only_not_implemented_not_executed",
+  "row_contract": {
+    "output": "exactly_one_row_per_train_base.case_id",
+    "anchor": "train_base.parquet",
+    "join": "left_join_from_base_only",
+    "orphan_policy": "fail_if_any_included_relation_case_id_is_absent_from_base",
+    "base_case_policy": "fail_on_missing_or_duplicate_case_id"
+  },
+  "input_scope": {
+    "include": [
+      "train_base",
+      "every_train_depth_0_family",
+      "every_train_depth_1_family"
+    ],
+    "exclude": [
+      "every_depth_2_family",
+      "competition_test",
+      "submission",
+      "CSV_duplicates"
+    ],
+    "part_order": "numeric file-part order; unnumbered part precedes no numbered peer"
+  },
+  "depth_0": {
+    "part_handling": "vertical_concat_in_numeric_part_order_then_require_case_id_unique",
+    "merge_order": [
+      "static",
+      "static_cb"
+    ],
+    "missing_relation": "leave feature values missing after base-left-join",
+    "feature_naming": "d0__{family}__{source_feature}",
+    "date_fields": "official *D fields parse strictly to dates and become signed whole days source_date - date_decision"
+  },
+  "depth_1": {
+    "family_order": [
+      "applprev",
+      "credit_bureau_a",
+      "credit_bureau_b",
+      "debitcard",
+      "deposit",
+      "other",
+      "person",
+      "tax_registry_a",
+      "tax_registry_b",
+      "tax_registry_c"
+    ],
+    "row_order": [
+      "case_id",
+      "num_group1",
+      "numeric_source_part",
+      "physical_row_offset_within_part"
+    ],
+    "row_count_feature": "d1__{family}__row_count; zero when no related row",
+    "numeric_aggregations": [
+      "count_non_missing",
+      "missing_count",
+      "min",
+      "max",
+      "mean",
+      "sum",
+      "sample_variance_ddof_1",
+      "first_by_num_group1",
+      "last_by_num_group1"
+    ],
+    "date_aggregations": {
+      "conversion": "strict parse official *D field then signed whole days source_date - base.date_decision",
+      "statistics": [
+        "count_non_missing",
+        "missing_count",
+        "min",
+        "max",
+        "mean",
+        "sample_variance_ddof_1",
+        "first_by_num_group1",
+        "last_by_num_group1"
+      ],
+      "future_information_rule": "use only values present in the frozen application snapshot; never refresh after date_decision; a positive signed scheduled date is not itself treated as an observed future outcome"
+    },
+    "boolean_aggregations": [
+      "count_non_missing",
+      "missing_count",
+      "false_count",
+      "true_count",
+      "mean",
+      "first_by_num_group1",
+      "last_by_num_group1",
+      "any",
+      "all"
+    ],
+    "categorical_aggregations": [
+      "count_non_missing",
+      "missing_count",
+      "nunique",
+      "lexical_mode",
+      "first_by_num_group1",
+      "last_by_num_group1"
+    ],
+    "categorical_mode_tie_break": "Unicode NFC then casefold then original UTF-8 byte order",
+    "empty_group_rule": "row_count=0; every other aggregate is missing",
+    "order_columns": "num_group1 is sort-only and never a predictor or numeric measurement",
+    "feature_naming": "d1__{family}__{source_feature}__{aggregation}"
+  },
+  "collision_handling": {
+    "rule": "always prefix depth and table family before source name; append aggregation for depth 1",
+    "duplicate_output": "fail closed before modeling",
+    "observed_cross_family_raw_predictor_collisions": 0
+  },
+  "preprocessing": {
+    "boolean_storage": "nullable booleans become numeric 0/1 with missing preserved before fold-local imputation",
+    "selector_stage": {
+      "implementation": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
+      "fit_scope": "current training partition only",
+      "numeric": "replace infinities with missing; training median; all-missing fallback 0; float32",
+      "categorical": "training-only Unicode string category map; <MISSING> token; unseen=-1; one numeric column per original candidate"
+    },
+    "final_model_stage": {
+      "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+      "fit_scope": "current training partition only",
+      "numeric": "training mean imputation then StandardScaler; all-missing fallback 0; float32",
+      "categorical": "Missing token then OneHotEncoder(handle_unknown=ignore,min_frequency=10,dense_float32)",
+      "applies_to": [
+        "lr",
+        "catboost"
+      ]
+    },
+    "constant_and_all_missing": "retain as authenticated original candidates; deterministic training-fit preprocessing maps them to constants and records them; no outcome-informed pruning",
+    "high_cardinality": "no feature-level cardinality exclusion; fold-local min_frequency=10 groups rare categorical levels; resource feasibility belongs to the bounded pilot",
+    "unsupported_dtype": "fail closed and require a versioned pre-result amendment; none observed in the included schema"
+  },
+  "leakage_boundaries": {
+    "fit_per_dev_fold": [
+      "imputers",
+      "category_maps",
+      "one_hot_encoder",
+      "scaler",
+      "selectors",
+      "models",
+      "decision_threshold"
+    ],
+    "fit_for_oot": "fit once on full DEV then transform locked OOT unchanged",
+    "never_fit_on_oot": true,
+    "excluded_predictors": [
+      "target",
+      "case_id",
+      "num_group*",
+      "date_decision",
+      "MONTH",
+      "WEEK_NUM"
+    ],
+    "domain_feature_engineering": "forbidden beyond this deterministic relational reduction"
+  },
+  "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2"
+}

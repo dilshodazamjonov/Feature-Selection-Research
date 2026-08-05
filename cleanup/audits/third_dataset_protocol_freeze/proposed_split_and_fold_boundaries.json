@@ -1,0 +1,191 @@
+{
+  "schema_version": "third_dataset_temporal_split_proposal_v1",
+  "status": "proposed_not_canonical_until_explicit_stage_2_approval",
+  "primary_time_column": "date_decision",
+  "stable_secondary_order": "case_id numeric ascending within date_decision",
+  "oot_boundary_rule": "fallback_latest_contiguous_whole_date_tail_closest_to_20_percent_of_base_rows",
+  "boundary_optimization_inputs": [
+    "date_decision",
+    "row_count"
+  ],
+  "target_counts_used_only_for_feasibility_confirmation": true,
+  "oot_start_inclusive": "2020-02-26",
+  "dev_end_inclusive": "2020-02-25",
+  "target_oot_fraction": 0.2,
+  "realized_oot_fraction": 0.19972764055365344,
+  "membership_specification": {
+    "dev": "date_decision < 2020-02-26",
+    "oot": "date_decision >= 2020-02-26",
+    "whole_calendar_dates_kept_together": true,
+    "authentication_order": [
+      "date_decision_ascending",
+      "case_id_numeric_ascending"
+    ],
+    "line_serialization": "case_id decimal UTF-8 plus LF; target-bound form is case_id, U+001F, target, LF"
+  },
+  "dev": {
+    "rows": 1221743,
+    "target_0": 1182098,
+    "target_1": 39645,
+    "date_min": "2019-01-01",
+    "date_max": "2020-02-25",
+    "unique_dates": 421,
+    "ordered_case_id_sha256": "e2133194cfd839ed8087f127bb949fba9c0408a70d8ea540b4c5b70657ac69ea",
+    "ordered_case_id_target_sha256": "395cb48986263c861fdd61141e3a4d30f1a7e42e04723cbdf51c00b59327180c"
+  },
+  "oot": {
+    "rows": 304916,
+    "target_0": 296567,
+    "target_1": 8349,
+    "date_min": "2020-02-26",
+    "date_max": "2020-10-05",
+    "unique_dates": 223,
+    "ordered_case_id_sha256": "7b93ae09267aacbb30a2e698716685207d127f0e3d5159a08f0e765e530729d7",
+    "ordered_case_id_target_sha256": "f360a3fe5af44ebb4b4d7a734a60809a65f473a888aca0ab3c385fa5c2058b4b"
+  },
+  "fold_protocol": {
+    "implementation": "credit_risk_fs.models._cv_utils.GroupedTimeSeriesSplit",
+    "n_splits": 5,
+    "gap_unique_time_groups": 1,
+    "training_window": "expanding",
+    "identical_date_values_kept_together": true
+  },
+  "folds": [
+    {
+      "fold_id": 1,
+      "train": {
+        "rows": 200661,
+        "target_0": 195314,
+        "target_1": 5347,
+        "date_min": "2019-01-01",
+        "date_max": "2019-03-28",
+        "unique_dates": 87,
+        "ordered_case_id_sha256": "df512d6d27ed1c33c88a08aab6ddacda495077a16f9cd800c27b32242d6603f2",
+        "ordered_case_id_target_sha256": "19672d734017e44950a1eacbd49be6fc3e99546a3dbce34694ea2822291009cc"
+      },
+      "validation": {
+        "rows": 204567,
+        "target_0": 198636,
+        "target_1": 5931,
+        "date_min": "2019-03-30",
+        "date_max": "2019-06-19",
+        "unique_dates": 82,
+        "ordered_case_id_sha256": "540abc6244dcec611ba40f8697115f3836d11c33c217ddbec208cb428e6711ff",
+        "ordered_case_id_target_sha256": "42b870b3a16ae10c881b2ca042f00e23839992ea948b20ab7c86bdd92c97e44d"
+      },
+      "case_id_overlap": 0,
+      "date_unit_overlap": 0,
+      "configured_gap_unique_time_groups": 1
+    },
+    {
+      "fold_id": 2,
+      "train": {
+        "rows": 402103,
+        "target_0": 390901,
+        "target_1": 11202,
+        "date_min": "2019-01-01",
+        "date_max": "2019-06-17",
+        "unique_dates": 168,
+        "ordered_case_id_sha256": "a4edc4dd33e0f8baee2abd324512fc3aa3e851da96b1636b0baf0f01f64bc558",
+        "ordered_case_id_target_sha256": "ed6c6ee5ce6e81ef007fa8f2c7de0fb6bdabf827a39b109a882b53e2caf8820d"
+      },
+      "validation": {
+        "rows": 203798,
+        "target_0": 198250,
+        "target_1": 5548,
+        "date_min": "2019-06-20",
+        "date_max": "2019-08-24",
+        "unique_dates": 66,
+        "ordered_case_id_sha256": "5efb6ff6f7cd730419e4480b8c89070759a49bf2a7727675882efa7ecff7a149",
+        "ordered_case_id_target_sha256": "80edbdc8ab85d013d2f845af75ece707d341bb6439d64a5a71dcb54a600c20e0"
+      },
+      "case_id_overlap": 0,
+      "date_unit_overlap": 0,
+      "configured_gap_unique_time_groups": 1
+    },
+    {
+      "fold_id": 3,
+      "train": {
+        "rows": 604598,
+        "target_0": 587862,
+        "target_1": 16736,
+        "date_min": "2019-01-01",
+        "date_max": "2019-08-22",
+        "unique_dates": 234,
+        "ordered_case_id_sha256": "5df3354c2344464fb0ebc721c910118c9b86b7356a6291523c6dc8f1b89c1ff1",
+        "ordered_case_id_target_sha256": "a7205775dd051170f3bf3dc23d6a82bfa86c6ba092fe623e426898468bed724f"
+      },
+      "validation": {
+        "rows": 205980,
+        "target_0": 198821,
+        "target_1": 7159,
+        "date_min": "2019-08-25",
+        "date_max": "2019-10-27",
+        "unique_dates": 64,
+        "ordered_case_id_sha256": "ff7ecceca99ae04697f71a796f1eb4e23a08da4d0b75c892f852942c59999677",
+        "ordered_case_id_target_sha256": "4171362f88af58d645f2497420e114565a57caf1b83115d59fced9e0c17013a4"
+      },
+      "case_id_overlap": 0,
+      "date_unit_overlap": 0,
+      "configured_gap_unique_time_groups": 1
+    },
+    {
+      "fold_id": 4,
+      "train": {
+        "rows": 810904,
+        "target_0": 787058,
+        "target_1": 23846,
+        "date_min": "2019-01-01",
+        "date_max": "2019-10-25",
+        "unique_dates": 298,
+        "ordered_case_id_sha256": "067beff6659a536ddf4d98b1d2e097c84d8af5a04a5ddd0c90d723989f83f9bc",
+        "ordered_case_id_target_sha256": "38d031c5e915b097c550a8ebc7e43ddd021e6e2d825bc7ed9492dce38819c709"
+      },
+      "validation": {
+        "rows": 201466,
+        "target_0": 194186,
+        "target_1": 7280,
+        "date_min": "2019-10-28",
+        "date_max": "2019-12-20",
+        "unique_dates": 54,
+        "ordered_case_id_sha256": "e268b338a102eca44d4209c22df6ed8f72209b6f14c612173faf897da0fb4f3a",
+        "ordered_case_id_target_sha256": "df8fa59d3de6b424d90d4eb550f5b21ba503d5b7f505aae675851a2549541012"
+      },
+      "case_id_overlap": 0,
+      "date_unit_overlap": 0,
+      "configured_gap_unique_time_groups": 1
+    },
+    {
+      "fold_id": 5,
+      "train": {
+        "rows": 1012061,
+        "target_0": 981057,
+        "target_1": 31004,
+        "date_min": "2019-01-01",
+        "date_max": "2019-12-18",
+        "unique_dates": 352,
+        "ordered_case_id_sha256": "6be95504a6d2a2784f912aee0557b08efa999cb7e566c065bfe216d9bf6a30a9",
+        "ordered_case_id_target_sha256": "a073ffa5a633853ad4c13b087671ac06449d6df2aee3f9357c1f75316fb93b73"
+      },
+      "validation": {
+        "rows": 202820,
+        "target_0": 194521,
+        "target_1": 8299,
+        "date_min": "2019-12-21",
+        "date_max": "2020-02-25",
+        "unique_dates": 67,
+        "ordered_case_id_sha256": "1526f3fd89f8bef401d251231d88f89e05bc043738c23b9e47fa4f5908c1f55e",
+        "ordered_case_id_target_sha256": "d01f2d2aafa581f9b4c4d35027bf9da9a1b4b312a787cea3c57edbcbcdfea7cd"
+      },
+      "case_id_overlap": 0,
+      "date_unit_overlap": 0,
+      "configured_gap_unique_time_groups": 1
+    }
+  ],
+  "validation_feasibility": {
+    "all_partitions_contain_target_0_and_target_1": true,
+    "all_fold_case_overlaps_zero": true,
+    "all_fold_date_overlaps_zero": true
+  },
+  "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2"
+}
