@@ -1,0 +1,65 @@
+{
+  "schema_version": "third_dataset_protocol_stage_2_validation_v1",
+  "created_at_utc": "2026-08-05T08:58:34.849Z",
+  "source_branch": "main",
+  "source_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+  "stage_1_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+  "approved_review_digest_sha256": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+  "precreation_checks": {
+    "stage_1_commit_is_ancestor": true,
+    "stage_1_package_authenticated": true,
+    "review_digest_matches_explicit_approval": true,
+    "approved_scope_matches_stage_1_review": true,
+    "unrelated_worktree_changes": 0,
+    "active_experiment_workers": 0,
+    "execution_locks": 0
+  },
+  "raw_reauthentication": {
+    "verification_mode": "streaming_bytes_only_no_dataset_parse",
+    "included_files_expected": 19,
+    "included_files_matched": 19,
+    "mismatches": 0,
+    "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2"
+  },
+  "canonical_lock": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "artifact_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "protected_change_classes": [
+      "dataset_identity_or_included_raw_file_hash",
+      "depth_or_raw_file_scope",
+      "temporal_boundary_or_membership",
+      "adapter_or_feature_scope",
+      "method_or_variant_order",
+      "feature_or_pool_budget",
+      "model_or_bootstrap_seed",
+      "metric_or_inference_rule"
+    ]
+  },
+  "gate_validation": {
+    "prompt_14": "next_required_manual_scientific_step_not_run_in_stage_2",
+    "adapter": "specification_frozen_not_implemented",
+    "pilot": "closed_until_Prompt_14_implements_and_validates_adapter_then_authorizes_bounded_manual_pilot",
+    "dev": "closed_until_later_authenticated_pilot_review_and_explicit_approval",
+    "oot": "closed_until_later_authenticated_complete_DEV_review_and_explicit_approval"
+  },
+  "execution_boundary": {
+    "prompt_14_run": false,
+    "adapter_implemented": false,
+    "third_dataset_pilot_started_or_resumed": false,
+    "third_dataset_dev_started": false,
+    "third_dataset_oot_started": false,
+    "existing_two_dataset_oot_metric_artifacts_opened": false,
+    "model_or_selector_fit_run": false,
+    "network_accessed": false,
+    "raw_file_operation": "streaming SHA-256 verification only; no dataset load or modification"
+  },
+  "validation_results": [
+    "Stage 1 digest and every declared Stage 1 artifact authenticated",
+    "19/19 included raw files matched expected byte size and streaming SHA-256",
+    "dataset/depth, temporal membership, adapter/feature scope, method order, budgets, seeds, and metrics are fail-closed",
+    "Prompt 14, adapter implementation, pilot, DEV, and OOT were not run",
+    "two-dataset OOT metric-bearing artifacts were not opened"
+  ],
+  "artifact_authentication_sha256": "339ccdd96d03511ae52378ceca92192d427f41fdf67d6f86c6f352fad3493675"
+}
