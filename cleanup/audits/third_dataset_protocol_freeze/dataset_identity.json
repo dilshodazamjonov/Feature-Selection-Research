@@ -1,0 +1,77 @@
+{
+  "schema_version": "third_dataset_identity_review_v1",
+  "status": "stage_1_review_only_not_canonical_lock",
+  "created_at_utc": "2026-08-05T08:16:27.689914Z",
+  "official_dataset_name": "Home Credit - Credit Risk Model Stability 2024",
+  "dataset_id": "homecredit_model_stability_2024",
+  "local_root": "data/homecredit_model_stability_2024",
+  "snapshot_definition": "feature_definitions.csv plus train_base and every train relational depth-0/depth-1 Parquet; depth-2 excluded",
+  "included_raw_file_count": 19,
+  "included_parquet_file_count": 18,
+  "excluded_parquet_file_count": 14,
+  "included_parquet_depth_counts": {
+    "0": 3,
+    "1": 14,
+    "base": 1
+  },
+  "included_table_family_count": 13,
+  "excluded_depth_2_family_count": 4,
+  "included_raw_input_digest_algorithm": "sha256(canonical JSON ordered inventory projection of relative_path,byte_size,sha256)",
+  "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2",
+  "base_population_validation": {
+    "row_count": 1526659,
+    "case_id_dtype": "int64",
+    "case_id_missing": 0,
+    "case_id_unique_count": 1526659,
+    "case_id_duplicate_count": 0,
+    "target_dtype": "int64",
+    "target_values": [
+      0,
+      1
+    ],
+    "target_missing": 0,
+    "target_0": 1478665,
+    "target_1": 47994,
+    "date_decision_dtype": "datetime64[us]",
+    "date_decision_missing": 0,
+    "date_min": "2019-01-01",
+    "date_max": "2020-10-05",
+    "unique_dates": 644,
+    "month_dtype": "int64",
+    "month_matches_date_decision_yyyymm": true,
+    "week_num_dtype": "int64",
+    "week_num_missing": 0,
+    "week_num_min": 0,
+    "week_num_max": 91,
+    "week_num_unique": 92,
+    "week_num_contiguous": true,
+    "each_date_maps_to_one_week_num": true,
+    "chronological_authority": "date_decision"
+  },
+  "repository_preflight": {
+    "branch": "main",
+    "commit": "c8f7949e835ce1a9589b8c6890fda42360618ac8",
+    "git_status_porcelain_at_task_preflight": "",
+    "generation_scope_validation": "all observed non-clean paths were confined to this new Stage 1 audit package, builder, and focused test",
+    "generation_changes": [
+      "cleanup/audits/third_dataset_protocol_freeze/",
+      "cleanup/tools/build_third_dataset_protocol_freeze.py",
+      "tests/test_third_dataset_protocol_freeze.py"
+    ],
+    "python_executable": "D:\\python projects\\Research\\.venv\\Scripts\\python.exe",
+    "python_version": "3.13.5 (main, Jun 12 2025, 12:42:35) [MSC v.1943 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "raw_root_git_ignored": true,
+    "active_execution_locks": [],
+    "experiment_workers": 0,
+    "process_check_note": "read-only preflight found no experiment worker; VS Code Jupyter interrupt helper is not a workload"
+  },
+  "task_boundaries": {
+    "existing_two_dataset_oot_metrics_opened": false,
+    "model_or_selector_fit_run": false,
+    "pilot_dev_or_oot_run": false,
+    "raw_files_modified": false,
+    "network_accessed": false,
+    "canonical_protocol_lock_created": false
+  }
+}

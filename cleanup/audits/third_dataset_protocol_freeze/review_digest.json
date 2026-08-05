@@ -1,0 +1,153 @@
+{
+  "schema_version": "third_dataset_protocol_stage_1_review_digest_v1",
+  "status": "awaiting_explicit_user_approval",
+  "created_at_utc": "2026-08-05T08:16:27.689914Z",
+  "hash_algorithm": "sha256",
+  "canonical_serialization": "UTF-8 JSON sort_keys=true separators=(',',':') ensure_ascii=false allow_nan=false",
+  "self_authentication_rule": "review_digest_sha256 hashes this JSON object with only review_digest_sha256 omitted",
+  "artifact_hashes": [
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/dataset_identity.json",
+      "byte_size": 3032,
+      "sha256": "c8f13d2c2b21caaf0d2a3b985f2a4c3042ec595648ba6bb1de18b45156cb4ee6"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/raw_file_inventory.csv",
+      "byte_size": 10115,
+      "sha256": "f128c0a009cb9ca5ba686d89badc68103a006ffe318ce33bd1d3a5703ed13222"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/schema_and_cardinality_profile.csv",
+      "byte_size": 5203,
+      "sha256": "a804d2c2d5297e47b3f2670589976e873104f7984de4483796a1bac580c00beb"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/feature_definition_coverage.json",
+      "byte_size": 1980,
+      "sha256": "1a5c9c41aec4ee9a232066c7dd0119920352df2862165be04c6f70e3c3f24d3e"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/temporal_population_profile.csv",
+      "byte_size": 2552,
+      "sha256": "5b6d4bea315688c62f19c8f537f24a7411f8b1c443c2201e3c96896433a4f47f"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/proposed_split_and_fold_boundaries.json",
+      "byte_size": 7124,
+      "sha256": "942093ac6ec6a352b29b5a62fae918233c22adf3910a93335ff10c4d4a199227"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/leakage_and_availability_review.csv",
+      "byte_size": 158996,
+      "sha256": "11e7867bf7655b7f7d51bfec7cda50852b4dcb31f24f7585ffae4402cf9703a6"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/proposed_adapter_protocol.json",
+      "byte_size": 5619,
+      "sha256": "b243f9327bbab49074e0161a256ef693b6b28348d9dda3b8f1e1a1da157d141c"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/proposed_method_matrix.json",
+      "byte_size": 28441,
+      "sha256": "7f9e7a3d7d1b0e5fc4e49bd8bcd6cd15c65546f0a4b29001b6e22dc57c2774f6"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/preregistered_hypotheses_and_analysis.md",
+      "byte_size": 2921,
+      "sha256": "396952f1366d45e7326c6eaeb652858383d0e2bf3ccbf0576ab9df7ec59b52fe"
+    },
+    {
+      "path": "cleanup/audits/third_dataset_protocol_freeze/protocol_review.md",
+      "byte_size": 5483,
+      "sha256": "8d7c096b7214ea9a4f806c3598803a8f4217a2c96f6597f49ad685cc25d1c908"
+    },
+    {
+      "path": "cleanup/tools/build_third_dataset_protocol_freeze.py",
+      "byte_size": 70527,
+      "sha256": "dc2af198b7752b633a06687f446d6a709227ba321ece25b22978151a19a7f9d3"
+    },
+    {
+      "path": "tests/test_third_dataset_protocol_freeze.py",
+      "byte_size": 8171,
+      "sha256": "5096d858a8c16829a1711d193b2cbac5952b19936eccc2a8107ff096c0d02489"
+    }
+  ],
+  "summary": {
+    "dataset_id": "homecredit_model_stability_2024",
+    "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2",
+    "included_parquet_files": 18,
+    "excluded_depth_2_parquet_files": 14,
+    "base_rows": 1526659,
+    "target_0": 1478665,
+    "target_1": 47994,
+    "oot_start_inclusive": "2020-02-26",
+    "included_candidate_features": 434,
+    "unresolved_leakage_rows": 0,
+    "baseline_methods": [
+      "full_features",
+      "random_k",
+      "iv_woe",
+      "mrmr_mutual_information",
+      "lasso_l1_logistic",
+      "legacy_rf_relevance_corr",
+      "catboost_shap",
+      "boruta_random_forest",
+      "rfe_catboost"
+    ],
+    "approved_combination_methods": [
+      "statistical_normalized_average_rank",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "models": [
+      "lr",
+      "catboost"
+    ],
+    "feature_budgets": {
+      "lr": 20,
+      "catboost": 40
+    },
+    "seed": 42,
+    "pilot_selector_fit_calls": 27,
+    "pilot_evaluation_cells": 30,
+    "dev_selector_fit_calls": 135,
+    "dev_fold_evaluation_cells": 150,
+    "oot_evaluation_cells": 30,
+    "depth_scope": {
+      "base": "included",
+      "depth_0": "included",
+      "depth_1": "included",
+      "depth_2": "excluded"
+    },
+    "temporal_protocol": {
+      "dev_end_inclusive": "2020-02-25",
+      "oot_start_inclusive": "2020-02-26",
+      "folds": 5,
+      "gap_unique_dates": 1,
+      "training_window": "expanding"
+    },
+    "adapter_protocol_sha256": "b243f9327bbab49074e0161a256ef693b6b28348d9dda3b8f1e1a1da157d141c",
+    "leakage_review_sha256": "11e7867bf7655b7f7d51bfec7cda50852b4dcb31f24f7585ffae4402cf9703a6",
+    "method_matrix_sha256": "7f9e7a3d7d1b0e5fc4e49bd8bcd6cd15c65546f0a4b29001b6e22dc57c2774f6",
+    "analysis_preregistration_sha256": "396952f1366d45e7326c6eaeb652858383d0e2bf3ccbf0576ab9df7ec59b52fe",
+    "extension_scope": {
+      "semantic_coverage_metric": "deferred_no_preexisting_third-dataset semantic-group mapping; source-family coverage may be reported separately but not relabeled semantic coverage",
+      "semantic_selector_or_voter": "deferred_no_pre_Prompt_14_plan_names_the_third_dataset",
+      "llm_assisted_methods": "deferred_no_pre_Prompt_14_third_dataset_replication_plan_and_network_forbidden",
+      "corrected_contrastive_methods": "deferred_no_pre_Prompt_14_third_dataset_scope_or_authenticated third-dataset contrastive provenance",
+      "directional_transfer": "deferred_no_pre_Prompt_14_symmetric_third-dataset transfer directions were specified",
+      "cross_dataset_rank_voting_v1": "deferred_existing_lock explicitly covers only homecredit and lendingclub_v2; no silent third-dataset extension"
+    },
+    "execution_gates": {
+      "stage_1": "review_only_no_execution",
+      "stage_2": "canonical lock only after exact digest and scope approval",
+      "pilot": "later Prompt 14 bounded manual run only after canonical lock and adapter validation",
+      "dev": "closed until authenticated pilot review and approval",
+      "oot": "closed until authenticated complete DEV review and approval"
+    },
+    "unresolved_blockers": [],
+    "canonical_lock_created": false
+  },
+  "review_digest_sha256": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e"
+}

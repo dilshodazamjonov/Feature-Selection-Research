@@ -1,0 +1,947 @@
+{
+  "schema_version": "third_dataset_method_matrix_proposal_v1",
+  "status": "proposed_not_authorized_for_execution",
+  "dataset": "homecredit_model_stability_2024",
+  "method_order": [
+    "full_features",
+    "random_k",
+    "iv_woe",
+    "mrmr_mutual_information",
+    "lasso_l1_logistic",
+    "legacy_rf_relevance_corr",
+    "catboost_shap",
+    "boruta_random_forest",
+    "rfe_catboost",
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "combination_order": [
+    "statistical_normalized_average_rank",
+    "iv_then_boruta",
+    "boruta_then_mrmr_mutual_information",
+    "boruta_then_rfe_catboost"
+  ],
+  "variant_order": [
+    {
+      "order": 1,
+      "family": "canonical_baseline",
+      "method_id": "full_features",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 2,
+      "family": "canonical_baseline",
+      "method_id": "random_k",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 3,
+      "family": "canonical_baseline",
+      "method_id": "iv_woe",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 4,
+      "family": "canonical_baseline",
+      "method_id": "mrmr_mutual_information",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 5,
+      "family": "canonical_baseline",
+      "method_id": "lasso_l1_logistic",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 6,
+      "family": "canonical_baseline",
+      "method_id": "legacy_rf_relevance_corr",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 7,
+      "family": "canonical_baseline",
+      "method_id": "catboost_shap",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 8,
+      "family": "canonical_baseline",
+      "method_id": "boruta_random_forest",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 9,
+      "family": "canonical_baseline",
+      "method_id": "rfe_catboost",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 10,
+      "family": "approved_combination",
+      "method_id": "statistical_normalized_average_rank",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 11,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 100
+    },
+    {
+      "order": 12,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 200
+    },
+    {
+      "order": 13,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 300
+    },
+    {
+      "order": 14,
+      "family": "approved_combination",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "iv_pool_budget": null
+    },
+    {
+      "order": 15,
+      "family": "approved_combination",
+      "method_id": "boruta_then_rfe_catboost",
+      "iv_pool_budget": null
+    }
+  ],
+  "models": [
+    "lr",
+    "catboost"
+  ],
+  "feature_budgets": {
+    "lr": 20,
+    "catboost": 40
+  },
+  "iv_pool_budgets": [
+    100,
+    200,
+    300
+  ],
+  "iv_pool_primary": 200,
+  "seeds": {
+    "experiment_selector_model": 42,
+    "paired_bootstrap": 20260721
+  },
+  "final_model_settings": {
+    "lr": {
+      "solver": "liblinear",
+      "max_iter": 1000,
+      "class_weight": "balanced",
+      "random_state": 42
+    },
+    "catboost": {
+      "depth": 10,
+      "learning_rate": 0.01,
+      "l2_leaf_reg": 95,
+      "min_data_in_leaf": 290,
+      "colsample_bylevel": 0.9,
+      "random_strength": 0.125,
+      "grow_policy": "Depthwise",
+      "one_hot_max_size": 21,
+      "leaf_estimation_method": "Newton",
+      "bootstrap_type": "Bernoulli",
+      "subsample": 0.55,
+      "loss_function": "Logloss",
+      "eval_metric": "AUC",
+      "auto_class_weights": "Balanced",
+      "iterations": 1500,
+      "early_stopping_rounds": 150,
+      "verbose": 100,
+      "random_state": 42,
+      "allow_writing_files": false
+    }
+  },
+  "selector_settings": {
+    "full_features": {
+      "random_state": 42
+    },
+    "random_k": {
+      "random_state": 42
+    },
+    "iv_woe": {
+      "n_bins": 10,
+      "binning_strategy": "quantile",
+      "zero_count_smoothing": 0.5,
+      "random_state": 42
+    },
+    "mrmr_mutual_information": {
+      "n_bins": 10,
+      "objective": "mid",
+      "random_state": 42
+    },
+    "lasso_l1_logistic": {
+      "C": 0.05,
+      "solver": "liblinear",
+      "max_iter": 2000,
+      "tol": 0.0001,
+      "random_state": 42,
+      "n_jobs": 1,
+      "allow_zero_coefficient_fill": false
+    },
+    "legacy_rf_relevance_corr": {
+      "method": "mrmr",
+      "random_state": 42,
+      "n_jobs": 4
+    },
+    "catboost_shap": {
+      "explanation_sample_size": 10000,
+      "random_state": 42,
+      "explanation_sample_seed": 42,
+      "thread_count": 4,
+      "catboost_params": {
+        "iterations": 500,
+        "depth": 6,
+        "learning_rate": 0.05,
+        "verbose": false,
+        "allow_writing_files": false,
+        "task_type": "CPU"
+      }
+    },
+    "boruta_random_forest": {
+      "selection_mode": "confirmed_top_k",
+      "random_state": 42,
+      "n_jobs": 4,
+      "forest_params": {
+        "n_estimators": 500,
+        "max_depth": 6,
+        "class_weight": null
+      },
+      "boruta_params": {
+        "n_estimators": "auto",
+        "max_iter": 10,
+        "perc": 100,
+        "alpha": 0.05,
+        "two_step": true,
+        "verbose": 0
+      }
+    },
+    "rfe_catboost": {
+      "step_fraction": 0.2,
+      "random_state": 42,
+      "thread_count": 4,
+      "catboost_params": {
+        "iterations": 500,
+        "depth": 6,
+        "learning_rate": 0.05,
+        "verbose": false,
+        "allow_writing_files": false,
+        "task_type": "CPU"
+      }
+    }
+  },
+  "combination_selector_settings": {
+    "iv_woe": {
+      "n_bins": 10,
+      "binning_strategy": "quantile",
+      "zero_count_smoothing": 0.5
+    },
+    "lasso_l1_logistic": {
+      "C": 0.05,
+      "solver": "liblinear",
+      "max_iter": 2000,
+      "tol": 0.0001,
+      "n_jobs": 1,
+      "allow_zero_coefficient_fill": false
+    },
+    "mrmr_mutual_information": {
+      "n_bins": 10,
+      "objective": "mid"
+    },
+    "boruta_random_forest": {
+      "n_jobs": 4,
+      "forest_params": {
+        "n_estimators": 500,
+        "max_depth": 6,
+        "class_weight": null
+      },
+      "boruta_params": {
+        "n_estimators": "auto",
+        "max_iter": 10,
+        "perc": 100,
+        "alpha": 0.05,
+        "two_step": true,
+        "verbose": 0
+      }
+    },
+    "rfe_catboost": {
+      "step_fraction": 0.2,
+      "thread_count": 4,
+      "catboost_params": {
+        "iterations": 500,
+        "depth": 6,
+        "learning_rate": 0.05,
+        "verbose": false,
+        "allow_writing_files": false,
+        "task_type": "CPU"
+      }
+    },
+    "catboost_shap": {
+      "explanation_sample_size": 10000,
+      "explanation_sample_seed": 42,
+      "thread_count": 4,
+      "catboost_params": {
+        "iterations": 500,
+        "depth": 6,
+        "learning_rate": 0.05,
+        "verbose": false,
+        "allow_writing_files": false,
+        "task_type": "CPU"
+      }
+    }
+  },
+  "combination_contract": {
+    "statistical_voting": {
+      "voters_in_order": [
+        "iv_woe",
+        "lasso_l1_logistic",
+        "rfe_catboost",
+        "boruta_random_forest",
+        "catboost_shap"
+      ],
+      "weights": {
+        "iv_woe": 0.2,
+        "lasso_l1_logistic": 0.2,
+        "rfe_catboost": 0.2,
+        "boruta_random_forest": 0.2,
+        "catboost_shap": 0.2
+      },
+      "normalization": "q = 1 - (r - 1) / (p - 1) for p > 1; q = 1 for p = 1",
+      "rank_ties": "midrank_before_normalization",
+      "aggregate": "arithmetic_mean_of_five_normalized_qualities",
+      "aggregate_tie_break": "canonical_candidate_universe_order",
+      "output": "exact_model_specific_top_k_without_tie_expansion",
+      "missing_evidence": "invalidates_cell",
+      "legitimate_unsupported_feature": "declared_worst_normalized_quality",
+      "lasso_adapter": "absolute_coefficient_magnitude_with_zero_coefficients_as_valid_tied_block",
+      "boruta_adapter": "ordered_confirmed_tentative_rejected_state_blocks_with_tied_midranks_when_no_authentic_within_state_rank",
+      "outcome_based_weighting": "forbidden"
+    },
+    "natural_support_rules": {
+      "boruta_support": "confirmed_only",
+      "padding": "forbidden",
+      "stage_1_support_below_final_budget": "infeasible_natural_support",
+      "stage_1_support_equals_final_budget": "no_refinement_possible",
+      "stage_1_support_above_final_budget": "run_frozen_stage_2"
+    },
+    "padding": "forbidden"
+  },
+  "natural_support": {
+    "rule": "report requested K and realized support; never pad",
+    "label_when_realized_below_requested": "infeasible_natural_support",
+    "methods": [
+      "boruta_random_forest",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "third_dataset_support": "unknown_until_bounded_pilot_and_never inferred from the earlier Home Credit dataset"
+  },
+  "phase_design": {
+    "pilot": {
+      "fold_ids": [
+        1
+      ],
+      "oot_access": "forbidden",
+      "configuration_evaluation_cells": 30,
+      "selector_fit_calls": 27,
+      "note": "18 canonical baseline cell-local selector fits plus 9 authenticated combination selection fits; IV-then-Boruta is reused across final models only for exact pool identity"
+    },
+    "dev": {
+      "fold_ids": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "configuration_count": 30,
+      "selector_fit_calls": 135,
+      "fold_evaluation_cells": 150,
+      "five_fold_summary_rows": 30
+    },
+    "oot": {
+      "full_dev_selector_refit_calls": 27,
+      "evaluation_cells": 30,
+      "access": "closed_until authenticated bounded pilot review and authenticated complete DEV review",
+      "single_locked_evaluation": true
+    },
+    "count_derivation": {
+      "model_configurations_per_model": 15,
+      "models": 2,
+      "baseline_selector_fits_per_fold": 18,
+      "combination_selector_fits_per_fold": 9
+    }
+  },
+  "matrix_cells": [
+    {
+      "configuration_order": 1,
+      "order": 1,
+      "family": "canonical_baseline",
+      "method_id": "full_features",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "all_authenticated_candidates_budget_ignored",
+      "seed": 42
+    },
+    {
+      "configuration_order": 2,
+      "order": 1,
+      "family": "canonical_baseline",
+      "method_id": "full_features",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "all_authenticated_candidates_budget_ignored",
+      "seed": 42
+    },
+    {
+      "configuration_order": 3,
+      "order": 2,
+      "family": "canonical_baseline",
+      "method_id": "random_k",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 4,
+      "order": 2,
+      "family": "canonical_baseline",
+      "method_id": "random_k",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 5,
+      "order": 3,
+      "family": "canonical_baseline",
+      "method_id": "iv_woe",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 6,
+      "order": 3,
+      "family": "canonical_baseline",
+      "method_id": "iv_woe",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 7,
+      "order": 4,
+      "family": "canonical_baseline",
+      "method_id": "mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 8,
+      "order": 4,
+      "family": "canonical_baseline",
+      "method_id": "mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 9,
+      "order": 5,
+      "family": "canonical_baseline",
+      "method_id": "lasso_l1_logistic",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 10,
+      "order": 5,
+      "family": "canonical_baseline",
+      "method_id": "lasso_l1_logistic",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 11,
+      "order": 6,
+      "family": "canonical_baseline",
+      "method_id": "legacy_rf_relevance_corr",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 12,
+      "order": 6,
+      "family": "canonical_baseline",
+      "method_id": "legacy_rf_relevance_corr",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 13,
+      "order": 7,
+      "family": "canonical_baseline",
+      "method_id": "catboost_shap",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 14,
+      "order": 7,
+      "family": "canonical_baseline",
+      "method_id": "catboost_shap",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 15,
+      "order": 8,
+      "family": "canonical_baseline",
+      "method_id": "boruta_random_forest",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 16,
+      "order": 8,
+      "family": "canonical_baseline",
+      "method_id": "boruta_random_forest",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 17,
+      "order": 9,
+      "family": "canonical_baseline",
+      "method_id": "rfe_catboost",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 18,
+      "order": 9,
+      "family": "canonical_baseline",
+      "method_id": "rfe_catboost",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 19,
+      "order": 10,
+      "family": "approved_combination",
+      "method_id": "statistical_normalized_average_rank",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 20,
+      "order": 10,
+      "family": "approved_combination",
+      "method_id": "statistical_normalized_average_rank",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 21,
+      "order": 11,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 100,
+      "model": "lr",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 22,
+      "order": 11,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 100,
+      "model": "catboost",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 23,
+      "order": 12,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 200,
+      "model": "lr",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 24,
+      "order": 12,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 200,
+      "model": "catboost",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 25,
+      "order": 13,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 300,
+      "model": "lr",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 26,
+      "order": 13,
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 300,
+      "model": "catboost",
+      "requested_feature_budget": null,
+      "feature_budget_semantics": "boruta_confirmed_only_natural_support_within_iv_pool",
+      "seed": 42
+    },
+    {
+      "configuration_order": 27,
+      "order": 14,
+      "family": "approved_combination",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 28,
+      "order": 14,
+      "family": "approved_combination",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 29,
+      "order": 15,
+      "family": "approved_combination",
+      "method_id": "boruta_then_rfe_catboost",
+      "iv_pool_budget": null,
+      "model": "lr",
+      "requested_feature_budget": 20,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    },
+    {
+      "configuration_order": 30,
+      "order": 15,
+      "family": "approved_combination",
+      "method_id": "boruta_then_rfe_catboost",
+      "iv_pool_budget": null,
+      "model": "catboost",
+      "requested_feature_budget": 40,
+      "feature_budget_semantics": "requested_model_specific_final_k",
+      "seed": 42
+    }
+  ],
+  "metrics": {
+    "primary_predictive": "roc_auc",
+    "secondary_predictive": [
+      "gini",
+      "ks",
+      "lift_at_10",
+      "bad_rate_capture_at_10",
+      "precision",
+      "recall",
+      "f1",
+      "accuracy"
+    ],
+    "calibration": [
+      "log_loss",
+      "brier"
+    ],
+    "stability": [
+      "nogueira",
+      "mean_all_pairwise_jaccard",
+      "kuncheva_when_fixed_size",
+      "selection_frequency"
+    ],
+    "drift": [
+      "selected_feature_psi",
+      "dev_oof_to_oot_score_psi"
+    ],
+    "resource": [
+      "preprocessing_seconds",
+      "feature_selection_seconds",
+      "training_seconds",
+      "prediction_seconds",
+      "evaluation_seconds",
+      "total_seconds",
+      "peak_process_ram_bytes",
+      "peak_system_ram_bytes",
+      "peak_gpu_bytes"
+    ],
+    "threshold": "maximize KS on each fitting partition then apply unchanged to held-out rows"
+  },
+  "inference": {
+    "comparison_registry": {
+      "schema_version": "selector_combination_comparison_registry_v1",
+      "inference": {
+        "primary_split": "oot_when_authenticated",
+        "paired_auc_test": "two_sided_delong_on_identical_rows",
+        "bootstrap": {
+          "type": "paired_stratified_by_target",
+          "attempted_repetitions": 2000,
+          "minimum_valid_repetitions": 1900,
+          "seed": 20260721,
+          "confidence_interval": "95_percent_percentile"
+        },
+        "holm_scope": "within_named_dataset_model_reference_family",
+        "gini": "2 * auc - 1; not separately tested"
+      },
+      "baseline_families": [
+        {
+          "family_template": "baseline_vs_full_features__{dataset}__{model}",
+          "reference": "full_features",
+          "methods": [
+            "iv_woe",
+            "mrmr_mutual_information",
+            "lasso_l1_logistic",
+            "legacy_rf_relevance_corr",
+            "catboost_shap",
+            "boruta_random_forest",
+            "rfe_catboost"
+          ]
+        },
+        {
+          "family_template": "baseline_vs_random_k__{dataset}__{model}",
+          "reference": "random_k",
+          "methods": [
+            "iv_woe",
+            "mrmr_mutual_information",
+            "lasso_l1_logistic",
+            "legacy_rf_relevance_corr",
+            "catboost_shap",
+            "boruta_random_forest",
+            "rfe_catboost"
+          ]
+        }
+      ],
+      "pending_combination_families": [
+        {
+          "method": "iv_then_boruta",
+          "comparators": [
+            "iv_woe",
+            "boruta_random_forest"
+          ]
+        },
+        {
+          "method": "boruta_then_rfe_catboost",
+          "comparators": [
+            "boruta_random_forest",
+            "rfe_catboost"
+          ]
+        },
+        {
+          "method": "boruta_then_mrmr_mutual_information",
+          "comparators": [
+            "boruta_random_forest",
+            "mrmr_mutual_information"
+          ]
+        },
+        {
+          "method": "statistical_normalized_average_rank",
+          "comparators": [
+            "iv_woe",
+            "lasso_l1_logistic",
+            "rfe_catboost",
+            "boruta_random_forest",
+            "catboost_shap",
+            "mrmr_mutual_information",
+            "cross_dataset_rank_voting_v1"
+          ]
+        }
+      ],
+      "restrictions": [
+        "no_all_pairs_search",
+        "same_dataset_split_model_and_ordered_rows_required",
+        "natural_support_count_mismatch_must_be_labelled",
+        "random_k_replicates_must_be_aggregated_not_selected_by_performance"
+      ]
+    },
+    "paired_auc": "two-sided DeLong on identical OOT case_id rows",
+    "paired_bootstrap": {
+      "type": "target-stratified paired",
+      "attempted_repetitions": 2000,
+      "minimum_valid_repetitions": 1900,
+      "seed": 20260721,
+      "confidence_interval": "95_percent_percentile",
+      "metrics": [
+        "auc",
+        "ks",
+        "lift_at_10"
+      ]
+    },
+    "multiplicity": "Holm within each named dataset-model-reference comparison family; never pool across models or reference families",
+    "descriptive_only": [
+      "stability",
+      "PSI",
+      "runtime",
+      "RAM",
+      "GPU",
+      "pool_to_pool_contrasts"
+    ]
+  },
+  "resource_controls": {
+    "accelerator": "cpu",
+    "concurrent_cells": 1,
+    "concurrent_folds": 1,
+    "data_loader_workers": 0,
+    "estimator_threads_maximum": 4,
+    "wall_clock_limits_seconds": {
+      "baseline_lightweight": 10800,
+      "baseline_catboost_shap": 10800,
+      "baseline_boruta_random_forest": 21600,
+      "baseline_rfe_catboost": 28800,
+      "statistical_normalized_average_rank": 43200,
+      "iv_then_boruta": 21600,
+      "boruta_then_mrmr_mutual_information": 21600,
+      "boruta_then_rfe_catboost": 43200,
+      "final_lr": 10800,
+      "final_catboost": 43200
+    },
+    "checkpoint": "atomic per-selection and per-evaluation state with declared SHA-256; immutable completed cells; resume only exact authenticated identity; archive interrupted/failed attempts; execution lock required and released"
+  },
+  "extension_scope": {
+    "semantic_coverage_metric": "deferred_no_preexisting_third-dataset semantic-group mapping; source-family coverage may be reported separately but not relabeled semantic coverage",
+    "semantic_selector_or_voter": "deferred_no_pre_Prompt_14_plan_names_the_third_dataset",
+    "llm_assisted_methods": "deferred_no_pre_Prompt_14_third_dataset_replication_plan_and_network_forbidden",
+    "corrected_contrastive_methods": "deferred_no_pre_Prompt_14_third_dataset_scope_or_authenticated third-dataset contrastive provenance",
+    "directional_transfer": "deferred_no_pre_Prompt_14_symmetric_third-dataset transfer directions were specified",
+    "cross_dataset_rank_voting_v1": "deferred_existing_lock explicitly covers only homecredit and lendingclub_v2; no silent third-dataset extension"
+  },
+  "legacy_or_extension_method_resolution": {
+    "pca": "not_in_current frozen full_baseline_v1 matrix; component-space output is outside the original-feature stability comparison and is not silently restored",
+    "domain_rule_baseline": "deferred_Home-Credit-specific semantic rule has no frozen mapping for the 2024 schema",
+    "llm": "deferred_with all LLM-only and LLM-hybrid variants under the explicit LLM scope decision",
+    "boruta_rfe_legacy_registry": "not separately added; the approved canonical boruta_then_rfe_catboost method is the frozen sequential implementation",
+    "legacy_mrmr_label": "retained under the accurate canonical method ID legacy_rf_relevance_corr"
+  },
+  "gates": {
+    "stage_1": "review_only_no_execution",
+    "stage_2": "canonical lock only after exact digest and scope approval",
+    "pilot": "later Prompt 14 bounded manual run only after canonical lock and adapter validation",
+    "dev": "closed until authenticated pilot review and approval",
+    "oot": "closed until authenticated complete DEV review and approval"
+  },
+  "source_authentication": [
+    {
+      "path": "configs/experiments/full_baseline_v1.yaml",
+      "sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f"
+    },
+    {
+      "path": "configs/experiments/selector_combination_research_v1.yaml",
+      "sha256": "432a24c0a12e2a134522e981effe0b151c02f9c98c03cb34af6916f77d5e86ab"
+    },
+    {
+      "path": "configs/protocols/selector_combinations_v1/combination_protocol_lock.json",
+      "sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9"
+    },
+    {
+      "path": "configs/protocols/selector_combinations_v1/combination_comparison_registry.json",
+      "sha256": "0460d1a7eea5d39bbc6a84af468de42d8308d1f7b9c34b12e68c3a0762472a65"
+    },
+    {
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49"
+    },
+    {
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0"
+    },
+    {
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012"
+    },
+    {
+      "path": "docs/experiment_protocol.md",
+      "sha256": "fa2d12054bf5f96fedc05315520f1dac118aa4b57171c1a3a337d39c393274e7"
+    },
+    {
+      "path": "README.md",
+      "sha256": "976eb225fc0dd149f68b58a6b7859568bb8b10455bfbdf2128d3cf51a00c72be"
+    }
+  ],
+  "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2"
+}
