@@ -1,0 +1,70 @@
+{
+  "schema_version": "prompt_14_v2_historical_plan_consistency_check_v1",
+  "status": "material_discrepancy_fail_closed",
+  "fresh_plan_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v2/preinspection_analysis_plan.json",
+  "fresh_plan_sha256": "84a66a8315f1455145b24c8ddbe1ced58a936e61b5dc96d93d67731bed67e397",
+  "fresh_plan_status": "rejected_material_historical_consistency_discrepancy_not_active",
+  "fresh_plan_used_historical_plan_as_authority": false,
+  "historical_plan_path": "cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json",
+  "historical_plan_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+  "historical_plan_expected_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+  "historical_plan_commit": "bf2e53e3ea3fbe91e1336019f33b8425287d4564",
+  "historical_plan_role": "consistency_cross_check_only_neither_authority_nor_active_plan",
+  "count_comparison": {
+    "fresh_comparisons": 124,
+    "historical_comparisons": 124,
+    "comparison_count_matches": true,
+    "fresh_holm_families": 36,
+    "historical_holm_families": 36,
+    "holm_family_count_matches": true
+  },
+  "material_comparison_identity_discrepancies": [
+    {
+      "code": "fresh_omits_standalone_baseline_families",
+      "fresh": "0 standalone baseline-vs-full/random comparison identities",
+      "historical": "56 standalone baseline comparisons: seven registered baseline methods versus full_features and random_k across two datasets and two models",
+      "difference_count": 56
+    },
+    {
+      "code": "fresh_adds_combination_sanity_contrasts",
+      "fresh": "48 combination-cell contrasts versus full_features and random_k",
+      "historical": "0 combination-vs-full/random contrasts; those references belong to standalone baseline families",
+      "difference_count": 48
+    },
+    {
+      "code": "fresh_expands_voting_sensitivity_pools",
+      "fresh": "statistical_normalized_average_rank compared with voting pools 100, 200, and 300",
+      "historical": "only cross_dataset_rank_voting_v1 primary pool 200 is eligible and exploratory",
+      "difference_count": 8
+    }
+  ],
+  "material_inference_discrepancies": [
+    {
+      "code": "recomputation_tolerance",
+      "fresh_absolute_tolerance": 1e-12,
+      "historical_absolute_tolerance": 1e-10
+    },
+    {
+      "code": "incomplete_family_rule",
+      "fresh": "retain unavailable members and adjust supported members while reporting planned denominator",
+      "historical": "mark entire family unavailable and do not adjust or claim significance"
+    }
+  ],
+  "family_membership_exact_match": false,
+  "comparison_identity_exact_match": false,
+  "direction_exact_match_for_shared_comparisons": true,
+  "test_definition_exact_match_for_shared_comparisons": true,
+  "thresholds_exact_match": false,
+  "exclusions_exact_match": false,
+  "outcome_blindness": {
+    "numeric_predictive_outcomes_opened_before_or_during_check": false,
+    "outcome_tables_opened": 0,
+    "prediction_arrays_opened": 0,
+    "historical_plan_sections_used": "non_outcome_design_definitions_only"
+  },
+  "decision": "stop_before_numeric_outcome_inspection_do_not_select_or_revise_either_design",
+  "repair_or_protocol_change_performed": false,
+  "raw_dataset_paths_resolved": false,
+  "workers_started": 0,
+  "terminal_marker": "PROMPT_14_BLOCKED"
+}

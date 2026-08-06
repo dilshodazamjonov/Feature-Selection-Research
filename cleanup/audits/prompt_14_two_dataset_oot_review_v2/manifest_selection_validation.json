@@ -1,0 +1,35 @@
+{
+  "schema_version": "prompt_14_v2_manifest_selection_validation_v1",
+  "validation_status": "pass",
+  "pointer_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json",
+  "pointer_sha256": "63b8c0542885b00074f6e3fe1a897d5fe049ddbfbe45d3c19f40db47ae195e99",
+  "selection_rule": "explicit_successor_pointer_fail_closed",
+  "fallback_to_original_permitted": false,
+  "selected_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+  "selected_manifest_sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf",
+  "original_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+  "original_manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+  "original_manifest_preserved_byte_identically": true,
+  "original_manifest_active": false,
+  "canonical_status": {
+    "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+    "size_bytes": 1298,
+    "sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+    "schema_version": "prompt_06_voting_inference_status_v1",
+    "status": "PASS"
+  },
+  "payload_authentication": {
+    "ordered_entries": 55,
+    "authenticated_entries": 55,
+    "mismatching_entries": 0,
+    "unaffected_entries_checked": 54,
+    "unaffected_entries_byte_identical": 54,
+    "manifest_metadata_outside_scientific_payload_scope": true
+  },
+  "validator": "credit_risk_fs.analysis.voting_inference.manifest_authentication:validate_voting_package",
+  "data_free_safety": {
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "predictive_metric_values_read": false
+  }
+}

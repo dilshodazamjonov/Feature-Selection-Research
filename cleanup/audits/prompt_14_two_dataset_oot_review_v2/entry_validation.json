@@ -1,0 +1,130 @@
+{
+  "schema_version": "prompt_14_v2_entry_validation_v1",
+  "audit_id": "prompt_14_two_dataset_oot_review_v2",
+  "entry_verdict": "pass",
+  "repository": {
+    "branch": "main",
+    "starting_head": "0824481af49f37ee1a2e1d359bd47499605dce1d",
+    "entry_worktree_clean_including_untracked": true,
+    "entry_changed_paths": [],
+    "origin_main_ahead": 5,
+    "origin_main_behind": 0,
+    "required_ancestor_commits": {
+      "third_dataset_stage_2": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+      "blocked_attempt_final": "3e4c78e81135eb2122b86a0b5ec428d725c6b8eb",
+      "manifest_repair": "0824481af49f37ee1a2e1d359bd47499605dce1d"
+    },
+    "all_required_commits_are_ancestors": true
+  },
+  "runtime_safety": {
+    "matching_experiment_or_analysis_processes": 0,
+    "active_writers": 0,
+    "execution_locks": 0,
+    "partial_files": 0,
+    "temporary_prediction_outputs": 0,
+    "persistent_registry_mutex_files": 3,
+    "persistent_registry_mutex_files_exclusively_held": 0
+  },
+  "repair_authentication": {
+    "blocker_audit": {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review/authentication_blocker.json",
+      "sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78"
+    },
+    "original_manifest": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+      "sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+      "preserved_byte_identically": true,
+      "active": false
+    },
+    "status": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+      "size_bytes": 1298,
+      "sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a"
+    },
+    "successor_manifest": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+      "sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf"
+    },
+    "selection_pointer": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json",
+      "sha256": "63b8c0542885b00074f6e3fe1a897d5fe049ddbfbe45d3c19f40db47ae195e99"
+    },
+    "supersession": {
+      "path": "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json",
+      "sha256": "6f64d6e7ca77452ae0da2bba5108bf2fdb082af234de814c9fb7dec2adfaf315"
+    },
+    "closure": {
+      "path": "cleanup/audits/prompt_14a_voting_manifest_repair/blocked_prompt_14_attempt_closure.json",
+      "sha256": "c83f1b1b8079efd097386cb4556a5f4d01b4cbd110a3ae47409f27560c977c3c",
+      "state": "closed_blocked_attempt_not_resumable",
+      "comparisons_actually_analyzed": 0
+    }
+  },
+  "combination_chain_locations": {
+    "pilot_approval_lock": "configs/protocols/selector_combinations_v1/pilot_approval_lock.json",
+    "pilot_authentication": "cleanup/audits/prompt_12_combination_pilot_review/pilot_authentication.json",
+    "dev_completion_lock": "results/selector_combinations_v1/dev_completion_lock.json",
+    "dev_review_lock": "configs/protocols/selector_combinations_v1/dev_review_lock.json",
+    "dev_authentication": "cleanup/audits/prompt_13_combination_dev_review/dev_authentication.json",
+    "oot_scope_freeze": "configs/protocols/selector_combinations_v1/oot_scope_freeze.json",
+    "oot_artifact_root": "results/selector_combinations_v1/oot",
+    "oot_structural_file_count": 168
+  },
+  "eligible_evidence_locations": {
+    "classical_baseline_root": "results/full_baseline_v1",
+    "classical_baseline_audit_root": "cleanup/audits/prompt_11_selector_combinations",
+    "voting_package_root": "results/final_experiments/cross_dataset_voting_inference_v1"
+  },
+  "canonical_integration_targets": {
+    "results/final_research_package_v2": {
+      "present_at_entry": false,
+      "intended_files": [
+        "final_research_report.md",
+        "final_results_tables.csv",
+        "claims_and_evidence.csv",
+        "artifact_inventory.md",
+        "reproducibility_summary.md"
+      ]
+    },
+    "results/research_summary": {
+      "present_at_entry": false,
+      "intended_files": [
+        "artifact_registry.csv",
+        "reusable_metrics.csv",
+        "results_access_guide.md",
+        "summary_manifest.json"
+      ]
+    },
+    "results/finalized_research": {
+      "present_at_entry": false,
+      "intended_files": [
+        "README.md",
+        "canonical_artifact_manifest.json"
+      ]
+    },
+    "README.md": {
+      "present_at_entry": true
+    },
+    "docs/REPRODUCIBILITY.md": {
+      "present_at_entry": true
+    },
+    "absence_interpretation": "previous canonical result hierarchies were absent before this attempt and cannot serve as active evidence; Phase 4 may create traceable two-dataset replacements without restoring or altering history"
+  },
+  "third_dataset": {
+    "lock_path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "stage_1_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "included_files_opened": 0,
+    "adapter_status": "not_implemented",
+    "pilot_gate": "closed",
+    "dev_gate": "closed",
+    "oot_gate": "closed"
+  },
+  "data_free_safety": {
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "numeric_predictive_outcomes_opened": false,
+    "historical_plan_opened": false
+  }
+}

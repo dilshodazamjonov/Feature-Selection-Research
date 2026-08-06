@@ -1,0 +1,12 @@
+{
+  "schema_version": "prompt_14_v2_preinspection_plan_digest_v1",
+  "plan_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v2/preinspection_analysis_plan.json",
+  "sha256": "84a66a8315f1455145b24c8ddbe1ced58a936e61b5dc96d93d67731bed67e397",
+  "canonical_semantic_sha256": "0fac8439f170f6d7938a12d2bb7c316395f4a146667b7dbc28368bab6fbf9f8d",
+  "comparison_count": 124,
+  "holm_family_count": 36,
+  "created_before_numeric_outcome_inspection": true,
+  "historical_plan_used_as_authority": false,
+  "plan_status": "rejected_material_historical_consistency_discrepancy_not_active",
+  "authorized_for_numeric_outcome_inspection": false
+}
