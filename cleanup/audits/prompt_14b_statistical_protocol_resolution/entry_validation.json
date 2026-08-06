@@ -1,0 +1,73 @@
+{
+  "schema_version": "prompt_14b_entry_validation_v1",
+  "audit_id": "prompt_14b_statistical_protocol_resolution",
+  "recorded_at_utc": "2026-08-06T16:36:16.8026488Z",
+  "status": "blocked_before_plan_read",
+  "repository": {
+    "branch": "main",
+    "head": "cb4f4f0e9056700b8badb5346994585a1fb7e0cc",
+    "expected_head": "cb4f4f0e9056700b8badb5346994585a1fb7e0cc",
+    "worktree_clean_at_entry": true,
+    "untracked_paths_at_entry": [],
+    "origin_main_behind": 0,
+    "origin_main_ahead": 6,
+    "required_ancestor_checks": {
+      "bf2e53e3ea3fbe91e1336019f33b8425287d4564": true,
+      "0824481af49f37ee1a2e1d359bd47499605dce1d": true,
+      "cb4f4f0e9056700b8badb5346994585a1fb7e0cc": true
+    }
+  },
+  "safety": {
+    "numeric_outcomes_opened_during_prompt_14b": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "comparisons_analyzed": 0,
+    "active_experiment_or_analysis_workers": 0,
+    "active_writers": 0,
+    "execution_locks": 0,
+    "partial_or_temporary_outputs": 0,
+    "first_preinspection_plan_read_during_prompt_14b": false,
+    "rejected_preinspection_plan_read_during_prompt_14b": false
+  },
+  "authenticated_identities": {
+    "active_voting_manifest_pointer": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json",
+      "sha256": "63b8c0542885b00074f6e3fe1a897d5fe049ddbfbe45d3c19f40db47ae195e99",
+      "selection_rule": "explicit_successor_pointer_fail_closed",
+      "selected_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json"
+    },
+    "voting_successor_manifest": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+      "sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf"
+    },
+    "prompt_14a_closure": {
+      "path": "cleanup/audits/prompt_14a_voting_manifest_repair/blocked_prompt_14_attempt_closure.json",
+      "sha256": "c83f1b1b8079efd097386cb4556a5f4d01b4cbd110a3ae47409f27560c977c3c",
+      "comparisons_actually_analyzed": 0,
+      "state": "closed_blocked_attempt_not_resumable"
+    },
+    "first_outcome_blind_plan": {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json",
+      "sha256_only_check": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+      "content_opened_during_prompt_14b": false
+    },
+    "rejected_plan": {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review_v2/preinspection_analysis_plan.json",
+      "sha256_only_check": "84a66a8315f1455145b24c8ddbe1ced58a936e61b5dc96d93d67731bed67e397",
+      "content_opened_during_prompt_14b": false
+    },
+    "third_dataset_lock": {
+      "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+      "sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860"
+    }
+  },
+  "blocking_check": {
+    "check_id": "both_prior_attempts_inspected_zero_numeric_outcomes",
+    "expected": true,
+    "observed": false,
+    "passed": false,
+    "reason": "The first blocked Prompt 14 attempt opened numeric OOT metric content, saved prediction rows, baseline numeric comparison/result tables, and cross-dataset voting numeric run-level metrics after its outcome-blind plan commit and before discovering the voting-manifest authentication failure. It analyzed zero comparisons, but zero comparisons analyzed is not the same as zero numeric outcomes inspected.",
+    "classification": "proven_prior_outcome_inspection",
+    "prompt_14b_failure_policy": "genuine_integrity_failure_stop_before_plan_read"
+  }
+}

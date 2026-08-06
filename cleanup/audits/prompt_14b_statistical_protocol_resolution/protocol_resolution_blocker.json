@@ -1,0 +1,42 @@
+{
+  "schema_version": "prompt_14b_protocol_resolution_blocker_v1",
+  "audit_id": "prompt_14b_statistical_protocol_resolution",
+  "recorded_at_utc": "2026-08-06T16:36:16.8026488Z",
+  "status": "blocked",
+  "blocked_phase": "Phase 0 - outcome-blind entry validation",
+  "fail_closed_condition": "proven prior outcome inspection",
+  "discrepancy": {
+    "required_claim": "Both blocked Prompt 14 attempts inspected zero numeric outcomes and analyzed zero comparisons.",
+    "authenticated_portion": "Both attempts analyzed zero comparisons.",
+    "failed_portion": "The first blocked attempt inspected numeric OOT artifacts after committing its first plan and before its Phase-2 voting-manifest failure.",
+    "why_material": "Prompt 14B explicitly makes proven prior outcome inspection a genuine blocker and requires a truthful numeric_outcomes_opened=false provenance assertion. The zero-outcome-inspection claim cannot be authenticated as written."
+  },
+  "known_first_attempt_numeric_inspection": [
+    "results/selector_combinations_v1/oot/evaluations/scv1-oot-001-homecredit-statistical-normalized-average-rank-lr-full-dev-k20-s42.oot_metrics.json",
+    "results/selector_combinations_v1/oot/evaluations/scv1-oot-001-homecredit-statistical-normalized-average-rank-lr-full-dev-k20-s42.oot_predictions.csv",
+    "cleanup/audits/prompt_11_selector_combinations/baseline_pairwise_comparisons.csv",
+    "cleanup/audits/prompt_11_selector_combinations/baseline_results_long.csv",
+    "results/final_experiments/cross_dataset_voting_inference_v1/run_level_metrics.csv"
+  ],
+  "boundary_preservation": {
+    "first_plan_content_opened_during_prompt_14b": false,
+    "rejected_plan_content_opened_during_prompt_14b": false,
+    "numeric_outcomes_opened_during_prompt_14b": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "comparisons_analyzed": 0,
+    "canonical_comparison_registry_created": false,
+    "canonical_holm_registry_created": false,
+    "analysis_protocol_lock_created": false,
+    "prior_prompt_14_directory_modified": false,
+    "voting_pointer_or_manifest_modified": false,
+    "third_dataset_lock_modified": false,
+    "experiment_or_report_workload_started": false,
+    "push_performed": false
+  },
+  "required_resolution": {
+    "authority_needed": "The user must explicitly revise the false zero-prior-inspection prerequisite and state whether the first plan remains authoritative solely because it was committed before that later inspection.",
+    "safe_next_step": "Issue a corrected Prompt 14B that distinguishes plan creation before outcome inspection from later outcome inspection in the blocked attempt. No metric, prediction, or workload access is needed to make that protocol-governance decision."
+  },
+  "terminal_marker": "PROMPT_14B_PROTOCOL_RESOLUTION_BLOCKED"
+}
