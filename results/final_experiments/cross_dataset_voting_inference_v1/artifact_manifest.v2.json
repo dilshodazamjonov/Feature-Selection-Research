@@ -1,0 +1,379 @@
+{
+  "schema_version": "prompt_14a_artifact_manifest_successor_v1",
+  "analysis_id": "cross_dataset_voting_inference_v1",
+  "generated_at_utc": "2026-07-28T06:39:26.476718+00:00",
+  "git_head": "3bd9d0b93421a156c55f211aaea47f7aa71665fa",
+  "git_tags_at_head": [
+    "cross-dataset-voting-observability-v2"
+  ],
+  "analysis_config_sha256": "8195e14412a55777064f4754dba5774b52107d2621d8799765d280d5df5d63db",
+  "frozen_inputs": [
+    {
+      "input_name": "scientific_protocol",
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "present": true,
+      "expected_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "observed_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "size_bytes": 18481,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "row_alignment_contract",
+      "path": "configs/protocols/row_alignment_contract_v1.json",
+      "present": true,
+      "expected_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "observed_sha256": "fc1064069f5cc45d76fd34060bb506869683e953c354d3f1f1a13327d99e71a0",
+      "size_bytes": 5090,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "voting_protocol",
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "present": true,
+      "expected_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "observed_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "size_bytes": 5342,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "execution_policy",
+      "path": "configs/execution/local_laptop_safe_v1.yaml",
+      "present": true,
+      "expected_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "observed_sha256": "1b77add8bf55096864934f6553aeba174cd22e2b112f53c7a45e5df327934012",
+      "size_bytes": 756,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "run_matrix",
+      "path": "configs/experiments/cross_dataset_rank_voting_matrix_v1.yaml",
+      "present": true,
+      "expected_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
+      "observed_sha256": "1a0739fd4c78e450d15b63bb9958de314f071ea567ed016ad287eb7943c6ace8",
+      "size_bytes": 25081,
+      "status": "hash_match"
+    },
+    {
+      "input_name": "configuration_lock",
+      "path": "results/comparisons/cross_dataset_voting_configuration_lock.json",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "7bd0ea6c5840124b2865c38679993654005fb6ddab15593754b3ff628e7b067c",
+      "size_bytes": 1331,
+      "status": "recorded_not_pinned"
+    },
+    {
+      "input_name": "completeness_summary",
+      "path": "results/comparisons/cross_dataset_voting_completeness_summary.json",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "55c0c7fe495b33de543f3e3399f3713bc5d5fc071b8c6d082186ff10491deb94",
+      "size_bytes": 335,
+      "status": "recorded_not_pinned"
+    },
+    {
+      "input_name": "run_index",
+      "path": "results/run_index.csv",
+      "present": true,
+      "expected_sha256": null,
+      "observed_sha256": "89bc4b57e0dd213eef2fe291b249a2f9fd1a1783f081a2f1c0f85e0437b57111",
+      "size_bytes": 10649,
+      "status": "recorded_not_pinned"
+    }
+  ],
+  "generated_files": [
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_catboost_k100.json",
+      "size_bytes": 2343,
+      "sha256": "fb12d07f044b43ae22a8f058b503669afadf0bb1b831db18a7a72592b7b2af69"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_catboost_k200.json",
+      "size_bytes": 2346,
+      "sha256": "cef19321d123fb7e29110fbcecddcc7439a046fdee2e9324b720433992a0bd41"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_catboost_k300.json",
+      "size_bytes": 2345,
+      "sha256": "a2d5e311780c61ac1deec2c977e66de7916c7cb9a48a54b32928cd2e4e61cd48"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_lr_k100.json",
+      "size_bytes": 2353,
+      "sha256": "9e8f85924ae2fce5bdb17af20ecad700278518948972bebd5f10f3ae1f98f287"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_lr_k200.json",
+      "size_bytes": 2350,
+      "sha256": "c54573ec0b5cc02f9a2f7f949d7acbbf62fcf351a0f1f462747d890cfaeb5dcb"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_homecredit_lr_k300.json",
+      "size_bytes": 2360,
+      "sha256": "f66f572ce625bf93fbe31fcc0a04b86710082c542f14f9b2f94afeef26fc0e24"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_catboost_k100.json",
+      "size_bytes": 2350,
+      "sha256": "a4edd4159873a4557a61a6d3ff6592e4c9e5294c8568b1a779d15d9c6500c971"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_catboost_k200.json",
+      "size_bytes": 2347,
+      "sha256": "9b456a80f99ace59dc98b654ae78ffad6863884aacbbaa3704a10d7b99090c7b"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_catboost_k300.json",
+      "size_bytes": 2343,
+      "sha256": "081f9508d401c2596b13b0bd8e953afc1cd31a043f0d446957c5cf74c9c1f7fb"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_lr_k100.json",
+      "size_bytes": 2353,
+      "sha256": "ea05e08e431747c424907b9491a7f3542e21025267a9ff338912444c09d62e9d"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_lr_k200.json",
+      "size_bytes": 2354,
+      "sha256": "0c64fa872a6eacc6c2d4626e499282869646c1bb92ec6702b03104cdac5f6389"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/_cache/bootstrap_lendingclub_v2_lr_k300.json",
+      "size_bytes": 2351,
+      "sha256": "dafd306076fdfb371c6ffe6613931bdc74f601bc9f551813da1d1bc62d3d435f"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/alignment_audit.csv",
+      "size_bytes": 10395,
+      "sha256": "ded8843a67bf5e7cc6bb146e3f64470da32aac4daf121e77d67ef180662bcd51"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/alignment_audit.json",
+      "size_bytes": 39512,
+      "sha256": "d22d1c18a676db7586cbfca4b015f1be0ac2794eea10a1eb8a4f61ef80444bab"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/bootstrap_equivalence_audit.csv",
+      "size_bytes": 1099,
+      "sha256": "b1159dd3c489d5cfa64778a2c375e43b3554bb5414a14dc3b042829ea1265118"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/bootstrap_replicate_manifest.json",
+      "size_bytes": 19293,
+      "sha256": "a16aedd3eb07aeb733886589f1921dc0c47720ded23366074c903003d07f8c6d"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/claims_and_evidence_seed.csv",
+      "size_bytes": 17046,
+      "sha256": "b2e88f884b4ed0a51a11cc0ef87ec404b08f7545cd83a8a3b6d597beb9c480f3"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/cross_dataset_voting_evidence_table.csv",
+      "size_bytes": 15261,
+      "sha256": "3195c8139a4fedc4d9e19c990c7cc974f47574316a961bf6048a80829359afd0"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/dev_oot_population_audit.csv",
+      "size_bytes": 1728,
+      "sha256": "58ba95c2f39992b57225b4bea2e0182ba71ab56c0df74d4cc849e8d68551aaf9"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/feature_psi_definition_audit.csv",
+      "size_bytes": 49498,
+      "sha256": "3edd5b6ff26604daa7906077c2b001828176608f56abb020e2b52e6bd40bb7cb"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/feature_psi_long.csv",
+      "size_bytes": 198813,
+      "sha256": "52e6b85086ae2bd51f549174232d41a3e8eee01cb880cd516e4c90013ac90f3a"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/feature_psi_summary.csv",
+      "size_bytes": 4760,
+      "sha256": "6f1295e302783a209017e08e53a8be97292fe94fb1e990846459cf4024be62ad"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/figure_captions.json",
+      "size_bytes": 3262,
+      "sha256": "1185688aa345f96b512d049c1c892a88fd0713dbfada7b03f7881a883794b733"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/figures/drift_stability_comparison.png",
+      "size_bytes": 121425,
+      "sha256": "0a71e3ab3e0ff694457fa41179cb6fb05c30e8c45eef6f2b709cf468dac0c973"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/figures/paired_auc_delta_forest.png",
+      "size_bytes": 141221,
+      "sha256": "4fae2b1c02d339fb276bbb9b0daf8590a0fe94a3228209488eaebb9067416cf1"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/figures/runtime_comparison.png",
+      "size_bytes": 63016,
+      "sha256": "10fc7ea2873fed714235742bf479f169b826c70b0ee6402c9e17edb708b14a56"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/figures/voting_budget_auc.png",
+      "size_bytes": 175725,
+      "sha256": "311ae162db54b9990cf31dbf1264cf76f844151ccb20a4321ed4eb959b3bd4ce"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/fold_selection_frequency.csv",
+      "size_bytes": 98929,
+      "sha256": "d278f23e24c4139841d1782ec4eb06ba3ee25fcfc3f285bf143568efd0fd6fd8"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/fold_selection_inventory.csv",
+      "size_bytes": 10452,
+      "sha256": "9f865f54e95b321384223738103b8b0ecdd53c53c0756d58c6ad2622148ce2b1"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/holm_adjustment_audit.csv",
+      "size_bytes": 3997,
+      "sha256": "2364844888be8e741f615addfafad112c3e160b170c92dc4d79b6cae1c2770a6"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/independent_recalculation_audit.csv",
+      "size_bytes": 30679,
+      "sha256": "b0a68c4952bc7ebb5c2fe18f91623eb933b3ed1f8f811e309e565917d335e513"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/input_inventory.csv",
+      "size_bytes": 21038,
+      "sha256": "63d009ffc1cebc8d465437850e354fa6814c328f75999ec2c2fa0e6184de85fc"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/leakage_audit.csv",
+      "size_bytes": 3406,
+      "sha256": "a35756183f62020ec8a33b8cd7e85eb8ade6fb4ccca12f2a61d351545d880884"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/lift10_audit.csv",
+      "size_bytes": 12167,
+      "sha256": "aa7420cd6449095c358e61f4b3b48ec344a6f7bb40aaab3f2d2e69b7c061aa22"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/limitations.md",
+      "size_bytes": 5369,
+      "sha256": "c19c8a345340097aeed3c6406964bedbcaaca660b53ee6d6913df0847f7329e5"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/paired_bootstrap_results.csv",
+      "size_bytes": 8615,
+      "sha256": "6627019e571e4d7877443e03d40b72056cc67d909c4721ce51dc1692ed33bb77"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/paired_delong_results.csv",
+      "size_bytes": 5499,
+      "sha256": "6a9a09ccf453509fc359fd08886c0ab8963a04af593e151e85c72b3d4a131a1f"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/paired_inference_final.csv",
+      "size_bytes": 13988,
+      "sha256": "13e598878d8849534a6a0ea4a5181d17d1ff08d7a468fe9cb35beee165c8ddaf"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/predeclared_comparison_family.json",
+      "size_bytes": 10351,
+      "sha256": "e38df6e42be2fd537ce2f1f15c037cf88d56d092f43d67b732a3b7b7744f8b85"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/prediction_inventory.csv",
+      "size_bytes": 16089,
+      "sha256": "8d1168e26b09db1827b5b717cfb1ceca73b4c00c54259af56298aac9cc2e2efc"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/prompt_05_completion_authentication.json",
+      "size_bytes": 1829,
+      "sha256": "8285737ef90c1286f13643ab03bdefb9766d1688200e4bc1a3604f5f6c09c0e4"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/provenance_audit.csv",
+      "size_bytes": 1505,
+      "sha256": "fa093688ed99d9925cdd34de2560b60bf6bbd128badbfd3e98707647c42038fe"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/run_level_metrics.csv",
+      "size_bytes": 9664,
+      "sha256": "82cdf69846a768a822cfab7d4e31e9dfd79a12b2d80f7a53237687dcbd52f3a6"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/runtime_resource_summary.csv",
+      "size_bytes": 6519,
+      "sha256": "f5edec6fe78ec01a20099953bf49bbd747a4c8fc770ec2b4d5821e962b681d8a"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/runtime_stage_breakdown.csv",
+      "size_bytes": 12789,
+      "sha256": "9e8be263a7c7b7866cd7440b06581672b900959b3bb77d6bab69109e07ff76d8"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/score_psi_bins.csv",
+      "size_bytes": 34514,
+      "sha256": "a850a13f045884dc8c6f354b08820e54c2dd335c5db1022628e67ddd130b6da8"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/score_psi_summary.csv",
+      "size_bytes": 4984,
+      "sha256": "db74552509c829824b80df303f68f74be0f88a2dfaa269fc9308036d2fdc7087"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/stability_pairwise.csv",
+      "size_bytes": 22714,
+      "sha256": "d4b481417fcba9f5014c1f6034d2e84161ad3cccc1e58f665ead520362e7ea87"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/stability_summary.csv",
+      "size_bytes": 6182,
+      "sha256": "545bd1901bbdce8d9e2d7a9cc5a858b3764e5023377ec572db950c8d44019cce"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+      "size_bytes": 1298,
+      "sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/validation_summary.md",
+      "size_bytes": 2968,
+      "sha256": "44fbd0f560daa084ed29f91497f0ef50e713602979f322e7045a2cd70b459f36"
+    },
+    {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/voting_budget_results.csv",
+      "size_bytes": 11647,
+      "sha256": "ca2e9e2b8e77044b0f7a23c69bf86c91844c6f27feb9749069681831c4d38b5e"
+    },
+    {
+      "path": "cleanup/audits/prompt_06_voting_inference_evidence_package/frozen_input_authentication.json",
+      "size_bytes": 3311,
+      "sha256": "ff1f74ec7b808ac3b8922642363e8ac1d6bd3a2c5d55c3749f90767b5d7f136c"
+    },
+    {
+      "path": "cleanup/audits/prompt_06_voting_inference_evidence_package/preservation_audit.json",
+      "size_bytes": 1556,
+      "sha256": "4ab321eb1426bcb312eee198fd6dc057beae9bbe6bfb8c5cb740a4312e0b1f1c"
+    },
+    {
+      "path": "cleanup/audits/prompt_06_voting_inference_evidence_package/repository_state.json",
+      "size_bytes": 1458,
+      "sha256": "50687299d553ed5e4772cd719c5a5898d332fa448772570adae06370776dc682"
+    }
+  ],
+  "generated_file_count": 55,
+  "writes_confined_to": [
+    "results/final_experiments/cross_dataset_voting_inference_v1",
+    "cleanup/audits/prompt_06_voting_inference_evidence_package"
+  ],
+  "supersedes": {
+    "manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+    "manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+    "blocker_audit_path": "cleanup/audits/prompt_14_two_dataset_oot_review/authentication_blocker.json",
+    "blocker_audit_sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78",
+    "decision_code": "legitimate_final_status_after_manifest_seal",
+    "derivation": "existing_authenticated_payload_bytes_only"
+  },
+  "manifest_metadata_outside_payload_scope": [
+    "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+    "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json",
+    "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json"
+  ]
+}

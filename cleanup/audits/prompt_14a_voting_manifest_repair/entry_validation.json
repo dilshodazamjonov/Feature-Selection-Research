@@ -1,0 +1,55 @@
+{
+  "schema_version": "prompt_14a_entry_validation_v1",
+  "audit_id": "prompt_14a_voting_manifest_repair",
+  "entry_verdict": "pass",
+  "repository": {
+    "branch": "main",
+    "starting_head": "3e4c78e81135eb2122b86a0b5ec428d725c6b8eb",
+    "blocked_prompt_14_final_commit": "3e4c78e81135eb2122b86a0b5ec428d725c6b8eb",
+    "blocked_prompt_14_final_commit_is_ancestor": true,
+    "entry_worktree_clean_including_untracked": true,
+    "entry_changed_paths": [],
+    "origin_main_ahead": 4,
+    "origin_main_behind": 0
+  },
+  "blocker_audit": {
+    "path": "cleanup/audits/prompt_14_two_dataset_oot_review/authentication_blocker.json",
+    "expected_sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78",
+    "observed_sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78",
+    "authenticated": true
+  },
+  "runtime_safety": {
+    "matching_experiment_or_analysis_processes": 0,
+    "active_writers": 0,
+    "execution_lock_files": 0,
+    "partial_files": 0,
+    "temporary_prediction_outputs": 0,
+    "persistent_registry_mutex_files": [
+      {
+        "path": "cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/run_index.csv.lock",
+        "size_bytes": 1,
+        "exclusive_open_blocked": false,
+        "classification": "inactive_persistent_registry_mutex"
+      },
+      {
+        "path": "results/full_baseline_v1/run_index.csv.lock",
+        "size_bytes": 1,
+        "exclusive_open_blocked": false,
+        "classification": "inactive_persistent_registry_mutex"
+      },
+      {
+        "path": "results/run_index.csv.lock",
+        "size_bytes": 1,
+        "exclusive_open_blocked": false,
+        "classification": "inactive_persistent_registry_mutex"
+      }
+    ]
+  },
+  "data_free_validation": {
+    "mode": "standalone_manifest_metadata_and_hash_validation",
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "experiment_runner_invoked": false
+  },
+  "audit_directory_creation_authorized": true
+}

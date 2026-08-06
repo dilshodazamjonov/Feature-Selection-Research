@@ -1,0 +1,17 @@
+{
+  "schema_version": "prompt_14a_manifest_selection_v1",
+  "analysis_id": "cross_dataset_voting_inference_v1",
+  "selection_rule": "explicit_successor_pointer_fail_closed",
+  "legacy_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+  "legacy_manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+  "selected_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+  "selected_manifest_sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf",
+  "supersession_record_path": "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json",
+  "supersession_record_sha256": "6f64d6e7ca77452ae0da2bba5108bf2fdb082af234de814c9fb7dec2adfaf315",
+  "payload_entry_count": 55,
+  "status_path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+  "status_size_bytes": 1298,
+  "status_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+  "failure_policy": "do_not_fallback_to_legacy_manifest_when_pointer_exists",
+  "canonical_record_digest": "761c81c546f512668b80ba7cb2489c0d50d6af2458b4a316151943ef1fac799d"
+}
