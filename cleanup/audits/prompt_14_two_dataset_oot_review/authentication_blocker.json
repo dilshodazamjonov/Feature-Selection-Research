@@ -1,0 +1,73 @@
+{
+  "schema_version": "prompt_14_authentication_blocker_v1",
+  "audit_id": "prompt_14_two_dataset_oot_review",
+  "recorded_at_utc": "2026-08-06T05:06:22.3499855Z",
+  "status": "blocked",
+  "blocked_phase": "Phase 2 - authenticate the complete evidence chain",
+  "fail_closed_condition": "An authentication failure was discovered after the committed preinspection boundary and after numeric OOT inspection had become authorized. Statistical analysis and canonical report integration must stop.",
+  "preinspection_plan": {
+    "path": "cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json",
+    "sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+    "commit": "bf2e53e3ea3fbe91e1336019f33b8425287d4564"
+  },
+  "failed_evidence_package": {
+    "package": "cross_dataset_voting_inference_v1",
+    "manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+    "manifest_file_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+    "declared_generated_file_count": 55,
+    "matching_generated_files": 54,
+    "mismatching_generated_files": 1,
+    "mismatch": {
+      "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+      "expected_size_bytes": 762,
+      "observed_size_bytes": 1298,
+      "expected_sha256": "8da9422226d4204fccd2912ca2049f3c55b372a0878bf44219e12685fbfa2ddc",
+      "observed_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+      "reason": "The package manifest does not authenticate the current status artifact. The package therefore cannot serve as the frozen cross-dataset voting comparator source in this Prompt 14 attempt."
+    }
+  },
+  "checks_completed_before_block": {
+    "combination_status_validation": {
+      "pilot_authenticated_evaluations": 24,
+      "pilot_expected_evaluations": 24,
+      "pilot_authenticated_selector_fits": 18,
+      "pilot_expected_selector_fits": 18,
+      "dev_authenticated_evaluations": 120,
+      "dev_expected_evaluations": 120,
+      "oot_authenticated_evaluations": 24,
+      "oot_expected_evaluations": 24,
+      "raw_dataset_paths_resolved": false,
+      "workers_started": 0
+    },
+    "combination_phase_artifact_authentication_before_voting_check": "passed",
+    "classical_baseline_source_authentication_before_voting_check": "passed",
+    "third_dataset_lock_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "third_dataset_lock_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6"
+  },
+  "work_not_performed": {
+    "paired_bootstrap_started": false,
+    "paired_delong_started": false,
+    "holm_adjustment_started": false,
+    "statistical_comparison_rows_created": 0,
+    "figures_created": 0,
+    "review_report_created": false,
+    "portable_html_created": false,
+    "canonical_report_or_registry_updated": false,
+    "third_dataset_adapter_implemented": false,
+    "experiment_workload_started": false,
+    "raw_dataset_loaded_or_hashed": false,
+    "push_performed": false
+  },
+  "final_safety_check": {
+    "matching_experiment_or_analysis_worker_processes": 0,
+    "execution_lock_or_partial_file_count": 0,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0
+  },
+  "required_remediation": {
+    "scope": "separate artifact-only authentication-repair review",
+    "action": "Determine why status.json changed after artifact_manifest.json was created; repair or supersede the voting package manifest under an explicit, versioned, outcome-independent audit; then restart Prompt 14 from a clean worktree with a newly committed preinspection plan.",
+    "prohibitions": "Do not rerun voting, baseline, pilot, DEV, or OOT models and do not load raw datasets merely to repair this manifest identity."
+  },
+  "terminal_marker": "PROMPT_14_BLOCKED"
+}
