@@ -9,6 +9,9 @@ import pandas as pd
 import pytest
 import yaml
 
+from credit_risk_fs.analysis.voting_inference.manifest_authentication import (
+    select_manifest,
+)
 from credit_risk_fs.analysis.voting_inference.config import (
     AuthenticationError,
     authenticate_frozen_inputs,
@@ -216,9 +219,7 @@ def test_published_package_is_internally_consistent() -> None:
     folds = pd.read_csv(PACKAGE_ROOT / "fold_selection_inventory.csv")
     assert int(folds["present"].sum()) == 80
 
-    manifest = json.loads(
-        (PACKAGE_ROOT / "artifact_manifest.json").read_text(encoding="utf-8")
-    )
+    manifest = select_manifest(ROOT).manifest
     assert manifest["generated_file_count"] == len(manifest["generated_files"])
     for entry in manifest["generated_files"]:
         assert not entry["path"].startswith("results/runs/")

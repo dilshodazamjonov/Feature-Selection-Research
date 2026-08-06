@@ -1,0 +1,31 @@
+{
+  "schema_version": "prompt_14a_repair_decision_v1",
+  "decision_code": "legitimate_final_status_after_manifest_seal",
+  "repair_authorized": true,
+  "manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+  "manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+  "status_path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+  "old_status_size_bytes": 762,
+  "old_status_sha256": "8da9422226d4204fccd2912ca2049f3c55b372a0878bf44219e12685fbfa2ddc",
+  "new_status_size_bytes": 1298,
+  "new_status_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+  "evidence": [
+    "cleanup/audits/prompt_14a_voting_manifest_repair/status_provenance_review.json",
+    "cleanup/audits/prompt_14a_voting_manifest_repair/status_structural_diff.json",
+    "cleanup/audits/prompt_14_two_dataset_oot_review/authentication_blocker.json",
+    "cleanup/audits/prompt_07_lightweight_selectors/prompt_06_package_hashes_baseline.json",
+    "cleanup/audits/prompt_07_lightweight_selectors/artifact_manifest.json",
+    "scripts/build_voting_inference_evidence.py"
+  ],
+  "counterevidence": [
+    "The exact 762-byte predecessor object is unavailable, so its semantic fields cannot be asserted.",
+    "The status schema has no internal digest.",
+    "The original writer used platform newline translation."
+  ],
+  "cause": "The Prompt 6 writer enumerated and sealed package bytes before it marked Phase J complete and wrote the immutable final PASS status. The manifest therefore authenticated a preexisting status file and became stale 4.465 milliseconds later when the same canonical writer completed the package.",
+  "substantive_evidence_drift_detected": false,
+  "why_hash_update_cannot_conceal_drift": "Repair is conditioned on an immutable Git-committed checkpoint that already recorded the current status hash together with the old manifest hash, exact structural validation against the authenticated configuration and comparison-family artifact, equality of all eight frozen-input hashes, and byte authentication of every other payload entry. The successor preserves the same ordered 55-entry scope and may change only the status entry after these checks.",
+  "authorized_repair": "preserve_artifact_manifest_json_in_place_create_versioned_successor_and_explicit_fail_closed_selection_pointer",
+  "payload_rewrite_authorized": false,
+  "scientific_lock_change_authorized": false
+}

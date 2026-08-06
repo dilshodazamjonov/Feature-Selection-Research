@@ -1,0 +1,102 @@
+{
+  "schema_version": "prompt_14a_status_provenance_review_v1",
+  "status_path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+  "status_size_bytes": 1298,
+  "status_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+  "validation": {
+    "json_syntax_valid": true,
+    "declared_schema_valid": true,
+    "required_keys_valid": true,
+    "internal_digest_present": false,
+    "internal_digest_required_by_schema": false,
+    "canonical_writer_serialization": {
+      "writer": "src/credit_risk_fs/experiments/atomic_io.py:write_json_atomic",
+      "encoding": "UTF-8 without BOM",
+      "indent": 2,
+      "observed_newline": "CRLF",
+      "windows_writer_byte_match": true,
+      "reconstructed_size_bytes": 1298,
+      "reconstructed_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a"
+    },
+    "completion_predicates_valid": true,
+    "analysis_and_path_identity_valid": true,
+    "predeclared_family_consistency_valid": true,
+    "frozen_input_hashes_matching": 8,
+    "frozen_input_hashes_checked": 8,
+    "post_oot_adaptation_indicated": false,
+    "changed_experiment_scope_indicated": false,
+    "new_model_result_indicated": false,
+    "rerun_indicated": false,
+    "different_canonical_population_indicated": false
+  },
+  "provenance_sources": [
+    {
+      "source_id": "git_committed_prompt_07_hash_checkpoint",
+      "independence": "later preservation audit committed independently of the ignored package payload",
+      "commit": "4847085a6be9fb22345113767e936ebd552085ee",
+      "checkpoint_path": "cleanup/audits/prompt_07_lightweight_selectors/prompt_06_package_hashes_baseline.json",
+      "checkpoint_sha256": "883a4e3dabb9c569a631898fa7c1906ce772e83f42da040c14dfd8ec9e2c2cb6",
+      "checkpoint_status_sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+      "checkpoint_manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+      "checkpoint_authentication_manifest_path": "cleanup/audits/prompt_07_lightweight_selectors/artifact_manifest.json",
+      "checkpoint_authentication_manifest_sha256": "a7326af6a0eb426b676fa582f50cdec3e5d1a5d2b70302cfbf06a77a541e795a",
+      "checkpoint_git_blob_matches_committed_blob": true,
+      "result": "authenticates_current_status_and_stale_manifest_as_the_joint_preserved_prompt_06_package_state"
+    },
+    {
+      "source_id": "canonical_writer_order_and_run_timeline",
+      "independence": "committed writer implementation plus authenticated package timestamps and repository-state marker",
+      "writer_path": "scripts/build_voting_inference_evidence.py",
+      "writer_sha256_before_repair": "a4b8382def6e37dbd103ab8346ff8b6de818d8eaab0ad4266aba64db7784385b",
+      "writer_commit": "07777f35c2dedfb87c7a81dce78ff96a6bd269c1",
+      "writer_git_blob": "94c01ea5aec51a5c45ab44bf47ee72cc96750edc",
+      "ordering_at_writer_commit": [
+        "construct_manifest_from_existing_disk_files",
+        "write_artifact_manifest",
+        "mark_J_provenance_pass",
+        "add_final_completion_metadata",
+        "write_status"
+      ],
+      "manifest_generated_at_utc": "2026-07-28T06:39:26.476718+00:00",
+      "status_completed_at_utc": "2026-07-28T06:39:26.481183+00:00",
+      "status_write_after_manifest_seconds": 0.004465,
+      "repository_state_path": "cleanup/audits/prompt_06_voting_inference_evidence_package/repository_state.json",
+      "repository_state_sha256": "50687299d553ed5e4772cd719c5a5898d332fa448772570adae06370776dc682",
+      "repository_state_recorded_at_utc": "2026-07-28T06:17:03.654599+00:00",
+      "result": "proves_the_manifest_can_capture_a_preexisting_status_then_become_stale_on_the_legitimate_final_status_write"
+    },
+    {
+      "source_id": "authenticated_structural_and_cross_lock_consistency",
+      "independence": "current status semantics checked against separately hashed configuration, frozen inputs, completion marker, and predeclared family",
+      "analysis_config_path": "configs/analysis/cross_dataset_voting_inference_v1.yaml",
+      "analysis_config_sha256": "8195e14412a55777064f4754dba5774b52107d2621d8799765d280d5df5d63db",
+      "predeclared_family_path": "results/final_experiments/cross_dataset_voting_inference_v1/predeclared_comparison_family.json",
+      "predeclared_family_sha256": "e38df6e42be2fd537ce2f1f15c037cf88d56d092f43d67b732a3b7b7744f8b85",
+      "completion_marker_path": "results/final_experiments/cross_dataset_voting_inference_v1/prompt_05_completion_authentication.json",
+      "completion_marker_sha256": "8285737ef90c1286f13643ab03bdefb9766d1688200e4bc1a3604f5f6c09c0e4",
+      "predeclared_family_count": 4,
+      "predeclared_comparison_count": 12,
+      "status_family_count": 4,
+      "status_comparison_count": 12,
+      "result": "all_structural_identifiers_completion_predicates_and_frozen_inputs_are_consistent"
+    }
+  ],
+  "counterevidence": [
+    {
+      "issue": "the_762_byte_object_is_not_recoverable",
+      "effect": "its exact structural projection cannot be compared",
+      "resolution": "the old bytes are not needed to authenticate the final status because the final status has an immutable later hash checkpoint and deterministic writer provenance"
+    },
+    {
+      "issue": "status_schema_has_no_internal_digest",
+      "effect": "status cannot self-authenticate",
+      "resolution": "authentication is supplied by the committed Prompt 7 checkpoint, its committed manifest, writer ordering, and cross-lock consistency"
+    },
+    {
+      "issue": "writer_newline_translation_is_platform_dependent",
+      "effect": "the current status uses CRLF",
+      "resolution": "the exact CRLF bytes reconstruct to the observed hash and size; line endings cannot explain the 536-byte size increase and are not the mismatch cause"
+    }
+  ],
+  "canonical_status_authenticated": true
+}

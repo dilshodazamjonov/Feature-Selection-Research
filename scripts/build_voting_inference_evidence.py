@@ -1923,13 +1923,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 provenance=provenance,
             ),
         )
-        manifest = _artifact_manifest(config, state=state, frozen=frozen)
-        write_json_atomic(package_root / "artifact_manifest.json", manifest)
-        status["phases"]["J_provenance"] = "PASS"
-
         elapsed = time.perf_counter() - _START
-        status.update(
-            {
+        _seal_final_status_and_manifest(
+            config,
+            state=state,
+            frozen=frozen,
+            status=status,
+            final_status={
                 "completed_at_utc": datetime.now(timezone.utc).isoformat(),
                 "runtime_seconds": elapsed,
                 "peak_process_rss_bytes": int(process.memory_info().rss) if process else None,
@@ -1947,9 +1947,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
                 "status": "PASS",
                 "success_marker": SUCCESS_MARKER,
-            }
+            },
         )
-        write_json_atomic(package_root / "status.json", status)
         log(SUCCESS_MARKER)
         return 0
 
@@ -1979,6 +1978,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise
 
 
+def _seal_final_status_and_manifest(
+    config: AnalysisConfig,
+    *,
+    state: Mapping[str, Any],
+    frozen: Mapping[str, Any],
+    status: dict[str, Any],
+    final_status: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Write the immutable final status before hashing the package payload."""
+
+    status["phases"]["J_provenance"] = "PASS"
+    status.update(final_status)
+    write_json_atomic(config.package_root / "status.json", status)
+    manifest = _artifact_manifest(config, state=state, frozen=frozen)
+    write_json_atomic(config.package_root / "artifact_manifest.json", manifest)
+    return manifest
+
+
 def _artifact_manifest(
     config: AnalysisConfig, *, state: Mapping[str, Any], frozen: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -1986,6 +2003,14 @@ def _artifact_manifest(
     for root in (config.package_root, config.audit_root):
         for path in sorted(root.rglob("*")):
             if not path.is_file():
+                continue
+            if path.parent == config.package_root and (
+                path.name in {"artifact_manifest.json", "artifact_manifest.current.json"}
+                or (
+                    path.name.startswith("artifact_manifest.v")
+                    and path.name.endswith(".json")
+                )
+            ):
                 continue
             entries.append(
                 {

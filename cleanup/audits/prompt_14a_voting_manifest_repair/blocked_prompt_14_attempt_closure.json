@@ -1,0 +1,18 @@
+{
+  "schema_version": "prompt_14a_blocked_attempt_closure_v1",
+  "blocked_plan_commit": "bf2e53e3ea3fbe91e1336019f33b8425287d4564",
+  "blocked_plan_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+  "frozen_comparison_count": 124,
+  "frozen_holm_family_count": 36,
+  "comparisons_actually_analyzed": 0,
+  "blocker_audit_path": "cleanup/audits/prompt_14_two_dataset_oot_review/authentication_blocker.json",
+  "blocker_audit_sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78",
+  "repair_supersession_record_path": "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json",
+  "repair_supersession_record_sha256": "6f64d6e7ca77452ae0da2bba5108bf2fdb082af234de814c9fb7dec2adfaf315",
+  "state": "closed_blocked_attempt_not_resumable",
+  "historical_plan_rule": "The prior plan and its commit remain historical evidence and must not be reused as the active plan.",
+  "fresh_attempt_rule": "The next Prompt 14 attempt must begin again at Phase 0 and create, validate, and commit a new preinspection plan and digest before numeric outcome inspection.",
+  "design_reproduction_rule": "The next plan may reproduce the 124-comparison and 36-Holm-family design from protocol evidence, but may not change it based on outcomes or this artifact repair.",
+  "new_preinspection_plan_created_by_prompt_14a": false,
+  "canonical_record_digest": "388f1ee7b9d439aa4ce40b548371184929684a00ab7bd7bdb9e5872f31b1cd1e"
+}

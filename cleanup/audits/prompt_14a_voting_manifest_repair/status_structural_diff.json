@@ -1,0 +1,81 @@
+{
+  "schema_version": "prompt_14a_status_structural_diff_v1",
+  "comparison_policy": {
+    "projection": "structural_and_provenance_fields_only",
+    "predictive_metric_values_read": false,
+    "predictive_metric_values_emitted": false
+  },
+  "manifest_expected_state": {
+    "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+    "size_bytes": 762,
+    "sha256": "8da9422226d4204fccd2912ca2049f3c55b372a0878bf44219e12685fbfa2ddc",
+    "exact_bytes_recovered": false,
+    "recovery_search": {
+      "repository_non_data_artifact_files_with_exact_size": 0,
+      "git_blobs_with_exact_size": 0,
+      "byte_identical_archive_found": false,
+      "hash_only_checkpoint_found": false
+    }
+  },
+  "current_state": {
+    "path": "results/final_experiments/cross_dataset_voting_inference_v1/status.json",
+    "size_bytes": 1298,
+    "sha256": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a",
+    "schema_version": "prompt_06_voting_inference_status_v1",
+    "analysis_id": "cross_dataset_voting_inference_v1",
+    "started_at_utc": "2026-07-28T06:17:03.635580+00:00",
+    "completed_at_utc": "2026-07-28T06:39:26.481183+00:00",
+    "phase_names": [
+      "A_frozen_inputs",
+      "A_preservation",
+      "A_prompt_05_completion",
+      "H1_predeclared_family",
+      "B_alignment",
+      "C_metric_recomputation",
+      "D_score_psi",
+      "F_stability",
+      "G_resources",
+      "E_feature_psi",
+      "C3_independent_recalculation",
+      "H_paired_inference",
+      "I_evidence_tables",
+      "J_provenance"
+    ],
+    "all_phase_states": "PASS",
+    "blocker_count": 0,
+    "needs_user_action_count": 0,
+    "package_root": "results/final_experiments/cross_dataset_voting_inference_v1",
+    "audit_root": "cleanup/audits/prompt_06_voting_inference_evidence_package",
+    "comparison_family_count": 4,
+    "comparison_count": 12,
+    "delong_comparison_count": 12,
+    "bootstrap_comparison_count": 12,
+    "bootstrap_repetitions": 2000,
+    "holm_family_count": 4,
+    "status": "PASS",
+    "success_marker": "PROMPT_06_VOTING_INFERENCE_EVIDENCE_PACKAGE_PASS"
+  },
+  "semantic_diff": {
+    "added_structural_fields": null,
+    "removed_structural_fields": null,
+    "changed_structural_fields": null,
+    "exact_diff_available": false,
+    "reason": "The 762-byte object is not present in the non-data artifact tree or Git object database. Inventing its structure from its hash is forbidden.",
+    "writer_finalization_fields_known_from_code": [
+      "phases.J_provenance",
+      "completed_at_utc",
+      "runtime_seconds",
+      "peak_process_rss_bytes",
+      "package_root",
+      "audit_root",
+      "comparison_family_count",
+      "comparison_count",
+      "delong_comparison_count",
+      "bootstrap_comparison_count",
+      "bootstrap_repetitions",
+      "holm_family_count",
+      "status",
+      "success_marker"
+    ]
+  }
+}

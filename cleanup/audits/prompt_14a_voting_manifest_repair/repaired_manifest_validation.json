@@ -1,0 +1,64 @@
+{
+  "schema_version": "prompt_14a_repaired_manifest_validation_v1",
+  "selected_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+  "selected_manifest_sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf",
+  "selection_rule": "explicit_successor_pointer_fail_closed",
+  "ordered_payload_entry_count": 55,
+  "authenticated_payload_entries": 55,
+  "mismatching_payload_entries": 0,
+  "unchanged_entries_checked": 54,
+  "unchanged_entries_byte_identical": 54,
+  "legacy_manifest_expected_failure_reproduced": true,
+  "status_validation": {
+    "schema_valid": true,
+    "required_keys_valid": true,
+    "completion_predicates_valid": true,
+    "configuration_identity_valid": true,
+    "predeclared_family_consistency_valid": true,
+    "predictive_metric_values_read": false
+  },
+  "status_checkpoint_validation": {
+    "checkpoint_path": "cleanup/audits/prompt_07_lightweight_selectors/prompt_06_package_hashes_baseline.json",
+    "checkpoint_sha256": "883a4e3dabb9c569a631898fa7c1906ce772e83f42da040c14dfd8ec9e2c2cb6",
+    "checkpoint_manifest_path": "cleanup/audits/prompt_07_lightweight_selectors/artifact_manifest.json",
+    "checkpoint_manifest_sha256": "a7326af6a0eb426b676fa582f50cdec3e5d1a5d2b70302cfbf06a77a541e795a",
+    "status_checkpoint_match": true,
+    "legacy_manifest_checkpoint_match": true
+  },
+  "data_free_safety": {
+    "raw_dataset_path_resolution_implemented": false,
+    "worker_start_implemented": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "predictive_metric_values_read": false
+  },
+  "legacy_manifest_preserved_in_place": true,
+  "legacy_manifest_sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+  "payload_hash_snapshot_before_equals_after": true,
+  "blocker_audit_sha256": "6e91e017af4791f67992397be5c2620392d6baf354de09cf75c7a84e23485a78",
+  "focused_tests": {
+    "command": ".venv/Scripts/python.exe -m pytest tests/test_prompt_14a_voting_manifest_repair.py -q",
+    "result": "7 passed",
+    "data_free": true,
+    "covered_controls": [
+      "blocker_digest_and_exact_one_file_mismatch",
+      "current_status_schema_and_independent_checkpoint_authentication",
+      "original_manifest_preservation_and_explicit_supersession",
+      "ordered_55_entry_scope_and_55_of_55_authentication",
+      "54_unchanged_entries_byte_identical",
+      "canonical_successor_selection",
+      "modified_payload_rejected_after_sealing",
+      "unauthenticated_status_rejected_even_when_candidate_hash_is_inserted",
+      "final_status_written_before_future_manifest_seal",
+      "manifest_metadata_excluded_from_payload_scope",
+      "validator_has_no_dataset_or_worker_imports"
+    ]
+  },
+  "packaging_defect_and_regression_fix": {
+    "defect": "manifest_was_sealed_before_the_final_status_write",
+    "fix": "write_immutable_final_status_before_manifest_enumeration_and_exclude_manifest_metadata_from_payload_scope",
+    "scientific_computation_changed": false
+  },
+  "raw_dataset_paths_resolved": false,
+  "workers_started": 0
+}

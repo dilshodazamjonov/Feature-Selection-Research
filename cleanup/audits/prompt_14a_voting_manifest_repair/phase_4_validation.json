@@ -1,0 +1,76 @@
+{
+  "schema_version": "prompt_14a_phase_4_validation_v1",
+  "data_free_validator": {
+    "selected_manifest_path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+    "selected_manifest_sha256": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf",
+    "selection_rule": "explicit_successor_pointer_fail_closed",
+    "authenticated_entries": 55,
+    "expected_entries": 55,
+    "unchanged_entries_byte_identical": 54,
+    "expected_unchanged_entries": 54,
+    "legacy_one_file_failure_reproduced": true,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0,
+    "predictive_metric_values_read": false
+  },
+  "focused_tests": {
+    "command": ".venv/Scripts/python.exe -m pytest tests/test_prompt_14a_voting_manifest_repair.py -q",
+    "passed": 7,
+    "failed": 0,
+    "data_free": true
+  },
+  "negative_controls": {
+    "modified_payload_rejected_after_manifest_sealing": true,
+    "unauthenticated_status_rejected_when_hash_inserted_into_candidate_manifest": true,
+    "malformed_or_mismatching_successor_metadata_fails_closed": true
+  },
+  "final_runtime_audit": {
+    "matching_python_or_experiment_runtime_processes_after_tests": 0,
+    "active_writers": 0,
+    "execution_lock_files": 0,
+    "partial_files": 0,
+    "temporary_prediction_outputs": 0,
+    "persistent_registry_mutex_files": 3,
+    "persistent_registry_mutex_files_exclusively_held": 0
+  },
+  "changed_path_allowlist": {
+    "result": "pass",
+    "paths": [
+      "cleanup/audits/prompt_14a_voting_manifest_repair/artifact_reauthentication.csv",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/blocked_prompt_14_attempt_closure.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/blocker_reproduction.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/entry_validation.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/phase_4_validation.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/repair_decision.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/repaired_manifest_validation.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/status_provenance_review.json",
+      "cleanup/audits/prompt_14a_voting_manifest_repair/status_structural_diff.json",
+      "cleanup/tools/build_prompt_14a_voting_manifest_repair.py",
+      "cleanup/tools/validate_prompt_14a_voting_manifest.py",
+      "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json",
+      "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+      "scripts/build_voting_inference_evidence.py",
+      "src/credit_risk_fs/analysis/voting_inference/manifest_authentication.py",
+      "tests/test_prompt_14a_voting_manifest_repair.py",
+      "tests/test_voting_evidence_provenance.py"
+    ],
+    "report_paths_changed": 0,
+    "results_registry_paths_changed": 0,
+    "model_output_paths_changed": 0,
+    "prediction_paths_changed": 0,
+    "scientific_lock_paths_changed": 0,
+    "third_dataset_paths_changed": 0,
+    "protocol_paths_changed": 0,
+    "unrelated_paths_changed": 0
+  },
+  "original_manifest_preservation": {
+    "path": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json",
+    "sha256": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+    "preserved_in_place": true
+  },
+  "git_diff_check": "pass",
+  "experiment_workloads_started": 0,
+  "numeric_statistical_analyses_started": 0,
+  "report_or_results_integrations_performed": 0
+}
