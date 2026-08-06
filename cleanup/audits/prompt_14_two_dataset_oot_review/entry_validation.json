@@ -1,0 +1,122 @@
+{
+  "schema_version": "prompt_14_entry_validation_v1",
+  "audit_id": "prompt_14_two_dataset_oot_review",
+  "recorded_at_utc": "2026-08-06T04:42:51.2786883Z",
+  "verdict": "pass_for_preinspection_plan_freeze",
+  "repository": {
+    "branch": "main",
+    "head": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+    "required_stage_2_commit": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+    "required_stage_2_commit_is_ancestor": true,
+    "origin_main_behind": 0,
+    "origin_main_ahead": 2,
+    "worktree_clean_at_entry": true,
+    "untracked_paths_at_entry": []
+  },
+  "safety": {
+    "experiment_workers": 0,
+    "matching_child_processes": 0,
+    "execution_locks": 0,
+    "stale_execution_locks": 0,
+    "partial_or_temporary_outputs": 0,
+    "active_writers": 0,
+    "workers_started": 0,
+    "raw_dataset_paths_resolved": false,
+    "raw_datasets_loaded": false,
+    "third_dataset_raw_files_hashed_or_scanned": false,
+    "numeric_oot_performance_inspected_before_plan_commit": false,
+    "metadata_only_prediction_inventory_used_for_population_freeze": true,
+    "status_mode_invoked_before_plan_commit": false,
+    "status_mode_reason_not_invoked": "Source inspection showed that status validation parses evaluation states containing numeric metrics; semantic status validation is deferred until after the committed preinspection plan.",
+    "persistent_zero_byte_index_sidecars_not_execution_locks": [
+      {
+        "path": "results/run_index.csv.lock",
+        "bytes": 1,
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      },
+      {
+        "path": "results/full_baseline_v1/run_index.csv.lock",
+        "bytes": 1,
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      }
+    ]
+  },
+  "canonical_artifacts": {
+    "pilot_approval": {
+      "path": "configs/protocols/selector_combinations_v1/pilot_approval_lock.json",
+      "file_sha256": "9d0fcdc2b0f2f036dc5b38f888772cdfaf64f7e06fc788f055230ea5600fab2e",
+      "artifact_authentication_sha256": "29d44d6e84930d52b2978db79621c90b33d7c5bb13b2302d163be86b5387ab95"
+    },
+    "dev_completion": {
+      "path": "results/selector_combinations_v1/dev_completion_lock.json",
+      "file_sha256": "87fc9c7a08f6115229d8f0997c6db399c688a02277762e73b2c05bf97c536009",
+      "artifact_authentication_sha256": "4ccdcca351b7878beb5d89302657e874007929bc48f867c192475c76d8e9cc94"
+    },
+    "oot_scope": {
+      "path": "configs/protocols/selector_combinations_v1/oot_scope_freeze.json",
+      "file_sha256": "c7ea3a4cb53043e30cde27c9cc8799450cc930c280a65ba8be31986b85763686",
+      "artifact_authentication_sha256": "827d3aff47d963c5cabd07dd3b09f8f439dfdc817a59c3f3f414b9be47decfed"
+    },
+    "combination_protocol": {
+      "path": "configs/protocols/selector_combinations_v1/combination_protocol_lock.json",
+      "file_sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9"
+    },
+    "comparison_registry": {
+      "path": "configs/protocols/selector_combinations_v1/combination_comparison_registry.json",
+      "file_sha256": "0460d1a7eea5d39bbc6a84af468de42d8308d1f7b9c34b12e68c3a0762472a65"
+    },
+    "classical_baseline_configuration": {
+      "path": "configs/experiments/full_baseline_v1.yaml",
+      "file_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f"
+    },
+    "third_dataset_protocol": {
+      "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+      "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+      "expected_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+      "artifact_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6"
+    },
+    "third_dataset_stage_2_audit": {
+      "path": "cleanup/audits/third_dataset_protocol_approval/stage_2_validation.json",
+      "file_sha256": "fe9c053b31eecc4cf53403d5455ee2556e49f1e09f9aeba47be9cee4ae545a9f",
+      "artifact_authentication_sha256": "339ccdd96d03511ae52378ceca92192d427f41fdf67d6f86c6f352fad3493675"
+    }
+  },
+  "active_combination_oot_inventory": {
+    "root": "results/selector_combinations_v1/oot",
+    "expected_files": 168,
+    "observed_files": 168,
+    "evaluation_state_files": 24,
+    "evaluation_metric_files": 24,
+    "evaluation_prediction_files": 24,
+    "evaluation_model_configuration_files": 24,
+    "selection_state_files": 18,
+    "selection_result_files": 18,
+    "selection_final_feature_files": 18,
+    "selection_intermediate_feature_files": 18,
+    "missing_by_filename_inventory": 0,
+    "unexpected_by_filename_inventory": 0,
+    "historical_archived_files_excluded": 1,
+    "semantic_authentication_deferred_until_after_plan_commit": true,
+    "completion_checkpoint_design": "Authenticated per-selection and per-evaluation state JSON files; no conventional manifest.json, checkpoint.json, or _SUCCESS is required for this pilot/DEV/OOT runner."
+  },
+  "canonical_integration_targets_at_entry": {
+    "tracked_repository_overview": "README.md",
+    "tracked_reproducibility_summary": "docs/REPRODUCIBILITY.md",
+    "baseline_run_overview": "results/full_baseline_v1/README.md",
+    "existing_combination_comparison_registry": "configs/protocols/selector_combinations_v1/combination_comparison_registry.json",
+    "existing_canonical_final_research_report": null,
+    "existing_canonical_final_two_dataset_results_registry": null,
+    "existing_full_baseline_final_package_files": 0
+  },
+  "checks": [
+    {"id": "entry_worktree_clean", "passed": true},
+    {"id": "required_commit_ancestor", "passed": true},
+    {"id": "third_dataset_lock_identity", "passed": true},
+    {"id": "third_dataset_lock_internal_authentication", "passed": true},
+    {"id": "no_active_worker_or_writer", "passed": true},
+    {"id": "no_execution_lock_or_partial_write", "passed": true},
+    {"id": "required_lock_chain_present_and_hash_bound", "passed": true},
+    {"id": "oot_filename_inventory_exact", "passed": true},
+    {"id": "no_numeric_oot_performance_inspected", "passed": true}
+  ]
+}

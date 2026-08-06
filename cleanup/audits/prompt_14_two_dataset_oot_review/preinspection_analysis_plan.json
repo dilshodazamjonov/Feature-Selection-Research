@@ -1,0 +1,300 @@
+{
+  "schema_version": "prompt_14_preinspection_analysis_plan_v1",
+  "audit_id": "prompt_14_two_dataset_oot_review",
+  "plan_status": "frozen_before_numeric_oot_performance_inspection",
+  "source_commit": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+  "protocol_bindings": {
+    "combination_configuration_sha256": "432a24c0a12e2a134522e981effe0b151c02f9c98c03cb34af6916f77d5e86ab",
+    "combination_protocol_lock_sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9",
+    "comparison_registry_sha256": "0460d1a7eea5d39bbc6a84af468de42d8308d1f7b9c34b12e68c3a0762472a65",
+    "oot_scope_file_sha256": "c7ea3a4cb53043e30cde27c9cc8799450cc930c280a65ba8be31986b85763686",
+    "ordered_oot_selection_ids_sha256": "7aaf89b3ac6f71ce5553142cddf37fec9c4e250f9232638c28f603e26e5de111",
+    "ordered_oot_evaluation_cell_ids_sha256": "b367aca362bdcc81b77bf5bb2ba9b0bd65a033c7ac82471b9a8d4d7854c7d937",
+    "baseline_configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f"
+  },
+  "eligible_scope": {
+    "datasets_in_order": ["homecredit", "lendingclub_v2"],
+    "combination_methods_in_order": [
+      "statistical_normalized_average_rank",
+      "iv_then_boruta",
+      "boruta_then_mrmr_mutual_information",
+      "boruta_then_rfe_catboost"
+    ],
+    "baseline_methods_in_order": [
+      "full_features",
+      "random_k",
+      "iv_woe",
+      "mrmr_mutual_information",
+      "lasso_l1_logistic",
+      "legacy_rf_relevance_corr",
+      "catboost_shap",
+      "boruta_random_forest",
+      "rfe_catboost"
+    ],
+    "exploratory_external_comparator": "cross_dataset_rank_voting_v1_primary_pool_200",
+    "models_and_requested_budgets": [
+      {"model": "lr", "requested_k": 20},
+      {"model": "catboost", "requested_k": 40}
+    ],
+    "seed": 42,
+    "fit_scope": "full_dev_only",
+    "oot_evaluation_cells_expected": 24,
+    "oot_selector_refits_expected": 18,
+    "iv_pool_policy": {
+      "primary": 200,
+      "preregistered_sensitivities": [100, 300],
+      "sensitivity_claim_status": "exploratory"
+    }
+  },
+  "realized_feature_budgets_frozen_from_nonperformance_selection_metadata": [
+    {"dataset": "homecredit", "method": "statistical_normalized_average_rank", "configuration": "k20", "requested_k": 20, "realized_k": 20},
+    {"dataset": "homecredit", "method": "statistical_normalized_average_rank", "configuration": "k40", "requested_k": 40, "realized_k": 40},
+    {"dataset": "lendingclub_v2", "method": "statistical_normalized_average_rank", "configuration": "k20", "requested_k": 20, "realized_k": 20},
+    {"dataset": "lendingclub_v2", "method": "statistical_normalized_average_rank", "configuration": "k40", "requested_k": 40, "realized_k": 40},
+    {"dataset": "homecredit", "method": "iv_then_boruta", "configuration": "pool100", "requested_k": null, "realized_k": 75},
+    {"dataset": "homecredit", "method": "iv_then_boruta", "configuration": "pool200", "requested_k": null, "realized_k": 107},
+    {"dataset": "homecredit", "method": "iv_then_boruta", "configuration": "pool300", "requested_k": null, "realized_k": 136},
+    {"dataset": "lendingclub_v2", "method": "iv_then_boruta", "configuration": "pool100", "requested_k": null, "realized_k": 100},
+    {"dataset": "lendingclub_v2", "method": "iv_then_boruta", "configuration": "pool200", "requested_k": null, "realized_k": 182},
+    {"dataset": "lendingclub_v2", "method": "iv_then_boruta", "configuration": "pool300", "requested_k": null, "realized_k": 219},
+    {"dataset": "homecredit", "method": "boruta_then_mrmr_mutual_information", "configuration": "k20_full_dev_refit", "requested_k": 20, "realized_k": 20},
+    {"dataset": "homecredit", "method": "boruta_then_mrmr_mutual_information", "configuration": "k40_full_dev_refit", "requested_k": 40, "realized_k": 40},
+    {"dataset": "homecredit", "method": "boruta_then_rfe_catboost", "configuration": "k20_full_dev_refit", "requested_k": 20, "realized_k": 20},
+    {"dataset": "homecredit", "method": "boruta_then_rfe_catboost", "configuration": "k40_full_dev_refit", "requested_k": 40, "realized_k": 40},
+    {"dataset": "lendingclub_v2", "method": "boruta_then_mrmr_mutual_information", "configuration": "k20", "requested_k": 20, "realized_k": 20},
+    {"dataset": "lendingclub_v2", "method": "boruta_then_mrmr_mutual_information", "configuration": "k40", "requested_k": 40, "realized_k": 40},
+    {"dataset": "lendingclub_v2", "method": "boruta_then_rfe_catboost", "configuration": "k20", "requested_k": 20, "realized_k": 20},
+    {"dataset": "lendingclub_v2", "method": "boruta_then_rfe_catboost", "configuration": "k40", "requested_k": 40, "realized_k": 40}
+  ],
+  "natural_support_rules": {
+    "padding": false,
+    "authoritative_policy": "Boruta confirmed natural support; tentative and rejected features cannot pad support.",
+    "required_reference_labels": [
+      {
+        "dataset": "homecredit",
+        "model": "catboost",
+        "method": "boruta_then_mrmr_mutual_information",
+        "requested_k": 40,
+        "authenticated_reference_realized_k": 26,
+        "support_status": "infeasible_natural_support",
+        "padding": false
+      },
+      {
+        "dataset": "homecredit",
+        "model": "catboost",
+        "method": "boruta_then_rfe_catboost",
+        "requested_k": 40,
+        "authenticated_reference_realized_k": 26,
+        "support_status": "infeasible_natural_support",
+        "padding": false
+      }
+    ],
+    "full_dev_refit_distinction": "The frozen 26-of-40 labels are authenticated reference-support facts. The OOT full-DEV selector refits must additionally report their own authenticated realized support and must not overwrite or erase the reference labels.",
+    "comparison_rule": "Every K40 contrast involving either labelled Home Credit CatBoost Boruta-first case is non-budget-matched and exploratory unless an authenticated exact realized-K comparator exists; no like-for-like wording is allowed."
+  },
+  "oot_populations": [
+    {
+      "dataset": "homecredit",
+      "rows": 120053,
+      "events": 10688,
+      "stable_case_id": "SK_ID_CURR",
+      "ordered_case_id_sha256": "08a815a762fc309aeba22ed42f9b772f39e1b6a8ce9c41f5eb1644b1c2f2f860",
+      "ordered_case_id_target_sha256": "d25fae6ded74dac8a32745d73659ce5437f238609fe6b3b40ad07daf4536d472",
+      "locked_window": "recent_decision[-240,-1]"
+    },
+    {
+      "dataset": "lendingclub_v2",
+      "rows": 293105,
+      "events": 68252,
+      "stable_case_id": "loan_id",
+      "ordered_case_id_sha256": "493bf9d2b88b385baf17081f64cea41e9f4f4ff2b1fd479f74d8be323f627c72",
+      "ordered_case_id_target_sha256": "4aab7126f7b5566bde6417bfa61ee01da4edb700905fa39fd1fd4209da527985",
+      "locked_window": "issue_d_month_index[-1065,-730]"
+    }
+  ],
+  "metrics": {
+    "primary": ["roc_auc"],
+    "secondary_predictive": ["gini", "ks", "lift_at_10", "bad_rate_capture_at_10", "precision", "recall", "f1", "accuracy"],
+    "calibration": ["log_loss", "brier"],
+    "selection_stability": ["nogueira_stability", "mean_pairwise_jaccard", "kuncheva_index", "selection_frequency"],
+    "drift": ["selected_feature_psi", "dev_oof_to_oot_score_psi"],
+    "resources": ["fit_seconds", "prediction_seconds", "wall_clock_seconds", "peak_process_rss_bytes", "peak_gpu_memory_bytes"],
+    "availability_rule": "Only metrics already persisted or exactly recomputable from authenticated stored predictions under the applicable protocol are reported. Unavailable metrics remain null with an explicit reason and are never reconstructed from raw data.",
+    "definitions": {
+      "gini": "2 * roc_auc - 1; no separate inferential test",
+      "ks": "Maximum absolute class-conditional ECDF separation using the frozen smallest-score tie convention",
+      "lift_at_10": "Top ceil(0.10*n) ordered by descending score then ascending stable case ID, divided by population event rate",
+      "bad_rate_capture_at_10": "Events in the frozen top-decile set divided by all events",
+      "log_loss": "Binary log loss on authenticated probability predictions",
+      "brier": "Mean squared probability error"
+    }
+  },
+  "comparison_graph": {
+    "direction": "method_minus_reference",
+    "baseline_families": [
+      {
+        "family_template": "baseline_vs_full_features__{dataset}__{model}",
+        "reference": "full_features",
+        "methods": ["iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "legacy_rf_relevance_corr", "catboost_shap", "boruta_random_forest", "rfe_catboost"],
+        "status": "confirmatory"
+      },
+      {
+        "family_template": "baseline_vs_random_k__{dataset}__{model}",
+        "reference": "random_k",
+        "methods": ["iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "legacy_rf_relevance_corr", "catboost_shap", "boruta_random_forest", "rfe_catboost"],
+        "status": "confirmatory"
+      }
+    ],
+    "combination_direct_comparators": [
+      {"method": "iv_then_boruta", "variants": ["pool100", "pool200", "pool300"], "primary_variant": "pool200", "comparators": ["iv_woe", "boruta_random_forest"]},
+      {"method": "boruta_then_rfe_catboost", "variants": ["model_budget"], "comparators": ["boruta_random_forest", "rfe_catboost"]},
+      {"method": "boruta_then_mrmr_mutual_information", "variants": ["model_budget"], "comparators": ["boruta_random_forest", "mrmr_mutual_information"]},
+      {"method": "statistical_normalized_average_rank", "variants": ["model_budget"], "comparators": ["iv_woe", "lasso_l1_logistic", "rfe_catboost", "boruta_random_forest", "catboost_shap", "mrmr_mutual_information", "cross_dataset_rank_voting_v1_primary_pool_200"]}
+    ],
+    "combination_family_template": "combination_vs_{reference}__{dataset}__{model}",
+    "expected_baseline_comparisons": 56,
+    "expected_combination_comparisons": 68,
+    "expected_total_comparisons": 124,
+    "expected_baseline_holm_families": 8,
+    "expected_combination_holm_families": 28,
+    "expected_total_holm_families": 36,
+    "exploratory_rules": [
+      "iv_then_boruta pool100 and pool300 contrasts are preregistered sensitivity analyses and cannot support primary confirmatory wording.",
+      "cross_dataset_rank_voting_v1 is frozen only by protocol version and primary pool; because the combination registry does not bind a run identity, its contrast is exploratory even after the primary pool200 run is authenticated.",
+      "Any realized-feature-count mismatch is non-budget-matched and exploratory.",
+      "No all-pairs comparisons are permitted."
+    ]
+  },
+  "inference": {
+    "primary_split": "oot",
+    "alpha": 0.05,
+    "confidence_level": 0.95,
+    "auc_test": {
+      "name": "two_sided_paired_delong_on_identical_rows",
+      "implementation": "credit_risk_fs.evaluation.paired_inference.paired_delong_test"
+    },
+    "paired_bootstrap": {
+      "type": "paired_stratified_by_target",
+      "metrics": ["roc_auc", "ks", "lift_at_10"],
+      "attempted_repetitions": 2000,
+      "minimum_valid_repetitions": 1900,
+      "seed": 20260721,
+      "interval": "two-sided 95% percentile"
+    },
+    "multiplicity": {
+      "method": "Holm step-down",
+      "implementation": "credit_risk_fs.evaluation.paired_inference.holm_adjust",
+      "scope": "within each complete named dataset-model-reference family",
+      "cross_family_pooling": false,
+      "incomplete_family_rule": "Do not adjust or claim significance; mark the entire family unavailable."
+    },
+    "ties": {
+      "effect_status": "tie when the serialized metric difference is exactly zero at 1e-12 absolute tolerance; otherwise win for positive and loss for negative",
+      "stable_score_order": "descending score then ascending stable case ID"
+    },
+    "recomputation_tolerances": {
+      "absolute": 1e-10,
+      "relative": 1e-10,
+      "hashes_and_counts": "exact"
+    }
+  },
+  "evidence_prerequisites": {
+    "pairing": [
+      "same dataset, split, model, seed, and locked OOT population",
+      "identical ordered case-ID hash or proven one-to-one key alignment",
+      "identical target hash with both classes",
+      "no duplicate or missing case IDs",
+      "finite scores within the authenticated probability/score domain",
+      "exact expected row count",
+      "no target/prediction misalignment"
+    ],
+    "missing_predictions": "No pairing, p-value, bootstrap interval, or imputation; retain the comparison row as unavailable.",
+    "failed_or_infeasible_configuration": "Retain the row and reason; do not substitute another method or configuration.",
+    "nonidentical_population": "Fail the paired comparison and the associated Holm family; no raw-data repair.",
+    "duplicate_or_unexpected_artifact": "Fail authentication and stop canonical integration.",
+    "configuration_adaptation_after_oot": "Must be false; any contrary evidence blocks the audit."
+  },
+  "dev_to_oot_and_stability_summaries": {
+    "primary_generalization": ["five-fold DEV mean roc_auc", "sample standard deviation across five folds", "DEV 95% normal-approximation interval", "OOT roc_auc", "oot_minus_dev_mean_auc"],
+    "stability": ["nogueira_stability", "mean_pairwise_jaccard", "kuncheva_index", "selection-frequency distribution"],
+    "drift": ["selected-feature PSI distribution", "DEV-OOF-to-OOT score PSI"],
+    "resources": ["selector fit time", "model fit time", "prediction time", "total wall time", "peak process RSS", "peak GPU memory if persisted"],
+    "synthesis": "Stratified by dataset and model. No pooled cross-dataset headline estimate. Cross-dataset consistency is descriptive."
+  },
+  "claim_rules": {
+    "predictive_evidence_grades": {
+      "strong": "delta_auc > 0 AND Holm-adjusted paired DeLong p < 0.05 AND the 95% paired stratified-bootstrap delta-AUC interval is wholly above zero",
+      "moderate": "delta_auc > 0 AND exactly one of the adjusted-DeLong or wholly-positive bootstrap-interval criteria is met",
+      "weak": "delta_auc > 0 AND neither inferential criterion is met",
+      "not_supported": "delta_auc <= 0 OR pairing is unavailable/invalid OR required inference is unavailable/invalid"
+    },
+    "statistically_significant": "Allowed only when the complete applicable Holm family has adjusted p < 0.05.",
+    "equivalent_or_noninferior": "Prohibited because no margin and corresponding test were preregistered.",
+    "best": "Prohibited unless the full preregistered evidence supports the scope; otherwise say highest observed in the named scope.",
+    "generalizes_across_datasets": "Requires consistent authenticated OOT evidence on both Home Credit and LendingClub v2, separately by model where applicable.",
+    "improves_stability": "Requires direct persisted stability evidence and cannot be inferred from AUC.",
+    "ci_contains_zero": "Insufficient evidence for a difference, never proof of equality.",
+    "causal_claims": "Prohibited.",
+    "third_dataset": "May be described only as separately preregistered and not yet executed."
+  },
+  "output_schemas_and_sort_order": {
+    "artifact_manifest.csv": {
+      "columns": ["evidence_class", "active_or_historical", "dataset", "method", "model", "artifact_role", "relative_path", "bytes", "sha256", "authenticated", "authentication_reference", "notes"],
+      "sort": ["evidence_class", "active_or_historical", "dataset", "method", "model", "artifact_role", "relative_path"]
+    },
+    "metric_recomputation_check.csv": {
+      "columns": ["dataset", "method", "configuration", "model", "metric", "stored_value", "recomputed_value", "absolute_difference", "relative_difference", "absolute_tolerance", "relative_tolerance", "passed", "prediction_path", "metric_path"],
+      "sort": ["dataset", "method", "configuration", "model", "metric"]
+    },
+    "two_dataset_results_long.csv": {
+      "columns": ["result_id", "dataset", "method", "method_family", "configuration", "model", "requested_k", "realized_k", "reference_natural_support_k", "support_status", "padding", "oot_rows", "oot_events", "dev_auc_mean", "dev_auc_sd", "dev_auc_ci_lower", "dev_auc_ci_upper", "oot_auc", "oot_gini", "oot_ks", "oot_lift_at_10", "oot_bad_rate_capture_at_10", "oot_log_loss", "oot_brier", "oot_minus_dev_auc", "nogueira_stability", "mean_pairwise_jaccard", "kuncheva_index", "score_psi", "feature_psi_mean", "fit_seconds", "prediction_seconds", "wall_clock_seconds", "peak_rss_bytes", "peak_gpu_memory_bytes", "result_authentication_reference", "prediction_authentication_reference", "confirmatory_eligibility", "notes"],
+      "sort": ["dataset_order", "method_order", "configuration_order", "model_order"]
+    },
+    "paired_comparisons.csv": {
+      "columns": ["comparison_id", "family_id", "family_status", "dataset", "model", "method", "method_configuration", "reference", "direction", "metric", "method_value", "reference_value", "difference", "bootstrap_ci_lower", "bootstrap_ci_upper", "bootstrap_attempted", "bootstrap_valid", "delong_z", "raw_p_value", "holm_adjusted_p_value", "holm_reject", "win_tie_loss", "population_rows", "ordered_case_id_sha256", "ordered_case_id_target_sha256", "budget_match_status", "natural_support_status", "exploratory", "availability", "evidence_grade", "method_prediction_path", "reference_prediction_path"],
+      "sort": ["family_id", "method_order", "configuration_order", "metric_order"]
+    },
+    "method_evidence_summary.csv": {
+      "columns": ["method", "configuration", "dataset", "model", "direct_comparisons", "wins", "ties", "losses", "strong", "moderate", "weak", "not_supported", "dev_to_oot_gap", "stability_summary", "drift_summary", "resource_summary", "natural_support_summary", "cross_dataset_consistency", "interpretation"],
+      "sort": ["method_order", "configuration_order", "dataset_order", "model_order"]
+    },
+    "claims_and_evidence.csv": {
+      "columns": ["claim_id", "claim", "scope", "fact_or_interpretation", "evidence_grade", "supporting_result_ids", "supporting_comparison_ids", "counterevidence", "allowed_wording", "limitations"],
+      "sort": ["claim_id"]
+    },
+    "multiplicity_families.json": "Families sorted by family_id; members sorted by method order then configuration order.",
+    "authentication_inventory.json": "Objects sorted by evidence class and relative path; active evidence separated from historical attempts.",
+    "authentication_validation.json": "Checks sorted by check_id.",
+    "results_digest.json": "Artifact references sorted by relative path with SHA-256 and row count.",
+    "final_validation.json": "Checks sorted by check_id with explicit command, status, and evidence."
+  },
+  "visuals": [
+    {
+      "id": "paired_oot_auc_effect_forest",
+      "purpose": "Show frozen paired OOT AUC effects and 95% intervals by dataset/model without pooling.",
+      "required_annotation": "method minus reference; paired target-stratified bootstrap; population; exploratory marker"
+    },
+    {
+      "id": "dev_oot_generalization_stability",
+      "purpose": "Show DEV mean versus OOT AUC gap with stability context by dataset/model.",
+      "required_annotation": "DEV support only; OOT primary; no causal or equivalence language"
+    }
+  ],
+  "determinism": {
+    "text_encoding": "UTF-8",
+    "line_endings": "LF",
+    "json": "sorted keys where generated; 2-space indentation; trailing newline; non-finite values forbidden",
+    "csv": "fixed column order; deterministic row sort; dot decimal; empty field for unavailable values; LF terminator",
+    "float_serialization": "17 significant decimal digits in machine-readable JSON/CSV; display rounding is report-only",
+    "paths": "repository-relative POSIX separators",
+    "absolute_machine_paths": false
+  },
+  "prohibitions": [
+    "No pilot, DEV, or OOT rerun/resume/refit/transform/predict/regeneration.",
+    "No raw research dataset loading or hashing.",
+    "No third-dataset adapter implementation or execution.",
+    "No protocol or lock modification.",
+    "No outcome-driven comparator, metric, multiplicity, or retention change.",
+    "No package installation, download, push, merge, rebase, or history rewrite."
+  ]
+}

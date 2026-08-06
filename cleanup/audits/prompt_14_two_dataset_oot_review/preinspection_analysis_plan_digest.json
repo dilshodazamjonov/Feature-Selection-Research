@@ -1,0 +1,15 @@
+{
+  "schema_version": "prompt_14_preinspection_analysis_plan_digest_v1",
+  "audit_id": "prompt_14_two_dataset_oot_review",
+  "recorded_at_utc": "2026-08-06T04:48:55.6279880Z",
+  "plan_path": "cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json",
+  "sha256_algorithm": "SHA-256",
+  "canonical_plan_file_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+  "canonicalization": "Exact UTF-8 file bytes committed to Git; LF line endings; terminal newline included.",
+  "validation": {
+    "json_parse_passed": true,
+    "recomputed_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+    "digest_matches": true,
+    "numeric_oot_performance_inspected_before_digest": false
+  }
+}
