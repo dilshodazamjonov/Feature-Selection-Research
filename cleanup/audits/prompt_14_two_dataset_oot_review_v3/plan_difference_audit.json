@@ -1,0 +1,29 @@
+{
+  "authoritative_historical": {
+    "baseline_or_full_random_comparisons": 56,
+    "combination_comparisons": 68,
+    "comparisons": 124,
+    "holm_families": 36,
+    "metric_recomputation_absolute_tolerance": 1e-10
+  },
+  "excluded_changes": [
+    "all_rejected_v2_comparison_identities",
+    "pool100_and_pool300_voting_sensitivity_additions",
+    "combination_vs_full_features_and_random_k_substitution",
+    "1e-12_metric_reconciliation_tolerance",
+    "rejected_incomplete_family_rule"
+  ],
+  "historical_primary_pool_200_relationships_retained": 4,
+  "note": "The four primary-pool voting relationships arise from the historical plan; no rejected v2 voting identity is imported.",
+  "rejected_v2": {
+    "active": false,
+    "combination_full_random_comparisons": 48,
+    "comparisons": 124,
+    "constituent_or_parent_comparisons": 64,
+    "holm_families": 36,
+    "metric_recomputation_absolute_tolerance": 1e-12,
+    "voting_context_comparisons": 12
+  },
+  "schema_version": "prompt_14_v3_plan_difference_audit_v1",
+  "status": "pass_historical_selected_rejected_excluded"
+}

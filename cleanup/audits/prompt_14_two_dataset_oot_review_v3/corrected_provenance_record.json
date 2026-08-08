@@ -1,0 +1,33 @@
+{
+  "binding_decision": "recover_unchanged_pre_outcome_committed_design",
+  "closed_attempt_state": "closed_blocked_attempt_not_resumable",
+  "false_zero_prior_inspection_statement_rejected": true,
+  "first_attempt_comparisons_analyzed": 0,
+  "first_attempt_inferential_results_produced": false,
+  "first_attempt_plan_modified_after_outcome_inspection": false,
+  "first_attempt_postcommit_numeric_outcomes_opened": true,
+  "first_attempt_report_integration_performed": false,
+  "first_plan_commit": "bf2e53e3ea3fbe91e1336019f33b8425287d4564",
+  "first_plan_committed_before_numeric_outcome_inspection": true,
+  "first_plan_path": "cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json",
+  "first_plan_sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+  "historical_plan_git_history": {
+    "commits_touching_path": [
+      "bf2e53e3ea3fbe91e1336019f33b8425287d4564"
+    ],
+    "first_blocker_commit_is_descendant": true,
+    "unchanged_in_worktree_at_starting_head": true
+  },
+  "phase_0_1_safety": {
+    "comparisons_analyzed_in_this_attempt": 0,
+    "numeric_outcomes_opened_in_this_attempt": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0
+  },
+  "prompt_14b_comparisons_analyzed": 0,
+  "prompt_14b_numeric_outcomes_opened": false,
+  "recovery_is_not_resumption": true,
+  "schema_version": "prompt_14_v3_corrected_provenance_v1",
+  "second_attempt_comparisons_analyzed": 0,
+  "second_attempt_numeric_outcomes_opened": false
+}

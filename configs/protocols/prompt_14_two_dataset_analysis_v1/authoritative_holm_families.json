@@ -1,0 +1,999 @@
+{
+  "alpha": 0.05,
+  "creation_parent_commit": "77337b5f58ba1baf5e2551c2fb72719525d1d12a",
+  "families": [
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "homecredit",
+      "family_id": "baseline_vs_full_features__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-015__homecredit__catboost__iv_woe__k40__vs__full_features",
+        "p14-b-016__homecredit__catboost__mrmr_mutual_information__k40__vs__full_features",
+        "p14-b-017__homecredit__catboost__lasso_l1_logistic__k40__vs__full_features",
+        "p14-b-018__homecredit__catboost__legacy_rf_relevance_corr__k40__vs__full_features",
+        "p14-b-019__homecredit__catboost__catboost_shap__k40__vs__full_features",
+        "p14-b-020__homecredit__catboost__boruta_random_forest__k40__vs__full_features",
+        "p14-b-021__homecredit__catboost__rfe_catboost__k40__vs__full_features"
+      ],
+      "model": "catboost",
+      "reference": "full_features",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "homecredit",
+      "family_id": "baseline_vs_full_features__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-001__homecredit__lr__iv_woe__k20__vs__full_features",
+        "p14-b-002__homecredit__lr__mrmr_mutual_information__k20__vs__full_features",
+        "p14-b-003__homecredit__lr__lasso_l1_logistic__k20__vs__full_features",
+        "p14-b-004__homecredit__lr__legacy_rf_relevance_corr__k20__vs__full_features",
+        "p14-b-005__homecredit__lr__catboost_shap__k20__vs__full_features",
+        "p14-b-006__homecredit__lr__boruta_random_forest__k20__vs__full_features",
+        "p14-b-007__homecredit__lr__rfe_catboost__k20__vs__full_features"
+      ],
+      "model": "lr",
+      "reference": "full_features",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "lendingclub_v2",
+      "family_id": "baseline_vs_full_features__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-043__lendingclub_v2__catboost__iv_woe__k40__vs__full_features",
+        "p14-b-044__lendingclub_v2__catboost__mrmr_mutual_information__k40__vs__full_features",
+        "p14-b-045__lendingclub_v2__catboost__lasso_l1_logistic__k40__vs__full_features",
+        "p14-b-046__lendingclub_v2__catboost__legacy_rf_relevance_corr__k40__vs__full_features",
+        "p14-b-047__lendingclub_v2__catboost__catboost_shap__k40__vs__full_features",
+        "p14-b-048__lendingclub_v2__catboost__boruta_random_forest__k40__vs__full_features",
+        "p14-b-049__lendingclub_v2__catboost__rfe_catboost__k40__vs__full_features"
+      ],
+      "model": "catboost",
+      "reference": "full_features",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "lendingclub_v2",
+      "family_id": "baseline_vs_full_features__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-029__lendingclub_v2__lr__iv_woe__k20__vs__full_features",
+        "p14-b-030__lendingclub_v2__lr__mrmr_mutual_information__k20__vs__full_features",
+        "p14-b-031__lendingclub_v2__lr__lasso_l1_logistic__k20__vs__full_features",
+        "p14-b-032__lendingclub_v2__lr__legacy_rf_relevance_corr__k20__vs__full_features",
+        "p14-b-033__lendingclub_v2__lr__catboost_shap__k20__vs__full_features",
+        "p14-b-034__lendingclub_v2__lr__boruta_random_forest__k20__vs__full_features",
+        "p14-b-035__lendingclub_v2__lr__rfe_catboost__k20__vs__full_features"
+      ],
+      "model": "lr",
+      "reference": "full_features",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "homecredit",
+      "family_id": "baseline_vs_random_k__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-022__homecredit__catboost__iv_woe__k40__vs__random_k",
+        "p14-b-023__homecredit__catboost__mrmr_mutual_information__k40__vs__random_k",
+        "p14-b-024__homecredit__catboost__lasso_l1_logistic__k40__vs__random_k",
+        "p14-b-025__homecredit__catboost__legacy_rf_relevance_corr__k40__vs__random_k",
+        "p14-b-026__homecredit__catboost__catboost_shap__k40__vs__random_k",
+        "p14-b-027__homecredit__catboost__boruta_random_forest__k40__vs__random_k",
+        "p14-b-028__homecredit__catboost__rfe_catboost__k40__vs__random_k"
+      ],
+      "model": "catboost",
+      "reference": "random_k",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "homecredit",
+      "family_id": "baseline_vs_random_k__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-008__homecredit__lr__iv_woe__k20__vs__random_k",
+        "p14-b-009__homecredit__lr__mrmr_mutual_information__k20__vs__random_k",
+        "p14-b-010__homecredit__lr__lasso_l1_logistic__k20__vs__random_k",
+        "p14-b-011__homecredit__lr__legacy_rf_relevance_corr__k20__vs__random_k",
+        "p14-b-012__homecredit__lr__catboost_shap__k20__vs__random_k",
+        "p14-b-013__homecredit__lr__boruta_random_forest__k20__vs__random_k",
+        "p14-b-014__homecredit__lr__rfe_catboost__k20__vs__random_k"
+      ],
+      "model": "lr",
+      "reference": "random_k",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "lendingclub_v2",
+      "family_id": "baseline_vs_random_k__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-050__lendingclub_v2__catboost__iv_woe__k40__vs__random_k",
+        "p14-b-051__lendingclub_v2__catboost__mrmr_mutual_information__k40__vs__random_k",
+        "p14-b-052__lendingclub_v2__catboost__lasso_l1_logistic__k40__vs__random_k",
+        "p14-b-053__lendingclub_v2__catboost__legacy_rf_relevance_corr__k40__vs__random_k",
+        "p14-b-054__lendingclub_v2__catboost__catboost_shap__k40__vs__random_k",
+        "p14-b-055__lendingclub_v2__catboost__boruta_random_forest__k40__vs__random_k",
+        "p14-b-056__lendingclub_v2__catboost__rfe_catboost__k40__vs__random_k"
+      ],
+      "model": "catboost",
+      "reference": "random_k",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "baseline_or_full_random",
+      "complete_registered_member_count": 7,
+      "dataset": "lendingclub_v2",
+      "family_id": "baseline_vs_random_k__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-b-036__lendingclub_v2__lr__iv_woe__k20__vs__random_k",
+        "p14-b-037__lendingclub_v2__lr__mrmr_mutual_information__k20__vs__random_k",
+        "p14-b-038__lendingclub_v2__lr__lasso_l1_logistic__k20__vs__random_k",
+        "p14-b-039__lendingclub_v2__lr__legacy_rf_relevance_corr__k20__vs__random_k",
+        "p14-b-040__lendingclub_v2__lr__catboost_shap__k20__vs__random_k",
+        "p14-b-041__lendingclub_v2__lr__boruta_random_forest__k20__vs__random_k",
+        "p14-b-042__lendingclub_v2__lr__rfe_catboost__k20__vs__random_k"
+      ],
+      "model": "lr",
+      "reference": "random_k",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 6,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_boruta_random_forest__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-021__homecredit__catboost__statistical_normalized_average_rank__k40__vs__boruta_random_forest",
+        "p14-c-026__homecredit__catboost__iv_then_boruta__pool100__vs__boruta_random_forest",
+        "p14-c-028__homecredit__catboost__iv_then_boruta__pool200__vs__boruta_random_forest",
+        "p14-c-030__homecredit__catboost__iv_then_boruta__pool300__vs__boruta_random_forest",
+        "p14-c-031__homecredit__catboost__boruta_then_mrmr_mutual_information__k40__vs__boruta_random_forest",
+        "p14-c-033__homecredit__catboost__boruta_then_rfe_catboost__k40__vs__boruta_random_forest"
+      ],
+      "model": "catboost",
+      "reference": "boruta_random_forest",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 6,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_boruta_random_forest__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-004__homecredit__lr__statistical_normalized_average_rank__k20__vs__boruta_random_forest",
+        "p14-c-009__homecredit__lr__iv_then_boruta__pool100__vs__boruta_random_forest",
+        "p14-c-011__homecredit__lr__iv_then_boruta__pool200__vs__boruta_random_forest",
+        "p14-c-013__homecredit__lr__iv_then_boruta__pool300__vs__boruta_random_forest",
+        "p14-c-014__homecredit__lr__boruta_then_mrmr_mutual_information__k20__vs__boruta_random_forest",
+        "p14-c-016__homecredit__lr__boruta_then_rfe_catboost__k20__vs__boruta_random_forest"
+      ],
+      "model": "lr",
+      "reference": "boruta_random_forest",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 6,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_boruta_random_forest__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-055__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__boruta_random_forest",
+        "p14-c-060__lendingclub_v2__catboost__iv_then_boruta__pool100__vs__boruta_random_forest",
+        "p14-c-062__lendingclub_v2__catboost__iv_then_boruta__pool200__vs__boruta_random_forest",
+        "p14-c-064__lendingclub_v2__catboost__iv_then_boruta__pool300__vs__boruta_random_forest",
+        "p14-c-065__lendingclub_v2__catboost__boruta_then_mrmr_mutual_information__k40__vs__boruta_random_forest",
+        "p14-c-067__lendingclub_v2__catboost__boruta_then_rfe_catboost__k40__vs__boruta_random_forest"
+      ],
+      "model": "catboost",
+      "reference": "boruta_random_forest",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 6,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_boruta_random_forest__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-038__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__boruta_random_forest",
+        "p14-c-043__lendingclub_v2__lr__iv_then_boruta__pool100__vs__boruta_random_forest",
+        "p14-c-045__lendingclub_v2__lr__iv_then_boruta__pool200__vs__boruta_random_forest",
+        "p14-c-047__lendingclub_v2__lr__iv_then_boruta__pool300__vs__boruta_random_forest",
+        "p14-c-048__lendingclub_v2__lr__boruta_then_mrmr_mutual_information__k20__vs__boruta_random_forest",
+        "p14-c-050__lendingclub_v2__lr__boruta_then_rfe_catboost__k20__vs__boruta_random_forest"
+      ],
+      "model": "lr",
+      "reference": "boruta_random_forest",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_catboost_shap__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-022__homecredit__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap"
+      ],
+      "model": "catboost",
+      "reference": "catboost_shap",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_catboost_shap__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-005__homecredit__lr__statistical_normalized_average_rank__k20__vs__catboost_shap"
+      ],
+      "model": "lr",
+      "reference": "catboost_shap",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_catboost_shap__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-056__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap"
+      ],
+      "model": "catboost",
+      "reference": "catboost_shap",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_catboost_shap__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-039__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__catboost_shap"
+      ],
+      "model": "lr",
+      "reference": "catboost_shap",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_cross_dataset_rank_voting_v1_primary_pool_200__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-024__homecredit__catboost__statistical_normalized_average_rank__k40__vs__cross_dataset_rank_voting_v1_primary_pool_200"
+      ],
+      "model": "catboost",
+      "reference": "cross_dataset_rank_voting_v1_primary_pool_200",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_cross_dataset_rank_voting_v1_primary_pool_200__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-007__homecredit__lr__statistical_normalized_average_rank__k20__vs__cross_dataset_rank_voting_v1_primary_pool_200"
+      ],
+      "model": "lr",
+      "reference": "cross_dataset_rank_voting_v1_primary_pool_200",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_cross_dataset_rank_voting_v1_primary_pool_200__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-058__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__cross_dataset_rank_voting_v1_primary_pool_200"
+      ],
+      "model": "catboost",
+      "reference": "cross_dataset_rank_voting_v1_primary_pool_200",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_cross_dataset_rank_voting_v1_primary_pool_200__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-041__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__cross_dataset_rank_voting_v1_primary_pool_200"
+      ],
+      "model": "lr",
+      "reference": "cross_dataset_rank_voting_v1_primary_pool_200",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 4,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_iv_woe__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-018__homecredit__catboost__statistical_normalized_average_rank__k40__vs__iv_woe",
+        "p14-c-025__homecredit__catboost__iv_then_boruta__pool100__vs__iv_woe",
+        "p14-c-027__homecredit__catboost__iv_then_boruta__pool200__vs__iv_woe",
+        "p14-c-029__homecredit__catboost__iv_then_boruta__pool300__vs__iv_woe"
+      ],
+      "model": "catboost",
+      "reference": "iv_woe",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 4,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_iv_woe__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-001__homecredit__lr__statistical_normalized_average_rank__k20__vs__iv_woe",
+        "p14-c-008__homecredit__lr__iv_then_boruta__pool100__vs__iv_woe",
+        "p14-c-010__homecredit__lr__iv_then_boruta__pool200__vs__iv_woe",
+        "p14-c-012__homecredit__lr__iv_then_boruta__pool300__vs__iv_woe"
+      ],
+      "model": "lr",
+      "reference": "iv_woe",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 4,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_iv_woe__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-052__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__iv_woe",
+        "p14-c-059__lendingclub_v2__catboost__iv_then_boruta__pool100__vs__iv_woe",
+        "p14-c-061__lendingclub_v2__catboost__iv_then_boruta__pool200__vs__iv_woe",
+        "p14-c-063__lendingclub_v2__catboost__iv_then_boruta__pool300__vs__iv_woe"
+      ],
+      "model": "catboost",
+      "reference": "iv_woe",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 4,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_iv_woe__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-035__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__iv_woe",
+        "p14-c-042__lendingclub_v2__lr__iv_then_boruta__pool100__vs__iv_woe",
+        "p14-c-044__lendingclub_v2__lr__iv_then_boruta__pool200__vs__iv_woe",
+        "p14-c-046__lendingclub_v2__lr__iv_then_boruta__pool300__vs__iv_woe"
+      ],
+      "model": "lr",
+      "reference": "iv_woe",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_lasso_l1_logistic__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-019__homecredit__catboost__statistical_normalized_average_rank__k40__vs__lasso_l1_logistic"
+      ],
+      "model": "catboost",
+      "reference": "lasso_l1_logistic",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_lasso_l1_logistic__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-002__homecredit__lr__statistical_normalized_average_rank__k20__vs__lasso_l1_logistic"
+      ],
+      "model": "lr",
+      "reference": "lasso_l1_logistic",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_lasso_l1_logistic__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-053__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__lasso_l1_logistic"
+      ],
+      "model": "catboost",
+      "reference": "lasso_l1_logistic",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 1,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_lasso_l1_logistic__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-036__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__lasso_l1_logistic"
+      ],
+      "model": "lr",
+      "reference": "lasso_l1_logistic",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_mrmr_mutual_information__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-023__homecredit__catboost__statistical_normalized_average_rank__k40__vs__mrmr_mutual_information",
+        "p14-c-032__homecredit__catboost__boruta_then_mrmr_mutual_information__k40__vs__mrmr_mutual_information"
+      ],
+      "model": "catboost",
+      "reference": "mrmr_mutual_information",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_mrmr_mutual_information__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-006__homecredit__lr__statistical_normalized_average_rank__k20__vs__mrmr_mutual_information",
+        "p14-c-015__homecredit__lr__boruta_then_mrmr_mutual_information__k20__vs__mrmr_mutual_information"
+      ],
+      "model": "lr",
+      "reference": "mrmr_mutual_information",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_mrmr_mutual_information__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-057__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__mrmr_mutual_information",
+        "p14-c-066__lendingclub_v2__catboost__boruta_then_mrmr_mutual_information__k40__vs__mrmr_mutual_information"
+      ],
+      "model": "catboost",
+      "reference": "mrmr_mutual_information",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_mrmr_mutual_information__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-040__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__mrmr_mutual_information",
+        "p14-c-049__lendingclub_v2__lr__boruta_then_mrmr_mutual_information__k20__vs__mrmr_mutual_information"
+      ],
+      "model": "lr",
+      "reference": "mrmr_mutual_information",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_rfe_catboost__homecredit__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-020__homecredit__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost",
+        "p14-c-034__homecredit__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost"
+      ],
+      "model": "catboost",
+      "reference": "rfe_catboost",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "homecredit",
+      "family_id": "combination_vs_rfe_catboost__homecredit__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-003__homecredit__lr__statistical_normalized_average_rank__k20__vs__rfe_catboost",
+        "p14-c-017__homecredit__lr__boruta_then_rfe_catboost__k20__vs__rfe_catboost"
+      ],
+      "model": "lr",
+      "reference": "rfe_catboost",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_rfe_catboost__lendingclub_v2__catboost",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-054__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost",
+        "p14-c-068__lendingclub_v2__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost"
+      ],
+      "model": "catboost",
+      "reference": "rfe_catboost",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    },
+    {
+      "category": "combination",
+      "complete_registered_member_count": 2,
+      "dataset": "lendingclub_v2",
+      "family_id": "combination_vs_rfe_catboost__lendingclub_v2__lr",
+      "holm_denominator_rule": "complete_registered_member_count",
+      "member_comparison_ids": [
+        "p14-c-037__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__rfe_catboost",
+        "p14-c-051__lendingclub_v2__lr__boruta_then_rfe_catboost__k20__vs__rfe_catboost"
+      ],
+      "model": "lr",
+      "reference": "rfe_catboost",
+      "unavailable_input_rule": {
+        "authentication_failure": "block_no_p1_substitution",
+        "protocol_allowed_infeasible": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        },
+        "protocol_allowed_unavailable": {
+          "holm_input_p": 1.0,
+          "raw_p": null,
+          "reject": false
+        }
+      }
+    }
+  ],
+  "family_count": 36,
+  "method": "Holm step-down",
+  "protocol_id": "prompt_14_two_dataset_analysis_v1",
+  "registered_member_count": 124,
+  "schema_version": "prompt_14_authoritative_holm_families_v1"
+}

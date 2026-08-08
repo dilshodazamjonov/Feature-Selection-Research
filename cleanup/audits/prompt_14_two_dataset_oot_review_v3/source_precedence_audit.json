@@ -1,0 +1,39 @@
+{
+  "historical_closure_rule_superseded_only_by_current_explicit_user_authorization": true,
+  "independent_graph_regeneration_performed": false,
+  "later_outcome_bearing_reports_are_protocol_sources": false,
+  "precedence": [
+    {
+      "rank": 1,
+      "role": "explicit_governance_correction_and_phase_requirements",
+      "sha256": "3a3a64b7d5c416b820eb9c4b9a734218cae8d8b975f88d686a0a30c01f9353ac",
+      "source": "current_final_prompt_14_task_specification"
+    },
+    {
+      "paths_and_hashes": {
+        "configs/experiments/full_baseline_v1.yaml": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+        "configs/experiments/selector_combination_research_v1.yaml": "432a24c0a12e2a134522e981effe0b151c02f9c98c03cb34af6916f77d5e86ab",
+        "configs/protocols/selector_combinations_v1/combination_comparison_registry.json": "0460d1a7eea5d39bbc6a84af468de42d8308d1f7b9c34b12e68c3a0762472a65",
+        "configs/protocols/selector_combinations_v1/combination_protocol_lock.json": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9",
+        "configs/protocols/selector_combinations_v1/oot_scope_freeze.json": "c7ea3a4cb53043e30cde27c9cc8799450cc930c280a65ba8be31986b85763686"
+      },
+      "rank": 2,
+      "role": "experiment_identity_metric_population_and_test_implementation",
+      "source": "earlier_immutable_field_specific_locks"
+    },
+    {
+      "rank": 3,
+      "role": "binding_exact_comparison_graph_and_rules_not_fixed_above",
+      "sha256": "baa3616fec0e4a8498b018fe8d17c90c141d4fd1169bd2d66cb6252c83156901",
+      "source": "git:bf2e53e3ea3fbe91e1336019f33b8425287d4564:cleanup/audits/prompt_14_two_dataset_oot_review/preinspection_analysis_plan.json"
+    },
+    {
+      "rank": 4,
+      "role": "diagnostic_exclusion_only",
+      "sha256": "84a66a8315f1455145b24c8ddbe1ced58a936e61b5dc96d93d67731bed67e397",
+      "source": "rejected_prompt_14_v2_plan"
+    }
+  ],
+  "schema_version": "prompt_14_v3_source_precedence_audit_v1",
+  "status": "pass"
+}

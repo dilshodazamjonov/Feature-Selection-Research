@@ -1,0 +1,85 @@
+{
+  "checks": [
+    {
+      "check_id": "comparison_count",
+      "expected": 124,
+      "observed": 124,
+      "status": "pass"
+    },
+    {
+      "check_id": "family_count",
+      "expected": 36,
+      "observed": 36,
+      "status": "pass"
+    },
+    {
+      "check_id": "baseline_category_count",
+      "expected": 56,
+      "observed": 56,
+      "status": "pass"
+    },
+    {
+      "check_id": "combination_category_count",
+      "expected": 68,
+      "observed": 68,
+      "status": "pass"
+    },
+    {
+      "check_id": "comparison_id_uniqueness",
+      "expected": 124,
+      "observed": 124,
+      "status": "pass"
+    },
+    {
+      "check_id": "family_member_accounting",
+      "expected": 124,
+      "observed": 124,
+      "status": "pass"
+    },
+    {
+      "check_id": "metric_tolerance",
+      "expected": 1e-10,
+      "observed": 1e-10,
+      "status": "pass"
+    },
+    {
+      "check_id": "rejected_voting_sensitivities_absent",
+      "expected": 0,
+      "observed": 0,
+      "status": "pass"
+    },
+    {
+      "check_id": "authentication_failure_p1_forbidden",
+      "expected": "block_no_p1_substitution",
+      "observed": "block_no_p1_substitution",
+      "status": "pass"
+    },
+    {
+      "check_id": "natural_support_cases",
+      "expected": 2,
+      "observed": 2,
+      "status": "pass"
+    },
+    {
+      "check_id": "raw_path_resolution",
+      "expected": false,
+      "observed": false,
+      "status": "pass"
+    },
+    {
+      "check_id": "worker_startup",
+      "expected": 0,
+      "observed": 0,
+      "status": "pass"
+    }
+  ],
+  "family_registry_sha256": "3cb158c82c482e7796daa2e9525bad08175b4fbc6143abce9d0c15b5975643be",
+  "focused_test_command": ".venv/Scripts/python.exe -m pytest tests/test_prompt_14_v3_protocol_lock.py -q",
+  "focused_test_result": "8 passed in 0.04s",
+  "focused_test_status": "pass",
+  "lock_sha256": "d2ad68273501148761a54acfc26229ed366c687c1ba2da1605d5daee141ec938",
+  "numeric_outcomes_opened_before_validation": false,
+  "registry_sha256": "7adc4c43b80871ba1d4ebe39a1938eca5f94872ba2efd60d8b198f641c9fa652",
+  "schema_version": "prompt_14_v3_protocol_lock_validation_v1",
+  "status": "pass"
+}
