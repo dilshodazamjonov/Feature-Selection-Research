@@ -1,0 +1,21 @@
+{
+  "active_inventory_rows": 1705,
+  "artifact_manifest_csv": "artifact_manifest.csv",
+  "baseline_cells": 36,
+  "canonical_active_voting_manifest": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+  "configuration_adaptation_after_oot": false,
+  "evidence_classes": {
+    "baseline": 468,
+    "combination_dev": 840,
+    "combination_oot": 168,
+    "combination_pilot": 168,
+    "historical_protocol": 3,
+    "voting_package": 58,
+    "voting_primary_predictions": 4
+  },
+  "historical_inventory_rows": 4,
+  "prediction_catalog_entries": 64,
+  "schema_version": "prompt_14_v3_authentication_inventory_v1",
+  "stale_original_manifest_used_as_active": false,
+  "status": "pass"
+}

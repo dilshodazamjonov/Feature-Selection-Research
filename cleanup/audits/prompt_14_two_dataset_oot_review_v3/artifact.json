@@ -1,0 +1,2644 @@
+{
+  "manifest": {
+    "blocks": [
+      {
+        "body": "# Two-dataset locked-OOT statistical review",
+        "id": "title",
+        "type": "markdown"
+      },
+      {
+        "body": "## Technical summary\n\nAll 124 preregistered comparisons were evaluable on authenticated saved predictions and were retained across all 36 complete Holm families. Effects were heterogeneous: positive combination contrasts coexist with adverse and null contrasts, so the evidence does not support a universal winner or a pooled cross-dataset effect. Statistical significance is interpreted with effect magnitude, uncertainty, budget comparability, stability, drift, and resource evidence.",
+        "id": "technical_summary",
+        "sourceId": "comparisons",
+        "type": "markdown"
+      },
+      {
+        "body": "## The complete saved evidence chain authenticated\n\nPilot, DEV, combination OOT, baseline, and pointer-selected voting evidence passed content-level authentication before inference.",
+        "id": "auth_heading",
+        "type": "markdown"
+      },
+      {
+        "id": "auth_table_block",
+        "tableId": "authentication_table",
+        "type": "table"
+      },
+      {
+        "body": "## Scope, populations, and locked methods\n\nHome Credit (120,053 OOT rows; 10,688 events) and LendingClub v2 (293,105 rows; 68,252 events) are analyzed separately. The graph contains 124 comparisons in 36 complete Holm families, with method-minus-reference direction.",
+        "id": "scope",
+        "type": "markdown"
+      },
+      {
+        "body": "## Effects are heterogeneous across registered contrasts\n\nPositive, adverse, and uncertain effects coexist. Read the scatter for direction and the accompanying table for exact 95% intervals and Holm-adjusted p-values; no pooled winner is inferred.",
+        "id": "effects_intro",
+        "sourceId": "comparisons",
+        "type": "markdown"
+      },
+      {
+        "chartId": "effect_scatter",
+        "id": "effect_chart_block",
+        "type": "chart"
+      },
+      {
+        "id": "effect_table_block",
+        "tableId": "comparison_table",
+        "type": "table"
+      },
+      {
+        "body": "## DEV-to-OOT movement is method- and dataset-specific\n\nOOT is the primary evidence. Points above the diagonal improved from DEV mean to OOT; points below it degraded. Marker labels identify configurations, while stability remains descriptive context.",
+        "id": "generalization_intro",
+        "sourceId": "results",
+        "type": "markdown"
+      },
+      {
+        "chartId": "generalization_scatter",
+        "id": "generalization_chart_block",
+        "type": "chart"
+      },
+      {
+        "body": "## The two 26-of-40 reference cases remain explicit\n\nBoth Home Credit CatBoost Boruta-first cases retain the frozen unpadded reference support of 26 against requested K=40. Their OOT full-DEV refits realized 40; these are not ordinary like-for-like K=40 contrasts.",
+        "id": "natural_support",
+        "sourceId": "results",
+        "type": "markdown"
+      },
+      {
+        "body": "## Evidence grades constrain the wording\n\nClaims are graded strong, moderate, weak, or not supported and retain counterevidence. Statistical significance is never treated as practical importance, equivalence, non-inferiority, or causality.",
+        "id": "claims_intro",
+        "sourceId": "claims",
+        "type": "markdown"
+      },
+      {
+        "id": "claims_table_block",
+        "tableId": "claims_table",
+        "type": "table"
+      },
+      {
+        "body": "## Limitations, uncertainty, and robustness\n\nOnly two datasets are complete; domains differ; multiplicity and exploratory labels apply; combination feature PSI cannot be reconstructed without prohibited raw features; and no cross-dataset pooling was registered. The third dataset is frozen but unexecuted.",
+        "id": "limitations",
+        "type": "markdown"
+      },
+      {
+        "body": "## Recommended next step\n\nImplement and data-free-test the already frozen third-dataset adapter in a separate prompt. Do not run its pilot until implementation review passes.",
+        "id": "next",
+        "type": "markdown"
+      },
+      {
+        "body": "## Further questions\n\nWill the frozen third dataset reproduce the dataset-specific patterns, and do the natural-support distinctions remain material under its preregistered population?",
+        "id": "questions",
+        "type": "markdown"
+      }
+    ],
+    "cards": [],
+    "charts": [
+      {
+        "dataset": "comparison_results",
+        "encodings": {
+          "color": {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "nominal"
+          },
+          "tooltip": [
+            {
+              "field": "contrast",
+              "label": "Contrast",
+              "type": "nominal"
+            },
+            {
+              "field": "ci_lower",
+              "label": "CI lower",
+              "type": "quantitative"
+            },
+            {
+              "field": "ci_upper",
+              "label": "CI upper",
+              "type": "quantitative"
+            },
+            {
+              "field": "holm_p",
+              "label": "Holm p",
+              "type": "quantitative"
+            },
+            {
+              "field": "grade",
+              "label": "Grade",
+              "type": "nominal"
+            }
+          ],
+          "x": {
+            "field": "effect",
+            "label": "AUC effect",
+            "type": "quantitative"
+          },
+          "y": {
+            "field": "comparison_order",
+            "label": "Registered comparison order",
+            "type": "quantitative"
+          }
+        },
+        "id": "effect_scatter",
+        "sourceId": "comparisons",
+        "subtitle": "Method minus reference; exact 95% intervals and Holm p-values are in the adjacent table.",
+        "title": "Registered locked-OOT AUC effects",
+        "type": "scatter"
+      },
+      {
+        "dataset": "generalization",
+        "encodings": {
+          "color": {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "nominal"
+          },
+          "label": {
+            "field": "method",
+            "label": "Method",
+            "type": "nominal"
+          },
+          "tooltip": [
+            {
+              "field": "configuration",
+              "label": "Configuration",
+              "type": "nominal"
+            },
+            {
+              "field": "model",
+              "label": "Model",
+              "type": "nominal"
+            },
+            {
+              "field": "gap",
+              "label": "OOT minus DEV",
+              "type": "quantitative"
+            },
+            {
+              "field": "jaccard",
+              "label": "Mean Jaccard",
+              "type": "quantitative"
+            }
+          ],
+          "x": {
+            "field": "dev_auc",
+            "label": "DEV mean AUC",
+            "type": "quantitative"
+          },
+          "y": {
+            "field": "oot_auc",
+            "label": "Locked-OOT AUC",
+            "type": "quantitative"
+          }
+        },
+        "id": "generalization_scatter",
+        "sourceId": "results",
+        "subtitle": "Each point is one authenticated configuration; dataset colors are descriptive, no pooled estimate.",
+        "title": "DEV mean AUC versus locked-OOT AUC",
+        "type": "scatter"
+      }
+    ],
+    "description": "Authenticated, preregistered Prompt 14 review of Home Credit and LendingClub v2.",
+    "filters": [],
+    "generatedAt": "2026-08-08T00:00:00Z",
+    "sources": [
+      {
+        "id": "comparisons",
+        "label": "Canonical paired comparisons",
+        "path": "paired_comparisons.csv",
+        "query": {
+          "sql": "SELECT * FROM comparison_results"
+        }
+      },
+      {
+        "id": "results",
+        "label": "Authenticated two-dataset long results",
+        "path": "two_dataset_results_long.csv",
+        "query": {
+          "sql": "SELECT * FROM generalization"
+        }
+      },
+      {
+        "id": "claims",
+        "label": "Claims and evidence audit",
+        "path": "claims_and_evidence.csv",
+        "query": {
+          "sql": "SELECT * FROM claims"
+        }
+      },
+      {
+        "id": "authentication",
+        "label": "Authentication validation",
+        "path": "authentication_validation.json",
+        "query": {
+          "sql": "SELECT * FROM authentication_checks"
+        }
+      }
+    ],
+    "surface": "report",
+    "tables": [
+      {
+        "columns": [
+          {
+            "field": "check",
+            "label": "Check",
+            "type": "text"
+          },
+          {
+            "field": "expected",
+            "format": "number",
+            "label": "Expected"
+          },
+          {
+            "field": "authenticated",
+            "format": "number",
+            "label": "Authenticated"
+          },
+          {
+            "field": "status",
+            "label": "Status",
+            "type": "text"
+          }
+        ],
+        "dataset": "authentication_checks",
+        "defaultSort": {
+          "direction": "asc",
+          "field": "check"
+        },
+        "id": "authentication_table",
+        "sourceId": "authentication",
+        "subtitle": "Expected and authenticated persisted counts.",
+        "title": "Evidence-chain authentication"
+      },
+      {
+        "columns": [
+          {
+            "field": "comparison_order",
+            "format": "number",
+            "label": "Order"
+          },
+          {
+            "field": "dataset",
+            "label": "Dataset",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "Model",
+            "type": "text"
+          },
+          {
+            "field": "contrast",
+            "label": "Contrast",
+            "type": "text"
+          },
+          {
+            "field": "effect",
+            "format": "number",
+            "label": "ΔAUC",
+            "movement": true
+          },
+          {
+            "field": "ci_lower",
+            "format": "number",
+            "label": "CI lower"
+          },
+          {
+            "field": "ci_upper",
+            "format": "number",
+            "label": "CI upper"
+          },
+          {
+            "field": "holm_p",
+            "format": "number",
+            "label": "Holm p"
+          },
+          {
+            "field": "grade",
+            "label": "Grade",
+            "type": "text"
+          },
+          {
+            "field": "exploratory",
+            "label": "Exploratory",
+            "type": "boolean"
+          }
+        ],
+        "dataset": "comparison_results",
+        "defaultSort": {
+          "direction": "asc",
+          "field": "comparison_order"
+        },
+        "id": "comparison_table",
+        "sourceId": "comparisons",
+        "subtitle": "Exact effect, interval, Holm result, grade, and exploratory label for 124 registered rows.",
+        "title": "All registered paired comparisons"
+      },
+      {
+        "columns": [
+          {
+            "field": "claim_id",
+            "label": "Claim ID",
+            "type": "text"
+          },
+          {
+            "field": "claim",
+            "label": "Claim evaluated",
+            "type": "text"
+          },
+          {
+            "field": "evidence_grade",
+            "label": "Grade",
+            "type": "text"
+          },
+          {
+            "field": "allowed_wording",
+            "label": "Allowed wording",
+            "type": "text"
+          },
+          {
+            "field": "counterevidence",
+            "label": "Counterevidence",
+            "type": "text"
+          }
+        ],
+        "dataset": "claims",
+        "defaultSort": {
+          "direction": "asc",
+          "field": "claim_id"
+        },
+        "id": "claims_table",
+        "sourceId": "claims",
+        "subtitle": "Allowed wording is constrained to the authenticated registered scope.",
+        "title": "Claims, evidence grades, and counterevidence"
+      }
+    ],
+    "title": "Two-dataset locked-OOT statistical review",
+    "version": 1
+  },
+  "snapshot": {
+    "accessIssues": [],
+    "datasets": {
+      "authentication_checks": [
+        {
+          "authenticated": 24,
+          "check": "Pilot evaluations",
+          "expected": 24,
+          "status": "pass"
+        },
+        {
+          "authenticated": 18,
+          "check": "Pilot selector fits",
+          "expected": 18,
+          "status": "pass"
+        },
+        {
+          "authenticated": 120,
+          "check": "DEV evaluations",
+          "expected": 120,
+          "status": "pass"
+        },
+        {
+          "authenticated": 90,
+          "check": "DEV selector fits",
+          "expected": 90,
+          "status": "pass"
+        },
+        {
+          "authenticated": 24,
+          "check": "Combination OOT evaluations",
+          "expected": 24,
+          "status": "pass"
+        },
+        {
+          "authenticated": 18,
+          "check": "Combination OOT selector refits",
+          "expected": 18,
+          "status": "pass"
+        },
+        {
+          "authenticated": 168,
+          "check": "Combination OOT active files",
+          "expected": 168,
+          "status": "pass"
+        },
+        {
+          "authenticated": 55,
+          "check": "Voting successor payload",
+          "expected": 55,
+          "status": "pass"
+        }
+      ],
+      "claims": [
+        {
+          "allowed_wording": "Some registered combination contrasts improved locked-OOT AUC; effects were heterogeneous.",
+          "claim": "Combinations improve locked-OOT discrimination over registered constituents.",
+          "claim_id": "claim_01_combination_discrimination",
+          "counterevidence": "p14-c-005__homecredit__lr__statistical_normalized_average_rank__k20__vs__catboost_shap|p14-c-020__homecredit__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost|p14-c-022__homecredit__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap|p14-c-034__homecredit__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost|p14-c-037__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__rfe_catboost|p14-c-039__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__catboost_shap|p14-c-051__lendingclub_v2__lr__boruta_then_rfe_catboost__k20__vs__rfe_catboost|p14-c-054__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost|p14-c-056__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap|p14-c-068__lendingclub_v2__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost",
+          "evidence_grade": "moderate"
+        },
+        {
+          "allowed_wording": "Stability and score drift vary by method; no universal stability improvement is established.",
+          "claim": "Combinations improve selection or temporal stability.",
+          "claim_id": "claim_02_selection_temporal_stability",
+          "counterevidence": "No registered paired stability test; feature PSI is unavailable for combination OOT without raw features.",
+          "evidence_grade": "weak"
+        },
+        {
+          "allowed_wording": "Cross-dataset consistency is descriptive and depends on method, model, and comparator.",
+          "claim": "Combination improvements are consistent across both completed datasets.",
+          "claim_id": "claim_03_cross_dataset_consistency",
+          "counterevidence": "p14-c-005__homecredit__lr__statistical_normalized_average_rank__k20__vs__catboost_shap|p14-c-020__homecredit__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost|p14-c-022__homecredit__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap|p14-c-034__homecredit__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost|p14-c-037__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__rfe_catboost|p14-c-039__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__catboost_shap|p14-c-051__lendingclub_v2__lr__boruta_then_rfe_catboost__k20__vs__rfe_catboost|p14-c-054__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__rfe_catboost|p14-c-056__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__catboost_shap|p14-c-068__lendingclub_v2__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost",
+          "evidence_grade": "moderate"
+        },
+        {
+          "allowed_wording": "Trade-offs are configuration-specific; no universal winner is supported.",
+          "claim": "A combination offers a defensible predictive/stability/resource trade-off.",
+          "claim_id": "claim_04_tradeoff",
+          "counterevidence": "Selector fit time and peak RSS vary substantially; prediction-time evidence is incomplete for combination OOT.",
+          "evidence_grade": "moderate"
+        },
+        {
+          "allowed_wording": "The frozen reference support was 26 of 40 and unpadded; OOT full-DEV refits realized 40 and are not ordinary like-for-like K=40 evidence.",
+          "claim": "Natural-support methods remain competitive despite the frozen 26-of-40 reference shortfall.",
+          "claim_id": "claim_05_natural_support",
+          "counterevidence": "p14-c-034__homecredit__catboost__boruta_then_rfe_catboost__k40__vs__rfe_catboost",
+          "evidence_grade": "moderate"
+        },
+        {
+          "allowed_wording": "Primary pool-200 voting is contextual evidence in four registered relationships; pool sensitivities were excluded.",
+          "claim": "Voting evidence changes the combination conclusion.",
+          "claim_id": "claim_06_voting_context",
+          "counterevidence": "p14-c-041__lendingclub_v2__lr__statistical_normalized_average_rank__k20__vs__cross_dataset_rank_voting_v1_primary_pool_200|p14-c-058__lendingclub_v2__catboost__statistical_normalized_average_rank__k40__vs__cross_dataset_rank_voting_v1_primary_pool_200",
+          "evidence_grade": "weak"
+        }
+      ],
+      "comparison_results": [
+        {
+          "ci_lower": -0.0366793658602422,
+          "ci_upper": -0.0299044112668745,
+          "comparison_order": 1,
+          "contrast": "iv_woe k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0333489305677494,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.077500566932898e-76,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0398318858271661,
+          "ci_upper": -0.0330776385162571,
+          "comparison_order": 2,
+          "contrast": "mrmr_mutual_information k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0363799981130866,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 6.495661125269168e-89,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0293185755084263,
+          "ci_upper": -0.0228503929854596,
+          "comparison_order": 3,
+          "contrast": "lasso_l1_logistic k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0261463995099912,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.8634670004882244e-55,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0299348587255779,
+          "ci_upper": -0.0234928196642991,
+          "comparison_order": 4,
+          "contrast": "legacy_rf_relevance_corr k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0267436859411064,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.221298699581505e-55,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0244100328437214,
+          "ci_upper": -0.018328302077781,
+          "comparison_order": 5,
+          "contrast": "catboost_shap k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0213659085443158,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.7998593645845027e-40,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0351483467859747,
+          "ci_upper": -0.0283454605327815,
+          "comparison_order": 6,
+          "contrast": "boruta_random_forest k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0317575156058751,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 9.118933386120566e-73,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0282750699653362,
+          "ci_upper": -0.0217380382262837,
+          "comparison_order": 7,
+          "contrast": "rfe_catboost k20 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0249496596403955,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.4683682480240075e-49,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.1045114398483242,
+          "ci_upper": 0.1160886767816718,
+          "comparison_order": 8,
+          "contrast": "iv_woe k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1103230558838433,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 4.928899370948448e-279,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.101421059437838,
+          "ci_upper": 0.1130163687570511,
+          "comparison_order": 9,
+          "contrast": "mrmr_mutual_information k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1072919883385061,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 8.941415584572955e-264,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.1117823596651847,
+          "ci_upper": 0.123409041046456,
+          "comparison_order": 10,
+          "contrast": "lasso_l1_logistic k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1175255869416016,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.084227755724e-311,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.1113243789132748,
+          "ci_upper": 0.1226322340638809,
+          "comparison_order": 11,
+          "contrast": "legacy_rf_relevance_corr k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1169283005104864,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.1165367800372543,
+          "ci_upper": 0.1283497379234296,
+          "comparison_order": 12,
+          "contrast": "catboost_shap k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1223060779072769,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.106487771514559,
+          "ci_upper": 0.1173987093875614,
+          "comparison_order": 13,
+          "contrast": "boruta_random_forest k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1119144708457177,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 1.321725224e-314,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.1129700358853168,
+          "ci_upper": 0.124459221290908,
+          "comparison_order": 14,
+          "contrast": "rfe_catboost k20 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.1187223268111973,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 4.94e-322,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0193834384105195,
+          "ci_upper": -0.0153899254493002,
+          "comparison_order": 15,
+          "contrast": "iv_woe k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0174613021933091,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 9.237449505390596e-61,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0286488592515626,
+          "ci_upper": -0.023636320701417,
+          "comparison_order": 16,
+          "contrast": "mrmr_mutual_information k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.026133228502534,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.586451075225453e-95,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0135847682977208,
+          "ci_upper": -0.0099757770411035,
+          "comparison_order": 17,
+          "contrast": "lasso_l1_logistic k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0118058013721562,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.7958911881192127e-35,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0181391571754652,
+          "ci_upper": -0.0143539820817835,
+          "comparison_order": 18,
+          "contrast": "legacy_rf_relevance_corr k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0162274588458524,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 4.5397485096346366e-61,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0082595331085531,
+          "ci_upper": -0.0048071312328367,
+          "comparison_order": 19,
+          "contrast": "catboost_shap k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0064968129849202,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 9.593129954607461e-14,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0345040379312011,
+          "ci_upper": -0.0289779865630486,
+          "comparison_order": 20,
+          "contrast": "boruta_random_forest k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0318295132064768,
+          "exploratory": true,
+          "grade": "not_supported",
+          "holm_p": 4.3311404058452045e-112,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0060539499753408,
+          "ci_upper": -0.0032312785150108,
+          "comparison_order": 21,
+          "contrast": "rfe_catboost k40 vs full_features",
+          "dataset": "homecredit",
+          "effect": -0.0046064887438125,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.0196971130365743e-10,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0786130635279982,
+          "ci_upper": 0.0880413755664846,
+          "comparison_order": 22,
+          "contrast": "iv_woe k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0831774482512139,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 4.2813343794180974e-232,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0695711389977212,
+          "ci_upper": 0.0796466523389237,
+          "comparison_order": 23,
+          "contrast": "mrmr_mutual_information k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.074505521941989,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 9.33286687049503e-174,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0842355462640587,
+          "ci_upper": 0.0936484427891918,
+          "comparison_order": 24,
+          "contrast": "lasso_l1_logistic k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0888329490723668,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.6326463169538463e-265,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.079775265070856,
+          "ci_upper": 0.0892991258901411,
+          "comparison_order": 25,
+          "contrast": "legacy_rf_relevance_corr k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0844112915986706,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.7250498560902762e-244,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0894159435530769,
+          "ci_upper": 0.0991401132230977,
+          "comparison_order": 26,
+          "contrast": "catboost_shap k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0941419374596028,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 3.496278987264276e-288,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0636509318319881,
+          "ci_upper": 0.0738131141750581,
+          "comparison_order": 27,
+          "contrast": "boruta_random_forest k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0688092372380462,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 8.911452626737401e-137,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0915434736026164,
+          "ci_upper": 0.1007968047797219,
+          "comparison_order": 28,
+          "contrast": "rfe_catboost k40 vs random_k",
+          "dataset": "homecredit",
+          "effect": 0.0960322617007105,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0301453481422966,
+          "ci_upper": -0.0273358852831223,
+          "comparison_order": 29,
+          "contrast": "iv_woe k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0287773793988104,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0263529882308993,
+          "ci_upper": -0.0235575508813433,
+          "comparison_order": 30,
+          "contrast": "mrmr_mutual_information k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0249636294707117,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.3627246066399721e-260,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0312662690741394,
+          "ci_upper": -0.0282288277003122,
+          "comparison_order": 31,
+          "contrast": "lasso_l1_logistic k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0297837260566403,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 5.702406433115072e-308,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0206197746663669,
+          "ci_upper": -0.0180001374340439,
+          "comparison_order": 32,
+          "contrast": "legacy_rf_relevance_corr k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0193415300436913,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.997066645329213e-189,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0154988190819836,
+          "ci_upper": -0.0131237408415745,
+          "comparison_order": 33,
+          "contrast": "catboost_shap k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.014345090313824,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.232817848893176e-124,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0571599725116235,
+          "ci_upper": -0.0528811319765242,
+          "comparison_order": 34,
+          "contrast": "boruta_random_forest k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0551395840494969,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0131464183976196,
+          "ci_upper": -0.0108416543386607,
+          "comparison_order": 35,
+          "contrast": "rfe_catboost k20 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0120066659443573,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.4764355551526266e-91,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0755848127528753,
+          "ci_upper": 0.0809821170673875,
+          "comparison_order": 36,
+          "contrast": "iv_woe k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0782881036282782,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0793995942803791,
+          "ci_upper": 0.0846171224946207,
+          "comparison_order": 37,
+          "contrast": "mrmr_mutual_information k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0821018535563768,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0744755914493958,
+          "ci_upper": 0.0800761925992368,
+          "comparison_order": 38,
+          "contrast": "lasso_l1_logistic k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0772817569704482,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0851277534233081,
+          "ci_upper": 0.0902835814372578,
+          "comparison_order": 39,
+          "contrast": "legacy_rf_relevance_corr k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0877239529833973,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0900488343128281,
+          "ci_upper": 0.0954102826609225,
+          "comparison_order": 40,
+          "contrast": "catboost_shap k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0927203927132646,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0496643453337608,
+          "ci_upper": 0.0542429628994811,
+          "comparison_order": 41,
+          "contrast": "boruta_random_forest k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0519258989775917,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0924739374358193,
+          "ci_upper": 0.097648481699416,
+          "comparison_order": 42,
+          "contrast": "rfe_catboost k20 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0950588170827312,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0211619891899738,
+          "ci_upper": -0.0194308955964157,
+          "comparison_order": 43,
+          "contrast": "iv_woe k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.020300546554716,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0219528252415279,
+          "ci_upper": -0.0199014673284214,
+          "comparison_order": 44,
+          "contrast": "mrmr_mutual_information k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.020949614852644,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0141392960208969,
+          "ci_upper": -0.0125662987949056,
+          "comparison_order": 45,
+          "contrast": "lasso_l1_logistic k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0133464265294374,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.7583198679945783e-246,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0165391003810612,
+          "ci_upper": -0.015024366692199,
+          "comparison_order": 46,
+          "contrast": "legacy_rf_relevance_corr k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0157795465747904,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0083803344298624,
+          "ci_upper": -0.0072183402847411,
+          "comparison_order": 47,
+          "contrast": "catboost_shap k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.007824247267779,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 5.664721224184199e-147,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0387933817604765,
+          "ci_upper": -0.0356752070999981,
+          "comparison_order": 48,
+          "contrast": "boruta_random_forest k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0372261413920005,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0044993908529437,
+          "ci_upper": -0.0035200664225583,
+          "comparison_order": 49,
+          "contrast": "rfe_catboost k40 vs full_features",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0040115766619884,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.3170536566163315e-57,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0289412443593397,
+          "ci_upper": 0.0327603870235444,
+          "comparison_order": 50,
+          "contrast": "iv_woe k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0308269978983962,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 5.435456911716904e-240,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0283061749056308,
+          "ci_upper": 0.0320105121332509,
+          "comparison_order": 51,
+          "contrast": "mrmr_mutual_information k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0301779296004682,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.9573702330436625e-233,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0358576127525107,
+          "ci_upper": 0.0396861918891699,
+          "comparison_order": 52,
+          "contrast": "lasso_l1_logistic k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0377811179236748,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0334930022931813,
+          "ci_upper": 0.0372520507344747,
+          "comparison_order": 53,
+          "contrast": "legacy_rf_relevance_corr k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0353479978783218,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0414337326908236,
+          "ci_upper": 0.0451240724083906,
+          "comparison_order": 54,
+          "contrast": "catboost_shap k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0433032971853332,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0122956205745525,
+          "ci_upper": 0.0155112847064771,
+          "comparison_order": 55,
+          "contrast": "boruta_random_forest k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0139014030611117,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.261453339321954e-68,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0453298639336159,
+          "ci_upper": 0.0489557301858477,
+          "comparison_order": 56,
+          "contrast": "rfe_catboost k40 vs random_k",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0471159677911238,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0093894578231412,
+          "ci_upper": 0.0137238837542306,
+          "comparison_order": 57,
+          "contrast": "statistical_normalized_average_rank k20 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.011567089213426,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 7.033460723560071e-24,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.002337854358318,
+          "ci_upper": 0.0064170072923348,
+          "comparison_order": 58,
+          "contrast": "statistical_normalized_average_rank k20 vs lasso_l1_logistic",
+          "dataset": "homecredit",
+          "effect": 0.0043645581556678,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 4.617985291459867e-05,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0014557399824545,
+          "ci_upper": 0.0050560403033256,
+          "comparison_order": 59,
+          "contrast": "statistical_normalized_average_rank k20 vs rfe_catboost",
+          "dataset": "homecredit",
+          "effect": 0.0031678182860721,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0013960050597626,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0077631620203222,
+          "ci_upper": 0.0122258549823613,
+          "comparison_order": 60,
+          "contrast": "statistical_normalized_average_rank k20 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0099756742515517,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 1.4914073712338188e-18,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0014479966525939,
+          "ci_upper": 0.0006539553419562,
+          "comparison_order": 61,
+          "contrast": "statistical_normalized_average_rank k20 vs catboost_shap",
+          "dataset": "homecredit",
+          "effect": -0.0004159328100075,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.4285989092264213,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0119580790457557,
+          "ci_upper": 0.0173902544015315,
+          "comparison_order": 62,
+          "contrast": "statistical_normalized_average_rank k20 vs mrmr_mutual_information",
+          "dataset": "homecredit",
+          "effect": 0.0145981567587633,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.7599784579937293e-24,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0010804794753176,
+          "ci_upper": 0.0021282517900353,
+          "comparison_order": 63,
+          "contrast": "statistical_normalized_average_rank k20 vs cross_dataset_rank_voting_v1_primary_pool_200",
+          "dataset": "homecredit",
+          "effect": 0.0004760469460201,
+          "exploratory": true,
+          "grade": "weak",
+          "holm_p": 0.5632947761378582,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0156993210807846,
+          "ci_upper": 0.0200848733073217,
+          "comparison_order": 64,
+          "contrast": "iv_then_boruta pool100 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0179941276410284,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 7.01184114309232e-53,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0133216322635212,
+          "ci_upper": 0.019197524813047,
+          "comparison_order": 65,
+          "contrast": "iv_then_boruta pool100 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0164027126791541,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 6.750832626571174e-27,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0213708609432143,
+          "ci_upper": 0.0264107102024861,
+          "comparison_order": 66,
+          "contrast": "iv_then_boruta pool200 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0238758878142768,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 1.2412649829896468e-70,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.019410179093192,
+          "ci_upper": 0.025204545048567,
+          "comparison_order": 67,
+          "contrast": "iv_then_boruta pool200 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0222844728524025,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 1.7226718408511702e-48,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0237131820058963,
+          "ci_upper": 0.0291244629791301,
+          "comparison_order": 68,
+          "contrast": "iv_then_boruta pool300 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0264231540690392,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 1.9091170054755982e-75,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0219619134425224,
+          "ci_upper": 0.0275820160529305,
+          "comparison_order": 69,
+          "contrast": "iv_then_boruta pool300 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0248317391071649,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 1.424136040070907e-63,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0021876734333075,
+          "ci_upper": 0.0061313551918245,
+          "comparison_order": 70,
+          "contrast": "boruta_then_mrmr_mutual_information k20 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0041075320898458,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.5994282003147974e-05,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0068537466881488,
+          "ci_upper": 0.010659212388041,
+          "comparison_order": 71,
+          "contrast": "boruta_then_mrmr_mutual_information k20 vs mrmr_mutual_information",
+          "dataset": "homecredit",
+          "effect": 0.0087300145970573,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 3.413825836313517e-19,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0055171232849758,
+          "ci_upper": 0.0106089928692539,
+          "comparison_order": 72,
+          "contrast": "boruta_then_rfe_catboost k20 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.008047266973391,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 8.074709255450132e-10,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0006442058834258,
+          "ci_upper": 0.0030286177704596,
+          "comparison_order": 73,
+          "contrast": "boruta_then_rfe_catboost k20 vs rfe_catboost",
+          "dataset": "homecredit",
+          "effect": 0.0012394110079114,
+          "exploratory": false,
+          "grade": "weak",
+          "holm_p": 0.1835854152711404,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0082715980910214,
+          "ci_upper": 0.0117596665938113,
+          "comparison_order": 74,
+          "contrast": "statistical_normalized_average_rank k40 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0100220617262252,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.7672396221345167e-28,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0025830546851024,
+          "ci_upper": 0.0062830580695008,
+          "comparison_order": 75,
+          "contrast": "statistical_normalized_average_rank k40 vs lasso_l1_logistic",
+          "dataset": "homecredit",
+          "effect": 0.0043665609050723,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 2.9926327914178134e-06,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0044670921238719,
+          "ci_upper": -0.0011306336972878,
+          "comparison_order": 76,
+          "contrast": "statistical_normalized_average_rank k40 vs rfe_catboost",
+          "dataset": "homecredit",
+          "effect": -0.0028327517232713,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.0005623601922181,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0217039777768561,
+          "ci_upper": 0.0270163476751407,
+          "comparison_order": 77,
+          "contrast": "statistical_normalized_average_rank k40 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0243902727393929,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 5.0754579756744844e-73,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0029103609147771,
+          "ci_upper": 0.0010186264506374,
+          "comparison_order": 78,
+          "contrast": "statistical_normalized_average_rank k40 vs catboost_shap",
+          "dataset": "homecredit",
+          "effect": -0.0009424274821636,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 0.3225952916708896,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0160797771442097,
+          "ci_upper": 0.0212376004916513,
+          "comparison_order": 79,
+          "contrast": "statistical_normalized_average_rank k40 vs mrmr_mutual_information",
+          "dataset": "homecredit",
+          "effect": 0.0186939880354501,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.451682287809647e-44,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0014510153417619,
+          "ci_upper": 0.0016040029818979,
+          "comparison_order": 80,
+          "contrast": "statistical_normalized_average_rank k40 vs cross_dataset_rank_voting_v1_primary_pool_200",
+          "dataset": "homecredit",
+          "effect": 2.1103725890703195e-05,
+          "exploratory": true,
+          "grade": "weak",
+          "holm_p": 0.9778560571497,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0018359748537145,
+          "ci_upper": 0.0019472987829717,
+          "comparison_order": 81,
+          "contrast": "iv_then_boruta pool100 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 6.319910583441057e-05,
+          "exploratory": true,
+          "grade": "weak",
+          "holm_p": 0.948912704458256,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0114084428223856,
+          "ci_upper": 0.0174207988537053,
+          "comparison_order": 82,
+          "contrast": "iv_then_boruta pool100 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0144314101190021,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 2.8478774839799934e-21,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0063890737717748,
+          "ci_upper": 0.0098057734953559,
+          "comparison_order": 83,
+          "contrast": "iv_then_boruta pool200 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0080819758781709,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 6.9210846834146894e-18,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.019679577012995,
+          "ci_upper": 0.025210825669844,
+          "comparison_order": 84,
+          "contrast": "iv_then_boruta pool200 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0224501868913387,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 5.578238399457671e-58,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.00926077071529,
+          "ci_upper": 0.0129263323921351,
+          "comparison_order": 85,
+          "contrast": "iv_then_boruta pool300 vs iv_woe",
+          "dataset": "homecredit",
+          "effect": 0.0111205548031627,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 1.2101816231654548e-30,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0227274543929216,
+          "ci_upper": 0.0282006506505915,
+          "comparison_order": 86,
+          "contrast": "iv_then_boruta pool300 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0254887658163305,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 8.781391009595954e-76,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0143695270659134,
+          "ci_upper": 0.0196714568308863,
+          "comparison_order": 87,
+          "contrast": "boruta_then_mrmr_mutual_information k40 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0170748408545684,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 5.167766557827353e-35,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0089743951739574,
+          "ci_upper": 0.0138684654932351,
+          "comparison_order": 88,
+          "contrast": "boruta_then_mrmr_mutual_information k40 vs mrmr_mutual_information",
+          "dataset": "homecredit",
+          "effect": 0.0113785561506256,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 7.492351999755499e-21,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0188601606920229,
+          "ci_upper": 0.024456346894231,
+          "comparison_order": 89,
+          "contrast": "boruta_then_rfe_catboost k40 vs boruta_random_forest",
+          "dataset": "homecredit",
+          "effect": 0.0217065466173673,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 2.9527031072887946e-54,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0070504940391812,
+          "ci_upper": -0.0039955854133182,
+          "comparison_order": 90,
+          "contrast": "boruta_then_rfe_catboost k40 vs rfe_catboost",
+          "dataset": "homecredit",
+          "effect": -0.0055164778452969,
+          "exploratory": true,
+          "grade": "not_supported",
+          "holm_p": 3.4199622676615965e-13,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0100233058269933,
+          "ci_upper": 0.0119974477188035,
+          "comparison_order": 91,
+          "contrast": "statistical_normalized_average_rank k20 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0110227874550873,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.431482743930419e-104,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0109056734504534,
+          "ci_upper": 0.0131278687631409,
+          "comparison_order": 92,
+          "contrast": "statistical_normalized_average_rank k20 vs lasso_l1_logistic",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0120291341129172,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 1.5505005886840144e-97,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0064693272428241,
+          "ci_upper": -0.005055598713059,
+          "comparison_order": 93,
+          "contrast": "statistical_normalized_average_rank k20 vs rfe_catboost",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0057479259993656,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.50594542217834e-55,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0353234034842373,
+          "ci_upper": 0.0393227277765068,
+          "comparison_order": 94,
+          "contrast": "statistical_normalized_average_rank k20 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0373849921057738,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 5.25577e-318,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0041615877853549,
+          "ci_upper": -0.0027062973124117,
+          "comparison_order": 95,
+          "contrast": "statistical_normalized_average_rank k20 vs catboost_shap",
+          "dataset": "lendingclub_v2",
+          "effect": -0.003409501629899,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 3.402991302945386e-20,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0059444789208338,
+          "ci_upper": 0.0084149413294598,
+          "comparison_order": 96,
+          "contrast": "statistical_normalized_average_rank k20 vs mrmr_mutual_information",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0072090375269886,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 8.211710202024334e-31,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0026003998312413,
+          "ci_upper": -0.0013293991886638,
+          "comparison_order": 97,
+          "contrast": "statistical_normalized_average_rank k20 vs cross_dataset_rank_voting_v1_primary_pool_200",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0019721281556948,
+          "exploratory": true,
+          "grade": "not_supported",
+          "holm_p": 1.1788882628057027e-09,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0194933652178488,
+          "ci_upper": 0.0218324479273335,
+          "comparison_order": 98,
+          "contrast": "iv_then_boruta pool100 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0206850796925575,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 2.3756619993618462e-268,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0449557668061119,
+          "ci_upper": 0.0490437886615984,
+          "comparison_order": 99,
+          "contrast": "iv_then_boruta pool100 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.047047284343244,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0230622316650082,
+          "ci_upper": 0.0255237117087406,
+          "comparison_order": 100,
+          "contrast": "iv_then_boruta pool200 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0243139448826128,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 9.763943e-318,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0485176705467889,
+          "ci_upper": 0.0526655758921325,
+          "comparison_order": 101,
+          "contrast": "iv_then_boruta pool200 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0506761495332993,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0263411862114107,
+          "ci_upper": 0.0289626177706439,
+          "comparison_order": 102,
+          "contrast": "iv_then_boruta pool300 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0276936204596424,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0518170473517115,
+          "ci_upper": 0.0560851544959401,
+          "comparison_order": 103,
+          "contrast": "iv_then_boruta pool300 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0540558251103289,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0348313279771157,
+          "ci_upper": 0.0392625236233738,
+          "comparison_order": 104,
+          "contrast": "boruta_then_mrmr_mutual_information k20 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0371215241480997,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.866937893459902e-259,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0058294738399221,
+          "ci_upper": 0.0081430677062189,
+          "comparison_order": 105,
+          "contrast": "boruta_then_mrmr_mutual_information k20 vs mrmr_mutual_information",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0069455695693145,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 5.837564729373562e-32,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0383394075094242,
+          "ci_upper": 0.042400340532613,
+          "comparison_order": 106,
+          "contrast": "boruta_then_rfe_catboost k20 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0404216865315806,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "lr"
+        },
+        {
+          "ci_lower": -0.0032155061415929,
+          "ci_upper": -0.0022131578438092,
+          "comparison_order": 107,
+          "contrast": "boruta_then_rfe_catboost k20 vs rfe_catboost",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0027112315735589,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 2.7057729876258534e-25,
+          "model": "lr"
+        },
+        {
+          "ci_lower": 0.0095698578962502,
+          "ci_upper": 0.0111523728892211,
+          "comparison_order": 108,
+          "contrast": "statistical_normalized_average_rank k40 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0103550830584663,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 4.354050400749903e-142,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.002815120217886,
+          "ci_upper": 0.0040262763994394,
+          "comparison_order": 109,
+          "contrast": "statistical_normalized_average_rank k40 vs lasso_l1_logistic",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0034009630331877,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 1.520271404884121e-26,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0066221238472414,
+          "ci_upper": -0.0052758349895867,
+          "comparison_order": 110,
+          "contrast": "statistical_normalized_average_rank k40 vs rfe_catboost",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0059338868342612,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 6.7389006204311576e-68,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0256758370647996,
+          "ci_upper": 0.0288488780899038,
+          "comparison_order": 111,
+          "contrast": "statistical_normalized_average_rank k40 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0272806778957508,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.089326169653501e-257,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0028162442762923,
+          "ci_upper": -0.0014546738431221,
+          "comparison_order": 112,
+          "contrast": "statistical_normalized_average_rank k40 vs catboost_shap",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0021212162284706,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 1.1240370719032822e-09,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0099038395738155,
+          "ci_upper": 0.0120869455274442,
+          "comparison_order": 113,
+          "contrast": "statistical_normalized_average_rank k40 vs mrmr_mutual_information",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0110041513563943,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 1.8492545992859545e-88,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0049526336267618,
+          "ci_upper": -0.0035773058350325,
+          "comparison_order": 114,
+          "contrast": "statistical_normalized_average_rank k40 vs cross_dataset_rank_voting_v1_primary_pool_200",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0042595615834644,
+          "exploratory": true,
+          "grade": "not_supported",
+          "holm_p": 4.275514750620578e-36,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0097749058316763,
+          "ci_upper": 0.0112211163941153,
+          "comparison_order": 115,
+          "contrast": "iv_then_boruta pool100 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0105150896584036,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 4.130918579445226e-167,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0258873531115285,
+          "ci_upper": 0.029012425724201,
+          "comparison_order": 116,
+          "contrast": "iv_then_boruta pool100 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0274406844956881,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 2.888544631165186e-266,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0128459220699335,
+          "ci_upper": 0.0143786843607581,
+          "comparison_order": 117,
+          "contrast": "iv_then_boruta pool200 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0136377605378459,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 4.511422168992205e-243,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0289966166400072,
+          "ci_upper": 0.0321128395867953,
+          "comparison_order": 118,
+          "contrast": "iv_then_boruta pool200 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0305633553751304,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0166204804669509,
+          "ci_upper": 0.0183135853524936,
+          "comparison_order": 119,
+          "contrast": "iv_then_boruta pool300 vs iv_woe",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0174745517556926,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0328628766100135,
+          "ci_upper": 0.0359427218989295,
+          "comparison_order": 120,
+          "contrast": "iv_then_boruta pool300 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0344001465929771,
+          "exploratory": true,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.020877261811545,
+          "ci_upper": 0.0244415405752551,
+          "comparison_order": 121,
+          "contrast": "boruta_then_mrmr_mutual_information k40 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0227058002235308,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.1489683466411445e-143,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.005358661672973,
+          "ci_upper": 0.0074922884105493,
+          "comparison_order": 122,
+          "contrast": "boruta_then_mrmr_mutual_information k40 vs mrmr_mutual_information",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0064292736841743,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 6.9064249776944e-33,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": 0.0301016402030142,
+          "ci_upper": 0.033283705571997,
+          "comparison_order": 123,
+          "contrast": "boruta_then_rfe_catboost k40 vs boruta_random_forest",
+          "dataset": "lendingclub_v2",
+          "effect": 0.0316965606535052,
+          "exploratory": false,
+          "grade": "strong",
+          "holm_p": 0.0,
+          "model": "catboost"
+        },
+        {
+          "ci_lower": -0.0020266632187414,
+          "ci_upper": -0.0010095580961925,
+          "comparison_order": 124,
+          "contrast": "boruta_then_rfe_catboost k40 vs rfe_catboost",
+          "dataset": "lendingclub_v2",
+          "effect": -0.0015180040765068,
+          "exploratory": false,
+          "grade": "not_supported",
+          "holm_p": 9.889180276198094e-09,
+          "model": "catboost"
+        }
+      ],
+      "generalization": [
+        {
+          "configuration": "full",
+          "dataset": "homecredit",
+          "dev_auc": 0.7491696380967157,
+          "gap": 0.0223261146543998,
+          "jaccard": 1.0,
+          "method": "full_features",
+          "model": "lr",
+          "oot_auc": 0.7714957527511155
+        },
+        {
+          "configuration": "full",
+          "dataset": "homecredit",
+          "dev_auc": 0.7716615882985325,
+          "gap": 0.0143704203422574,
+          "jaccard": 1.0,
+          "method": "full_features",
+          "model": "catboost",
+          "oot_auc": 0.7860320086407899
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.6203018673706652,
+          "gap": 0.0075218989288575,
+          "jaccard": 1.0,
+          "method": "random_k",
+          "model": "lr",
+          "oot_auc": 0.6278237662995227
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.6624554644284345,
+          "gap": 0.0229377937678324,
+          "jaccard": 1.0,
+          "method": "random_k",
+          "model": "catboost",
+          "oot_auc": 0.685393258196267
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7248392917942452,
+          "gap": 0.0133075303891209,
+          "jaccard": 0.805288913984566,
+          "method": "iv_woe",
+          "model": "lr",
+          "oot_auc": 0.7381468221833661
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7505299399747939,
+          "gap": 0.018040766472687,
+          "jaccard": 0.7538388796052887,
+          "method": "iv_woe",
+          "model": "catboost",
+          "oot_auc": 0.7685707064474809
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7245332273606258,
+          "gap": 0.010582527277403,
+          "jaccard": 0.54320893277415,
+          "method": "mrmr_mutual_information",
+          "model": "lr",
+          "oot_auc": 0.7351157546380288
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7384897068930701,
+          "gap": 0.0214090732451858,
+          "jaccard": 0.6341189438132044,
+          "method": "mrmr_mutual_information",
+          "model": "catboost",
+          "oot_auc": 0.759898780138256
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7451174047975078,
+          "gap": 0.0002319484436165,
+          "jaccard": 0.4160567112059108,
+          "method": "lasso_l1_logistic",
+          "model": "lr",
+          "oot_auc": 0.7453493532411243
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.76156434716017,
+          "gap": 0.0126618601084638,
+          "jaccard": 0.4045132658107526,
+          "method": "lasso_l1_logistic",
+          "model": "catboost",
+          "oot_auc": 0.7742262072686338
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7342675799488416,
+          "gap": 0.0104844868611675,
+          "jaccard": 0.6998804094456268,
+          "method": "legacy_rf_relevance_corr",
+          "model": "lr",
+          "oot_auc": 0.7447520668100092
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7522743942122128,
+          "gap": 0.0175301555827249,
+          "jaccard": 0.6216360033213574,
+          "method": "legacy_rf_relevance_corr",
+          "model": "catboost",
+          "oot_auc": 0.7698045497949377
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.743327157429894,
+          "gap": 0.0068026867769057,
+          "jaccard": 0.6108460299764646,
+          "method": "catboost_shap",
+          "model": "lr",
+          "oot_auc": 0.7501298442067997
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7638542180844813,
+          "gap": 0.0156809775713884,
+          "jaccard": 0.5022971523259339,
+          "method": "catboost_shap",
+          "model": "catboost",
+          "oot_auc": 0.7795351956558697
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7267203301056346,
+          "gap": 0.0130179070396058,
+          "jaccard": 0.4335030490870313,
+          "method": "boruta_random_forest",
+          "model": "lr",
+          "oot_auc": 0.7397382371452405
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7369243708178838,
+          "gap": 0.0172781246164294,
+          "jaccard": 0.3832459024521369,
+          "method": "boruta_random_forest",
+          "model": "catboost",
+          "oot_auc": 0.7542024954343132
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7372156763774645,
+          "gap": 0.0093304167332554,
+          "jaccard": 0.4957820723337964,
+          "method": "rfe_catboost",
+          "model": "lr",
+          "oot_auc": 0.74654609311072
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.762960625378043,
+          "gap": 0.0184648945189345,
+          "jaccard": 0.4543431892813805,
+          "method": "rfe_catboost",
+          "model": "catboost",
+          "oot_auc": 0.7814255198969775
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.743883800882492,
+          "gap": 0.0058301105143002,
+          "jaccard": 0.4994780021466677,
+          "method": "statistical_normalized_average_rank",
+          "model": "lr",
+          "oot_auc": 0.7497139113967922
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7610098179163001,
+          "gap": 0.0175829502574059,
+          "jaccard": 0.4692690814229871,
+          "method": "statistical_normalized_average_rank",
+          "model": "catboost",
+          "oot_auc": 0.778592768173706
+        },
+        {
+          "configuration": "pool100",
+          "dataset": "homecredit",
+          "dev_auc": 0.7395275103143126,
+          "gap": 0.0166134395100818,
+          "jaccard": 0.5221276130828344,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7561409498243945
+        },
+        {
+          "configuration": "pool100",
+          "dataset": "homecredit",
+          "dev_auc": 0.7477249995393417,
+          "gap": 0.0209089060139736,
+          "jaccard": 0.5221276130828344,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7686339055533153
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "homecredit",
+          "dev_auc": 0.743540353606645,
+          "gap": 0.0184823563909978,
+          "jaccard": 0.5145038957335922,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7620227099976429
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "homecredit",
+          "dev_auc": 0.7508565024592089,
+          "gap": 0.025796179866443,
+          "jaccard": 0.5145038957335922,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7766526823256519
+        },
+        {
+          "configuration": "pool300",
+          "dataset": "homecredit",
+          "dev_auc": 0.7446867217270631,
+          "gap": 0.0198832545253423,
+          "jaccard": 0.5326808634194815,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7645699762524054
+        },
+        {
+          "configuration": "pool300",
+          "dataset": "homecredit",
+          "dev_auc": 0.7531741422901356,
+          "gap": 0.0265171189605081,
+          "jaccard": 0.5326808634194815,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7796912612506437
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7327898103127278,
+          "gap": 0.0110559589223584,
+          "jaccard": 0.3592520060124587,
+          "method": "boruta_then_mrmr_mutual_information",
+          "model": "lr",
+          "oot_auc": 0.7438457692350863
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7514236892731893,
+          "gap": 0.0198536470156922,
+          "jaccard": 0.4204268136698809,
+          "method": "boruta_then_mrmr_mutual_information",
+          "model": "catboost",
+          "oot_auc": 0.7712773362888815
+        },
+        {
+          "configuration": "k20",
+          "dataset": "homecredit",
+          "dev_auc": 0.7358722795120457,
+          "gap": 0.0119132246065858,
+          "jaccard": 0.410660603764052,
+          "method": "boruta_then_rfe_catboost",
+          "model": "lr",
+          "oot_auc": 0.7477855041186315
+        },
+        {
+          "configuration": "k40",
+          "dataset": "homecredit",
+          "dev_auc": 0.7542860972591622,
+          "gap": 0.0216229447925182,
+          "jaccard": 0.4410639788915402,
+          "method": "boruta_then_rfe_catboost",
+          "model": "catboost",
+          "oot_auc": 0.7759090420516804
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "homecredit",
+          "dev_auc": 0.7386995408176371,
+          "gap": 0.0105383236331348,
+          "jaccard": 0.4897167289371187,
+          "method": "cross_dataset_rank_voting_v1_primary_pool_200",
+          "model": "lr",
+          "oot_auc": 0.749237864450772
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "homecredit",
+          "dev_auc": 0.7620035833086347,
+          "gap": 0.0165680811391806,
+          "jaccard": 0.4163297157667947,
+          "method": "cross_dataset_rank_voting_v1_primary_pool_200",
+          "model": "catboost",
+          "oot_auc": 0.7785716644478153
+        },
+        {
+          "configuration": "full",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7319632593152103,
+          "gap": -0.0210760007476634,
+          "jaccard": 1.0,
+          "method": "full_features",
+          "model": "lr",
+          "oot_auc": 0.7108872585675469
+        },
+        {
+          "configuration": "full",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7372043236935173,
+          "gap": -0.0142309796566115,
+          "jaccard": 1.0,
+          "method": "full_features",
+          "model": "catboost",
+          "oot_auc": 0.7229733440369057
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.5934072674382754,
+          "gap": 0.0104145081021828,
+          "jaccard": 1.0,
+          "method": "random_k",
+          "model": "lr",
+          "oot_auc": 0.6038217755404582
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.6719504070360727,
+          "gap": -0.0001046074522793,
+          "jaccard": 1.0,
+          "method": "random_k",
+          "model": "catboost",
+          "oot_auc": 0.6718457995837933
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7010830436202105,
+          "gap": -0.0189731644514741,
+          "jaccard": 0.871861471861472,
+          "method": "iv_woe",
+          "model": "lr",
+          "oot_auc": 0.6821098791687363
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7216340994631656,
+          "gap": -0.0189613019809758,
+          "jaccard": 0.8424426193495714,
+          "method": "iv_woe",
+          "model": "catboost",
+          "oot_auc": 0.7026727974821897
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7044367644470642,
+          "gap": -0.018513135350229,
+          "jaccard": 0.732927652058087,
+          "method": "mrmr_mutual_information",
+          "model": "lr",
+          "oot_auc": 0.6859236290968351
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7203292609686585,
+          "gap": -0.0183055317843968,
+          "jaccard": 0.8462238152181971,
+          "method": "mrmr_mutual_information",
+          "model": "catboost",
+          "oot_auc": 0.7020237291842616
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7187182667753295,
+          "gap": -0.0376147342644229,
+          "jaccard": 0.5201127097678822,
+          "method": "lasso_l1_logistic",
+          "model": "lr",
+          "oot_auc": 0.6811035325109065
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7299407028485662,
+          "gap": -0.0203137853410979,
+          "jaccard": 0.5712349876104434,
+          "method": "lasso_l1_logistic",
+          "model": "catboost",
+          "oot_auc": 0.7096269175074682
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7155802277944121,
+          "gap": -0.0240344992705566,
+          "jaccard": 0.7235167730819905,
+          "method": "legacy_rf_relevance_corr",
+          "model": "lr",
+          "oot_auc": 0.6915457285238554
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7261076332237754,
+          "gap": -0.0189138357616601,
+          "jaccard": 0.70913976543807,
+          "method": "legacy_rf_relevance_corr",
+          "model": "catboost",
+          "oot_auc": 0.7071937974621152
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7185730868266694,
+          "gap": -0.0220309185729465,
+          "jaccard": 0.5975126966431314,
+          "method": "catboost_shap",
+          "model": "lr",
+          "oot_auc": 0.6965421682537228
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7320285396761441,
+          "gap": -0.0168794429070175,
+          "jaccard": 0.6054958817762053,
+          "method": "catboost_shap",
+          "model": "catboost",
+          "oot_auc": 0.7151490967691265
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.6574010203845271,
+          "gap": -0.0016533458664771,
+          "jaccard": 0.9272727272727274,
+          "method": "boruta_random_forest",
+          "model": "lr",
+          "oot_auc": 0.6557476745180499
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7006441345507275,
+          "gap": -0.0148969319058223,
+          "jaccard": 0.7293074020105423,
+          "method": "boruta_random_forest",
+          "model": "catboost",
+          "oot_auc": 0.6857472026449052
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7211322571465768,
+          "gap": -0.0222516645233873,
+          "jaccard": 0.4417554348588831,
+          "method": "rfe_catboost",
+          "model": "lr",
+          "oot_auc": 0.6988805926231895
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7347423319611869,
+          "gap": -0.0157805645862697,
+          "jaccard": 0.461602717412052,
+          "method": "rfe_catboost",
+          "model": "catboost",
+          "oot_auc": 0.7189617673749171
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7172036396477223,
+          "gap": -0.0240709730238984,
+          "jaccard": 0.5825769721421895,
+          "method": "statistical_normalized_average_rank",
+          "model": "lr",
+          "oot_auc": 0.6931326666238238
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7298614110639685,
+          "gap": -0.0168335305233126,
+          "jaccard": 0.5560287522239963,
+          "method": "statistical_normalized_average_rank",
+          "model": "catboost",
+          "oot_auc": 0.7130278805406559
+        },
+        {
+          "configuration": "pool100",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7239530467872437,
+          "gap": -0.0211580879259496,
+          "jaccard": 0.843748811894335,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7027949588612941
+        },
+        {
+          "configuration": "pool100",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7283426538379394,
+          "gap": -0.0151547666973461,
+          "jaccard": 0.843748811894335,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7131878871405932
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7280300076047734,
+          "gap": -0.0216061835534242,
+          "jaccard": 0.8073185541957617,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7064238240513492
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.731929817958722,
+          "gap": -0.0156192599386865,
+          "jaccard": 0.8073185541957617,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7163105580200355
+        },
+        {
+          "configuration": "pool300",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7296761985608192,
+          "gap": -0.0198726989324403,
+          "jaccard": 0.790052968123312,
+          "method": "iv_then_boruta",
+          "model": "lr",
+          "oot_auc": 0.7098034996283789
+        },
+        {
+          "configuration": "pool300",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7336229846427191,
+          "gap": -0.0134756354048367,
+          "jaccard": 0.790052968123312,
+          "method": "iv_then_boruta",
+          "model": "catboost",
+          "oot_auc": 0.7201473492378824
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7146889952741073,
+          "gap": -0.0218197966079576,
+          "jaccard": 0.396634629738078,
+          "method": "boruta_then_mrmr_mutual_information",
+          "model": "lr",
+          "oot_auc": 0.6928691986661497
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7293695530735563,
+          "gap": -0.0209165502051202,
+          "jaccard": 0.4339039049220592,
+          "method": "boruta_then_mrmr_mutual_information",
+          "model": "catboost",
+          "oot_auc": 0.708453002868436
+        },
+        {
+          "configuration": "k20",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7202064899009094,
+          "gap": -0.0240371288512787,
+          "jaccard": 0.4333124988964811,
+          "method": "boruta_then_rfe_catboost",
+          "model": "lr",
+          "oot_auc": 0.6961693610496307
+        },
+        {
+          "configuration": "k40",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7321446524182416,
+          "gap": -0.0147008891198311,
+          "jaccard": 0.4752853310946657,
+          "method": "boruta_then_rfe_catboost",
+          "model": "catboost",
+          "oot_auc": 0.7174437632984104
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7188888032767703,
+          "gap": -0.0237840084972515,
+          "jaccard": 0.437819256506687,
+          "method": "cross_dataset_rank_voting_v1_primary_pool_200",
+          "model": "lr",
+          "oot_auc": 0.6951047947795187
+        },
+        {
+          "configuration": "pool200",
+          "dataset": "lendingclub_v2",
+          "dev_auc": 0.7330066548558116,
+          "gap": -0.0157192127316913,
+          "jaccard": 0.4566844388095629,
+          "method": "cross_dataset_rank_voting_v1_primary_pool_200",
+          "model": "catboost",
+          "oot_auc": 0.7172874421241203
+        }
+      ]
+    },
+    "generatedAt": "2026-08-08T00:00:00Z",
+    "status": "ready",
+    "version": 1
+  },
+  "sources": [
+    {
+      "id": "comparisons",
+      "label": "Canonical paired comparisons",
+      "path": "paired_comparisons.csv",
+      "query": {
+        "sql": "SELECT * FROM comparison_results"
+      }
+    },
+    {
+      "id": "results",
+      "label": "Authenticated two-dataset long results",
+      "path": "two_dataset_results_long.csv",
+      "query": {
+        "sql": "SELECT * FROM generalization"
+      }
+    },
+    {
+      "id": "claims",
+      "label": "Claims and evidence audit",
+      "path": "claims_and_evidence.csv",
+      "query": {
+        "sql": "SELECT * FROM claims"
+      }
+    },
+    {
+      "id": "authentication",
+      "label": "Authentication validation",
+      "path": "authentication_validation.json",
+      "query": {
+        "sql": "SELECT * FROM authentication_checks"
+      }
+    }
+  ],
+  "surface": "report"
+}

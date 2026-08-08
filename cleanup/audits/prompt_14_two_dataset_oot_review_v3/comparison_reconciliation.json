@@ -1,0 +1,12 @@
+{
+  "authentication_failures": 0,
+  "evaluable_comparisons": 124,
+  "full_family_denominators_preserved": true,
+  "holm_families": 36,
+  "holm_input_p1_substitutions": 0,
+  "protocol_allowed_infeasible": 0,
+  "protocol_allowed_unavailable": 0,
+  "registered_comparisons": 124,
+  "represented_once": 124,
+  "schema_version": "prompt_14_v3_comparison_reconciliation_v1"
+}

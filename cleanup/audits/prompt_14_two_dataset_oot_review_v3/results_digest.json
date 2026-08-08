@@ -1,0 +1,103 @@
+{
+  "artifacts": [
+    {
+      "bytes": 91258,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/artifact.json",
+      "row_count": null,
+      "sha256": "6d5341a4f29bc6cb97c31f0ac1c898f008786594587b490bdbd8a8000c2660b0"
+    },
+    {
+      "bytes": 678112,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/artifact_manifest.csv",
+      "row_count": 1709,
+      "sha256": "7f2a7e4abbaf4fc1a846eac0174fcdcdbb9149699f7e77db874a2f48ca746501"
+    },
+    {
+      "bytes": 719,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/authentication_inventory.json",
+      "row_count": null,
+      "sha256": "6cbf8da0846ffc62c837fb65696291af6ac78f373d43611875ebbdfe81b0b58d"
+    },
+    {
+      "bytes": 3445,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/authentication_validation.json",
+      "row_count": null,
+      "sha256": "5137f40dad600aa0205e1bc11fdbde635a0ab5fd1553b794f652821ea5fa8450"
+    },
+    {
+      "bytes": 24940,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/claims_and_evidence.csv",
+      "row_count": 6,
+      "sha256": "956236dba4af62da51468c1566655b1a770beace3eb4797dae38e8e3c9acd005"
+    },
+    {
+      "bytes": 370,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/comparison_reconciliation.json",
+      "row_count": null,
+      "sha256": "e9d243cf16b3ccba6e4062583b125ef7e598053dea2ba28cdafaf311e1ec1bcc"
+    },
+    {
+      "bytes": 180211,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/figures/dev_oot_generalization_stability.png",
+      "row_count": null,
+      "sha256": "d0799dbdbb2fced4eb9405a054a1b7a2189d82ceffc9334fa3d8f1d3066518b0"
+    },
+    {
+      "bytes": 453486,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/figures/paired_oot_auc_effect_forest.png",
+      "row_count": null,
+      "sha256": "5dced6082afcb4b84b7c9faa04066d8f351834317a44499d1984ac2cc1187825"
+    },
+    {
+      "bytes": 20906,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/method_evidence_summary.csv",
+      "row_count": 52,
+      "sha256": "cbda14124671b79417a0f11aa5c84d277459bc5c04a120e3e8ae27bf02008c1f"
+    },
+    {
+      "bytes": 126656,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/metric_recomputation_check.csv",
+      "row_count": 448,
+      "sha256": "c00be51885392087f1f5f4aca35d2eb0bd12383a85c3cab2a0b5ccb39fae1d6c"
+    },
+    {
+      "bytes": 26271,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/multiplicity_families.json",
+      "row_count": null,
+      "sha256": "186cdf7f247676d3d15939f1021fa80401d1522a4793d5d31cf31456012d2aed"
+    },
+    {
+      "bytes": 129534,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/paired_comparisons.csv",
+      "row_count": 124,
+      "sha256": "61f0fec03293ce43272aaec5294f9efa3f504ef8e1c4e1a129e6421577fa9756"
+    },
+    {
+      "bytes": 501412,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/report.html",
+      "row_count": null,
+      "sha256": "927e746f6ed2a3ee2d9dbdd438bd302b136fe057ff080465deb78fb374b52d61"
+    },
+    {
+      "bytes": 27191,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/report_traceability.json",
+      "row_count": null,
+      "sha256": "862cf0ee1c2b601bb41ede393b99133b118f67230b78b23f0413a5e97ca6e985"
+    },
+    {
+      "bytes": 10427,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/review_report.md",
+      "row_count": null,
+      "sha256": "3dc44e4ca2985f4702688d0f92f9d77c60b72ab403bfcee12199936de0a74700"
+    },
+    {
+      "bytes": 44577,
+      "relative_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/two_dataset_results_long.csv",
+      "row_count": 64,
+      "sha256": "8cd049f3cd813848b29b6511ec109e0059c397d7fbb49f883b43d276576261e3"
+    }
+  ],
+  "holm_families": 36,
+  "registered_comparisons": 124,
+  "schema_version": "prompt_14_v3_results_digest_v1"
+}

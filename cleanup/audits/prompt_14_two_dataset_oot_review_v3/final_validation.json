@@ -1,0 +1,110 @@
+{
+  "checks": [
+    {
+      "check_id": "pointer_fail_closed",
+      "evidence": "authentication_validation.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "protocol_lock_and_registry_digests",
+      "evidence": "protocol_lock_validation.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "pilot_dev_oot_voting_counts",
+      "evidence": "authentication_validation.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "comparison_family_accounting",
+      "evidence": "comparison_reconciliation.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "paired_population_target_alignment",
+      "evidence": "authentication_validation.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "metric_reconciliation_1e-10",
+      "evidence": "metric_recomputation_check.csv",
+      "status": "pass"
+    },
+    {
+      "check_id": "natural_support_no_padding",
+      "evidence": "two_dataset_results_long.csv",
+      "status": "pass"
+    },
+    {
+      "check_id": "report_numeric_traceability",
+      "evidence": "report_traceability.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "raw_data_access",
+      "observed": 0,
+      "status": "pass"
+    },
+    {
+      "check_id": "experiment_worker_startup",
+      "observed": 0,
+      "status": "pass"
+    },
+    {
+      "check_id": "configuration_adaptation_after_oot",
+      "observed": false,
+      "status": "pass"
+    },
+    {
+      "check_id": "deterministic_artifact_ordering",
+      "evidence": "results_digest.json",
+      "status": "pass"
+    },
+    {
+      "check_id": "report_schema_packaging_links_structure",
+      "evidence": "portable report builder receipt",
+      "status": "pass"
+    },
+    {
+      "check_id": "final_process_writer_lock_partial_audit",
+      "active_repo_python_processes": 0,
+      "active_writers": 0,
+      "active_execution_locks": 0,
+      "partial_or_temporary_result_files": 0,
+      "persistent_registry_lock_files_exclusively_openable": 2,
+      "status": "pass"
+    }
+  ],
+  "focused_tests": {
+    "analysis_and_protocol": "14 passed in 0.05s",
+    "existing_baseline_and_paired_inference": "28 passed in 2.67s",
+    "status": "pass"
+  },
+  "git_diff_check": "pass",
+  "report_delivery_mode": "html",
+  "report_path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/report.html",
+  "report_validation": {
+    "blocks": 16,
+    "browser_limitation": "browser unavailable; no browser downloaded",
+    "charts": 2,
+    "package": "passed",
+    "schema_validation": "passed",
+    "structural_verification": "passed",
+    "tables": 3,
+    "visual_qa": "passed",
+    "status": "pass"
+  },
+  "repository_hygiene": {
+    "active_repo_python_processes": 0,
+    "active_writers": 0,
+    "active_execution_locks": 0,
+    "changed_paths_reviewed": true,
+    "forbidden_generated_or_raw_paths": 0,
+    "partial_or_temporary_result_files": 0,
+    "persistent_registry_lock_files_inactive": 2,
+    "precommit_status": "pass",
+    "status": "pass"
+  },
+  "schema_version": "prompt_14_v3_final_validation_v1",
+  "status": "pass"
+}

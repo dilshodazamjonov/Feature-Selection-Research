@@ -1,0 +1,9 @@
+{
+  "analysis": "prompt_14_two_dataset_analysis_v1",
+  "canonical_report": "results/final_research_package_v2/final_research_report.md",
+  "holm_families": 36,
+  "phase_1_commit": "fd98d3c6d445e042b69dd24b0d6e8355157548dd",
+  "portable_report": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/report.html",
+  "registered_comparisons": 124,
+  "schema_version": "research_summary_manifest_v1"
+}
