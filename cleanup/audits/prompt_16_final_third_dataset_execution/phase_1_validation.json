@@ -1,0 +1,75 @@
+{
+  "schema_version": "prompt_16_phase_1_validation_v1",
+  "validated_at_utc": "2026-08-08T18:54:09.4052641Z",
+  "status": "pass_ready_for_first_gate_commit",
+  "outcome_blind": true,
+  "raw_dataset_opened": false,
+  "prompt_14_numeric_findings_opened": false,
+  "artifacts": {
+    "resource_pilot_plan.json": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "resource_pilot_plan.md": "f382b824631a34179a60bbe27090a6ea6bd0de27767120159294db7538fa099b",
+    "resource_pilot_execution_authorization.json": "3a5291ef09456d9bcb31716e7204c2a0b6dabc55901d28af55df7b38356c6754",
+    "scripts/run_prompt_16_third_dataset.py": "137aa02216406c15315776f0136e10a232d75bbac8dc0fb448535759ae8ff4c5",
+    "src/credit_risk_fs/experiments/prompt_16_third_dataset.py": "e1d9fd9147a5a6cfd3564752ad07c1f0807e393f0e4d2351f45162886a72409b",
+    "src/credit_risk_fs/experiments/resource_monitor.py": "8d2adf182b4c7a680ca629211972d787fd5bf9e554170bdefa577ab32279fec9",
+    "tests/test_prompt_16_third_dataset_execution.py": "a0fbfe9a10466a4a53e44d4a9eee79c79d4ea8aa115c0dc32440fab3a12609ab",
+    "tests/test_resource_monitor.py": "cee589c9682855e0a47e49b8c7d12af242711ca8adccfd418a294e838e11623f"
+  },
+  "plan_checks": {
+    "json_parse": "pass",
+    "schema": "prompt_16_resource_pilot_plan_v1",
+    "status": "authorized_outcome_blind",
+    "plan_digest_pinned_in_cli_worker": true,
+    "dev_plus_oot_equals_base": true,
+    "fit_ids": 27,
+    "fit_dependencies_cover_cells_once": true,
+    "evaluation_cells": 30,
+    "exact_pilot_fold": 1,
+    "oot_access": "forbidden",
+    "raw_output_path_overlap": false,
+    "one_cell_one_fold_one_family": true,
+    "maximum_estimator_threads": 4,
+    "process_rss_hard_cap_gib": 24,
+    "system_available_abort_floor_gib": 8,
+    "dynamic_disk_safety_factor": 2.5,
+    "atomic_resume_rules_present": true,
+    "visible_resource_infeasibility_rule_present": true,
+    "oot_retry_path_present": false
+  },
+  "cli_checks": {
+    "inert_import": "pass",
+    "top_level_help": "pass",
+    "matrix_help": "pass",
+    "phase_help": "pass",
+    "canonical_registry": "27 selector fits and 30 evaluations in exact locked order",
+    "per_stage_wall_clock_enforcement": "pass",
+    "opt_in_process_rss_and_system_headroom_enforcement": "pass",
+    "owned_process_tree_cleanup": "pass"
+  },
+  "tests": [
+    {
+      "scope": "Prompt-15 focused adapter",
+      "passed": 27,
+      "failed": 0,
+      "elapsed_seconds": 6.19
+    },
+    {
+      "scope": "compatible protocol, atomicity, split, Stage-1 integrity, checkpoint and resource-policy tests",
+      "passed": 32,
+      "failed": 0,
+      "deselected": 35
+    },
+    {
+      "scope": "Prompt-16 execution, resource monitor, run-index atomicity, combination runner and rank-voting protocol",
+      "passed": 49,
+      "failed": 0,
+      "elapsed_seconds": 60.01
+    }
+  ],
+  "aggregate": {
+    "passed": 108,
+    "failed": 0,
+    "warnings": 0
+  },
+  "verdict": "Phase 1 is internally consistent and may be committed before any raw-data access."
+}
