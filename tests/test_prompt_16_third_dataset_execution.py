@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -27,6 +28,7 @@ from credit_risk_fs.experiments.prompt_16_third_dataset import (
     selector_wall_clock_stage,
 )
 from credit_risk_fs.experiments.resource_policy import load_execution_policy
+from credit_risk_fs.experiments.research_logging import _human_line
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -192,3 +194,49 @@ def test_prompt_16_cli_import_is_inert(tmp_path: Path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     assert list(tmp_path.iterdir()) == before
+
+
+def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
+    cli = ROOT / "scripts/run_prompt_16_third_dataset.py"
+    tree = ast.parse(cli.read_text(encoding="utf-8"))
+    session_contexts = [
+        item.context_expr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.With)
+        for item in node.items
+        if isinstance(item.context_expr, ast.Call)
+        and isinstance(item.context_expr.func, ast.Name)
+        and item.context_expr.func.id == "ResearchLogSession"
+    ]
+    assert len(session_contexts) == 1
+    supervisor_calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "supervise_worker"
+    ]
+    assert len(supervisor_calls) == 1
+    keywords = {item.arg: item.value for item in supervisor_calls[0].keywords}
+    assert ast.literal_eval(keywords["heartbeat_interval_seconds"]) == 30.0
+
+
+def test_prompt_16_heartbeat_human_format_includes_stage_time_and_ram():
+    rendered = _human_line(
+        {
+            "event": "stage_heartbeat",
+            "level": "INFO",
+            "timestamp_utc": "2026-08-08T20:00:00+00:00",
+            "stage": "baseline_boruta_random_forest",
+            "component": "boruta_random_forest_selection",
+            "elapsed_stage_seconds": 1832,
+            "worker_rss_bytes": 7 * 1024**3,
+            "system_available_ram_bytes": 23 * 1024**3,
+        },
+        debug_log_path="logs/debug.log",
+    )
+    assert rendered == (
+        "[2026-08-08 20:00:00 UTC] ACTIVE | "
+        "Boruta Random Forest Selection running | Elapsed 30m 32s | "
+        "RAM 7.0 GiB | Available 23.0 GiB"
+    )
