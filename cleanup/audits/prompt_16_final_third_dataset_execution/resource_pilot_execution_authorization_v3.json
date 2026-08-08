@@ -1,0 +1,61 @@
+{
+  "schema_version": "prompt_16_resource_pilot_execution_authorization_v3",
+  "status": "authorized_after_fix_commit",
+  "authorized_at_utc": "2026-08-08T21:15:37.5793850Z",
+  "supersedes_for_restart": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_execution_authorization_v2.json",
+  "superseded_authorization_sha256": "7270c7e3b08d4d82c155c050a698f1411068ccd5a0319b628d49ccbffc1a53d1",
+  "working_directory": "D:/python projects/Research",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e"
+  },
+  "operational_amendment": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/implementation_fix_002_fold_alignment_and_ram_wait.json",
+    "user_approved": true,
+    "system_memory_behavior": "wait_below_8_GiB_resume_after_three_5_second_checks_at_or_above_10_GiB",
+    "wait_log_interval_seconds": 300,
+    "process_tree_rss_hard_cap_gib": 24,
+    "scientific_configuration_changed": false
+  },
+  "matrix_prerequisite": {
+    "root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "rows": 1526659,
+    "predictors": 1959,
+    "parts": 31,
+    "depth_2_files_opened": 0,
+    "status": "authenticated_complete"
+  },
+  "implementation_sha256": {
+    "scripts/run_prompt_16_third_dataset.py": "86f12601dab7070e0b5a09517f9a0b85ec68b58e6cb453758cca3581023ea90e",
+    "src/credit_risk_fs/experiments/prompt_16_third_dataset.py": "720062a568ee2b9c771e98b89a0c0f1dec35926dafd8c0cc1ba17a2ac27cebff",
+    "src/credit_risk_fs/experiments/resource_monitor.py": "9a50e650aaad5d9488dbc083ec61062128ca75db93f4db0666051386a7e9d93f",
+    "configs/execution/prompt_16_ram_wait_resume_v1.yaml": "ee1b08cd03d91f2a536d32f2185665f5681cbd0bff899b005149ab92cbf8ea1a"
+  },
+  "exact_command": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1",
+  "expected_terminal_behavior": {
+    "active_heartbeat_seconds": 30,
+    "memory_wait_log_seconds": 300,
+    "memory_wait_example": "[UTC] WAIT | DEV data loading paused | Process RAM ... | Available ...",
+    "resume_example": "[UTC] RESUME | Available RAM stable at ... | Continuing dataset loading",
+    "terminal_event_required": true
+  },
+  "expected_accounting": {
+    "selector_fit_records": 27,
+    "evaluation_cells": 30,
+    "oot_access": false
+  },
+  "restart_preconditions": [
+    "this versioned fix and authorization are committed",
+    "no active Prompt-16 worker or execution lock",
+    "matrix manifest and _SUCCESS retain the exact hashes above",
+    "worktree is clean"
+  ],
+  "resume_behavior": "matrix remains immutable; fold-1 data loading restarts because no selector/evaluation checkpoint exists; later exact sealed selector/evaluation checkpoints are reused",
+  "success_markers": [
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/_SUCCESS",
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/phase_manifest.json",
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/accounting.json"
+  ]
+}

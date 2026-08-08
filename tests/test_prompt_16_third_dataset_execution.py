@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -17,6 +18,8 @@ from credit_risk_fs.experiments.prompt_16_third_dataset import (
     EXPECTED_EXECUTION_PLAN_SHA256,
     PLAN_SCHEMA_VERSION,
     Prompt16ExecutionError,
+    _locked_alignment_summary,
+    _validate_scope_frame,
     _baseline_selector,
     _combination_selector,
     _read_date_slice,
@@ -28,6 +31,7 @@ from credit_risk_fs.experiments.prompt_16_third_dataset import (
     selector_wall_clock_stage,
 )
 from credit_risk_fs.experiments.resource_policy import load_execution_policy
+from credit_risk_fs.experiments.ram_control import load_ram_control_policy
 from credit_risk_fs.experiments.research_logging import _human_line
 
 
@@ -90,6 +94,12 @@ def test_prompt_16_resource_policy_is_strict_and_sequential():
     assert policy.memory.abort_process_tree_rss_gb == 24
     assert policy.memory.abort_if_system_available_below_gb == 8
     assert policy.disk.minimum_free_results_gb == 80
+    ram_control = load_ram_control_policy(
+        ROOT, "configs/execution/prompt_16_ram_wait_resume_v1.yaml"
+    )
+    assert ram_control.emergency_margin_bytes == 8 * 1024**3
+    assert ram_control.recovery_threshold_bytes == 10 * 1024**3
+    assert ram_control.log_interval_seconds == 300
 
 
 def test_execution_lock_is_outside_atomic_output_root(tmp_path: Path):
@@ -126,7 +136,7 @@ def test_matrix_date_slice_uses_typed_date_bounds(tmp_path: Path):
         {
             "case_id": pa.array([1, 2, 3], type=pa.int64()),
             "date_decision": pa.array(
-                ["2020-01-01", "2020-01-02", "2020-01-03"], type=pa.string()
+                ["2020-01-03", "2020-01-02", "2020-01-01"], type=pa.string()
             ).cast(pa.date32()),
             "MONTH": pa.array([202001, 202001, 202001], type=pa.int64()),
             "WEEK_NUM": pa.array([1, 1, 1], type=pa.int64()),
@@ -151,8 +161,25 @@ def test_matrix_date_slice_uses_typed_date_bounds(tmp_path: Path):
         stage="test",
         fold_label="test",
     )
-    assert observed["case_id"].tolist() == [2, 3]
+    assert observed["case_id"].tolist() == [2, 1]
     assert pd.api.types.is_float_dtype(observed["x"])
+
+
+def test_scope_authentication_uses_the_lock_frozen_line_serialization():
+    frame = pd.DataFrame({"case_id": [1, 2], "target": [0, 1]})
+    expected = {
+        "rows": 2,
+        "target_0": 1,
+        "target_1": 1,
+        "ordered_case_id_sha256": hashlib.sha256(b"1\n2\n").hexdigest(),
+        "ordered_case_id_target_sha256": hashlib.sha256(
+            b"1\x1f0\n2\x1f1\n"
+        ).hexdigest(),
+    }
+    result = _validate_scope_frame(frame, expected, "synthetic")
+    assert result["authenticated"] is True
+    locked = _locked_alignment_summary([1, 2], [0, 1])
+    assert locked["ordered_case_id_sha256"] == expected["ordered_case_id_sha256"]
 
 
 def test_resource_limited_selector_is_sealed_and_visible(tmp_path: Path, monkeypatch):
@@ -219,6 +246,19 @@ def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
     assert len(supervisor_calls) == 1
     keywords = {item.arg: item.value for item in supervisor_calls[0].keywords}
     assert ast.literal_eval(keywords["heartbeat_interval_seconds"]) == 30.0
+    terminal_events = {
+        ast.literal_eval(node.args[0])
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "emit_research_event"
+        and node.args
+    }
+    assert terminal_events == {
+        "session_completed",
+        "session_controlled_stop",
+        "session_failed",
+    }
 
 
 def test_prompt_16_heartbeat_human_format_includes_stage_time_and_ram():

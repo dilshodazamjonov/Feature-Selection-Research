@@ -1,0 +1,111 @@
+{
+  "schema_version": "prompt_16_implementation_fix_v1",
+  "fix_id": "implementation_fix_002_fold_alignment_and_ram_wait",
+  "recorded_at_utc": "2026-08-08T21:15:37.5793850Z",
+  "status": "validated_awaiting_commit_before_restart",
+  "parent_commit": "f6b741f58c209972efcc4f5f448c6316baa7cfa4",
+  "prior_fix_record_sha256": "8dc1c71dc12454efa77a986773e27958e96d470c6d1b23bb406d31752eafa4c0",
+  "triggers": {
+    "deterministic_worker_failure": {
+      "status": "failed",
+      "stop_code": "worker_crash",
+      "stage": "dev_data_loading",
+      "scope": "fold_1:validation",
+      "rows_expected_and_observed": 200661,
+      "target_0_expected_and_observed": 195314,
+      "target_1_expected_and_observed": 5347,
+      "lock_expected_case_id_sha256": "df512d6d27ed1c33c88a08aab6ddacda495077a16f9cd800c27b32242d6603f2",
+      "incorrect_v1_alignment_case_id_sha256": "b6df9e6eaa62332a69d791f42415878c300e6573bfd23f443ff612d690686165",
+      "lock_expected_case_id_target_sha256": "19672d734017e44950a1eacbd49be6fc3e99546a3dbce34694ea2822291009cc",
+      "incorrect_v1_alignment_case_id_target_sha256": "65c74191cada7efc1a430a67bc63dfa83c2c4ee5d59e5b0fc484773d9dc8453d",
+      "latest_supervisor_summary_sha256": "77cf5fec4d8e0808cbf69e0e6c82863982a611aea79f5853b8a62e9add32cf31",
+      "peak_process_tree_rss_bytes": 7610855424,
+      "minimum_system_available_ram_bytes": 22533025792,
+      "selector_fits_started": 0,
+      "evaluations_started": 0,
+      "target_linked_metrics_generated": false
+    },
+    "user_approved_operational_amendment": {
+      "request": "wait for system memory to recover instead of stopping and log the wait every five minutes",
+      "scientific_configuration_change_requested": false,
+      "process_rss_cap_increase_requested": false
+    }
+  },
+  "root_cause": {
+    "alignment": "The canonical third-dataset lock predates the generic credit_risk_ordered_row_alignment_v1 helper and freezes decimal case_id plus LF, or case_id plus U+001F plus target plus LF. Prompt-16 incorrectly compared the newer versioned JSON serialization to those legacy frozen digests. The row set, order, target counts, and target values were already exact.",
+    "memory_behavior": "The first runtime policy treated the 8 GiB system-available threshold as a terminal abort. The repository already has a process-safe RAM wait/resume state machine, but Prompt-16 had not bound it to its 8 GiB threshold or added cooperative gates to matrix-part loading."
+  },
+  "independent_validation": {
+    "fold_1_train_rows": 200661,
+    "stable_order": ["date_decision_ascending", "case_id_numeric_ascending"],
+    "frozen_decimal_line_case_id_sha256_observed": "df512d6d27ed1c33c88a08aab6ddacda495077a16f9cd800c27b32242d6603f2",
+    "frozen_decimal_line_case_id_sha256_matches_lock": true,
+    "frozen_decimal_line_case_id_target_sha256_observed": "19672d734017e44950a1eacbd49be6fc3e99546a3dbce34694ea2822291009cc",
+    "frozen_decimal_line_case_id_target_sha256_matches_lock": true,
+    "performance_metric_inspected": false,
+    "oot_opened": false
+  },
+  "changes": {
+    "alignment": [
+      "authenticate fold scopes and prediction rows with the exact lock-frozen decimal-line serialization",
+      "retain the generic alignment-v1 digest as supplemental evidence",
+      "enforce stable date_decision/case_id order only when the matrix slice is not already monotonic"
+    ],
+    "memory_wait": {
+      "wait_below_system_available_gib": 8,
+      "resume_at_system_available_gib": 10,
+      "required_consecutive_recovery_checks": 3,
+      "check_interval_seconds": 5,
+      "wait_log_interval_seconds": 300,
+      "wait_excluded_from_active_wall_clock": true,
+      "data_loading_behavior": "cooperative wait at every matrix-part boundary",
+      "opaque_selector_model_behavior": "suspend and later resume the owned process tree",
+      "process_tree_rss_hard_cap_gib": 24,
+      "process_tree_rss_behavior": "remains a hard stop because suspending an owned tree does not release its allocated memory",
+      "disk_and_stage_wall_limits_changed": false
+    },
+    "terminal_finalization": "emit an explicit completed, controlled-stop, or failed workflow event so the terminal no longer reports a spurious missing-terminal-event warning"
+  },
+  "classification": {
+    "alignment_fix": "implementation_bug_demonstrated_without_performance",
+    "memory_change": "user_approved_operational_safety_amendment",
+    "methodological_change": false,
+    "selector_model_budget_seed_split_fold_change": false,
+    "resource_cap_weakened": false,
+    "post_outcome_adaptation": false
+  },
+  "files_after_sha256": {
+    "scripts/run_prompt_16_third_dataset.py": "86f12601dab7070e0b5a09517f9a0b85ec68b58e6cb453758cca3581023ea90e",
+    "src/credit_risk_fs/experiments/prompt_16_third_dataset.py": "720062a568ee2b9c771e98b89a0c0f1dec35926dafd8c0cc1ba17a2ac27cebff",
+    "src/credit_risk_fs/experiments/resource_monitor.py": "9a50e650aaad5d9488dbc083ec61062128ca75db93f4db0666051386a7e9d93f",
+    "configs/execution/prompt_16_ram_wait_resume_v1.yaml": "ee1b08cd03d91f2a536d32f2185665f5681cbd0bff899b005149ab92cbf8ea1a",
+    "tests/test_prompt_16_third_dataset_execution.py": "208b7fc17d6ab52635e65f529e751a3b358b17dffbcf65abcd7d5e37cd372c63",
+    "tests/test_resource_monitor.py": "55bd6272afd980ecf05fbc1063827c14632fd5784d5babf54b089b75d618539a",
+    "tests/test_ram_wait_resume.py": "8be6b5c11c37a6ae56bb9e034a843f6056e7597734f2521c740a290e841daddb"
+  },
+  "regression_validation": {
+    "comprehensive_command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_prompt_16_third_dataset_execution.py tests/test_resource_monitor.py tests/test_ram_wait_resume.py tests/test_research_logging.py",
+    "comprehensive_passed": 56,
+    "comprehensive_failed": 0,
+    "focused_final_command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_prompt_16_third_dataset_execution.py tests/test_research_logging.py",
+    "focused_final_passed": 26,
+    "focused_final_failed": 0,
+    "verified_behaviors": [
+      "lock-frozen alignment serialization",
+      "stable slice ordering",
+      "system-headroom wait and stable recovery without abort",
+      "24 GiB process-tree hard ceiling remains enforceable",
+      "five-minute WAIT log interval",
+      "30-second ACTIVE terminal heartbeats",
+      "explicit terminal workflow event",
+      "owned process-tree cleanup"
+    ]
+  },
+  "laptop_feasibility_assessment": {
+    "physical_ram_gib": 39.63,
+    "observed_fold_loading_peak_process_tree_gib": 7.09,
+    "observed_minimum_system_available_gib_on_non_memory_failure": 20.99,
+    "conclusion": "fold loading fits; the bounded pilot is still required to prove every heavy selector/model under the unchanged 24 GiB owned-process cap",
+    "guarantee_all_registered_cells_fit": false
+  }
+}

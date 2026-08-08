@@ -1,0 +1,13 @@
+schema_version: ram_wait_resume_policy_v1
+profile_name: prompt_16_user_approved_ram_wait_resume_v1
+
+# Operational-only amendment approved by the user after the bounded pilot
+# demonstrated the original hard system-headroom abort. Scientific settings,
+# the 24 GiB owned-process ceiling, and disk/wall-clock limits are unchanged.
+emergency_min_available_ram_gb: 8
+emergency_total_ram_fraction: 0.02
+recovery_available_ram_gb: 10
+recovery_consecutive_checks: 3
+check_interval_seconds: 5
+log_interval_seconds: 300
+opaque_stage_pause_mode: process_tree_suspend

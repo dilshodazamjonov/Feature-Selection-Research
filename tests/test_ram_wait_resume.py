@@ -155,6 +155,7 @@ def test_supervisor_waits_without_failing_parent_and_recovers_automatically(tmp_
         results_root=tmp_path,
         temp_root=tmp_path,
         sampler_factory=_sampler_factory([0.5, 4.5, 4.5, 4.5, 8]),
+        enforce_process_tree_rss_limit=True,
     )
     assert result.status == "completed"
     assert result.stop_code is None

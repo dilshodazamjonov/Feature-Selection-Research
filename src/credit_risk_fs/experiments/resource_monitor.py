@@ -1134,6 +1134,7 @@ def supervise_worker(
     max_wall_clock_seconds: float | None = None,
     stage_wall_clock_limits_seconds: Mapping[str, float] | None = None,
     enforce_memory_limits: bool = False,
+    enforce_process_tree_rss_limit: bool = False,
     ram_control_policy: ResolvedRamControlPolicy | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
@@ -1460,7 +1461,9 @@ def supervise_worker(
                 sample,
                 policy,
                 emitted_warnings,
-                enforce_process_tree_rss_limit=enforce_memory_limits,
+                enforce_process_tree_rss_limit=(
+                    enforce_memory_limits or enforce_process_tree_rss_limit
+                ),
             ):
                 warnings.append(warning_message)
                 logged = emit_contextual_research_event(
@@ -1505,12 +1508,14 @@ def supervise_worker(
                 )
                 last_heartbeat_at = now
             threshold = _classify_threshold(sample, policy)
-            if threshold is None and enforce_memory_limits:
+            if threshold is None and (
+                enforce_memory_limits or enforce_process_tree_rss_limit
+            ):
                 if sample.process_tree_rss_bytes >= int(
                     policy.memory.abort_process_tree_rss_gb * GIB
                 ):
                     threshold = RAM_PROCESS_LIMIT
-                elif sample.system_available_ram_bytes <= int(
+                elif enforce_memory_limits and sample.system_available_ram_bytes <= int(
                     policy.memory.abort_if_system_available_below_gb * GIB
                 ):
                     threshold = RAM_SYSTEM_HEADROOM
