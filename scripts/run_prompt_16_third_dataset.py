@@ -80,6 +80,7 @@ def _run_supervised(args: argparse.Namespace) -> int:
         WALL_CLOCK_LIMIT,
         supervise_worker,
     )
+    from credit_risk_fs.experiments.research_logging import ResearchLogSession
     from credit_risk_fs.experiments.resource_policy import (
         GIB,
         detect_hardware,
@@ -216,35 +217,42 @@ def _run_supervised(args: argparse.Namespace) -> int:
 
     lock = acquire_execution_lock(output_root)
     try:
-        result = supervise_worker(
-            worker_target=target,
-            worker_kwargs=worker_kwargs,
-            policy=policy,
-            results_root=output_root.parent,
-            temp_root=temp_root,
-            run_association=f"prompt16:{name}",
-            max_wall_clock_seconds=max_seconds,
-            stage_wall_clock_limits_seconds=stage_wall_clock_limits,
-            enforce_memory_limits=True,
-        )
-        infeasibility = None
-        if (
-            args.operation == "phase"
-            and phase in {"pilot", "dev"}
-            and result.stop_code in {RAM_PROCESS_LIMIT, WALL_CLOCK_LIMIT}
+        terminal_log_path = log_root / f"{name}.log"
+        with ResearchLogSession(
+            terminal_log_path,
+            repository_root=PROJECT_ROOT,
+            command_arguments=[str(value) for value in sys.argv],
         ):
-            supervisor_evidence = result.to_dict()
-            supervisor_evidence.pop("samples", None)
-            infeasibility = record_phase_resource_infeasibility(
-                matrix_root=paths["matrix_root"],
-                output_root=output_root,
-                protocol_lock=paths["protocol_lock"],
-                phase=phase,
-                fold_id=int(args.fold_id),
-                stopped_stage=result.final_stage,
-                stopped_scope=result.final_fold_id,
-                supervisor_evidence=supervisor_evidence,
+            result = supervise_worker(
+                worker_target=target,
+                worker_kwargs=worker_kwargs,
+                policy=policy,
+                results_root=output_root.parent,
+                temp_root=temp_root,
+                run_association=f"prompt16:{name}",
+                heartbeat_interval_seconds=30.0,
+                max_wall_clock_seconds=max_seconds,
+                stage_wall_clock_limits_seconds=stage_wall_clock_limits,
+                enforce_memory_limits=True,
             )
+            infeasibility = None
+            if (
+                args.operation == "phase"
+                and phase in {"pilot", "dev"}
+                and result.stop_code in {RAM_PROCESS_LIMIT, WALL_CLOCK_LIMIT}
+            ):
+                supervisor_evidence = result.to_dict()
+                supervisor_evidence.pop("samples", None)
+                infeasibility = record_phase_resource_infeasibility(
+                    matrix_root=paths["matrix_root"],
+                    output_root=output_root,
+                    protocol_lock=paths["protocol_lock"],
+                    phase=phase,
+                    fold_id=int(args.fold_id),
+                    stopped_stage=result.final_stage,
+                    stopped_scope=result.final_fold_id,
+                    supervisor_evidence=supervisor_evidence,
+                )
         _write_supervision(
             result=result,
             log_root=log_root,
@@ -264,6 +272,7 @@ def _run_supervised(args: argparse.Namespace) -> int:
                 "minimum_system_available_ram_bytes": result.minimum_system_available_ram_bytes,
                 "output_root": str(output_root),
                 "log_root": str(log_root),
+                "terminal_log_path": str(terminal_log_path),
                 "sealed_resource_infeasibility": infeasibility,
             },
             indent=2,

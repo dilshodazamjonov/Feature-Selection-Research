@@ -1,0 +1,82 @@
+{
+  "schema_version": "prompt_16_implementation_fix_v1",
+  "fix_id": "implementation_fix_001_terminal_heartbeat",
+  "recorded_at_utc": "2026-08-08T20:39:58.9819225Z",
+  "status": "validated_awaiting_commit_before_restart",
+  "parent_gate_commit": "11b8adb842febca24e0694cc93155f4d0a5cabac",
+  "trigger": {
+    "user_observation": "supervisor activity was durable but not mirrored to the invoking terminal",
+    "matrix_status": "completed",
+    "matrix_manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "matrix_success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "matrix_rows": 1526659,
+    "matrix_predictors": 1959,
+    "matrix_parts": 31,
+    "depth_2_files_opened": 0,
+    "pilot_status": "aborted_resource_limit",
+    "pilot_stop_code": "ram_system_headroom",
+    "pilot_final_stage": "dev_data_loading",
+    "pilot_final_scope": "fold_1:validation",
+    "pilot_peak_process_tree_rss_bytes": 7877566464,
+    "pilot_minimum_system_available_ram_bytes": 8226406400,
+    "pilot_selector_fits_started": 0,
+    "pilot_evaluations_started": 0,
+    "pilot_target_linked_metrics_generated": false,
+    "pilot_supervisor_summary_sha256": "395910141e358694f2a1ccf3a152f473b33f6fdc627c0d2a9bbbba02ac85af99"
+  },
+  "classification": {
+    "type": "implementation_observability_fix",
+    "demonstrated_independently_of_performance": true,
+    "performance_result_inspected_or_used": false,
+    "methodological_change": false,
+    "resource_limit_change": false,
+    "scientific_configuration_change": false,
+    "resume_identity_change": false,
+    "oot_access": false
+  },
+  "change": {
+    "description": "Wrap each supervised Prompt-16 operation in the repository's existing ResearchLogSession and request 30-second supervisor heartbeats. Human INFO/ACTIVE/DONE/STOP lines are mirrored to the same terminal while durable human, JSONL audit, debug, supervisor-summary, resource-sample, and checkpoint logs remain enabled.",
+    "selector_stage_labeling": "method-specific component labels are supplied for selection heartbeats",
+    "evaluation_stage_labeling": "method/model-specific component labels are supplied for model-fit/evaluation heartbeats",
+    "terminal_log_files": [
+      "outputs/prompt_16_homecredit_model_stability_2024/logs/pilot_fold_1.log",
+      "outputs/prompt_16_homecredit_model_stability_2024/logs/events.jsonl",
+      "outputs/prompt_16_homecredit_model_stability_2024/logs/debug.log"
+    ],
+    "heartbeat_interval_seconds": 30,
+    "durable_logs_disabled": false
+  },
+  "files": {
+    "scripts/run_prompt_16_third_dataset.py": {
+      "before_sha256": "137aa02216406c15315776f0136e10a232d75bbac8dc0fb448535759ae8ff4c5",
+      "after_sha256": "d4108cca93f8278182f150ee71b8b7108571ab8c3074ac792ecdc9966db0174d"
+    },
+    "src/credit_risk_fs/experiments/prompt_16_third_dataset.py": {
+      "before_sha256": "e1d9fd9147a5a6cfd3564752ad07c1f0807e393f0e4d2351f45162886a72409b",
+      "after_sha256": "bc709297cd860bee1177ecbacdbea9d7f19ff608ba778d78f9f2763b8945f345"
+    },
+    "tests/test_prompt_16_third_dataset_execution.py": {
+      "after_sha256": "908cd338747c765c8193aedf75ffdb875fee646ebdc00c4a5895b402567bec93"
+    }
+  },
+  "regression_validation": {
+    "command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_prompt_16_third_dataset_execution.py tests/test_research_logging.py",
+    "passed": 25,
+    "failed": 0,
+    "elapsed_seconds": 10.20,
+    "checks": [
+      "ResearchLogSession encloses the supervised worker",
+      "heartbeat interval is exactly 30 seconds",
+      "human heartbeat includes UTC timestamp, ACTIVE status, detailed stage, elapsed time, process-tree RAM, and available RAM",
+      "CLI import remains inert",
+      "existing process-safe research logging tests remain compatible"
+    ]
+  },
+  "restart_semantics": {
+    "matrix": "immutable completed matrix is authenticated and reused; it is not rebuilt",
+    "pilot": "fold-1 data loading restarts because the controlled stop occurred before any selector/evaluation checkpoint",
+    "selector_and_evaluation_resume": "future sealed exact-identity selector/evaluation checkpoints are reused",
+    "resource_guard": "unchanged hard abort at 24 GiB process-tree RSS or 8 GiB system-available RAM",
+    "recommendation": "close memory-heavy applications and restore at least approximately 24 GiB available RAM before restarting; do not lower the frozen floor"
+  }
+}

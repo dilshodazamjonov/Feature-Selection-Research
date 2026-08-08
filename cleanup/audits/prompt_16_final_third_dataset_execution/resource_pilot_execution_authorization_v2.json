@@ -1,0 +1,65 @@
+{
+  "schema_version": "prompt_16_resource_pilot_execution_authorization_v2",
+  "status": "authorized_after_fix_commit",
+  "authorized_at_utc": "2026-08-08T20:39:58.9819225Z",
+  "supersedes_for_restart": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_execution_authorization.json",
+  "superseded_authorization_sha256": "3a5291ef09456d9bcb31716e7204c2a0b6dabc55901d28af55df7b38356c6754",
+  "reason": "matrix is already complete; restart only the fold-1 pilot with live terminal heartbeats",
+  "working_directory": "D:/python projects/Research",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e"
+  },
+  "matrix_prerequisite": {
+    "root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "rows": 1526659,
+    "predictors": 1959,
+    "parts": 31,
+    "depth_2_files_opened": 0,
+    "status": "authenticated_complete"
+  },
+  "implementation_fix": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/implementation_fix_001_terminal_heartbeat.json",
+    "classification": "observability_only_no_scientific_or_resource_change",
+    "cli_sha256": "d4108cca93f8278182f150ee71b8b7108571ab8c3074ac792ecdc9966db0174d",
+    "worker_sha256": "bc709297cd860bee1177ecbacdbea9d7f19ff608ba778d78f9f2763b8945f345",
+    "focused_tests_passed": 25
+  },
+  "exact_command": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1",
+  "expected_terminal_format": "[YYYY-MM-DD HH:MM:SS UTC] ACTIVE | Detailed Stage running | Elapsed ... | RAM ... GiB | Available ... GiB",
+  "heartbeat_interval_seconds": 30,
+  "expected_outputs": {
+    "pilot_root": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1",
+    "success_marker": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/_SUCCESS",
+    "phase_manifest": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/phase_manifest.json",
+    "accounting": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/accounting.json",
+    "terminal_mirror_log": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/pilot_fold_1.log",
+    "supervisor_summary": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/pilot_fold_1_supervisor_summary.json",
+    "resource_samples": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/pilot_fold_1_resource_samples.csv"
+  },
+  "expected_accounting": {
+    "selector_fit_records": 27,
+    "evaluation_cells": 30,
+    "oot_access": false
+  },
+  "unchanged_abort_thresholds": {
+    "process_tree_rss_bytes": 25769803776,
+    "system_available_ram_bytes": 8589934592,
+    "results_free_disk_bytes": "max(85899345920, ceil(2.5 * forecast_remaining_output_bytes))",
+    "temp_free_disk_bytes": 21474836480,
+    "poll_interval_seconds": 1.0,
+    "pilot_total_seconds": 604800,
+    "canonical_per_stage_limits": true
+  },
+  "restart_preconditions": [
+    "this versioned fix and authorization are committed",
+    "no active Prompt-16 worker or execution lock",
+    "matrix manifest and _SUCCESS retain the exact hashes above",
+    "worktree is clean",
+    "close memory-heavy applications and preferably restore at least 24 GiB system-available RAM",
+    "do not lower the 8 GiB frozen runtime floor"
+  ],
+  "resume_behavior": "matrix remains immutable; pilot fold-1 data loading restarts; any later exact sealed selector/evaluation checkpoint is reused; no OOT is authorized"
+}
