@@ -138,7 +138,7 @@ def test_opt_in_process_rss_ceiling_aborts_owned_worker(tmp_path):
         results_root=tmp_path,
         temp_root=tmp_path,
         sampler_factory=_HighRssSampler,
-        enforce_memory_limits=True,
+        enforce_process_tree_rss_limit=True,
     )
     assert result.status == "aborted_resource_limit"
     assert result.stop_code == RAM_PROCESS_LIMIT

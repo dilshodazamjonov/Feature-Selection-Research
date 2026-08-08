@@ -80,7 +80,11 @@ def _run_supervised(args: argparse.Namespace) -> int:
         WALL_CLOCK_LIMIT,
         supervise_worker,
     )
-    from credit_risk_fs.experiments.research_logging import ResearchLogSession
+    from credit_risk_fs.experiments.research_logging import (
+        ResearchLogSession,
+        emit_research_event,
+    )
+    from credit_risk_fs.experiments.ram_control import load_ram_control_policy
     from credit_risk_fs.experiments.resource_policy import (
         GIB,
         detect_hardware,
@@ -204,6 +208,11 @@ def _run_supervised(args: argparse.Namespace) -> int:
     configured = load_execution_policy(PROJECT_ROOT, policy_path)
     capacity = detect_hardware(output_root.parent, temp_root)
     policy = resolve_execution_policy(configured, capacity)
+    ram_control = load_ram_control_policy(
+        PROJECT_ROOT,
+        "configs/execution/prompt_16_ram_wait_resume_v1.yaml",
+        total_physical_ram_bytes=int(capacity.total_ram_gb * GIB),
+    )
     if policy.memory.abort_process_tree_rss_gb > 24.0 + 1e-12:
         raise Prompt16ExecutionError("resolved RSS cap exceeds the Prompt-16 hard ceiling")
     if policy.memory.abort_if_system_available_below_gb < 8.0 - 1e-12:
@@ -214,6 +223,12 @@ def _run_supervised(args: argparse.Namespace) -> int:
         raise Prompt16ExecutionError("Prompt-16 requires one fold at a time")
     if policy.parallelism.estimator_threads > 4:
         raise Prompt16ExecutionError("Prompt-16 permits at most four estimator threads")
+    if ram_control.emergency_margin_bytes != 8 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM wait threshold must remain 8 GiB")
+    if ram_control.recovery_threshold_bytes != 10 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM recovery threshold must remain 10 GiB")
+    if ram_control.log_interval_seconds != 300:
+        raise Prompt16ExecutionError("Prompt-16 RAM wait logging must remain five-minute")
 
     lock = acquire_execution_lock(output_root)
     try:
@@ -233,7 +248,8 @@ def _run_supervised(args: argparse.Namespace) -> int:
                 heartbeat_interval_seconds=30.0,
                 max_wall_clock_seconds=max_seconds,
                 stage_wall_clock_limits_seconds=stage_wall_clock_limits,
-                enforce_memory_limits=True,
+                enforce_process_tree_rss_limit=True,
+                ram_control_policy=ram_control,
             )
             infeasibility = None
             if (
@@ -252,6 +268,31 @@ def _run_supervised(args: argparse.Namespace) -> int:
                     stopped_stage=result.final_stage,
                     stopped_scope=result.final_fold_id,
                     supervisor_evidence=supervisor_evidence,
+                )
+            if result.status == "completed":
+                emit_research_event(
+                    "session_completed",
+                    message=f"{name} completed and supervisor cleanup authenticated",
+                    priority=True,
+                )
+            elif result.status in {
+                "aborted_resource_limit",
+                "interrupted",
+                "timed_out",
+            }:
+                emit_research_event(
+                    "session_controlled_stop",
+                    message=f"{name} stopped under the frozen runtime controls",
+                    priority=True,
+                    stop_code=result.stop_code,
+                )
+            else:
+                emit_research_event(
+                    "session_failed",
+                    level="ERROR",
+                    message=f"{name} failed; inspect the authenticated debug log",
+                    priority=True,
+                    stop_code=result.stop_code,
                 )
         _write_supervision(
             result=result,

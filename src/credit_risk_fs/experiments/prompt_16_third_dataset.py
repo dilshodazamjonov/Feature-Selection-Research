@@ -49,6 +49,7 @@ from credit_risk_fs.preprocessing.encoding import (
     OriginalFeatureNumericEncoder,
     Preprocessor,
 )
+from credit_risk_fs.experiments.ram_control import wait_for_ram_ready
 from credit_risk_fs.selectors.base import get_selected_features
 from credit_risk_fs.selectors.combinations import (
     BorutaThenCatBoostRFESelector,
@@ -442,11 +443,17 @@ def _read_date_slice(
     stage_queue: Any,
     stage: str,
     fold_label: str,
+    ram_ready_event: Any = None,
 ) -> pd.DataFrame:
     columns = [*NON_PREDICTORS, *predictors]
     selected_tables: list[pa.Table] = []
     for index, path in enumerate(_part_paths(matrix_root, manifest), start=1):
         _check_stop(stop_event)
+        wait_for_ram_ready(
+            ram_ready_event,
+            stop_event,
+            boundary=f"{stage}:{fold_label}:matrix_part_{index}",
+        )
         _publish_stage(
             stage_queue,
             stage,
@@ -485,6 +492,14 @@ def _read_date_slice(
     for name in predictors:
         if pd.api.types.is_bool_dtype(frame[name].dtype):
             frame[name] = frame[name].astype("Float32")
+    order_index = pd.MultiIndex.from_frame(frame[["date_decision", "case_id"]])
+    if not order_index.is_monotonic_increasing:
+        frame.sort_values(
+            ["date_decision", "case_id"],
+            kind="mergesort",
+            inplace=True,
+            ignore_index=True,
+        )
     return frame
 
 
@@ -505,20 +520,24 @@ def _expected_scope(
 def _validate_scope_frame(
     frame: pd.DataFrame, expected: Mapping[str, Any], label: str
 ) -> dict[str, Any]:
-    summary = split_alignment_summary(frame["case_id"].tolist(), frame["target"].tolist())
+    summary = _locked_alignment_summary(
+        frame["case_id"].tolist(), frame["target"].tolist()
+    )
     checks = {
         "rows": int(expected["rows"]),
         "target_0": int(expected["target_0"]),
         "target_1": int(expected["target_1"]),
-        "ordered_row_id_sha256": str(expected["ordered_case_id_sha256"]),
-        "ordered_row_id_target_sha256": str(expected["ordered_case_id_target_sha256"]),
+        "ordered_case_id_sha256": str(expected["ordered_case_id_sha256"]),
+        "ordered_case_id_target_sha256": str(expected["ordered_case_id_target_sha256"]),
     }
     observed = {
         "rows": len(frame),
         "target_0": int((frame["target"] == 0).sum()),
         "target_1": int((frame["target"] == 1).sum()),
-        "ordered_row_id_sha256": summary["ordered_row_id_sha256"],
-        "ordered_row_id_target_sha256": summary["ordered_row_id_target_sha256"],
+        "ordered_case_id_sha256": summary["ordered_case_id_sha256"],
+        "ordered_case_id_target_sha256": summary[
+            "ordered_case_id_target_sha256"
+        ],
     }
     if observed != checks:
         raise Prompt16ExecutionError(
@@ -529,6 +548,31 @@ def _validate_scope_frame(
     return {"expected": checks, "observed": observed, "authenticated": True}
 
 
+def _locked_alignment_summary(
+    row_ids: Sequence[Any], targets: Sequence[Any]
+) -> dict[str, Any]:
+    """Reproduce the exact line serialization frozen in the third-data lock."""
+
+    ids = list(row_ids)
+    target_values = list(targets)
+    if len(ids) != len(target_values):
+        raise Prompt16ExecutionError("row ID and target counts differ")
+    id_digest = hashlib.sha256()
+    target_digest = hashlib.sha256()
+    for row_id, target in zip(ids, target_values, strict=True):
+        case_id = int(row_id)
+        outcome = int(target)
+        id_digest.update(f"{case_id}\n".encode("utf-8"))
+        target_digest.update(f"{case_id}\x1f{outcome}\n".encode("utf-8"))
+    return {
+        "hash_contract": "third_dataset_protocol_lock_decimal_line_v1",
+        "row_count": len(ids),
+        "ordered_case_id_sha256": id_digest.hexdigest(),
+        "ordered_case_id_target_sha256": target_digest.hexdigest(),
+        "canonical_alignment_v1": split_alignment_summary(ids, target_values),
+    }
+
+
 def _load_phase_frames(
     *,
     matrix_root: str | Path,
@@ -537,6 +581,7 @@ def _load_phase_frames(
     fold_id: int | None,
     stop_event: Any,
     stage_queue: Any,
+    ram_ready_event: Any = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, list[str], dict[str, Any]]:
     root = Path(matrix_root)
     manifest, metadata = _matrix_identity(root)
@@ -553,6 +598,7 @@ def _load_phase_frames(
         stage_queue=stage_queue,
         stage="full_dev_data_loading" if phase == "oot" else "dev_data_loading",
         fold_label=label + ":train",
+        ram_ready_event=ram_ready_event,
     )
     validation = _read_date_slice(
         root,
@@ -564,6 +610,7 @@ def _load_phase_frames(
         stage_queue=stage_queue,
         stage="locked_oot_data_loading" if phase == "oot" else "dev_data_loading",
         fold_label=label + ":validation",
+        ram_ready_event=ram_ready_event,
     )
     authentication = {
         "matrix_manifest_sha256": file_sha256(root / "manifest.json"),
@@ -1084,6 +1131,7 @@ def run_phase_worker(
     oot_analysis_plan: str | None = None,
     stop_event: Any = None,
     stage_queue: Any = None,
+    ram_ready_event: Any = None,
     **_controls: Any,
 ) -> dict[str, Any]:
     """Run one exact pilot/DEV fold or the single locked OOT phase."""
@@ -1123,6 +1171,7 @@ def run_phase_worker(
         fold_id=fold_id,
         stop_event=stop_event,
         stage_queue=stage_queue,
+        ram_ready_event=ram_ready_event,
     )
     matrix_manifest_sha = scope_auth["matrix_manifest_sha256"]
     write_json_atomic(phase_root / "scope_authentication.json", scope_auth)
@@ -1336,15 +1385,15 @@ def run_phase_worker(
                 phase=phase,
                 frozen_threshold=thresholds.get(order),
             )
-            prediction_auth = split_alignment_summary(
+            prediction_auth = _locked_alignment_summary(
                 predictions["case_id"].tolist(), predictions["target"].tolist()
             )
             expected_validation = scope_auth["validation"]["observed"]
             if (
-                prediction_auth["ordered_row_id_sha256"]
-                != expected_validation["ordered_row_id_sha256"]
-                or prediction_auth["ordered_row_id_target_sha256"]
-                != expected_validation["ordered_row_id_target_sha256"]
+                prediction_auth["ordered_case_id_sha256"]
+                != expected_validation["ordered_case_id_sha256"]
+                or prediction_auth["ordered_case_id_target_sha256"]
+                != expected_validation["ordered_case_id_target_sha256"]
             ):
                 raise Prompt16ExecutionError("prediction row alignment changed")
             write_parquet_atomic(
