@@ -1,0 +1,88 @@
+{
+  "schema_version": "prompt_15_fixture_validation_v1",
+  "status": "pass",
+  "validation_scope": "synthetic fixtures and compatible data-free repository tests only",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.5",
+    "pyarrow": "24.0.0",
+    "pytest": "9.0.3"
+  },
+  "focused_adapter_suite": {
+    "command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_homecredit_model_stability_2024_adapter.py",
+    "passed": 27,
+    "failed": 0,
+    "warnings": 0,
+    "elapsed_seconds": 7.62,
+    "real_dataset_used": false,
+    "research_workload_used": false
+  },
+  "compatible_existing_suites": [
+    {
+      "scope": "canonical protocol lock, atomic publication, and grouped temporal splitter",
+      "command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_third_dataset_protocol_lock.py tests/test_atomic_io.py tests/test_data_pipeline.py -k \"GroupedTimeSeriesSplit or protocol_lock or atomic\"",
+      "passed": 11,
+      "failed": 0,
+      "deselected": 10,
+      "warnings": 0
+    },
+    {
+      "scope": "compatible Stage-1 freeze integrity assertions",
+      "command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_third_dataset_protocol_freeze.py -k \"not test_method_matrix_and_execution_gates_remain_frozen_closed\"",
+      "passed": 4,
+      "failed": 0,
+      "deselected": 1,
+      "warnings": 0
+    },
+    {
+      "scope": "checkpoint and deterministic/sequential resource-policy behavior",
+      "command": ".venv\\Scripts\\python.exe -m pytest -q tests/test_checkpointing.py tests/test_resource_policy.py -k \"checkpoint or deterministic or nested_parallelism\"",
+      "passed": 17,
+      "failed": 0,
+      "deselected": 14,
+      "warnings": 0
+    }
+  ],
+  "totals": {
+    "focused_passed": 27,
+    "compatible_existing_passed": 32,
+    "passed": 59,
+    "failed": 0,
+    "warnings_in_final_commands": 0
+  },
+  "historical_test_classification": {
+    "test": "tests/test_third_dataset_protocol_freeze.py::test_method_matrix_and_execution_gates_remain_frozen_closed",
+    "classification": "superseded Stage-1-only gate, preserved and intentionally deselected",
+    "direct_contradiction": "the test asserts configs/protocols/homecredit_model_stability_2024_v1 must not exist, while the later canonical lock test and Prompt 15 binding authority require that directory and its authenticated lock",
+    "implementation_defect": false,
+    "changed": false
+  },
+  "exploratory_warning_classification": {
+    "warnings_observed_in_one_overbroad_pre-final_command": 107,
+    "category": "pandas PerformanceWarning: highly fragmented DataFrame",
+    "source": "existing LendingClub feature-engineering tests in tests/test_data_pipeline.py",
+    "adapter_related": false,
+    "scientific_conflict": false,
+    "final_targeted_command_warnings": 0
+  },
+  "material_fixture_coverage": [
+    "base key, target, date, and order validation",
+    "exact authenticated inventory and Arrow schemas",
+    "locked partition order independent of directory enumeration",
+    "one-to-one depth-0 base-left joins and collision-safe prefixes",
+    "numeric, date, boolean, and categorical depth-1 operations",
+    "duplicate num_group1 deterministic source-part/physical-offset tie breaking",
+    "literal null first/last semantics and no-row versus all-null distinction",
+    "Unicode NFC/casefold/original-UTF-8 lexical mode tie breaking",
+    "strict signed date conversion including positive scheduled snapshot dates",
+    "orphan, missing-order, depth-2, unknown-table, unknown-partition, protocol, and schema rejection",
+    "constant/all-missing retention and predictor role exclusions",
+    "deterministic 1959-column predictor order and lineage",
+    "DEV-only fit tokens and full-DEV requirement for OOT transform",
+    "atomic failure without false completion",
+    "valid checkpoint reuse and mismatch rejection",
+    "status-bound manifest authentication and completion marker last",
+    "full exact-schema 19-input synthetic build with one row per base case",
+    "zero later-stage fits and evaluations while asserting locked counts"
+  ]
+}
