@@ -1,0 +1,43 @@
+{
+  "schema_version": "prompt_15_third_dataset_adapter_implementation_status_v1",
+  "status": "complete_ready_for_prompt_16_resource_pilot",
+  "branch": "main",
+  "starting_head": "8bb283c0d71cad2f09ecbefd08148f3211b62a7d",
+  "protocol_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+  "protocol_internal_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+  "approved_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+  "implementation_manifest_sha256": "91d48d995de8ca49fa095560a36b14fbdb6ee8c49023401d45919e4d51e67dc8",
+  "validation": {
+    "focused_tests_passed": 27,
+    "compatible_existing_tests_passed": 32,
+    "failed": 0,
+    "warnings_in_final_commands": 0,
+    "protocol_traceability_rules": 42,
+    "protocol_traceability_unresolved": 0,
+    "git_diff_check": "pass"
+  },
+  "locked_later_stage_accounting": {
+    "resource_pilot_selector_fits": 27,
+    "resource_pilot_evaluations": 30,
+    "dev_selector_fits": 135,
+    "dev_fold_evaluations": 150,
+    "oot_full_dev_selector_refits": 27,
+    "oot_evaluations": 30
+  },
+  "prompt_15_execution_boundary": {
+    "raw_dataset_paths_resolved": false,
+    "raw_dataset_files_opened": 0,
+    "numeric_two_dataset_outcomes_opened": false,
+    "workers_started": 0,
+    "selector_fits_started": 0,
+    "model_fits_started": 0,
+    "predictions_generated": 0,
+    "metric_workloads_started": 0,
+    "pilot_evaluations_started": 0,
+    "dev_evaluations_started": 0,
+    "oot_evaluations_started": 0,
+    "network_requests": 0,
+    "pushes": 0
+  },
+  "next_step": "Prompt 16 bounded real-data adapter/resource pilot only; DEV and OOT remain closed"
+}

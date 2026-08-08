@@ -1,0 +1,57 @@
+{
+  "schema_version": "prompt_15_entry_validation_v1",
+  "status": "pass",
+  "recorded_at_utc": "2026-08-08T16:55:55.6034135Z",
+  "repository": {
+    "branch": "main",
+    "head": "8bb283c0d71cad2f09ecbefd08148f3211b62a7d",
+    "expected_starting_head": "8bb283c0d71cad2f09ecbefd08148f3211b62a7d",
+    "head_exact": true,
+    "worktree_clean_including_untracked": true,
+    "origin_main_behind": 0,
+    "origin_main_ahead": 0,
+    "required_ancestors": {
+      "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9": true,
+      "8bb283c0d71cad2f09ecbefd08148f3211b62a7d": true
+    }
+  },
+  "protocol_authentication": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256_expected": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "file_sha256_observed": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_authentication_sha256_expected": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "internal_authentication_sha256_observed": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "approved_review_digest_expected": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "approved_review_digest_observed": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "review_digest_file_sha256": "1f70713bf08f6a72c4e45e25477ddb98d32422ccf208ba6098e51c5fc118b407",
+    "freeze_commit": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+    "stage_1_artifact_bindings_expected": 13,
+    "stage_1_artifact_bindings_authenticated": 13,
+    "dataset_id": "homecredit_model_stability_2024",
+    "status": "canonical_approved_locked_no_execution"
+  },
+  "process_and_filesystem_safety": {
+    "experiment_workers": 0,
+    "active_writers": 0,
+    "active_execution_locks": 0,
+    "persistent_registry_lock_files": 2,
+    "persistent_registry_lock_files_active": 0,
+    "partial_or_temporary_research_outputs": 0,
+    "raw_root_git_ignored": true,
+    "raw_root_ignore_rule": ".gitignore:21:/data/",
+    "raw_dataset_directory_enumerated": false
+  },
+  "task_boundary_counters": {
+    "raw_dataset_paths_resolved": false,
+    "raw_dataset_files_opened": 0,
+    "numeric_two_dataset_outcomes_opened": false,
+    "workers_started": 0,
+    "selector_fits_started": 0,
+    "model_fits_started": 0,
+    "predictions_generated": 0,
+    "metric_workloads_started": 0,
+    "pilot_evaluations_started": 0,
+    "dev_evaluations_started": 0,
+    "oot_evaluations_started": 0
+  }
+}

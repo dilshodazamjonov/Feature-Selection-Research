@@ -1,0 +1,113 @@
+{
+  "schema_version": "prompt_15_static_resource_and_execution_safety_review_v1",
+  "status": "pass",
+  "reviewed_paths": [
+    "src/credit_risk_fs/data/homecredit_model_stability_2024/__init__.py",
+    "src/credit_risk_fs/data/homecredit_model_stability_2024/contract.py",
+    "src/credit_risk_fs/data/homecredit_model_stability_2024/adapter.py",
+    "scripts/build_homecredit_model_stability_2024.py",
+    "tests/test_homecredit_model_stability_2024_adapter.py"
+  ],
+  "static_ast_scan": {
+    "forbidden_model_or_selector_imports": 0,
+    "fit_fit_transform_predict_predict_proba_score_calls": 0,
+    "process_spawn_calls": 0,
+    "pandas_imports_in_adapter_or_cli": 0,
+    "network_client_imports": 0
+  },
+  "import_and_cli_safety": {
+    "package_import_is_inert": true,
+    "cli_import_is_inert": true,
+    "required_explicit_cli_arguments": [
+      "--input-root",
+      "--output-root",
+      "--protocol-lock",
+      "--stage",
+      "--mode"
+    ],
+    "implicit_data_root": false,
+    "implicit_resume_target": false,
+    "implicit_execution": false
+  },
+  "resource_design": {
+    "engine": "PyArrow 24",
+    "raw_full_table_pandas_join": false,
+    "projection": "only locked included and structural columns are read",
+    "partition_identity": "locked logical-table PartitionSpec order, never filename inference or filesystem order",
+    "raw_batching": "ParquetFile.iter_batches with 65536-row default batches",
+    "population_memory": "base authority only: case_id, date_decision, MONTH, WEEK_NUM, target",
+    "bounded_work_unit": "explicit contiguous base-order shard; default 50000 base cases",
+    "family_lifecycle": "one depth-0/depth-1 family at a time; compact per-case Parquet checkpoint; raw selected table released",
+    "joins": "only one-row-per-case compact tables join to the base shard",
+    "parallelism": "none introduced",
+    "resource_budget": "external fail-closed hook supported; no Prompt-15 RAM/runtime budget invented",
+    "resource_events": [
+      "input_batch",
+      "checkpoint_reused",
+      "family_shard_completed",
+      "matrix_shard_completed"
+    ]
+  },
+  "execution_counters": {
+    "raw_dataset_paths_resolved": false,
+    "raw_dataset_directory_enumerated": false,
+    "raw_dataset_files_opened": 0,
+    "depth_2_files_opened": 0,
+    "numeric_two_dataset_outcomes_opened": false,
+    "workers_started": 0,
+    "selector_fits_started": 0,
+    "model_fits_started": 0,
+    "predictions_generated": 0,
+    "metric_workloads_started": 0,
+    "pilot_evaluations_started": 0,
+    "dev_evaluations_started": 0,
+    "oot_evaluations_started": 0,
+    "network_requests": 0,
+    "downloads": 0,
+    "pushes": 0
+  },
+  "scientific_safety": {
+    "target_in_predictors": false,
+    "identifiers_in_predictors": false,
+    "split_controls_in_predictors": false,
+    "num_group_identifiers_in_predictors": false,
+    "target_informed_schema_or_aggregation": false,
+    "global_imputation_encoding_scaling_selection": false,
+    "depth_2_execution_path": false,
+    "oot_fit_state_allowed": false,
+    "oot_transform_with_fold_fit_allowed": false
+  },
+  "atomic_resume_and_provenance": {
+    "atomic_temp_then_replace": true,
+    "completion_marker_written_last": true,
+    "final_status_written_before_and_bound_by_manifest": true,
+    "checkpoint_binding_fields": [
+      "adapter_version",
+      "protocol_file_sha256",
+      "protocol_internal_sha256",
+      "input_inventory_identity_sha256",
+      "logical_table",
+      "table_schema_sha256",
+      "aggregation_rules_sha256",
+      "shard_id",
+      "base_case_identity_sha256",
+      "output_sha256"
+    ],
+    "stale_checkpoint_rejected": true,
+    "incompatible_completed_output_overwritten": false,
+    "manifest_artifacts": [
+      "matrix shards",
+      "metadata",
+      "lineage",
+      "split membership",
+      "runtime",
+      "status"
+    ]
+  },
+  "bounded_pilot_limitations": [
+    "case-filtered bounded shards may rescan each raw Parquet partition once per shard; Prompt 16 must measure I/O time and choose a safe shard size without changing scientific semantics",
+    "the full five-column base authority is resident in memory; Prompt 16 must measure its actual peak",
+    "Prompt 15 deliberately sets no hard RAM or wall-clock thresholds; Prompt 16 must supply them through the resource hook",
+    "no real-input identity, schema, throughput, compression, or peak-memory behavior has been exercised in Prompt 15"
+  ]
+}
