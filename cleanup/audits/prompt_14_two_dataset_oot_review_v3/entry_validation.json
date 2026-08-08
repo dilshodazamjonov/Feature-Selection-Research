@@ -1,0 +1,59 @@
+{
+  "audit_id": "prompt_14_two_dataset_oot_review_v3",
+  "authenticated_non_outcome_identities": {
+    "cleanup/audits/prompt_14_two_dataset_oot_review_v2/preinspection_analysis_plan.json": "84a66a8315f1455145b24c8ddbe1ced58a936e61b5dc96d93d67731bed67e397",
+    "cleanup/audits/prompt_14a_voting_manifest_repair/blocked_prompt_14_attempt_closure.json": "c83f1b1b8079efd097386cb4556a5f4d01b4cbd110a3ae47409f27560c977c3c",
+    "cleanup/audits/prompt_14a_voting_manifest_repair/manifest_supersession.json": "6f64d6e7ca77452ae0da2bba5108bf2fdb082af234de814c9fb7dec2adfaf315",
+    "cleanup/audits/prompt_14b_statistical_protocol_resolution/entry_validation.json": "8b336f03ce1fded3b7cf85fc3b6a7740f7c20d096dcbdd543d056105c7a15e02",
+    "cleanup/audits/prompt_14b_statistical_protocol_resolution/protocol_resolution_blocker.json": "c64f3e1a14d4be35474ae1d792d5f49236aa6d3122546fd3a7a902c582e49b43",
+    "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.current.json": "63b8c0542885b00074f6e3fe1a897d5fe049ddbfbe45d3c19f40db47ae195e99",
+    "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.json": "e16a3cff5135a9eb3ecf92ea635bdeb55772fbe8f80c9dca07086590464de2a2",
+    "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json": "45a3c3ce2773508d352d3cd9a031b0d6e35835de72ad36c877f32090c1ceabaf",
+    "results/final_experiments/cross_dataset_voting_inference_v1/status.json": "4b16d8cea9dd877fe62b687416fe70c6bcd9def50ab8f9425f16cd2aebeb0e8a"
+  },
+  "entry_verdict": "pass",
+  "phase_0_1_safety": {
+    "comparisons_analyzed_in_this_attempt": 0,
+    "numeric_outcomes_opened_in_this_attempt": false,
+    "raw_dataset_paths_resolved": false,
+    "workers_started": 0
+  },
+  "repository": {
+    "all_required_commits_are_ancestors": true,
+    "branch": "main",
+    "expected_starting_head": "77337b5f58ba1baf5e2551c2fb72719525d1d12a",
+    "origin_main_ahead": 7,
+    "origin_main_behind": 0,
+    "required_ancestor_commits": [
+      "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+      "bf2e53e3ea3fbe91e1336019f33b8425287d4564",
+      "3e4c78e81135eb2122b86a0b5ec428d725c6b8eb",
+      "0824481af49f37ee1a2e1d359bd47499605dce1d",
+      "cb4f4f0e9056700b8badb5346994585a1fb7e0cc",
+      "77337b5f58ba1baf5e2551c2fb72719525d1d12a"
+    ],
+    "starting_head": "77337b5f58ba1baf5e2551c2fb72719525d1d12a",
+    "worktree_clean_including_untracked": true
+  },
+  "runtime_safety": {
+    "active_child_workers": 0,
+    "active_experiment_workers": 0,
+    "active_writers": 0,
+    "execution_locks": 0,
+    "partial_outputs": 0,
+    "temporary_prediction_outputs": 0,
+    "unrelated_interactive_shells_excluded": true
+  },
+  "schema_version": "prompt_14_v3_entry_validation_v1",
+  "third_dataset": {
+    "adapter_status": "not_implemented",
+    "approved_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "dev_gate": "closed",
+    "internal_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "lock_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "oot_gate": "closed",
+    "pilot_gate": "closed",
+    "raw_19_file_snapshot_opened": false
+  }
+}
