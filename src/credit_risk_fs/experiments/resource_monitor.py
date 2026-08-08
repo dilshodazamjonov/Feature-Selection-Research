@@ -537,8 +537,16 @@ def _new_warnings(
     sample: ResourceSample,
     policy: ResolvedExecutionPolicy,
     emitted: set[str],
+    *,
+    enforce_process_tree_rss_limit: bool = False,
 ) -> list[str]:
     candidates = {
+        RAM_PROCESS_LIMIT: (
+            enforce_process_tree_rss_limit
+            and sample.process_tree_rss_bytes
+            >= int(policy.memory.warn_process_tree_rss_gb * GIB),
+            "process-tree RAM crossed warning threshold",
+        ),
         GPU_PROCESS_LIMIT: (
             sample.process_gpu_bytes is not None
             and sample.process_gpu_bytes >= int(policy.gpu.warn_process_vram_gb * GIB),
@@ -1124,6 +1132,8 @@ def supervise_worker(
     run_association: str | None = None,
     heartbeat_interval_seconds: float = STAGE_HEARTBEAT_INTERVAL_SECONDS,
     max_wall_clock_seconds: float | None = None,
+    stage_wall_clock_limits_seconds: Mapping[str, float] | None = None,
+    enforce_memory_limits: bool = False,
     ram_control_policy: ResolvedRamControlPolicy | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
@@ -1131,6 +1141,12 @@ def supervise_worker(
     apply_thread_environment(policy.parallelism.estimator_threads)
     if max_wall_clock_seconds is not None and float(max_wall_clock_seconds) <= 0:
         raise ValueError("max_wall_clock_seconds must be positive or None")
+    resolved_stage_wall_clock_limits = {
+        str(stage_name): float(limit)
+        for stage_name, limit in dict(stage_wall_clock_limits_seconds or {}).items()
+    }
+    if any(limit <= 0 for limit in resolved_stage_wall_clock_limits.values()):
+        raise ValueError("stage wall-clock limits must be positive")
     association = run_association or f"supervised-worker:{uuid.uuid4()}"
     resolved_worker_kwargs = dict(worker_kwargs or {})
     supervisor_log_context = _supervisor_logging_context(
@@ -1440,7 +1456,12 @@ def supervise_worker(
                     },
                 )
                 break
-            for warning_message in _new_warnings(sample, policy, emitted_warnings):
+            for warning_message in _new_warnings(
+                sample,
+                policy,
+                emitted_warnings,
+                enforce_process_tree_rss_limit=enforce_memory_limits,
+            ):
                 warnings.append(warning_message)
                 logged = emit_contextual_research_event(
                     "resource_warning",
@@ -1484,6 +1505,15 @@ def supervise_worker(
                 )
                 last_heartbeat_at = now
             threshold = _classify_threshold(sample, policy)
+            if threshold is None and enforce_memory_limits:
+                if sample.process_tree_rss_bytes >= int(
+                    policy.memory.abort_process_tree_rss_gb * GIB
+                ):
+                    threshold = RAM_PROCESS_LIMIT
+                elif sample.system_available_ram_bytes <= int(
+                    policy.memory.abort_if_system_available_below_gb * GIB
+                ):
+                    threshold = RAM_SYSTEM_HEADROOM
             if threshold is not None:
                 computation_ended_at = monotonic()
                 suspension_inclusive_computation_ended_at = (
@@ -1604,6 +1634,69 @@ def supervise_worker(
                     },
                 )
                 break
+            stage_wall_clock_limit = resolved_stage_wall_clock_limits.get(
+                str(stage)
+            )
+            if (
+                stage_wall_clock_limit is not None
+                and stage_active_elapsed(monotonic()) >= stage_wall_clock_limit
+            ):
+                computation_ended_at = monotonic()
+                suspension_inclusive_computation_ended_at = (
+                    suspension_inclusive_monotonic()
+                )
+                recorder.observe(
+                    WALL_CLOCK_LIMIT,
+                    elapsed_seconds=stage_active_elapsed(monotonic()),
+                    detail=(
+                        f"stage wall-clock limit reached for {stage}: "
+                        f"{stage_wall_clock_limit:.3f} seconds"
+                    ),
+                )
+                _lifecycle_event(
+                    lifecycle,
+                    "STAGE_WALL_CLOCK_STOP_LATCHED",
+                    supervisor_started=supervisor_started,
+                    detail=f"primary_stop_code={WALL_CLOCK_LIMIT}; stage={stage}",
+                    pids=tuple(sorted({sample.worker_pid, *sample.child_pids})),
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": WALL_CLOCK_LIMIT,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": sample.worker_pid,
+                        "worker_rss_bytes": sample.process_tree_rss_bytes,
+                        "system_available_ram_bytes": sample.system_available_ram_bytes,
+                        "stage_wall_clock_limit_seconds": stage_wall_clock_limit,
+                    },
+                )
+                if opaque_tree_suspended:
+                    ownership.resume_phase()
+                    opaque_tree_suspended = False
+                ram_ready_event.set()
+                (
+                    child_cleanup_confirmed,
+                    survivors,
+                    termination_condition,
+                    shutdown_elapsed,
+                    graceful_stop_completed,
+                ) = _shutdown_owned_worker(
+                    process=process,
+                    stop_event=stop_event,
+                    ownership=ownership,
+                    policy=policy,
+                    recorder=recorder,
+                    lifecycle=lifecycle,
+                    supervisor_started=supervisor_started,
+                    log_context={
+                        **supervisor_log_context,
+                        "stop_code": recorder.primary,
+                        "fold_id": fold_id,
+                        "stage": stage,
+                        "worker_pid": int(process.pid),
+                    },
+                )
+                break
             sleep_seconds = float(ram_control.check_interval_seconds)
             if not ram_state.waiting:
                 sleep_seconds = min(
@@ -1623,6 +1716,18 @@ def supervise_worker(
                     )
                     sleep_seconds = min(
                         sleep_seconds, max(0.001, remaining_active)
+                    )
+                stage_wall_clock_limit = resolved_stage_wall_clock_limits.get(
+                    str(stage)
+                )
+                if stage_wall_clock_limit is not None:
+                    sleep_seconds = min(
+                        sleep_seconds,
+                        max(
+                            0.001,
+                            stage_wall_clock_limit
+                            - stage_active_elapsed(monotonic()),
+                        ),
                     )
             process.join(timeout=sleep_seconds)
     except KeyboardInterrupt:

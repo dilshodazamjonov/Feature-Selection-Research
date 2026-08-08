@@ -130,6 +130,22 @@ def test_high_process_rss_alone_does_not_abort_worker(tmp_path):
     assert result.child_cleanup_confirmed
 
 
+def test_opt_in_process_rss_ceiling_aborts_owned_worker(tmp_path):
+    result = supervise_worker(
+        worker_target="credit_risk_fs.experiments.synthetic_execution:uncooperative_wait_worker",
+        worker_kwargs={},
+        policy=_policy(warn_ram=0.07, abort_ram=0.11),
+        results_root=tmp_path,
+        temp_root=tmp_path,
+        sampler_factory=_HighRssSampler,
+        enforce_memory_limits=True,
+    )
+    assert result.status == "aborted_resource_limit"
+    assert result.stop_code == RAM_PROCESS_LIMIT
+    assert any(message.startswith(RAM_PROCESS_LIMIT) for message in result.warnings)
+    assert result.child_cleanup_confirmed
+
+
 class _HighRssSampler(ProcessTreeSampler):
     def sample(self, *args, **kwargs):
         return replace(
@@ -149,6 +165,27 @@ def test_unexpected_worker_exit_is_recorded(tmp_path):
     assert result.status == "failed"
     assert result.stop_code == WORKER_CRASH
     assert result.worker_exit_code == 7
+
+
+def test_stage_specific_wall_clock_limit_stops_owned_worker(tmp_path):
+    result = supervise_worker(
+        worker_target=(
+            "credit_risk_fs.experiments.synthetic_execution:"
+            "uncooperative_wait_worker"
+        ),
+        worker_kwargs={},
+        policy=_policy(),
+        results_root=tmp_path,
+        temp_root=tmp_path,
+        stage_wall_clock_limits_seconds={"uncooperative_wait": 0.06},
+    )
+    assert result.status == "timed_out"
+    assert result.stop_code == "wall_clock_limit"
+    assert result.final_stage == "uncooperative_wait"
+    assert any(
+        event["state"] == "STAGE_WALL_CLOCK_STOP_LATCHED"
+        for event in result.stop_lifecycle
+    )
 
 
 class _ClosedGpu:

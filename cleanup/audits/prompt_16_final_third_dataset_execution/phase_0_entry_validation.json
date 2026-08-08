@@ -1,0 +1,123 @@
+{
+  "schema_version": "prompt_16_phase_0_entry_validation_v1",
+  "recorded_at_utc": "2026-08-08T18:20:52.1443586Z",
+  "status": "pass",
+  "repository": {
+    "path": "D:/python projects/Research",
+    "entry_recorded_at_utc": "2026-08-08T18:15:44.2398227Z",
+    "branch": "main",
+    "head": "8b0ae85677dbf7522fc2f71300c174710ea04b76",
+    "expected_head": "8b0ae85677dbf7522fc2f71300c174710ea04b76",
+    "worktree_clean_including_untracked": true,
+    "upstream": "origin/main",
+    "ahead": 0,
+    "behind": 0,
+    "ahead_behind_source": "local origin/main tracking reference; no fetch or network access",
+    "prompt_14_commit": "8bb283c0d71cad2f09ecbefd08148f3211b62a7d",
+    "prompt_14_commit_is_ancestor": true,
+    "prompt_15_commit": "8b0ae85677dbf7522fc2f71300c174710ea04b76",
+    "prompt_15_commit_is_ancestor": true
+  },
+  "canonical_protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "expected_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "calculated_internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "approved_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "observed_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "included_raw_input_digest": "8adb1db82c9dafb662657db08fd7d1dcf2eb4794d5ff7925e9ca4dd25f73fad2",
+    "authenticated": true
+  },
+  "stage_1_authentication": {
+    "stage_1_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+    "binding_count": 13,
+    "authenticated_count": 13,
+    "all_declared_artifacts_authenticated": true,
+    "bindings": [
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/dataset_identity.json", "byte_size": 3032, "sha256": "c8f13d2c2b21caaf0d2a3b985f2a4c3042ec595648ba6bb1de18b45156cb4ee6", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/raw_file_inventory.csv", "byte_size": 10115, "sha256": "f128c0a009cb9ca5ba686d89badc68103a006ffe318ce33bd1d3a5703ed13222", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/schema_and_cardinality_profile.csv", "byte_size": 5203, "sha256": "a804d2c2d5297e47b3f2670589976e873104f7984de4483796a1bac580c00beb", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/feature_definition_coverage.json", "byte_size": 1980, "sha256": "1a5c9c41aec4ee9a232066c7dd0119920352df2862165be04c6f70e3c3f24d3e", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/temporal_population_profile.csv", "byte_size": 2552, "sha256": "5b6d4bea315688c62f19c8f537f24a7411f8b1c443c2201e3c96896433a4f47f", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/proposed_split_and_fold_boundaries.json", "byte_size": 7124, "sha256": "942093ac6ec6a352b29b5a62fae918233c22adf3910a93335ff10c4d4a199227", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/leakage_and_availability_review.csv", "byte_size": 158996, "sha256": "11e7867bf7655b7f7d51bfec7cda50852b4dcb31f24f7585ffae4402cf9703a6", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/proposed_adapter_protocol.json", "byte_size": 5619, "sha256": "b243f9327bbab49074e0161a256ef693b6b28348d9dda3b8f1e1a1da157d141c", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/proposed_method_matrix.json", "byte_size": 28441, "sha256": "7f9e7a3d7d1b0e5fc4e49bd8bcd6cd15c65546f0a4b29001b6e22dc57c2774f6", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/preregistered_hypotheses_and_analysis.md", "byte_size": 2921, "sha256": "396952f1366d45e7326c6eaeb652858383d0e2bf3ccbf0576ab9df7ec59b52fe", "authenticated": true},
+      {"path": "cleanup/audits/third_dataset_protocol_freeze/protocol_review.md", "byte_size": 5483, "sha256": "8d7c096b7214ea9a4f806c3598803a8f4217a2c96f6597f49ad685cc25d1c908", "authenticated": true},
+      {"path": "cleanup/tools/build_third_dataset_protocol_freeze.py", "byte_size": 70527, "sha256": "dc2af198b7752b633a06687f446d6a709227ba321ece25b22978151a19a7f9d3", "authenticated": true},
+      {"path": "tests/test_third_dataset_protocol_freeze.py", "byte_size": 8171, "sha256": "5096d858a8c16829a1711d193b2cbac5952b19936eccc2a8107ff096c0d02489", "authenticated": true}
+    ]
+  },
+  "prompt_15_authentication": {
+    "authenticated_count": 8,
+    "all_manifest_entries_authenticated_by_focused_tests": true,
+    "files": [
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/adapter_contract.json", "sha256": "910ddb3cd37911803138e65dc8b2ef0716d7524603c4f0581abb4f0a451d7f09", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/entry_validation.json", "sha256": "39b816cb8bf53343a5c3c56c8381f0aaf505aed96d58cab5dbae95d4934ec80a", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/fixture_validation.json", "sha256": "283f260b0ebd9ef67dcd7a6c2a7c714dd7304148036f89ef5befddaa402ce3a0", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/implementation_manifest.json", "sha256": "91d48d995de8ca49fa095560a36b14fbdb6ee8c49023401d45919e4d51e67dc8", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/implementation_review.md", "sha256": "a85bd501d79c9db3ecb4243d824606b95c24b1c54f6676bd694e91210d44296d", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/protocol_rule_traceability.csv", "sha256": "0fbbb1e6b77bae5309c61ed063d41c59c583fcb52959d87d2ee460e38140e0e6", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/static_resource_and_execution_safety_review.json", "sha256": "54dcdea876db970db9b2595f77c2f753d181183c7917796dd96432177d56a6e5", "authenticated": true},
+      {"path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/status.json", "sha256": "2aae5b514745e7b186ea9618b691708f531eb4cf003db44e31d3c1e867c2ec33", "authenticated": true}
+    ]
+  },
+  "frozen_execution_registry": {
+    "method_order": ["full_features", "random_k", "iv_woe", "mrmr_mutual_information", "lasso_l1_logistic", "legacy_rf_relevance_corr", "catboost_shap", "boruta_random_forest", "rfe_catboost", "statistical_normalized_average_rank", "iv_then_boruta", "boruta_then_mrmr_mutual_information", "boruta_then_rfe_catboost"],
+    "combination_order": ["statistical_normalized_average_rank", "iv_then_boruta", "boruta_then_mrmr_mutual_information", "boruta_then_rfe_catboost"],
+    "model_order": ["lr", "catboost"],
+    "variant_count": 15,
+    "matrix_cell_count": 30,
+    "pilot_fold_ids": [1],
+    "dev_fold_ids": [1, 2, 3, 4, 5],
+    "pilot_selector_fits": 27,
+    "pilot_evaluations": 30,
+    "dev_selector_fits": 135,
+    "dev_evaluations": 150,
+    "oot_selector_refits": 27,
+    "oot_evaluations": 30,
+    "concurrent_cells": 1,
+    "concurrent_folds": 1,
+    "data_loader_workers": 0,
+    "estimator_threads_maximum": 4,
+    "checkpoint_rule": "atomic per-selection and per-evaluation state with declared SHA-256; immutable completed cells; resume only exact authenticated identity; archive interrupted/failed attempts; execution lock required and released",
+    "natural_support_padding": "forbidden"
+  },
+  "process_and_output_safety": {
+    "active_experiment_or_pytest_processes_after_validation": 0,
+    "active_execution_lock_count": 0,
+    "partial_research_output_count": 0,
+    "temporary_research_output_count": 0,
+    "prompt_16_output_root_preexisted": false,
+    "persistent_advisory_lock_files": [
+      {"path": "results/run_index.csv.lock", "active": false, "verification": "non-blocking one-byte lock acquired and released"},
+      {"path": "results/full_baseline_v1/run_index.csv.lock", "active": false, "verification": "non-blocking one-byte lock acquired and released"}
+    ],
+    "processes_killed": 0
+  },
+  "import_and_cli_safety": {
+    "committed_cli_inspected": true,
+    "adapter_and_contract_import_boundary_inspected": true,
+    "focused_inert_import_test_passed": true,
+    "help_run_after_import_safety_passed": true,
+    "help_command": ".venv\\Scripts\\python.exe scripts\\build_homecredit_model_stability_2024.py --help",
+    "help_exit_code": 0,
+    "required_cli_arguments": ["--input-root", "--output-root", "--protocol-lock", "--stage", "--mode"],
+    "cli_resource_hook_exposed": false,
+    "cli_stages": ["inspect", "build"]
+  },
+  "closed_boundaries": {
+    "raw_dataset_path_resolved": false,
+    "raw_dataset_directory_enumerated": false,
+    "raw_dataset_files_opened": 0,
+    "depth_2_files_opened": 0,
+    "two_dataset_numeric_artifacts_opened": false,
+    "oot_target_linked_artifacts_opened": false,
+    "network_requests": 0,
+    "downloads": 0,
+    "pushes": 0
+  },
+  "verdict": "phase_0_pass_raw_access_remains_closed_until_resource_plan_commit"
+}

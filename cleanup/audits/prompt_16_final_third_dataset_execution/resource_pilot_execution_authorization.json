@@ -1,0 +1,96 @@
+{
+  "schema_version": "prompt_16_resource_pilot_execution_authorization_v1",
+  "status": "authorized_after_gate_commit",
+  "authorized_at_utc": "2026-08-08T18:43:08.5248310Z",
+  "authorization_scope": ["authenticated matrix build", "locked fold-1 resource pilot"],
+  "working_directory": "D:/python projects/Research",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "required_status": "authorized_outcome_blind"
+  },
+  "protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6"
+  },
+  "committed_cli_validation": {
+    "cli_path": "scripts/run_prompt_16_third_dataset.py",
+    "precommit_sha256": "137aa02216406c15315776f0136e10a232d75bbac8dc0fb448535759ae8ff4c5",
+    "worker_path": "src/credit_risk_fs/experiments/prompt_16_third_dataset.py",
+    "worker_precommit_sha256": "e1d9fd9147a5a6cfd3564752ad07c1f0807e393f0e4d2351f45162886a72409b",
+    "resource_policy_path": "configs/execution/prompt_16_homecredit_2024_v1.yaml",
+    "resource_policy_sha256": "5cb4d682dcf86ddbc538d6a3f4acf667575844e2aef81690c769075296680e98",
+    "inert_import_test": "pass",
+    "top_level_help": "pass",
+    "matrix_help": "pass",
+    "phase_help": "pass",
+    "argument_validation": "pass"
+  },
+  "exact_commands": {
+    "matrix": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py matrix --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\"",
+    "pilot": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1",
+    "single_powershell_handoff": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py matrix --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; .venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1"
+  },
+  "expected_inputs": {
+    "raw_root": "D:/python projects/Research/data/homecredit_model_stability_2024",
+    "included_inventory_records": 19,
+    "included_parquet_files": 18,
+    "included_bytes": 962954938,
+    "excluded_depth_2_records": 14,
+    "pilot_fold_id": 1,
+    "oot_access": "forbidden"
+  },
+  "expected_outputs": {
+    "matrix_root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "matrix_manifest": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1/manifest.json",
+    "matrix_success_marker": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1/_SUCCESS",
+    "pilot_root": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1",
+    "pilot_manifest": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/phase_manifest.json",
+    "pilot_accounting": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/accounting.json",
+    "pilot_success_marker": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/_SUCCESS",
+    "matrix_supervisor_summary": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/matrix_supervisor_summary.json",
+    "pilot_supervisor_summary": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/pilot_fold_1_supervisor_summary.json"
+  },
+  "expected_accounting": {
+    "matrix_rows": 1526659,
+    "dev_rows": 1221743,
+    "oot_rows": 304916,
+    "approved_raw_predictors": 434,
+    "matrix_predictors": 1959,
+    "pilot_selector_fit_records": 27,
+    "pilot_evaluation_cells": 30,
+    "permitted_visible_unavailable": "only natural zero support, recorded selector failure, or locked resource infeasibility; never omit a registered cell"
+  },
+  "abort_thresholds": {
+    "process_tree_rss_bytes": 25769803776,
+    "system_available_ram_bytes": 8589934592,
+    "results_free_disk_bytes": "max(85899345920, ceil(2.5 * forecast_remaining_output_bytes))",
+    "temp_free_disk_bytes": 21474836480,
+    "poll_interval_seconds": 1.0,
+    "graceful_stop_timeout_seconds": 20.0,
+    "forced_cleanup_timeout_seconds": 10.0,
+    "matrix_total_seconds": 43200,
+    "pilot_total_seconds": 604800,
+    "per_stage_limits": "byte-for-byte values read from canonical protocol resource_controls.wall_clock_limits_seconds"
+  },
+  "launch_preconditions": [
+    "first Prompt-16 gate commit contains this authorization and the exact plan",
+    "branch main and worktree clean including untracked files",
+    "no active experiment worker or writer",
+    "no conflicting execution lock",
+    "no partial matrix or pilot output",
+    "CLI and worker SHA-256 match this authorization",
+    "protocol and plan identities authenticate",
+    "disk and memory readiness checks pass"
+  ],
+  "resume_behavior": "exact authenticated completed checkpoints only; archive incomplete pilot artifacts; fail closed on identity mismatch; no OOT is authorized",
+  "success_condition": "both _SUCCESS markers authenticate exact manifests; matrix/split/fold/lineage identities reconcile; 27 selector fits and all 30 cells are accounted; logs and resource forecast reconcile",
+  "required_manual_return_if_handed_off": [
+    "terminal exit code and complete stdout/stderr",
+    "matrix _SUCCESS and manifest.json",
+    "pilot fold_1 _SUCCESS, phase_manifest.json, and accounting.json",
+    "matrix and pilot supervisor summaries and resource-sample CSV files"
+  ],
+  "scientific_boundary": "resource evidence may decide feasibility and launch mechanics only; it cannot change methods, budgets, seeds, splits, folds, models, comparisons, or natural-support handling"
+}

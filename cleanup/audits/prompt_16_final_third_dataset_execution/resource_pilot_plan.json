@@ -1,0 +1,229 @@
+{
+  "schema_version": "prompt_16_resource_pilot_plan_v1",
+  "status": "authorized_outcome_blind",
+  "created_at_utc": "2026-08-08T18:43:08.5248310Z",
+  "entry_head": "8b0ae85677dbf7522fc2f71300c174710ea04b76",
+  "protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "approved_review_digest": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "included_raw_input_digest": "f80b431817ff436410dc2a4b0fec0ac6857420a278909bda6b9fa4f099ec0e1f",
+    "authority": "canonical lock only"
+  },
+  "paths": {
+    "raw_dataset_root": "D:/python projects/Research/data/homecredit_model_stability_2024",
+    "protocol_lock": "D:/python projects/Research/configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "matrix_root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "pilot_root": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/pilot_v1",
+    "dev_root": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_v1",
+    "oot_root": "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/oot_v1",
+    "audit_root": "D:/python projects/Research/cleanup/audits/prompt_16_final_third_dataset_execution",
+    "log_root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs",
+    "temp_root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/temp"
+  },
+  "machine_profile": {
+    "captured_at_utc": "2026-08-08T18:24:07.5371074Z",
+    "operating_system": "Windows 11 10.0.26200",
+    "cpu": "Intel Core i7-13620H",
+    "physical_cores": 10,
+    "logical_processors": 16,
+    "physical_ram_bytes": 42555686912,
+    "available_ram_bytes": 27265576960,
+    "virtual_memory_total_bytes": 46094733312,
+    "virtual_memory_available_bytes": 26536173568,
+    "pagefile": {
+      "volume": "C:",
+      "management": "system_managed",
+      "allocated_megabytes": 3375,
+      "current_usage_megabytes": 178,
+      "peak_usage_megabytes": 2689
+    },
+    "free_disk_bytes": {
+      "C:": 78227152896,
+      "D:": 232936747008
+    },
+    "versions": {
+      "python": "3.13.5",
+      "pyarrow": "24.0.0",
+      "pandas": "3.0.1",
+      "numpy": "2.4.2",
+      "scikit_learn": "1.8.0",
+      "scipy": "1.17.1",
+      "catboost": "1.2.10",
+      "boruta": "0.4.3",
+      "psutil": "7.2.2",
+      "pyyaml": "6.0.3",
+      "joblib": "1.5.3",
+      "pytest": "9.0.3"
+    }
+  },
+  "raw_inventory_expectation": {
+    "included_record_count": 19,
+    "included_parquet_count": 18,
+    "included_total_bytes": 962954938,
+    "excluded_depth_2_record_count": 14,
+    "excluded_depth_2_total_bytes": 365519910,
+    "authentication": "Prompt-15 adapter verifies exact relative paths, bytes, and SHA-256 before data use; extra in-scope files, missing files, changed files, and depth-2 input fail closed",
+    "depth_2_policy": "excluded files are matched only by the frozen inventory boundary and never opened"
+  },
+  "adapter": {
+    "committed_cli": "scripts/run_prompt_16_third_dataset.py",
+    "committed_worker": "credit_risk_fs.experiments.prompt_16_third_dataset:run_matrix_worker",
+    "prompt_15_adapter": "credit_risk_fs.datasets.homecredit_model_stability_2024",
+    "pyarrow_batch_rows": 65536,
+    "case_shard_rows": 50000,
+    "family_workers": 1,
+    "data_loader_workers": 0,
+    "base_and_family_scan_order": [
+      "train_base",
+      "static",
+      "static_cb",
+      "applprev",
+      "credit_bureau_a",
+      "credit_bureau_b",
+      "debitcard",
+      "deposit",
+      "other",
+      "person",
+      "tax_registry_a",
+      "tax_registry_b",
+      "tax_registry_c"
+    ],
+    "release_and_checkpoint_rule": "process one family at a time, atomically checkpoint it, release family objects, collect garbage, and pass the monitored RAM recovery boundary before continuing",
+    "expected_base_rows": 1526659,
+    "expected_dev_rows": 1221743,
+    "expected_oot_rows": 304916,
+    "expected_approved_raw_predictors": 434,
+    "expected_matrix_predictors": 1959,
+    "matrix_order": "stable case/date order defined by the lock",
+    "global_preprocessing": false
+  },
+  "resource_controls": {
+    "execution_policy_path": "configs/execution/prompt_16_homecredit_2024_v1.yaml",
+    "accelerator": "cpu",
+    "max_parallel_experiment_cells": 1,
+    "max_parallel_folds": 1,
+    "max_adapter_family_workers": 1,
+    "data_loader_workers": 0,
+    "estimator_threads_maximum": 4,
+    "process_peak_rss_warning_bytes": 21474836480,
+    "process_peak_rss_hard_cap_bytes": 25769803776,
+    "system_available_memory_floor_bytes": 8589934592,
+    "disk_free_hard_floor_bytes": 85899345920,
+    "temp_disk_free_hard_floor_bytes": 21474836480,
+    "disk_remaining_output_safety_factor": 2.5,
+    "poll_interval_seconds": 1.0,
+    "graceful_stop_timeout_seconds": 20.0,
+    "forced_cleanup_timeout_seconds": 10.0,
+    "ram_limit_policy": "hard-abort the owned process tree when system-available memory reaches 8 GiB or process-tree RSS reaches 24 GiB; preserve the first stop cause and partial evidence",
+    "ownership": "one supervised spawned worker and its complete process tree",
+    "unbounded_parallelism": false
+  },
+  "resource_forecast": {
+    "basis": "outcome-blind structural dimensions, raw bytes, dense-float worst cases, Parquet/checkpoint overhead, and conservative packaging allowance; to be replaced by measured pilot forecast",
+    "matrix_and_intermediate_bytes": 59055800320,
+    "experiment_artifact_bytes": 8589934592,
+    "logs_and_audits_bytes": 2147483648,
+    "final_package_bytes": 536870912,
+    "forecast_total_output_bytes": 75161927680,
+    "initial_required_free_results_bytes": 187904819200,
+    "initial_observed_free_results_bytes": 232936747008,
+    "forecast_roots": [
+      "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024",
+      "D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024"
+    ],
+    "launch_rule": "free results-volume bytes must be at least max(80 GiB, ceil(2.5 * forecast_remaining_output_bytes)); temp volume must retain 20 GiB"
+  },
+  "wall_time_limits_seconds": {
+    "raw_inventory_scan": 1800,
+    "base_scan": 3600,
+    "each_depth_0_scan": 3600,
+    "each_depth_1_scan_and_aggregation": 7200,
+    "each_checkpoint_write_or_read": 1800,
+    "matrix_total": 43200,
+    "pilot_total": 604800,
+    "dev_fold_total": 604800,
+    "dev_total": 3024000,
+    "oot_total": 604800,
+    "baseline_lightweight": 10800,
+    "baseline_catboost_shap": 10800,
+    "baseline_boruta_random_forest": 21600,
+    "baseline_rfe_catboost": 28800,
+    "statistical_normalized_average_rank": 43200,
+    "iv_then_boruta": 21600,
+    "boruta_then_mrmr_mutual_information": 21600,
+    "boruta_then_rfe_catboost": 43200,
+    "final_lr": 10800,
+    "final_catboost": 43200
+  },
+  "pilot_registry": {
+    "fold_ids": [1],
+    "oot_access": "forbidden",
+    "selector_fit_count": 27,
+    "evaluation_count": 30,
+    "fit_ids_in_order": [
+      "fit_001", "fit_002", "fit_003", "fit_004", "fit_005", "fit_006", "fit_007", "fit_008", "fit_009",
+      "fit_010", "fit_011", "fit_012", "fit_013", "fit_014", "fit_015", "fit_016", "fit_017", "fit_018",
+      "fit_019", "fit_020", "fit_021", "fit_022", "fit_023", "fit_024", "fit_025", "fit_026", "fit_027"
+    ],
+    "fit_dependency_orders": [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21, 22], [23, 24], [25, 26], [27], [28], [29], [30]],
+    "evaluation_cells_in_order": [
+      "001|full_features|null|lr|null", "002|full_features|null|catboost|null",
+      "003|random_k|null|lr|20", "004|random_k|null|catboost|40",
+      "005|iv_woe|null|lr|20", "006|iv_woe|null|catboost|40",
+      "007|mrmr_mutual_information|null|lr|20", "008|mrmr_mutual_information|null|catboost|40",
+      "009|lasso_l1_logistic|null|lr|20", "010|lasso_l1_logistic|null|catboost|40",
+      "011|legacy_rf_relevance_corr|null|lr|20", "012|legacy_rf_relevance_corr|null|catboost|40",
+      "013|catboost_shap|null|lr|20", "014|catboost_shap|null|catboost|40",
+      "015|boruta_random_forest|null|lr|20", "016|boruta_random_forest|null|catboost|40",
+      "017|rfe_catboost|null|lr|20", "018|rfe_catboost|null|catboost|40",
+      "019|statistical_normalized_average_rank|null|lr|20", "020|statistical_normalized_average_rank|null|catboost|40",
+      "021|iv_then_boruta|100|lr|null", "022|iv_then_boruta|100|catboost|null",
+      "023|iv_then_boruta|200|lr|null", "024|iv_then_boruta|200|catboost|null",
+      "025|iv_then_boruta|300|lr|null", "026|iv_then_boruta|300|catboost|null",
+      "027|boruta_then_mrmr_mutual_information|null|lr|20", "028|boruta_then_mrmr_mutual_information|null|catboost|40",
+      "029|boruta_then_rfe_catboost|null|lr|20", "030|boruta_then_rfe_catboost|null|catboost|40"
+    ],
+    "cell_encoding": "configuration_order|method_id|iv_pool_budget|model|requested_feature_budget",
+    "natural_support_rule": "unpadded; zero support or permitted selector failure remains visible and unavailable",
+    "sampling_rule": "exact frozen selector/model sampling settings and seeds from the canonical lock"
+  },
+  "commands": {
+    "matrix": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py matrix --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\"",
+    "pilot": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1",
+    "dev_template": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase dev --fold-id {1..5, sequential}",
+    "oot_template": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase oot --oot-analysis-plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\oot_analysis_plan.json\""
+  },
+  "atomicity_and_resume": {
+    "write_rule": "all checkpoint files are written through atomic temp-to-final replacement; manifest authenticates content; _SUCCESS is last",
+    "selection_rule": "immutable completed authenticated selection fit; archive incomplete pilot/DEV attempt before exact retry",
+    "evaluation_rule": "immutable completed authenticated evaluation; archive incomplete pilot/DEV attempt before exact retry",
+    "oot_rule": "fail closed on an incomplete OOT evaluation directory because target-linked output may have become inspectable; no second attempt unless evidence proves no inspectable metric and identity is unchanged",
+    "phase_rule": "reuse only when phase _SUCCESS authenticates the exact phase manifest and protocol/matrix identities",
+    "lock_rule": "exclusive execution lock lives beside, never inside, each atomic output root and is released in finally",
+    "failure_visibility": "failed and infeasible registered cells are sealed and remain in 27/30 accounting"
+  },
+  "measurement_requirements": [
+    "inventory and each raw scan duration and bytes",
+    "base and per-family peak process-tree RSS and system-available RAM",
+    "aggregation, checkpoint write/read, join, validation, and publication durations",
+    "repeated bounded scan and checkpoint reuse cost",
+    "matrix rows, columns, predictors, lineage, split/fold counts, bytes, and identity hashes",
+    "per-selector and per-model time, predictions, metrics, support, failure, and resource evidence",
+    "pilot-derived DEV/OOT runtime and disk forecast with 20 percent allowance"
+  ],
+  "gate_criteria": {
+    "success": "authenticated 19-record included inventory, no depth-2 open, exact 1,526,659 rows and 1,959 predictors, exact split/fold identities, 27 fit records and 30 accounted evaluations, aligned predictions, no leakage/padding/fallback/overwrite, reconciled logs, and feasible 20-percent-allowance forecast",
+    "abort": "supervisor latches first resource, wall-clock, disk, manual-interrupt, worker-crash, or unsafe-pause cause; stops the owned tree; preserves partial evidence; a selector/model stopped by its own locked RSS or wall-time cap is sealed as visible resource-infeasible before an exact pilot/DEV resume",
+    "infeasible": "registered method cannot complete inside its locked stage resource/wall-clock limit; preserve authenticated failure and apply only the lock's declared visible-unavailable handling",
+    "blocker": "identity, ancestry, protocol, inventory, dimensions, split/fold, target orientation, leakage, atomicity, accounting, scientific scope, or forecast feasibility fails without a predeclared protocol resolution"
+  },
+  "outcome_blindness": {
+    "raw_files_opened_before_plan_commit": false,
+    "oot_target_linked_information_opened": false,
+    "prompt_14_numeric_findings_opened": false,
+    "network_or_download_used": false,
+    "performance_based_configuration_choice": false
+  }
+}
