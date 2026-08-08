@@ -67,6 +67,26 @@ optional to active repository validation and can be validated read-only by
 passing its repository root to `validate_repository_state.py` with
 `--legacy-repository-root`.
 
+## Finalized two-dataset statistical review
+
+The current canonical Home Credit and LendingClub v2 review is reproducible
+from authenticated persisted predictions and result metadata; it does not
+require raw research tables or model execution. The binding protocol is
+`configs/protocols/prompt_14_two_dataset_analysis_v1/analysis_protocol_lock.json`.
+Exact outputs and claim wording are indexed by:
+
+- `results/finalized_research/canonical_artifact_manifest.json`
+- `results/final_research_package_v2/final_research_report.md`
+- `results/final_research_package_v2/final_results_tables.csv`
+- `results/final_research_package_v2/claims_and_evidence.csv`
+- `cleanup/audits/prompt_14_two_dataset_oot_review_v3/results_digest.json`
+
+Metric reconciliation uses an absolute tolerance of `1e-10`. AUC inference
+uses paired DeLong; registered intervals use 2,000 target-stratified paired
+bootstrap draws with seed `20260721`; Holm adjustment retains every member of
+all 36 original families. The third-dataset protocol remains frozen and
+unexecuted.
+
 Non-goals:
 - no calibration changes
 - no stacking changes

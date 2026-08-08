@@ -1,0 +1,108 @@
+{
+  "active_workers": 0,
+  "active_writers": 0,
+  "baseline": {
+    "authenticated_cells": 36,
+    "configuration_adaptation_after_oot": false,
+    "configuration_sha256": "f03647c376fe834f9bb1c3d6834ed42732ef3e7e1047eeff352af49b31ed607f",
+    "expected_cells": 36,
+    "hash_invalid": 0,
+    "missing": 0
+  },
+  "combination_oot": {
+    "authenticated_active_files": 168,
+    "authenticated_evaluations": 24,
+    "authenticated_selector_fits": 18,
+    "expected_active_files": 168,
+    "expected_evaluations": 24,
+    "expected_selector_fits": 18,
+    "failed": 0,
+    "hash_invalid": 0,
+    "missing": 0,
+    "partial": 0,
+    "phase": "oot",
+    "unexpected": 0
+  },
+  "configuration_adaptation_after_oot": false,
+  "datasets": {
+    "homecredit": {
+      "alignment": "identical_order_or_safe_keyed_one_to_one",
+      "duplicate_ids": 0,
+      "events": 10688,
+      "missing_ids": 0,
+      "ordered_case_id_sha256": "08a815a762fc309aeba22ed42f9b772f39e1b6a8ce9c41f5eb1644b1c2f2f860",
+      "ordered_case_id_target_sha256": "d25fae6ded74dac8a32745d73659ce5437f238609fe6b3b40ad07daf4536d472",
+      "paired_identity_target_sha256": "f5045e863d8debb0b80a5f67d62dcc27f62d80660b6395d4a41b1e05b07b07be",
+      "rows": 120053,
+      "target_classes": [
+        0,
+        1
+      ],
+      "unmatched_ids": 0
+    },
+    "lendingclub_v2": {
+      "alignment": "identical_order_or_safe_keyed_one_to_one",
+      "duplicate_ids": 0,
+      "events": 68252,
+      "missing_ids": 0,
+      "ordered_case_id_sha256": "493bf9d2b88b385baf17081f64cea41e9f4f4ff2b1fd479f74d8be323f627c72",
+      "ordered_case_id_target_sha256": "4aab7126f7b5566bde6417bfa61ee01da4edb700905fa39fd1fd4209da527985",
+      "paired_identity_target_sha256": "e455f6dae0c55f6bd47aaeefde05ef6ad1468aa1053f9be7013b109c2b94c162",
+      "rows": 293105,
+      "target_classes": [
+        0,
+        1
+      ],
+      "unmatched_ids": 0
+    }
+  },
+  "dev": {
+    "authenticated_active_files": 840,
+    "authenticated_evaluations": 120,
+    "authenticated_selector_fits": 90,
+    "expected_active_files": 840,
+    "expected_evaluations": 120,
+    "expected_selector_fits": 90,
+    "failed": 0,
+    "hash_invalid": 0,
+    "missing": 0,
+    "partial": 0,
+    "phase": "dev",
+    "unexpected": 0
+  },
+  "execution_locks": 0,
+  "metric_reconciliation_failures": 0,
+  "metric_reconciliation_rows": 448,
+  "partial_outputs": 0,
+  "phase_1_commit": "fd98d3c6d445e042b69dd24b0d6e8355157548dd",
+  "pilot": {
+    "authenticated_active_files": 168,
+    "authenticated_evaluations": 24,
+    "authenticated_selector_fits": 18,
+    "expected_active_files": 168,
+    "expected_evaluations": 24,
+    "expected_selector_fits": 18,
+    "failed": 0,
+    "hash_invalid": 0,
+    "missing": 0,
+    "partial": 0,
+    "phase": "pilot",
+    "unexpected": 0
+  },
+  "prediction_artifacts_authenticated": 64,
+  "raw_dataset_files_opened": 0,
+  "raw_dataset_paths_resolved": false,
+  "schema_version": "prompt_14_v3_authentication_validation_v1",
+  "status": "pass",
+  "temporary_predictions": 0,
+  "voting_package": {
+    "active_manifest": "results/final_experiments/cross_dataset_voting_inference_v1/artifact_manifest.v2.json",
+    "legacy_fallback_used": false,
+    "payload_entries_authenticated": 55,
+    "payload_entries_expected": 55,
+    "selection_rule": "explicit_successor_pointer_fail_closed",
+    "unaffected_entries_byte_identical": 54,
+    "unaffected_entries_expected": 54
+  },
+  "workloads_started": 0
+}

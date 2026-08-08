@@ -65,15 +65,25 @@ property, and old imports of `RFESelector`/`BorutaRFESelector` from
 `BorutaRFESelector` class name is retained; canonical new code should import
 `BorutaThenRFESelector` from `selectors.boruta_then_rfe`.
 
-## Planned combinations
+## Canonical two-dataset OOT evidence
 
-- Available for future opt-in use, but not part of a finalized matrix:
-  `boruta_rfe` (Boruta → RFE).
-- Planned only: IV → Boruta, IV → custom mRMR-like, IV → RFE, and Boruta →
-  custom mRMR-like.
-- Planned only: statistical majority voting and normalized average-rank voting.
+The finalized Home Credit and LendingClub v2 review is indexed at
+`results/finalized_research/README.md`. Its locked graph contains 124 paired
+comparisons in 36 complete Holm families, evaluated from authenticated saved
+predictions without rerunning models. Findings are dataset-, model-, and
+comparator-specific: favorable combination contrasts coexist with adverse
+contrasts, so the evidence does not establish a universal selector winner.
 
-No LASSO or CatBoost–SHAP selector was added during this cleanup.
+The canonical report, exact result table, claims audit, artifact inventory,
+and reproducibility summary live under `results/final_research_package_v2/`.
+The interactive portable report is
+`cleanup/audits/prompt_14_two_dataset_oot_review_v3/report.html`.
+
+The two Home Credit CatBoost Boruta-first reference cases remain explicitly
+unpadded natural-support cases: requested K=40, frozen reference support K=26.
+Authenticated full-DEV OOT refits realized 40 features, but this does not make
+the registered contrasts ordinary like-for-like K=40 evidence. The third
+dataset is separately frozen and preregistered, but not implemented or run.
 
 ## Validation
 
@@ -85,5 +95,6 @@ git diff --check
 ```
 
 The repository validator requires `results/run_index.csv` and the active
-top-level results directories. It does not require or recreate the former
-`results/research_summary/` hierarchy.
+top-level results directories. Canonical review packages are validated by
+their focused digest and traceability checks rather than recreated by the
+general repository-state validator.

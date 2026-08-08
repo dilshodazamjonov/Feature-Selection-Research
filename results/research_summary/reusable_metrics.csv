@@ -1,0 +1,7 @@
+metric,definition,role
+roc_auc,Area under ROC curve on authenticated locked-OOT predictions,primary
+gini,2 * ROC AUC - 1,derived
+ks,Maximum class-conditional ECDF separation,secondary
+lift_at_10,Top ceil(10%*n) event rate divided by population event rate,secondary
+bad_rate_capture_at_10,Events in frozen top decile divided by all events,secondary
+score_psi,DEV-OOF quantile-bin score PSI applied to locked OOT,drift

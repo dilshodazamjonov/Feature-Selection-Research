@@ -1,0 +1,22 @@
+{
+  "authentication": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/authentication_validation.json",
+  "claims": "results/final_research_package_v2/claims_and_evidence.csv",
+  "comparison_accounting": {
+    "authentication_failures": 0,
+    "evaluable_comparisons": 124,
+    "full_family_denominators_preserved": true,
+    "holm_families": 36,
+    "holm_input_p1_substitutions": 0,
+    "protocol_allowed_infeasible": 0,
+    "protocol_allowed_unavailable": 0,
+    "registered_comparisons": 124,
+    "represented_once": 124,
+    "schema_version": "prompt_14_v3_comparison_reconciliation_v1"
+  },
+  "configuration_adaptation_after_oot": false,
+  "protocol": "configs/protocols/prompt_14_two_dataset_analysis_v1/analysis_protocol_lock.json",
+  "report": "results/final_research_package_v2/final_research_report.md",
+  "results": "results/final_research_package_v2/final_results_tables.csv",
+  "schema_version": "canonical_artifact_manifest_v1",
+  "third_dataset_status": "frozen_not_implemented_not_executed"
+}
