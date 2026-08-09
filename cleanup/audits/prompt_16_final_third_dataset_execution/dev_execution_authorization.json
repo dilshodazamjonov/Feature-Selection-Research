@@ -1,0 +1,101 @@
+{
+  "schema_version": "prompt_16_dev_execution_authorization_v1",
+  "status": "authorized_after_pilot_gate_commit",
+  "authorized_at_utc": "2026-08-09T16:53:52.2208813Z",
+  "working_directory": "D:/python projects/Research",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e"
+  },
+  "pilot_gate": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/pilot_gate_status.json",
+    "sha256": "89a06b40f59482421941878ccadf494d1f47967cbb9646f5db8ced097d116494",
+    "status": "passed_with_declared_resource_infeasibility",
+    "selector_fits": 27,
+    "evaluation_cells": 30,
+    "completed_evaluations": 28,
+    "resource_infeasible_evaluations": 2,
+    "unavailable_configurations": [
+      {
+        "configuration_order": 1,
+        "method_id": "full_features",
+        "model": "lr",
+        "reason": "ram_process_limit"
+      },
+      {
+        "configuration_order": 2,
+        "method_id": "full_features",
+        "model": "catboost",
+        "reason": "ram_process_limit"
+      }
+    ]
+  },
+  "matrix_prerequisite": {
+    "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "rows": 1526659,
+    "predictors": 1959,
+    "parts": 31,
+    "depth_2_files_opened": 0,
+    "status": "authenticated_complete"
+  },
+  "execution_scope": {
+    "phase": "dev",
+    "fold_order": [1, 2, 3, 4, 5],
+    "concurrent_folds": 1,
+    "concurrent_cells": 1,
+    "selector_fits_per_fold": 27,
+    "evaluation_cells_per_fold": 30,
+    "expected_total_selector_fits": 135,
+    "expected_total_evaluations": 150,
+    "oot_access": "forbidden",
+    "two_dataset_numeric_results_access": "forbidden"
+  },
+  "resource_forecast": {
+    "allowance": 1.2,
+    "dev_active_seconds": 496159.0960961913,
+    "dev_active_hours": 137.8219711378309,
+    "maximum_fold_active_seconds": 166446.79062856975,
+    "maximum_fold_active_hours": 46.23521961904715,
+    "incremental_dev_disk_bytes": 680466517,
+    "current_results_volume_free_bytes": 229264691200,
+    "launch_floor_bytes": 85899345920,
+    "status": "feasible_under_frozen_controls"
+  },
+  "implementation_sha256": {
+    "configs/execution/prompt_16_homecredit_2024_v1.yaml": "7d5cc2f39d305974d2aa8d79e7bef24bc4bd71e8579c397d341b500524deec60",
+    "configs/execution/prompt_16_ram_wait_resume_v1.yaml": "aff59ce2212547b3af7633bce1c289b98a13ef6f0fc8cf6902ecf77d93f50aed",
+    "scripts/run_prompt_16_third_dataset.py": "b93dfb2ea312156b146d382485ba422105b50327e6c8255c73e041b46cc6230e",
+    "scripts/build_prompt_16_pilot_gate.py": "9bbc6763f3aac7cba7aa63a22afa9d0d2d7ae386acb0e4a993a26356b43f422a"
+  },
+  "first_manual_command": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase dev --fold-id 1",
+  "later_fold_template": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase dev --fold-id {2|3|4|5}",
+  "resume_behavior": {
+    "pilot_checkpoints_reused_by_dev": false,
+    "reason": "DEV fold checkpoints have distinct phase/fold identities",
+    "within_fold_sealed_selectors_and_evaluations_reused": true,
+    "in_progress_selector_or_evaluation_restarted": true,
+    "resource_limited_pilot_or_dev_cell": "seal visible resource-infeasibility, then rerun the same fold command to continue",
+    "matrix_rebuilt": false
+  },
+  "restart_preconditions": [
+    "the pilot gate, this authorization, gate builder, and tests are committed",
+    "no active Prompt-16 worker or DEV fold execution lock",
+    "the matrix and pilot hashes above remain unchanged",
+    "the worktree is clean"
+  ],
+  "manual_handoff": {
+    "scope": "DEV fold 1 only; later folds are handed off sequentially after prior-fold authentication",
+    "return_files": [
+      "terminal output ending in the structured pilot/dev operation summary",
+      "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/_SUCCESS when completed",
+      "outputs/prompt_16_homecredit_model_stability_2024/logs/dev_fold_1_supervisor_summary.json"
+    ],
+    "expected_intermediate_condition": "a full-feature cell may stop at the 24 GiB process cap; if sealed_resource_infeasibility is present, the exact same fold command is resumed without changing configuration"
+  },
+  "gate_boundary": {
+    "dev_gate": "open_after_this_authorization_is_committed",
+    "oot_gate": "closed_pending_authenticated_135_selector_fit_and_150_evaluation_DEV_accounting_plus_DEV_freeze_commit",
+    "scientific_configuration_changed_from_pilot_performance": false
+  }
+}

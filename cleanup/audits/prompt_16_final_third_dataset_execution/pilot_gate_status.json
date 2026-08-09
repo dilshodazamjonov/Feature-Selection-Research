@@ -1,0 +1,153 @@
+{
+  "schema_version": "prompt_16_pilot_gate_v1",
+  "generated_at_utc": "2026-08-09T16:53:22.032397+00:00",
+  "status": "passed_with_declared_resource_infeasibility",
+  "source_branch": "main",
+  "source_commit": "0ec0724047e163cfc2a5ac4e76c188e33580e5a2",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e"
+  },
+  "protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6"
+  },
+  "builder": {
+    "path": "scripts/build_prompt_16_pilot_gate.py",
+    "sha256": "9bbc6763f3aac7cba7aa63a22afa9d0d2d7ae386acb0e4a993a26356b43f422a"
+  },
+  "matrix": {
+    "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "row_count": 1526659,
+    "predictor_count": 1959,
+    "matrix_part_count": 31,
+    "included_inventory_records": 19,
+    "depth_2_files_opened": 0,
+    "authenticated": true
+  },
+  "pilot": {
+    "phase_manifest_sha256": "a76f4857f59082642f0fa141e0705467744f40d992cd3a176c2d06f79677eab0",
+    "success_sha256": "c9858c0b1d18bc435b342fdec84a1e65520f73c66f1f98e7e21bab6fa72f4dda",
+    "selector_fits": 27,
+    "evaluation_cells": 30,
+    "completed_evaluations": 28,
+    "unavailable_evaluations": 2,
+    "unavailable_cells": [
+      {
+        "configuration_order": 1,
+        "method_id": "full_features",
+        "model": "lr",
+        "stop_code": "ram_process_limit",
+        "peak_process_tree_rss_bytes": 27656318976
+      },
+      {
+        "configuration_order": 2,
+        "method_id": "full_features",
+        "model": "catboost",
+        "stop_code": "ram_process_limit",
+        "peak_process_tree_rss_bytes": 26713628672
+      }
+    ],
+    "prediction_alignments_authenticated": 28,
+    "metric_recalculations_authenticated": 28,
+    "all_registered_cells_visible": true,
+    "oot_opened": false
+  },
+  "resource_evidence": {
+    "sessions": [
+      {
+        "name": "pre_fix_checkpoint_session",
+        "status": "interrupted",
+        "active_seconds": 1571.3795793000027,
+        "peak_rss_bytes": 23526805504,
+        "minimum_available_bytes": 6468104192,
+        "included_for_runtime": true
+      },
+      {
+        "name": "post_fix_selectors_and_cell_001",
+        "status": "aborted_resource_limit",
+        "active_seconds": 23791.435359799943,
+        "peak_rss_bytes": 27656318976,
+        "minimum_available_bytes": 2981531648,
+        "included_for_runtime": true
+      },
+      {
+        "name": "cell_002_resource_infeasibility",
+        "status": "aborted_resource_limit",
+        "active_seconds": 85.17288800003007,
+        "peak_rss_bytes": 26713628672,
+        "minimum_available_bytes": 5389443072,
+        "included_for_runtime": true
+      },
+      {
+        "name": "cells_003_through_030_completion",
+        "status": "completed",
+        "active_seconds": 2053.1373145000543,
+        "peak_rss_bytes": 9934311424,
+        "minimum_available_bytes": 23403769856,
+        "included_for_runtime": true
+      }
+    ],
+    "total_active_seconds": 27501.12514160003,
+    "peak_process_tree_rss_bytes": 27656318976,
+    "minimum_system_available_ram_bytes": 2981531648,
+    "completed_cells_peak_process_tree_rss_bytes": 9934311424,
+    "completed_cells_minimum_system_available_ram_bytes": 23403769856,
+    "matrix_active_seconds": 3876.292130000016,
+    "matrix_peak_process_tree_rss_bytes": 1849749504,
+    "process_tree_rss_hard_cap_bytes": 25769803776,
+    "system_available_wait_floor_bytes": 1073741824,
+    "forecast_allowance": 1.2
+  },
+  "forecast": {
+    "dev_runtime_seconds_with_20pct": 496159.0960961913,
+    "oot_runtime_seconds_with_20pct": 199924.15416471305,
+    "maximum_dev_fold_seconds_with_20pct": 166446.79062856975,
+    "dev_incremental_disk_bytes_with_20pct": 680466517,
+    "oot_incremental_disk_bytes_with_20pct": 200532047,
+    "results_free_bytes": 229264691200,
+    "reforecast_disk_floor_bytes": 85899345920,
+    "checks": {
+      "maximum_dev_fold_forecast_with_20pct_within_limit": true,
+      "oot_forecast_with_20pct_within_limit": true,
+      "disk_free_above_reforecast_floor": true,
+      "completed_non_full_feature_cells_peak_below_process_cap": true,
+      "resource_infeasible_cells_visible_and_not_dropped": true
+    }
+  },
+  "validation": {
+    "matrix_manifest_and_artifacts": "authenticated",
+    "pilot_phase_marker": "authenticated",
+    "fold_scope_and_disjointness": "authenticated",
+    "selector_seals": "27/27",
+    "evaluation_seals": "30/30",
+    "prediction_alignment": "28/28 completed",
+    "metric_recalculation": "28/28 completed",
+    "natural_support_padding": "none",
+    "silent_fallback_or_duplicate_active_cell": "none",
+    "resource_infeasibility_rule": "two full-feature cells preserved visibly",
+    "oot_access": "closed_not_opened"
+  },
+  "source_artifacts": {
+    "matrix_supervisor_summary_sha256": "752cc942862e92fa9820152065919b88cefa41e41fca2311d9b69a0d49021b1d",
+    "latest_pilot_supervisor_summary_sha256": "e271e3c3b26e989a0906b2f9c972ddb8d1c3dede6a521759daf3d097c9108a36",
+    "pilot_scope_authentication_sha256": "7fcfe6fd6a34fa382d13e876a1e6fd7f112626f591556915463632aabb2e94dc",
+    "pilot_accounting_source_sha256": "14f09bac556c8a3a75e333ebb4b43d2c9045636b1ffdc9eeec93724522c81f68",
+    "cell_001_resource_status_sha256": "71982226b0696a4e3a20186da16783eeb1b4a608990005647bf21167312aa2ec",
+    "cell_002_resource_status_sha256": "8d5430ef0c2fb3b203174385b7cecd925393866beddc32fd2f94649e5bbb98c6",
+    "pre_fix_checkpoint_evidence_sha256": "858c0988fbc392e06ee45c1c500b9997a6474ebd3eab1c6368db16e4ecd9fdf5"
+  },
+  "decision": {
+    "pilot_gate": "pass_after_commit",
+    "dev_gate": "open_after_this_gate_commit",
+    "oot_gate": "closed_pending_authenticated_complete_DEV_and_DEV_freeze_commit",
+    "scientific_configuration_changed_from_pilot_performance": false
+  },
+  "artifacts": {
+    "cleanup/audits/prompt_16_final_third_dataset_execution/pilot_accounting.csv": "516ea394240ba8e6138ab63b2e54783beed69e8288511760bc059e9932a81a06",
+    "cleanup/audits/prompt_16_final_third_dataset_execution/pilot_resource_forecast.csv": "e1b5eb3d175909f9022f9c40a8115102d16a4164d2aea732bfa189e0f941e3d5",
+    "cleanup/audits/prompt_16_final_third_dataset_execution/pilot_feasibility_decision.md": "fe33494695626893970d88356dfe6455dd507e5b9b243604805fc12ca9e32e23"
+  }
+}
