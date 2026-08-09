@@ -4,8 +4,11 @@ import ast
 import hashlib
 import importlib.util
 import json
+import weakref
 from pathlib import Path
+from types import SimpleNamespace
 
+import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -92,14 +95,82 @@ def test_prompt_16_resource_policy_is_strict_and_sequential():
     assert policy.parallelism.data_loader_workers == 0
     assert policy.parallelism.estimator_threads == 4
     assert policy.memory.abort_process_tree_rss_gb == 24
-    assert policy.memory.abort_if_system_available_below_gb == 8
+    assert policy.memory.abort_if_system_available_below_gb == 1
     assert policy.disk.minimum_free_results_gb == 80
     ram_control = load_ram_control_policy(
         ROOT, "configs/execution/prompt_16_ram_wait_resume_v1.yaml"
     )
-    assert ram_control.emergency_margin_bytes == 8 * 1024**3
-    assert ram_control.recovery_threshold_bytes == 10 * 1024**3
+    assert ram_control.emergency_margin_bytes == 1 * 1024**3
+    assert ram_control.recovery_threshold_bytes == 2 * 1024**3
     assert ram_control.log_interval_seconds == 300
+
+
+def test_selector_fit_releases_wide_phase_frames_before_opaque_work(
+    tmp_path: Path, monkeypatch
+):
+    frame_refs: dict[str, weakref.ReferenceType[pd.DataFrame]] = {}
+
+    def fake_load_phase_frames(**_kwargs):
+        train = pd.DataFrame(
+            {
+                "case_id": [1, 2, 3],
+                "target": pd.Series([0, 1, 0], dtype="int8"),
+                "x": pd.Series([1.0, 2.0, 3.0], dtype="float32"),
+            }
+        )
+        validation = pd.DataFrame(
+            {
+                "case_id": [4],
+                "target": pd.Series([0], dtype="int8"),
+                "x": pd.Series([4.0], dtype="float32"),
+            }
+        )
+        frame_refs["train"] = weakref.ref(train)
+        frame_refs["validation"] = weakref.ref(validation)
+        return train, validation, ["x"], {"matrix_manifest_sha256": "a" * 64}
+
+    fit = {
+        "fit_id": "fit_001",
+        "fit_order": 1,
+        "method_id": "lasso_l1_logistic",
+        "family": "canonical_baseline",
+        "dependent_configuration_orders": [],
+    }
+    protocol = {
+        "approved_protocol": {
+            "method_and_evaluation_matrix": {"matrix_cells": []}
+        }
+    }
+    monkeypatch.setattr(
+        prompt16,
+        "_protocol_payload",
+        lambda _path: (
+            SimpleNamespace(
+                lock_file_sha256=prompt16.EXPECTED_PROTOCOL_FILE_SHA256,
+                lock_internal_sha256=prompt16.EXPECTED_PROTOCOL_INTERNAL_SHA256,
+            ),
+            protocol,
+        ),
+    )
+    monkeypatch.setattr(prompt16, "_load_phase_frames", fake_load_phase_frames)
+    monkeypatch.setattr(prompt16, "selection_fit_registry", lambda _matrix: [fit])
+
+    def observe_released_frames(**kwargs):
+        assert frame_refs["train"]() is None
+        assert frame_refs["validation"]() is None
+        assert kwargs["numeric_train"].dtypes.tolist() == [np.dtype("float32")]
+        assert kwargs["y_train"].dtype == np.dtype("int64")
+        raise KeyboardInterrupt("test stop after lifecycle assertion")
+
+    monkeypatch.setattr(prompt16, "_fit_one_selection", observe_released_frames)
+    with pytest.raises(KeyboardInterrupt, match="lifecycle assertion"):
+        prompt16.run_phase_worker(
+            matrix_root=str(tmp_path / "matrix"),
+            output_root=str(tmp_path / "fold_1"),
+            protocol_lock=str(tmp_path / "protocol.json"),
+            phase="pilot",
+            fold_id=1,
+        )
 
 
 def test_execution_lock_is_outside_atomic_output_root(tmp_path: Path):
@@ -227,7 +298,7 @@ def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
     cli = ROOT / "scripts/run_prompt_16_third_dataset.py"
     tree = ast.parse(cli.read_text(encoding="utf-8"))
     session_contexts = [
-        item.context_expr
+        item
         for node in ast.walk(tree)
         if isinstance(node, ast.With)
         for item in node.items
@@ -236,6 +307,8 @@ def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
         and item.context_expr.func.id == "ResearchLogSession"
     ]
     assert len(session_contexts) == 1
+    assert isinstance(session_contexts[0].optional_vars, ast.Name)
+    assert session_contexts[0].optional_vars.id == "session"
     supervisor_calls = [
         node
         for node in ast.walk(tree)
@@ -250,8 +323,10 @@ def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
         ast.literal_eval(node.args[0])
         for node in ast.walk(tree)
         if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "emit_research_event"
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "session"
+        and node.func.attr == "finish"
         and node.args
     }
     assert terminal_events == {

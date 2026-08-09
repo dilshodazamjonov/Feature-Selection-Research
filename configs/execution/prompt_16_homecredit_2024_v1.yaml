@@ -12,7 +12,7 @@ memory:
   reserve_system_ram_gb: 10
   warn_process_tree_rss_gb: 20
   abort_process_tree_rss_gb: 24
-  abort_if_system_available_below_gb: 8
+  abort_if_system_available_below_gb: 1
   estimated_peak_safety_factor: 1.35
 
 gpu:

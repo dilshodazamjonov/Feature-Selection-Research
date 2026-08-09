@@ -1,0 +1,74 @@
+{
+  "schema_version": "prompt_16_resource_pilot_execution_authorization_v4",
+  "status": "authorized_after_fix_commit",
+  "authorized_at_utc": "2026-08-09T05:21:43.9836048Z",
+  "supersedes_for_restart": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_execution_authorization_v3.json",
+  "superseded_authorization_sha256": "cbc9a3654a00b761c87950b7d8c33b0a3dac921413b8a53f6afaa8e7c9f1408f",
+  "working_directory": "D:/python projects/Research",
+  "plan": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e"
+  },
+  "operational_amendment": {
+    "path": "cleanup/audits/prompt_16_final_third_dataset_execution/implementation_fix_003_one_gib_selector_memory_release.json",
+    "sha256": "858c0988fbc392e06ee45c1c500b9997a6474ebd3eab1c6368db16e4ecd9fdf5",
+    "user_approved": true,
+    "system_memory_behavior": "wait_below_1_GiB_resume_after_three_5_second_checks_at_or_above_2_GiB",
+    "wait_log_interval_seconds": 300,
+    "process_tree_rss_hard_cap_gib": 24,
+    "selector_memory_behavior": "release wide train and validation frames before selector fits; reload and reauthenticate once for evaluations",
+    "scientific_configuration_changed": false
+  },
+  "checkpoint_state": {
+    "sealed_selector_fits_reused": 8,
+    "incomplete_selector_fit_archived_then_restarted": "fit_009",
+    "evaluation_directories": 0,
+    "fold_data_loading_repeated": true,
+    "selector_encoding_repeated": true,
+    "modeling_matrix_rebuilt": false,
+    "oot_opened": false
+  },
+  "matrix_prerequisite": {
+    "root": "D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "success_sha256": "4b2d5de2b6114eb998af657e095bb895687a9c6f5919428914797d8fc549adac",
+    "rows": 1526659,
+    "predictors": 1959,
+    "parts": 31,
+    "depth_2_files_opened": 0,
+    "status": "authenticated_complete"
+  },
+  "implementation_sha256": {
+    "configs/execution/prompt_16_homecredit_2024_v1.yaml": "7d5cc2f39d305974d2aa8d79e7bef24bc4bd71e8579c397d341b500524deec60",
+    "configs/execution/prompt_16_ram_wait_resume_v1.yaml": "aff59ce2212547b3af7633bce1c289b98a13ef6f0fc8cf6902ecf77d93f50aed",
+    "scripts/run_prompt_16_third_dataset.py": "b93dfb2ea312156b146d382485ba422105b50327e6c8255c73e041b46cc6230e",
+    "src/credit_risk_fs/experiments/prompt_16_third_dataset.py": "dd3dd152ec05fe4672e4e9c1563232e13071dfbd3a3cf04a57e124b4761b7667"
+  },
+  "exact_command": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase pilot --fold-id 1",
+  "expected_terminal_behavior": {
+    "active_heartbeat_seconds": 30,
+    "memory_wait_log_seconds": 300,
+    "memory_wait_example": "[UTC] WAIT | selector paused | Waiting ... | Process RAM ... | Available ...",
+    "resume_example": "[UTC] RESUME | Available RAM stable at ... | Continuing ...",
+    "terminal_event_required": true,
+    "manual_stop_false_missing_terminal_warning_fixed": true
+  },
+  "expected_accounting": {
+    "selector_fit_records": 27,
+    "evaluation_cells": 30,
+    "oot_access": false
+  },
+  "restart_preconditions": [
+    "this versioned fix and authorization are committed",
+    "no active Prompt-16 worker or execution lock",
+    "matrix manifest and _SUCCESS retain the exact hashes above",
+    "the eight existing selector seals authenticate under the frozen identity",
+    "worktree is clean"
+  ],
+  "resume_behavior": "matrix remains immutable; fold-1 data loading and selector encoding repeat; fit_001 through fit_008 are skipped from authenticated seals; incomplete fit_009 restarts; all later selector and evaluation work continues in frozen order",
+  "success_markers": [
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/_SUCCESS",
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/phase_manifest.json",
+    "results/prompt_16_homecredit_model_stability_2024/pilot_v1/fold_1/accounting.json"
+  ]
+}
