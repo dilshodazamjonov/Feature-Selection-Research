@@ -1,0 +1,13 @@
+measure,component,pilot_measured,dev_scale,dev_forecast_with_20pct,oot_scale,oot_forecast_with_20pct,scaling_basis
+runtime_seconds,adapter_matrix_build,0.0,0.0,0.0,0.0,0.0,matrix is already authenticated and reused; actual build is reported separately
+runtime_seconds,selector_fit,25255.10146679962,15.101723802831641,457674.6803569153,6.088592202769846,184521.61664510096,sum of fold/full-DEV training-row ratios
+runtime_seconds,selection_encoding,36.49512970005162,15.101723802831641,661.367242654437,6.088592202769846,266.6447545569702,training-row ratio
+runtime_seconds,model_preprocessing,33.57313179993071,9.991802145952402,402.5473084378686,3.7674074841817444,151.78040161257488,train-plus-held-out row ratio
+runtime_seconds,model_training,1921.1544254996115,15.101723802831641,34815.292219779396,6.088592202769846,14036.55102649646,training-row ratio for the 28 executable cells
+runtime_seconds,prediction,19.093438399839215,4.9794492757873945,114.08976961484473,1.4905434405353748,34.1515192369759,validation/OOT-row ratio
+runtime_seconds,metric_calculation,4.777196300099604,4.9794492757873945,28.545367988190232,1.4905434405353748,8.544742331115991,validation/OOT-row ratio
+runtime_seconds,checkpoint_packaging,50.92728810000699,4.9794492757873945,304.3078174168749,1.4905434405353748,91.0912022660648,prediction-row ratio; selector checkpoint overhead is in operational overhead
+runtime_seconds,data_loading_resource_stops_and_operational_overhead,180.00306500087027,9.991802145952402,2158.266013384446,3.7674074841817444,813.773873111918,train-plus-held-out row ratio; includes the two visible resource stops
+disk_bytes,selection_artifacts,18547086.0,5.0,111282516.0,1.0,22256504.0,one 27-fit selection package per DEV fold or full-DEV refit
+disk_bytes,evaluation_artifacts,82528096.0,4.9794492757873945,493133362.0,1.4905434405353748,147614055.0,prediction-row ratio
+disk_bytes,logs_and_resource_samples,4196576.0,15.101723802831641,76050639.0,6.088592202769846,30661488.0,conservative active-runtime proxy
