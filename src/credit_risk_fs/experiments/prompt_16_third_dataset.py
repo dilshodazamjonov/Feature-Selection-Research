@@ -1208,19 +1208,28 @@ def run_phase_worker(
             completed_fit_count += 1
 
     numeric_train: pd.DataFrame | None = None
-    encoding_record: dict[str, Any] | None = None
+    selection_target: pd.Series | None = None
+    encoding_path = phase_root / "selector_encoding.json"
+    encoding_record: dict[str, Any] | None = (
+        _json(encoding_path) if encoding_path.is_file() else None
+    )
     if incomplete_fits:
         _check_stop(stop_event)
         _publish_stage(stage_queue, "selection_encoding", fold_id or "oot")
         encoding_started = time.perf_counter()
         encoder = OriginalFeatureNumericEncoder()
         numeric_train = encoder.fit_transform(train.loc[:, predictors])
+        selection_target = pd.Series(
+            train["target"].to_numpy(dtype=np.int64, copy=True),
+            index=train.index.copy(deep=True),
+            name="target",
+        )
         if list(numeric_train.columns) != predictors:
             raise Prompt16ExecutionError("selector encoding changed candidate order")
         encoding_record = {
             "implementation": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
             "fit_scope": fit_scope,
-            "training_rows": len(train),
+            "training_rows": len(selection_target),
             "candidate_count": len(predictors),
             "elapsed_seconds": time.perf_counter() - encoding_started,
             "numeric_column_count": len(encoder.numeric_columns_),
@@ -1228,8 +1237,17 @@ def run_phase_worker(
             "training_only": True,
             "shared_across_registered_selector_invocations": True,
             "sharing_effect": "deterministic identical fold-local encoding; selector fits remain distinct",
+            "source_phase_frames_released_before_selector_fits": True,
+            "evaluation_phase_frames_reloaded_after_selector_fits": True,
         }
-        write_json_atomic(phase_root / "selector_encoding.json", encoding_record)
+        write_json_atomic(encoding_path, encoding_record)
+        # The selector matrix owns one C-contiguous float32 buffer and the target
+        # above owns an independent int64 buffer. Keeping the much wider source
+        # train frame and the unused validation frame alive during opaque selector
+        # fits caused the demonstrated 21.9 GiB Lasso peak and made suspension at
+        # the old system-RAM floor unable to recover.
+        del encoder, train, validation
+        gc.collect()
 
     for fit in fits:
         _check_stop(stop_event)
@@ -1242,8 +1260,8 @@ def run_phase_worker(
         )
         if _load_sealed(path, identity) is not None:
             continue
-        if numeric_train is None:
-            raise Prompt16ExecutionError("incomplete selector fit lacks numeric training frame")
+        if numeric_train is None or selection_target is None:
+            raise Prompt16ExecutionError("incomplete selector fit lacks training inputs")
         path.mkdir(parents=True, exist_ok=False)
         _publish_stage(
             stage_queue,
@@ -1260,7 +1278,7 @@ def run_phase_worker(
                 fit=fit,
                 matrix=matrix,
                 numeric_train=numeric_train,
-                y_train=train["target"].astype("int64"),
+                y_train=selection_target,
                 fit_scope=fit_scope,
             )
             status = "complete" if selected else "infeasible_natural_support"
@@ -1303,7 +1321,25 @@ def run_phase_worker(
 
     if numeric_train is not None:
         del numeric_train
-        gc.collect()
+    if selection_target is not None:
+        del selection_target
+    gc.collect()
+
+    if incomplete_fits:
+        train, validation, reloaded_predictors, reloaded_scope_auth = _load_phase_frames(
+            matrix_root=matrix_root,
+            protocol=protocol,
+            phase=phase,
+            fold_id=fold_id,
+            stop_event=stop_event,
+            stage_queue=stage_queue,
+            ram_ready_event=ram_ready_event,
+        )
+        if reloaded_predictors != predictors:
+            raise Prompt16ExecutionError("evaluation reload changed candidate order")
+        if reloaded_scope_auth != scope_auth:
+            raise Prompt16ExecutionError("evaluation reload changed authenticated fold scope")
+        del reloaded_predictors, reloaded_scope_auth
 
     thresholds = _frozen_thresholds(oot_analysis_plan)
     for cell in cells:

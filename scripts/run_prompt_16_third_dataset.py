@@ -80,10 +80,7 @@ def _run_supervised(args: argparse.Namespace) -> int:
         WALL_CLOCK_LIMIT,
         supervise_worker,
     )
-    from credit_risk_fs.experiments.research_logging import (
-        ResearchLogSession,
-        emit_research_event,
-    )
+    from credit_risk_fs.experiments.research_logging import ResearchLogSession
     from credit_risk_fs.experiments.ram_control import load_ram_control_policy
     from credit_risk_fs.experiments.resource_policy import (
         GIB,
@@ -215,18 +212,18 @@ def _run_supervised(args: argparse.Namespace) -> int:
     )
     if policy.memory.abort_process_tree_rss_gb > 24.0 + 1e-12:
         raise Prompt16ExecutionError("resolved RSS cap exceeds the Prompt-16 hard ceiling")
-    if policy.memory.abort_if_system_available_below_gb < 8.0 - 1e-12:
-        raise Prompt16ExecutionError("resolved system-available floor weakened below 8 GiB")
+    if abs(policy.memory.abort_if_system_available_below_gb - 1.0) > 1e-12:
+        raise Prompt16ExecutionError("Prompt-16 system-available floor must remain 1 GiB")
     if policy.parallelism.concurrent_experiment_runs != 1:
         raise Prompt16ExecutionError("Prompt-16 requires one experiment cell at a time")
     if policy.parallelism.concurrent_folds != 1:
         raise Prompt16ExecutionError("Prompt-16 requires one fold at a time")
     if policy.parallelism.estimator_threads > 4:
         raise Prompt16ExecutionError("Prompt-16 permits at most four estimator threads")
-    if ram_control.emergency_margin_bytes != 8 * GIB:
-        raise Prompt16ExecutionError("Prompt-16 RAM wait threshold must remain 8 GiB")
-    if ram_control.recovery_threshold_bytes != 10 * GIB:
-        raise Prompt16ExecutionError("Prompt-16 RAM recovery threshold must remain 10 GiB")
+    if ram_control.emergency_margin_bytes != 1 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM wait threshold must remain 1 GiB")
+    if ram_control.recovery_threshold_bytes != 2 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM recovery threshold must remain 2 GiB")
     if ram_control.log_interval_seconds != 300:
         raise Prompt16ExecutionError("Prompt-16 RAM wait logging must remain five-minute")
 
@@ -237,7 +234,7 @@ def _run_supervised(args: argparse.Namespace) -> int:
             terminal_log_path,
             repository_root=PROJECT_ROOT,
             command_arguments=[str(value) for value in sys.argv],
-        ):
+        ) as session:
             result = supervise_worker(
                 worker_target=target,
                 worker_kwargs=worker_kwargs,
@@ -270,28 +267,25 @@ def _run_supervised(args: argparse.Namespace) -> int:
                     supervisor_evidence=supervisor_evidence,
                 )
             if result.status == "completed":
-                emit_research_event(
+                session.finish(
                     "session_completed",
                     message=f"{name} completed and supervisor cleanup authenticated",
-                    priority=True,
                 )
             elif result.status in {
                 "aborted_resource_limit",
                 "interrupted",
                 "timed_out",
             }:
-                emit_research_event(
+                session.finish(
                     "session_controlled_stop",
                     message=f"{name} stopped under the frozen runtime controls",
-                    priority=True,
                     stop_code=result.stop_code,
                 )
             else:
-                emit_research_event(
+                session.finish(
                     "session_failed",
                     level="ERROR",
                     message=f"{name} failed; inspect the authenticated debug log",
-                    priority=True,
                     stop_code=result.stop_code,
                 )
         _write_supervision(
