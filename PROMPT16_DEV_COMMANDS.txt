@@ -1,0 +1,14 @@
+FOLD 1
+.venv\Scripts\python.exe scripts\run_prompt_16_third_dataset.py phase --plan "D:\python projects\Research\cleanup\audits\prompt_16_final_third_dataset_execution\resource_pilot_plan.json" --phase dev --fold-id 1
+
+FOLD 2
+.venv\Scripts\python.exe scripts\run_prompt_16_third_dataset.py phase --plan "D:\python projects\Research\cleanup\audits\prompt_16_final_third_dataset_execution\resource_pilot_plan.json" --phase dev --fold-id 2
+
+FOLD 3
+.venv\Scripts\python.exe scripts\run_prompt_16_third_dataset.py phase --plan "D:\python projects\Research\cleanup\audits\prompt_16_final_third_dataset_execution\resource_pilot_plan.json" --phase dev --fold-id 3
+
+FOLD 4
+.venv\Scripts\python.exe scripts\run_prompt_16_third_dataset.py phase --plan "D:\python projects\Research\cleanup\audits\prompt_16_final_third_dataset_execution\resource_pilot_plan.json" --phase dev --fold-id 4
+
+FOLD 5
+.venv\Scripts\python.exe scripts\run_prompt_16_third_dataset.py phase --plan "D:\python projects\Research\cleanup\audits\prompt_16_final_third_dataset_execution\resource_pilot_plan.json" --phase dev --fold-id 5

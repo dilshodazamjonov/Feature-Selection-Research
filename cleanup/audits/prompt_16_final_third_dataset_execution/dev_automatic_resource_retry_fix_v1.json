@@ -1,0 +1,76 @@
+{
+  "schema_version": "prompt_16_dev_automatic_resource_retry_fix_v1",
+  "status": "authorized_after_commit_containing_this_record",
+  "created_at_utc": "2026-08-11T04:22:51.6858310Z",
+  "classification": "execution_orchestration_fix_without_scientific_change",
+  "trigger": {
+    "request": "continue the same Prompt-16 phase command after a controlled resource stop without human intervention",
+    "observed_behavior": "DEV fold 1 required separate identical command invocations after cell_001 and cell_002 crossed the locked process-tree RAM cap",
+    "scientific_performance_used_to_design_fix": false
+  },
+  "authenticated_prerequisites": {
+    "resource_pilot_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "pilot_gate_status_sha256": "89a06b40f59482421941878ccadf494d1f47967cbb9646f5db8ced097d116494",
+    "original_dev_execution_authorization_sha256": "2fa0309a29eb57c45110ebf4c34918eaebacc538cded421c78bb710d4f3177c7",
+    "dev_fold_1_phase_manifest_sha256": "bd8c517ab275aae3510ee694de25ede52afc530c347a79cbc4a12916657ab31b",
+    "dev_fold_1_success_sha256": "9d42246b974bd205809d14ac5d5bdcf61c18971c6eb29c47865926872a6340ac",
+    "dev_fold_1_accounting_sha256": "21fbb1d614782f3125ae3ad1ab3a7e03d5ba775d3b87fb3ae2addb4632942c9a"
+  },
+  "implementation": {
+    "path": "scripts/run_prompt_16_third_dataset.py",
+    "authorized_sha256": "281e72146f4325ceda980382e14ec5aa5e467dc4195d75d4112fc1e5a7f72bd0",
+    "superseded_sha256": "b93dfb2ea312156b146d382485ba422105b50327e6c8255c73e041b46cc6230e",
+    "behavior": [
+      "retain the same CLI command and one-fold-at-a-time execution",
+      "after ram_process_limit or wall_clock_limit, require authenticated child and queue cleanup with no survivors",
+      "require record_phase_resource_infeasibility to create a new complete authenticated seal",
+      "retry the unchanged worker arguments automatically",
+      "stop on a duplicate seal or after at most 57 unique sealed scopes",
+      "stop immediately on crashes, manual interrupts, disk limits, failed cleanup, or failed sealing",
+      "reuse the existing RAM wait/recovery controller before each restarted worker",
+      "keep the canonical supervisor summary current and report automatic retry accounting in final terminal JSON"
+    ]
+  },
+  "regression_tests": {
+    "path": "tests/test_prompt_16_third_dataset_execution.py",
+    "sha256": "4341786629daa609f666b45796bdd52b009ee7ebaf7839dbaa197622ff2d3603",
+    "targeted_suite": ".venv\\Scripts\\python.exe -m pytest -q tests\\test_prompt_16_third_dataset_execution.py tests\\test_prompt_16_pilot_gate.py tests\\test_resource_monitor.py tests\\test_ram_wait_resume.py tests\\test_research_logging.py",
+    "result": "68 passed in 44.95s",
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "black_available": false,
+    "ruff_available": false
+  },
+  "command_contract": {
+    "changed": false,
+    "template": ".venv\\Scripts\\python.exe scripts\\run_prompt_16_third_dataset.py phase --plan \"D:\\python projects\\Research\\cleanup\\audits\\prompt_16_final_third_dataset_execution\\resource_pilot_plan.json\" --phase dev --fold-id {1|2|3|4|5}",
+    "command_list_path": "PROMPT16_DEV_COMMANDS.txt",
+    "command_list_sha256": "a1a43cca241b5774ad7d05ce2d16ddd6964d0cc89cb12bf72b991dd5d7d97d2d",
+    "automatic_retry_requires_human_intervention": false,
+    "advance_to_next_fold_automatically": false
+  },
+  "frozen_scientific_contract": {
+    "protocol_changed": false,
+    "resource_limits_changed": false,
+    "ram_wait_thresholds_changed": false,
+    "folds_or_membership_changed": false,
+    "method_or_model_registry_changed": false,
+    "features_or_budgets_changed": false,
+    "hyperparameters_or_seeds_changed": false,
+    "preprocessing_or_metrics_changed": false,
+    "checkpoint_identities_changed": false,
+    "oot_opened": false,
+    "parallelism_changed": false
+  },
+  "execution_boundary": {
+    "fold_1_status": "completed_before_this_fix",
+    "authorized_remaining_scope": "DEV folds 2 through 5, sequentially",
+    "oot_gate": "closed",
+    "restart_preconditions": [
+      "the commit containing this audit record and implementation is the checked-out HEAD",
+      "the worktree is clean",
+      "no Prompt-16 worker or DEV execution lock is active",
+      "the authenticated plan, pilot gate, matrix, and completed Fold-1 hashes remain unchanged"
+    ]
+  }
+}

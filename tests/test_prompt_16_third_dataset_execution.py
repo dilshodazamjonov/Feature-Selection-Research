@@ -42,6 +42,15 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCK = ROOT / "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json"
 
 
+def _load_prompt_16_cli():
+    cli = ROOT / "scripts/run_prompt_16_third_dataset.py"
+    spec = importlib.util.spec_from_file_location("prompt16_cli_test", cli)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_canonical_registry_is_exact_27_fits_and_30_cells():
     registry = canonical_registry(LOCK)
     assert registry["protocol_file_sha256"] == EXPECTED_PROTOCOL_FILE_SHA256
@@ -286,12 +295,219 @@ def test_resource_limited_selector_is_sealed_and_visible(tmp_path: Path, monkeyp
 
 def test_prompt_16_cli_import_is_inert(tmp_path: Path):
     before = list(tmp_path.iterdir())
-    cli = ROOT / "scripts/run_prompt_16_third_dataset.py"
-    spec = importlib.util.spec_from_file_location("prompt16_cli_import_test", cli)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    _load_prompt_16_cli()
     assert list(tmp_path.iterdir()) == before
+
+
+def test_prompt_16_cli_automatically_retries_a_new_authenticated_resource_seal():
+    cli = _load_prompt_16_cli()
+    resource_stop = SimpleNamespace(
+        status="aborted_resource_limit",
+        stop_code="ram_process_limit",
+        child_cleanup_confirmed=True,
+        queue_cleanup_confirmed=True,
+        survivor_processes=(),
+    )
+    completed = SimpleNamespace(
+        status="completed",
+        stop_code=None,
+        child_cleanup_confirmed=True,
+        queue_cleanup_confirmed=True,
+        survivor_processes=(),
+    )
+    results = iter((resource_stop, completed))
+    attempts: list[SimpleNamespace] = []
+    announcements: list[tuple[int, str, str]] = []
+
+    def supervise_attempt():
+        result = next(results)
+        attempts.append(result)
+        return result
+
+    def seal_resource_stop(_result):
+        return {
+            "kind": "evaluation",
+            "id": "cell_001",
+            "status": "complete",
+            "manifest_sha256": "a" * 64,
+        }
+
+    def announce_retry(retry_count, _result, sealed):
+        announcements.append((retry_count, sealed["kind"], sealed["id"]))
+
+    result, current_seal, sealed = cli._run_with_automatic_resource_retries(
+        supervise_attempt=supervise_attempt,
+        seal_resource_stop=seal_resource_stop,
+        announce_retry=announce_retry,
+    )
+
+    assert result is completed
+    assert current_seal is None
+    assert len(attempts) == 2
+    assert announcements == [(1, "evaluation", "cell_001")]
+    assert [item["id"] for item in sealed] == ["cell_001"]
+
+
+@pytest.mark.parametrize(
+    ("status", "stop_code", "child_cleanup", "queue_cleanup", "survivors"),
+    [
+        ("failed", "worker_crash", True, True, ()),
+        ("interrupted", "manual_interrupt", True, True, ()),
+        ("aborted_resource_limit", "ram_process_limit", False, True, ()),
+        ("aborted_resource_limit", "ram_process_limit", True, False, ()),
+        ("aborted_resource_limit", "ram_process_limit", True, True, (123,)),
+    ],
+)
+def test_prompt_16_cli_does_not_retry_unsafe_or_nonresource_stops(
+    status, stop_code, child_cleanup, queue_cleanup, survivors
+):
+    cli = _load_prompt_16_cli()
+    stopped = SimpleNamespace(
+        status=status,
+        stop_code=stop_code,
+        child_cleanup_confirmed=child_cleanup,
+        queue_cleanup_confirmed=queue_cleanup,
+        survivor_processes=survivors,
+    )
+    attempts = 0
+    seal_calls = 0
+
+    def supervise_attempt():
+        nonlocal attempts
+        attempts += 1
+        return stopped
+
+    def seal_resource_stop(_result):
+        nonlocal seal_calls
+        seal_calls += 1
+        return {
+            "kind": "evaluation",
+            "id": "cell_001",
+            "status": "complete",
+            "manifest_sha256": "a" * 64,
+        }
+
+    result, current_seal, sealed = cli._run_with_automatic_resource_retries(
+        supervise_attempt=supervise_attempt,
+        seal_resource_stop=seal_resource_stop,
+        announce_retry=lambda *_args: pytest.fail("unsafe retry announced"),
+    )
+
+    assert result is stopped
+    assert attempts == 1
+    assert seal_calls == (
+        1
+        if status == "aborted_resource_limit"
+        and child_cleanup
+        and queue_cleanup
+        and not survivors
+        else 0
+    )
+    assert current_seal is None
+    assert sealed == ()
+
+
+def test_prompt_16_cli_does_not_retry_without_a_new_complete_seal():
+    cli = _load_prompt_16_cli()
+    stopped = SimpleNamespace(
+        status="timed_out",
+        stop_code="wall_clock_limit",
+        child_cleanup_confirmed=True,
+        queue_cleanup_confirmed=True,
+        survivor_processes=(),
+    )
+    attempts = 0
+
+    def supervise_attempt():
+        nonlocal attempts
+        attempts += 1
+        return stopped
+
+    result, current_seal, sealed = cli._run_with_automatic_resource_retries(
+        supervise_attempt=supervise_attempt,
+        seal_resource_stop=lambda _result: None,
+        announce_retry=lambda *_args: pytest.fail("unsealed retry announced"),
+    )
+
+    assert result is stopped
+    assert attempts == 1
+    assert current_seal is None
+    assert sealed == ()
+
+
+def test_prompt_16_cli_stops_if_a_retry_reports_the_same_sealed_scope():
+    cli = _load_prompt_16_cli()
+    stopped = SimpleNamespace(
+        status="aborted_resource_limit",
+        stop_code="ram_process_limit",
+        child_cleanup_confirmed=True,
+        queue_cleanup_confirmed=True,
+        survivor_processes=(),
+    )
+    attempts = 0
+    announcements: list[int] = []
+
+    def supervise_attempt():
+        nonlocal attempts
+        attempts += 1
+        return stopped
+
+    result, current_seal, sealed = cli._run_with_automatic_resource_retries(
+        supervise_attempt=supervise_attempt,
+        seal_resource_stop=lambda _result: {
+            "kind": "evaluation",
+            "id": "cell_001",
+            "status": "complete",
+            "manifest_sha256": "a" * 64,
+        },
+        announce_retry=lambda retry_count, *_args: announcements.append(retry_count),
+    )
+
+    assert result is stopped
+    assert attempts == 2
+    assert current_seal is not None and current_seal["id"] == "cell_001"
+    assert announcements == [1]
+    assert [item["id"] for item in sealed] == ["cell_001"]
+
+
+def test_prompt_16_cli_honors_the_automatic_retry_bound():
+    cli = _load_prompt_16_cli()
+    stopped = SimpleNamespace(
+        status="timed_out",
+        stop_code="wall_clock_limit",
+        child_cleanup_confirmed=True,
+        queue_cleanup_confirmed=True,
+        survivor_processes=(),
+    )
+    attempts = 0
+    seals = 0
+
+    def supervise_attempt():
+        nonlocal attempts
+        attempts += 1
+        return stopped
+
+    def seal_resource_stop(_result):
+        nonlocal seals
+        seals += 1
+        return {
+            "kind": "selection_fit",
+            "id": f"fit_{seals:03d}",
+            "status": "complete",
+            "manifest_sha256": f"{seals:064x}",
+        }
+
+    result, current_seal, sealed = cli._run_with_automatic_resource_retries(
+        supervise_attempt=supervise_attempt,
+        seal_resource_stop=seal_resource_stop,
+        announce_retry=lambda *_args: None,
+        maximum_retries=2,
+    )
+
+    assert result is stopped
+    assert attempts == 3
+    assert current_seal is not None and current_seal["id"] == "fit_003"
+    assert [item["id"] for item in sealed] == ["fit_001", "fit_002"]
 
 
 def test_prompt_16_supervised_cli_mirrors_30_second_heartbeats_to_terminal():
