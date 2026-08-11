@@ -7,11 +7,12 @@ import json
 import math
 from pathlib import Path
 import sys
-from typing import Any, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
+MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES = 57
 for candidate in (PROJECT_ROOT, SRC_ROOT):
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
@@ -63,6 +64,55 @@ def _write_supervision(
     )
 
 
+def _run_with_automatic_resource_retries(
+    *,
+    supervise_attempt: Callable[[], Any],
+    seal_resource_stop: Callable[[Any], Mapping[str, Any] | None],
+    announce_retry: Callable[[int, Any, Mapping[str, Any]], None],
+    maximum_retries: int = MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES,
+) -> tuple[Any, Mapping[str, Any] | None, tuple[dict[str, Any], ...]]:
+    """Retry only newly sealed, fully cleaned-up phase resource stops."""
+
+    if maximum_retries < 0:
+        raise ValueError("maximum_retries must be non-negative")
+    retry_count = 0
+    seen_scopes: set[tuple[str, str]] = set()
+    sealed_infeasibilities: list[dict[str, Any]] = []
+    while True:
+        result = supervise_attempt()
+        infeasibility: Mapping[str, Any] | None = None
+        controlled_resource_stop = (
+            result.status in {"aborted_resource_limit", "timed_out"}
+            and result.stop_code in {"ram_process_limit", "wall_clock_limit"}
+        )
+        cleanup_authenticated = (
+            bool(getattr(result, "child_cleanup_confirmed", False))
+            and bool(getattr(result, "queue_cleanup_confirmed", False))
+            and not tuple(getattr(result, "survivor_processes", ()) or ())
+        )
+        if controlled_resource_stop and cleanup_authenticated:
+            infeasibility = seal_resource_stop(result)
+
+        seal_complete = (
+            isinstance(infeasibility, Mapping)
+            and infeasibility.get("status") == "complete"
+            and bool(infeasibility.get("kind"))
+            and bool(infeasibility.get("id"))
+            and bool(infeasibility.get("manifest_sha256"))
+        )
+        if not seal_complete or retry_count >= maximum_retries:
+            return result, infeasibility, tuple(sealed_infeasibilities)
+
+        scope = (str(infeasibility["kind"]), str(infeasibility["id"]))
+        if scope in seen_scopes:
+            return result, infeasibility, tuple(sealed_infeasibilities)
+        seen_scopes.add(scope)
+        retry_count += 1
+        sealed = dict(infeasibility)
+        sealed_infeasibilities.append(sealed)
+        announce_retry(retry_count, result, sealed)
+
+
 def _run_supervised(args: argparse.Namespace) -> int:
     from credit_risk_fs.experiments.atomic_io import write_csv_atomic, write_json_atomic
     from credit_risk_fs.experiments.prompt_16_third_dataset import (
@@ -75,12 +125,11 @@ def _run_supervised(args: argparse.Namespace) -> int:
         record_phase_resource_infeasibility,
         release_execution_lock,
     )
-    from credit_risk_fs.experiments.resource_monitor import (
-        RAM_PROCESS_LIMIT,
-        WALL_CLOCK_LIMIT,
-        supervise_worker,
+    from credit_risk_fs.experiments.resource_monitor import supervise_worker
+    from credit_risk_fs.experiments.research_logging import (
+        ResearchLogSession,
+        emit_research_event,
     )
-    from credit_risk_fs.experiments.research_logging import ResearchLogSession
     from credit_risk_fs.experiments.ram_control import load_ram_control_policy
     from credit_risk_fs.experiments.resource_policy import (
         GIB,
@@ -109,6 +158,7 @@ def _run_supervised(args: argparse.Namespace) -> int:
     temp_root.mkdir(parents=True, exist_ok=True)
     log_root.mkdir(parents=True, exist_ok=True)
 
+    phase: str | None = None
     if args.operation == "matrix":
         output_root = Path(paths["matrix_root"])
         target = "credit_risk_fs.experiments.prompt_16_third_dataset:run_matrix_worker"
@@ -235,37 +285,73 @@ def _run_supervised(args: argparse.Namespace) -> int:
             repository_root=PROJECT_ROOT,
             command_arguments=[str(value) for value in sys.argv],
         ) as session:
-            result = supervise_worker(
-                worker_target=target,
-                worker_kwargs=worker_kwargs,
-                policy=policy,
-                results_root=output_root.parent,
-                temp_root=temp_root,
-                run_association=f"prompt16:{name}",
-                heartbeat_interval_seconds=30.0,
-                max_wall_clock_seconds=max_seconds,
-                stage_wall_clock_limits_seconds=stage_wall_clock_limits,
-                enforce_process_tree_rss_limit=True,
-                ram_control_policy=ram_control,
-            )
-            infeasibility = None
-            if (
-                args.operation == "phase"
-                and phase in {"pilot", "dev"}
-                and result.stop_code in {RAM_PROCESS_LIMIT, WALL_CLOCK_LIMIT}
-            ):
+            def supervise_attempt() -> Any:
+                attempt_result = supervise_worker(
+                    worker_target=target,
+                    worker_kwargs=worker_kwargs,
+                    policy=policy,
+                    results_root=output_root.parent,
+                    temp_root=temp_root,
+                    run_association=f"prompt16:{name}",
+                    heartbeat_interval_seconds=30.0,
+                    max_wall_clock_seconds=max_seconds,
+                    stage_wall_clock_limits_seconds=stage_wall_clock_limits,
+                    enforce_process_tree_rss_limit=True,
+                    ram_control_policy=ram_control,
+                )
+                _write_supervision(
+                    result=attempt_result,
+                    log_root=log_root,
+                    name=name,
+                    write_json_atomic=write_json_atomic,
+                    write_csv_atomic=write_csv_atomic,
+                )
+                return attempt_result
+
+            def seal_resource_stop(result: Any) -> Mapping[str, Any] | None:
+                if args.operation != "phase" or phase not in {"pilot", "dev"}:
+                    return None
                 supervisor_evidence = result.to_dict()
                 supervisor_evidence.pop("samples", None)
-                infeasibility = record_phase_resource_infeasibility(
+                return record_phase_resource_infeasibility(
                     matrix_root=paths["matrix_root"],
                     output_root=output_root,
                     protocol_lock=paths["protocol_lock"],
-                    phase=phase,
+                    phase=str(phase),
                     fold_id=int(args.fold_id),
                     stopped_stage=result.final_stage,
                     stopped_scope=result.final_fold_id,
                     supervisor_evidence=supervisor_evidence,
                 )
+
+            def announce_retry(
+                retry_count: int,
+                result: Any,
+                sealed: Mapping[str, Any],
+            ) -> None:
+                emit_research_event(
+                    "plan_resume_decision",
+                    message=(
+                        f"{name} sealed resource-infeasible {sealed['kind']} "
+                        f"{sealed['id']}; retrying automatically "
+                        f"({retry_count}/{MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES})"
+                    ),
+                    priority=True,
+                    retry_count=retry_count,
+                    retry_limit=MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES,
+                    stop_code=result.stop_code,
+                    sealed_kind=sealed["kind"],
+                    sealed_id=sealed["id"],
+                    sealed_manifest_sha256=sealed["manifest_sha256"],
+                )
+
+            result, infeasibility, sealed_infeasibilities = (
+                _run_with_automatic_resource_retries(
+                    supervise_attempt=supervise_attempt,
+                    seal_resource_stop=seal_resource_stop,
+                    announce_retry=announce_retry,
+                )
+            )
             if result.status == "completed":
                 session.finish(
                     "session_completed",
@@ -288,13 +374,6 @@ def _run_supervised(args: argparse.Namespace) -> int:
                     message=f"{name} failed; inspect the authenticated debug log",
                     stop_code=result.stop_code,
                 )
-        _write_supervision(
-            result=result,
-            log_root=log_root,
-            name=name,
-            write_json_atomic=write_json_atomic,
-            write_csv_atomic=write_csv_atomic,
-        )
     finally:
         release_execution_lock(lock)
     print(
@@ -309,6 +388,15 @@ def _run_supervised(args: argparse.Namespace) -> int:
                 "log_root": str(log_root),
                 "terminal_log_path": str(terminal_log_path),
                 "sealed_resource_infeasibility": infeasibility,
+                "automatic_resource_retry_count": len(sealed_infeasibilities),
+                "automatically_sealed_resource_infeasibilities": [
+                    {
+                        "kind": item["kind"],
+                        "id": item["id"],
+                        "manifest_sha256": item["manifest_sha256"],
+                    }
+                    for item in sealed_infeasibilities
+                ],
             },
             indent=2,
         )
