@@ -1217,17 +1217,35 @@ def run_phase_worker(
         _check_stop(stop_event)
         _publish_stage(stage_queue, "selection_encoding", fold_id or "oot")
         encoding_started = time.perf_counter()
-        encoder = OriginalFeatureNumericEncoder()
-        numeric_train = encoder.fit_transform(train.loc[:, predictors])
         selection_target = pd.Series(
             train["target"].to_numpy(dtype=np.int64, copy=True),
             index=train.index.copy(deep=True),
             name="target",
         )
+        # Selection uses training rows only. The validation frame is reloaded
+        # after all selector fits, so retaining it while materializing the
+        # Fold-5 float32 selector matrix only adds an avoidable multi-GiB peak.
+        del validation
+        for name in NON_PREDICTORS:
+            if name in train:
+                del train[name]
+        if list(train.columns) != predictors:
+            raise Prompt16ExecutionError(
+                "selector source projection changed candidate order"
+            )
+        gc.collect()
+        encoder = OriginalFeatureNumericEncoder()
+        encoder.fit(train)
+        numeric_train = encoder.transform_releasing_source(train)
+        if train.shape[1] != 0:
+            raise Prompt16ExecutionError(
+                "memory-bounded selector encoding did not release source columns"
+            )
         if list(numeric_train.columns) != predictors:
             raise Prompt16ExecutionError("selector encoding changed candidate order")
         encoding_record = {
             "implementation": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
+            "memory_strategy": "destructive_source_column_release_v1",
             "fit_scope": fit_scope,
             "training_rows": len(selection_target),
             "candidate_count": len(predictors),
@@ -1246,7 +1264,7 @@ def run_phase_worker(
         # train frame and the unused validation frame alive during opaque selector
         # fits caused the demonstrated 21.9 GiB Lasso peak and made suspension at
         # the old system-RAM floor unable to recover.
-        del encoder, train, validation
+        del encoder, train
         gc.collect()
 
     for fit in fits:

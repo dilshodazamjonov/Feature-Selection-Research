@@ -164,6 +164,21 @@ def test_selector_fit_releases_wide_phase_frames_before_opaque_work(
     monkeypatch.setattr(prompt16, "_load_phase_frames", fake_load_phase_frames)
     monkeypatch.setattr(prompt16, "selection_fit_registry", lambda _matrix: [fit])
 
+    original_encoder = prompt16.OriginalFeatureNumericEncoder
+
+    class ObservedReleaseEncoder(original_encoder):
+        def fit(self, X):
+            assert frame_refs["validation"]() is None
+            assert list(X.columns) == ["x"]
+            return super().fit(X)
+
+        def transform_releasing_source(self, X):
+            result = super().transform_releasing_source(X)
+            assert X.empty
+            return result
+
+    monkeypatch.setattr(prompt16, "OriginalFeatureNumericEncoder", ObservedReleaseEncoder)
+
     def observe_released_frames(**kwargs):
         assert frame_refs["train"]() is None
         assert frame_refs["validation"]() is None
