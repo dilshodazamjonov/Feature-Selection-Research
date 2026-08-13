@@ -98,6 +98,29 @@ def test_contiguous_encoder_is_value_and_dtype_identical_to_prior_expression():
     assert observed.to_numpy(copy=False).flags.c_contiguous
 
 
+def test_destructive_encoder_is_exact_and_releases_every_source_column():
+    original = pd.DataFrame(
+        {
+            "numeric": pd.array([1.0, np.nan, np.inf, -2.0], dtype="float64"),
+            "nullable_integer": pd.array([1, None, 3, 4], dtype="Int64"),
+            "boolean_as_loaded": pd.array([1.0, 0.0, None, 1.0], dtype="Float32"),
+            "category": pd.array(["b", None, "A", "b"], dtype="string"),
+        },
+        index=pd.Index([10, 20, 30, 40], name="row"),
+    )
+    encoder = OriginalFeatureNumericEncoder().fit(original)
+    expected = encoder.transform(original)
+    source = original.copy(deep=True)
+
+    observed = encoder.transform_releasing_source(source)
+
+    pd.testing.assert_frame_equal(observed, expected, check_exact=True)
+    assert source.empty
+    assert list(source.columns) == []
+    assert observed.to_numpy(copy=False).flags.c_contiguous
+    assert set(observed.dtypes.astype(str)) == {"float32"}
+
+
 class _MRMR:
     def fit(self, X, y):
         self.selected_features_ = list(X.columns[:300])

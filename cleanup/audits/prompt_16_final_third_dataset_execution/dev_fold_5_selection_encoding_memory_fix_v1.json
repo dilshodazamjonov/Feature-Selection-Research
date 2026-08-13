@@ -1,0 +1,119 @@
+{
+  "schema_version": "prompt_16_dev_fold_5_selection_encoding_memory_fix_v1",
+  "status": "authorized_after_commit_containing_this_record",
+  "created_at_utc": "2026-08-13T05:59:25.3182134Z",
+  "classification": "implementation_memory_lifecycle_fix_without_scientific_change",
+  "source_commit": "b43504982c0a6abc91c6caf865d766ef73ca8112",
+  "trigger": {
+    "phase": "dev",
+    "fold_id": 5,
+    "repeated_attempt_count": 2,
+    "final_stage": "selection_encoding",
+    "status": "aborted_resource_limit",
+    "stop_code": "ram_process_limit",
+    "peak_process_tree_rss_bytes": 26144256000,
+    "peak_process_tree_rss_gib": 24.348735809326172,
+    "minimum_system_available_ram_bytes": 8823853056,
+    "minimum_system_available_ram_gib": 8.217853546142578,
+    "supervisor_summary_path": "outputs/prompt_16_homecredit_model_stability_2024/logs/dev_fold_5_supervisor_summary.json",
+    "supervisor_summary_sha256": "f7f941155b253afd167b3be0398889927bef9dd5c2a84de31dd741686c4ec0b2",
+    "terminal_log_path": "outputs/prompt_16_homecredit_model_stability_2024/logs/dev_fold_5.log",
+    "terminal_log_sha256_at_diagnosis": "f7ee61d7ef849e308c111358e16f78b1d898fef5d8de8129327a4a84a283df7f",
+    "child_cleanup_confirmed": true,
+    "queue_cleanup_confirmed": true,
+    "survivor_processes": [],
+    "system_ram_shortage_was_root_cause": false
+  },
+  "independent_diagnosis": {
+    "fold_5_training_rows": 1012061,
+    "candidate_predictors": 1959,
+    "selector_output_dtype": "float32",
+    "selector_output_bytes": 7930509996,
+    "selector_output_gib": 7.385862987488508,
+    "prior_lifecycle": "the complete train and validation source frames remained resident while the complete float32 selector output buffer was populated",
+    "failure_mechanism": "transient overlap of source phase frames and the 7.39 GiB selector output crossed the unchanged 24 GiB process-tree cap",
+    "why_waiting_cannot_fix_it": "the allocation pressure belongs to the supervised Fold-5 worker itself; pausing that worker does not release its source frames or partially populated output buffer"
+  },
+  "implementation": {
+    "encoder_path": "src/credit_risk_fs/preprocessing/encoding.py",
+    "encoder_sha256": "8ee72972a27075a6dc2e804b5bf7e5a8f8b90daf8720a5ccd4456b6a3a2e9a8c",
+    "phase_worker_path": "src/credit_risk_fs/experiments/prompt_16_third_dataset.py",
+    "phase_worker_sha256": "0491df330ccd1495823be4bd657aeb97b6cdea0fa3ae22693f90e4d3c8a5f048",
+    "memory_strategy": "destructive_source_column_release_v1",
+    "behavior": [
+      "copy the unchanged int64 training target before releasing source columns",
+      "release the validation frame before selector encoding because it is not consumed by selector fits and is authenticated/reloaded before evaluation",
+      "remove non-predictor training columns before selector encoding",
+      "fit the identical training-only encoder on the identical predictor frame",
+      "populate one C-contiguous float32 output buffer in canonical predictor order",
+      "remove each source predictor immediately after applying the unchanged conversion, imputation, or category mapping expression",
+      "record the memory strategy in selector_encoding.json",
+      "retain existing sealed-selector and evaluation checkpoint identities"
+    ]
+  },
+  "regression_evidence": {
+    "encoder_test_path": "tests/test_lendingclub_memory_refinement.py",
+    "encoder_test_sha256": "041c528ac5d18b7ffb7b4b0cf0fc05feb2165a111c81687104fe4c205d194464",
+    "phase_test_path": "tests/test_prompt_16_third_dataset_execution.py",
+    "phase_test_sha256": "0c193e42c1c2905580655506d529af646e42b299ab43956ed411aff529f74a51",
+    "assertions": [
+      "standard and destructive transforms are exactly equal in values, index, column order, and float32 dtype",
+      "the destructive transform empties the source predictor frame",
+      "the output remains one C-contiguous float32 owner",
+      "the validation and original training frames are released before opaque selector fitting"
+    ],
+    "suite_command": ".venv\\Scripts\\python.exe -m pytest -q tests\\test_lendingclub_memory_refinement.py tests\\test_cross_dataset_voting_integration.py tests\\test_prompt_16_third_dataset_execution.py tests\\test_prompt_16_pilot_gate.py tests\\test_resource_monitor.py tests\\test_ram_wait_resume.py tests\\test_research_logging.py",
+    "suite_result": "96 passed in 44.19s",
+    "compileall": "passed",
+    "git_diff_check": "passed",
+    "black_available": false,
+    "ruff_available": false
+  },
+  "authenticated_prerequisites": {
+    "resource_pilot_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "dev_execution_authorization_sha256": "2fa0309a29eb57c45110ebf4c34918eaebacc538cded421c78bb710d4f3177c7",
+    "completed_dev_folds": [
+      {
+        "fold_id": 1,
+        "phase_manifest_sha256": "bd8c517ab275aae3510ee694de25ede52afc530c347a79cbc4a12916657ab31b",
+        "success_sha256": "9d42246b974bd205809d14ac5d5bdcf61c18971c6eb29c47865926872a6340ac",
+        "accounting_sha256": "21fbb1d614782f3125ae3ad1ab3a7e03d5ba775d3b87fb3ae2addb4632942c9a"
+      },
+      {
+        "fold_id": 2,
+        "phase_manifest_sha256": "6f060849c211b044c1daacd4662a112c23cd2c25ec3f6fb6ac80732f8a8320d8",
+        "success_sha256": "d4590b3b16b94661152bd4302985268fef3b82cd037c54fffb851f4a1b48e7e0",
+        "accounting_sha256": "affe8a5475c1a4bd592891f0b14d0d22228fe9e7c1bee55dbe87f8a924806b2d"
+      },
+      {
+        "fold_id": 3,
+        "phase_manifest_sha256": "d2013c5a989b36a1bb426a7c19116d051db619e5db0cc1d2fffc52bc529847d9",
+        "success_sha256": "93ae0f67e4a07d992c608a7caeeec7d309e763a552324a4337c0a56b0ce2dfc2",
+        "accounting_sha256": "d04d0f130b3b9ef12cd6b3b6d6e0eb8d79db3b42219f7da15bd7803b409c6c80"
+      },
+      {
+        "fold_id": 4,
+        "phase_manifest_sha256": "db1384f79c820b857d86d27fcc1c1278809624ee7e4d3620219bb01ea89420dd",
+        "success_sha256": "93fae2b80b0a740ab77c3f92f66980b84ceef41af95a0a29cbfd76b5ef6d3a96",
+        "accounting_sha256": "7d839e55a9cf3f429ce66e36f9203639384b2373e31b48c0c5c544f62d702796"
+      }
+    ]
+  },
+  "frozen_contract": {
+    "protocol_changed": false,
+    "matrix_or_fold_membership_changed": false,
+    "models_selectors_or_feature_budgets_changed": false,
+    "hyperparameters_seeds_or_metrics_changed": false,
+    "encoded_values_dtypes_or_order_changed": false,
+    "resource_limits_or_parallelism_changed": false,
+    "oot_opened": false
+  },
+  "restart_boundary": {
+    "fold_5_success_exists": false,
+    "fold_5_completed_selector_fits": 0,
+    "fold_5_completed_evaluations": 0,
+    "active_prompt_16_process": false,
+    "fold_5_execution_lock_exists": false,
+    "action_after_commit": "rerun the unchanged DEV Fold-5 command; automatic retries remain enabled for sealable selector/evaluation resource stops"
+  }
+}

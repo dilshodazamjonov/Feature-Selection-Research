@@ -53,7 +53,18 @@ class OriginalFeatureNumericEncoder:
             }
         return self
 
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def _encode_column(self, name: str, source: pd.Series) -> pd.Series:
+        if name in self.numeric_columns_:
+            return (
+                pd.to_numeric(source, errors="coerce")
+                .replace([np.inf, -np.inf], np.nan)
+                .fillna(self.fill_values_[name])
+                .astype("float32")
+            )
+        values = source.astype("string").fillna(self.missing_token).astype(str)
+        return values.map(self.category_maps_[name]).fillna(-1).astype("float32")
+
+    def _validate_transform_input(self, X: pd.DataFrame) -> list[str]:
         if self.feature_names_ is None:
             raise ValueError("OriginalFeatureNumericEncoder has not been fitted")
         observed = [str(column) for column in X.columns]
@@ -62,29 +73,48 @@ class OriginalFeatureNumericEncoder:
                 "selection encoding column order mismatch: "
                 f"expected={self.feature_names_}, observed={observed}"
             )
+        return list(self.feature_names_)
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        feature_names = self._validate_transform_input(X)
         # A single C-contiguous float32 owner preserves the existing effective
         # dtype while avoiding a simultaneously-live dictionary of 675 encoded
         # Series plus the consolidated DataFrame block.  Each column is still
         # produced by the exact same pandas conversion/mapping expression.
-        output = np.empty((len(X), len(self.feature_names_)), dtype=np.float32)
-        for position, name in enumerate(self.feature_names_):
-            if name in self.numeric_columns_:
-                encoded = (
-                    pd.to_numeric(X[name], errors="coerce")
-                    .replace([np.inf, -np.inf], np.nan)
-                    .fillna(self.fill_values_[name])
-                    .astype("float32")
-                )
-            else:
-                values = X[name].astype("string").fillna(self.missing_token).astype(str)
-                encoded = (
-                    values.map(self.category_maps_[name]).fillna(-1).astype("float32")
-                )
+        output = np.empty((len(X), len(feature_names)), dtype=np.float32)
+        for position, name in enumerate(feature_names):
+            encoded = self._encode_column(name, X[name])
             output[:, position] = encoded.to_numpy(dtype=np.float32, copy=False)
         return pd.DataFrame(
             output,
             index=X.index,
-            columns=self.feature_names_,
+            columns=feature_names,
+            copy=False,
+        )
+
+    def transform_releasing_source(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Transform while destructively releasing each consumed source column.
+
+        This opt-in path is for memory-bounded training-only workflows that no
+        longer need ``X``. Values and order are identical to :meth:`transform`,
+        but a source column is removed before its encoded values are copied into
+        the single output buffer. Wide float64/object source blocks therefore do
+        not remain resident while the complete float32 matrix is populated.
+        """
+
+        feature_names = self._validate_transform_input(X)
+        output_index = X.index.copy(deep=True)
+        output = np.empty((len(X), len(feature_names)), dtype=np.float32)
+        for position, name in enumerate(feature_names):
+            source = X.pop(name)
+            encoded = self._encode_column(name, source)
+            del source
+            output[:, position] = encoded.to_numpy(dtype=np.float32, copy=False)
+            del encoded
+        return pd.DataFrame(
+            output,
+            index=output_index,
+            columns=feature_names,
             copy=False,
         )
 
