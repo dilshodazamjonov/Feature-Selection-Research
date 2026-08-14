@@ -16,22 +16,23 @@
   },
   "amendment": {
     "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
-    "file_sha256": "e9690bfd6f47dbb197686dce1ae8bce4c7216cfd229880ad35639f3f826fbb09",
-    "internal_sha256": "321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"
+    "file_sha256": "1e2e79d6e7fb5b03691f00c78cf2e4a52a55dfbbdf45f62f5f6eb7b7e5180392",
+    "internal_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
   },
   "v1_protocol_path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
   "blocker_path": "cleanup/audits/prompt_16_llm_scope_correction/method_identity_blocker.json",
   "execution_plan_path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
   "execution_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
   "implementation_files": [
-    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"bfdede31e0204cf78f29580a7d4dc9a7893008c24aa8b4514ac33c602e5dbd01"},
+    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"de34c35ccb991bb24fbc0f3ea4c9a47afcb2d8f9e777a4c3b5b36842ed8abde0"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/parameter_parity_audit_v2.json","sha256":"0ff437f07b7cc53e154198d12f0f7de42970915b5064c2cad252bfa54dde48b2"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/implementation_validation_v2.json","sha256":"b72e83bca9cf89032ab71480dc560464db48580d23b4a812172b7f5546ab171c"},
+    {"path":"cleanup/audits/prompt_16_llm_scope_correction/structured_output_runtime_fix_v3.json","sha256":"bddcec572512aeb95d7075f28b03960cbd417a3388b43c10daa850acc14374de"},
     {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"6093674e21a8d8338ac8d5468169fb3686cad34e3834e5b4e12f1a69adb79009"},
-    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"fb2ac8df5e785ef9c6ce2454cb781c4297a08258141166cf53afbc4475e2c130"},
-    {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"870e2724e0b3b87bc55cceb05cf893dbed90fa1a31751df51ba449cb87a67816"},
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"b4faee875d4261991719b071348cccd779d5a2437a956154246d9d8169298e62"},
+    {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"3b6b882eb14b5faccde1ec6a6b1b93c2ab18eabae4e0f6372191e431af867123"},
     {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"7aa074177a7818c4323a5070b2ad568ab0f644184e0c58ed0e57e37ed7df30b9"},
-    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"2b9e74441e1a5ab25f2aab03a062fee1906a014b48373faddc58d2e32edcad7d"}
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"8d90179cd35478370c17d3fdb49f312b674399aaf59fc05f507601a277bf3f5a"}
   ],
   "supplemental_cells": [
     {"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","model":"lr","requested_feature_budget":20,"ranking_budget":100,"seed":42},
@@ -84,9 +85,14 @@
     "temperature":0.0,
     "seed":null,
     "ranking_budget":100,
+    "prompt_version":"stability_expert_v4",
     "ordered_rendered_descriptions_sha256":"4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
-    "rendered_prompt_sha256":"caebd18c3cbbfe89f7107ddeebc2df48ea77a07257b20a2ba8f102997a5515f4",
-    "response_parser":"strict JSON, exact 100 distinct known names",
+    "rendered_prompt_sha256":"0d383066c6f728ee2c419eb0c835317d658f01892c5bd33a7dc58cc49054a3a3",
+    "response_format_type":"json_schema",
+    "response_format_strict":true,
+    "selected_features_min_items":100,
+    "selected_features_max_items":100,
+    "response_parser":"strict JSON schema, then exact 100 distinct known names",
     "application_attempts_maximum":3,
     "fallback_allowed":false,
     "credentials":"OPENAI_API_KEY environment variable only; never serialized"
@@ -127,5 +133,5 @@
     "oot_workloads":0,
     "prompt_14_numeric_findings_opened":false
   },
-  "artifact_authentication_sha256": "23b5799d6f049e9c70c42d373e88ed216d90eb93de28872850da0960598ab6e8"
+  "artifact_authentication_sha256": "cef98841ddac66f73e11b8c8956391538586e09876f18b0c872138646878d821"
 }

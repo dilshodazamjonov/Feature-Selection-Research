@@ -403,7 +403,7 @@ def build_description_and_prompt_freeze(
         ranking_budget=FROZEN_LLM_RANKING_BUDGET,
         feature_budget=FROZEN_LLM_RANKING_BUDGET,
         shared_pool_size=FROZEN_LLM_RANKING_BUDGET,
-        prompt_version="stability_expert_v3",
+        prompt_version="stability_expert_v4",
         iv_filter_kwargs={},
     )
     prompt = selector.build_target_free_prompt(records, expected_features=predictors)
@@ -422,7 +422,7 @@ def build_description_and_prompt_freeze(
         "ordered_rendered_descriptions_sha256": canonical_sha256(
             [row["rendered_description"] for row in records]
         ),
-        "prompt_version": "stability_expert_v3",
+        "prompt_version": "stability_expert_v4",
         "prompt_chunk_count": 1,
         "prompt_chunk_order": [1],
         "prompt_merge_algorithm": "identity_single_chunk_no_cross_chunk_merge",
@@ -442,10 +442,10 @@ def build_description_and_prompt_freeze(
         "temperature": FROZEN_LLM_TEMPERATURE,
         "seed": None,
         "seed_rule": "not_sent_by_authenticated_historical_chat_completions_call",
-        "response_format": {"type": "json_object"},
+        "response_format": selector.target_free_response_format(),
         "application_parse_or_contract_attempts_maximum": 3,
         "sdk_transport_retry_rule": "OpenAI_Python_SDK_default_transport_retries",
-        "parser": "json.loads_then_exact_100_distinct_known_names",
+        "parser": "strict_json_schema_then_exact_100_distinct_known_names",
         "fallback": "forbidden",
         "cache_reuse": "only_complete_recursively_hashed_identity_exact_success",
         "candidate_coverage": {
@@ -922,7 +922,7 @@ def ensure_target_free_ranking(
             ranking_budget=FROZEN_LLM_RANKING_BUDGET,
             feature_budget=FROZEN_LLM_RANKING_BUDGET,
             shared_pool_size=FROZEN_LLM_RANKING_BUDGET,
-            prompt_version="stability_expert_v3",
+            prompt_version="stability_expert_v4",
             iv_filter_kwargs={},
         )
     )
