@@ -128,6 +128,47 @@ def _strict_selector(selected_per_attempt: list[list[str]]) -> tuple[LLMSelector
     return selector, completions
 
 
+def test_active_prompt16_workers_ignores_current_windows_launcher_lineage(
+    monkeypatch,
+):
+    import psutil
+
+    class FakeProcess:
+        def __init__(self, pid, name, cmdline, parent=None):
+            self.pid = pid
+            self.info = {"pid": pid, "name": name, "cmdline": cmdline}
+            self._parent = parent
+
+        def parent(self):
+            return self._parent
+
+    command = [
+        r"D:\python projects\Research\.venv\Scripts\python.exe",
+        r"D:\python projects\Research\scripts\run_prompt_16_third_dataset.py",
+        "supplemental-dev",
+    ]
+    launcher = FakeProcess(100, "python.exe", command)
+    current = FakeProcess(200, "python.exe", command, parent=launcher)
+    separate = FakeProcess(300, "python.exe", command)
+    processes = {100: launcher, 200: current, 300: separate}
+
+    monkeypatch.setattr(supplement.os, "getpid", lambda: 200)
+    monkeypatch.setattr(psutil, "Process", lambda pid: processes[pid])
+    monkeypatch.setattr(
+        psutil,
+        "process_iter",
+        lambda _attributes: [launcher, current, separate],
+    )
+
+    assert supplement.active_prompt16_workers() == [
+        {
+            "pid": 300,
+            "name": "python.exe",
+            "command_line": " ".join(command),
+        }
+    ]
+
+
 def test_v2_amendment_authenticates_exact_methods_registries_and_accounting():
     amendment, file_sha, internal_sha = supplement.load_supplemental_amendment(
         AMENDMENT

@@ -543,6 +543,22 @@ def active_prompt16_workers() -> list[dict[str, Any]]:
     import psutil
 
     current_pid = os.getpid()
+    current_lineage_pids = {current_pid}
+    try:
+        current_process = psutil.Process(current_pid)
+        while True:
+            parent = current_process.parent()
+            if parent is None:
+                break
+            parent_pid = int(parent.pid)
+            if parent_pid in current_lineage_pids:
+                break
+            current_lineage_pids.add(parent_pid)
+            current_process = parent
+    except (psutil.Error, TypeError, ValueError):
+        # The current PID remains excluded even if an ancestor exits while the
+        # process table is being inspected.
+        pass
     workers: list[dict[str, Any]] = []
     for process in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
@@ -551,7 +567,7 @@ def active_prompt16_workers() -> list[dict[str, Any]]:
             command = " ".join(process.info.get("cmdline") or [])
         except (psutil.Error, TypeError, ValueError):
             continue
-        if pid == current_pid or not name.startswith("python"):
+        if pid in current_lineage_pids or not name.startswith("python"):
             continue
         normalized = command.lower().replace("\\", "/")
         if (

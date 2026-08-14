@@ -28,10 +28,10 @@
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/parameter_parity_audit_v2.json","sha256":"0ff437f07b7cc53e154198d12f0f7de42970915b5064c2cad252bfa54dde48b2"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/implementation_validation_v2.json","sha256":"b72e83bca9cf89032ab71480dc560464db48580d23b4a812172b7f5546ab171c"},
     {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"6093674e21a8d8338ac8d5468169fb3686cad34e3834e5b4e12f1a69adb79009"},
-    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"65420295d0ba70418a0f2fef027290c33012e1a08a7d27acd8b286515613f2c6"},
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"fb2ac8df5e785ef9c6ce2454cb781c4297a08258141166cf53afbc4475e2c130"},
     {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"870e2724e0b3b87bc55cceb05cf893dbed90fa1a31751df51ba449cb87a67816"},
     {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"7aa074177a7818c4323a5070b2ad568ab0f644184e0c58ed0e57e37ed7df30b9"},
-    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"2b09d25042f16b6f52d5e07314838f533df6bbb80d3f278be138edf80589a179"}
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"2b9e74441e1a5ab25f2aab03a062fee1906a014b48373faddc58d2e32edcad7d"}
   ],
   "supplemental_cells": [
     {"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","model":"lr","requested_feature_budget":20,"ranking_budget":100,"seed":42},
@@ -127,5 +127,5 @@
     "oot_workloads":0,
     "prompt_14_numeric_findings_opened":false
   },
-  "artifact_authentication_sha256": "c2d1b717d3782162d5a5f5672b076f3807dccf1c211294de2ce2feece3bae414"
+  "artifact_authentication_sha256": "23b5799d6f049e9c70c42d373e88ed216d90eb93de28872850da0960598ab6e8"
 }
