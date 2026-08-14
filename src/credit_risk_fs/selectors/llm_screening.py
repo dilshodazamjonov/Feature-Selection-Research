@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Mapping, Sequence
 
 import dotenv
 import pandas as pd
@@ -205,6 +205,336 @@ Return ONLY valid JSON:
 
 Keep the response compact. Do not include per-feature explanations unless absolutely necessary.
 """.strip()
+
+    TARGET_FREE_SYSTEM_MESSAGE = (
+        "You are a senior retail credit-risk feature-screening expert "
+        "specializing in interpretable, stable variable selection."
+    )
+    TARGET_FREE_RETRY_SUFFIX = (
+        "CRITICAL RETRY INSTRUCTION: the previous response failed the frozen JSON "
+        "or candidate-coverage contract. Return compact valid JSON only, with exactly "
+        "the requested number of distinct selected_features copied verbatim from the "
+        "candidate list. Do not invent, omit, normalize, or duplicate feature names."
+    )
+    TARGET_FREE_METADATA_FIELDS = frozenset(
+        {
+            "name",
+            "source_family",
+            "source_table",
+            "original_feature",
+            "depth",
+            "aggregation",
+            "dtype",
+            "logical_type",
+            "approved_definition",
+            "rendered_description",
+            "description_sha256",
+        }
+    )
+
+    def _validate_target_free_metadata(
+        self,
+        metadata: Sequence[Mapping[str, Any]],
+        expected_features: Sequence[str],
+    ) -> list[dict[str, Any]]:
+        """Validate the outcome-independent Prompt-16 description boundary.
+
+        This is intentionally separate from ``fit``.  It never receives a feature
+        matrix or target and therefore cannot place fold statistics in the prompt.
+        """
+
+        expected = [str(value) for value in expected_features]
+        if len(expected) != len(set(expected)):
+            raise ValueError("target-free candidate universe contains duplicate names")
+        records: list[dict[str, Any]] = []
+        for index, raw in enumerate(metadata):
+            record = dict(raw)
+            unknown = set(record) - self.TARGET_FREE_METADATA_FIELDS
+            if unknown:
+                raise ValueError(
+                    "target-free metadata contains non-authorized fields: "
+                    f"{sorted(unknown)}"
+                )
+            missing = self.TARGET_FREE_METADATA_FIELDS - set(record)
+            if missing:
+                raise ValueError(
+                    "target-free metadata is missing required fields: "
+                    f"{sorted(missing)}"
+                )
+            name = str(record["name"])
+            if index >= len(expected) or name != expected[index]:
+                raise ValueError("target-free metadata order differs from candidate universe")
+            rendered = str(record["rendered_description"])
+            observed_hash = hashlib.sha256(rendered.encode("utf-8")).hexdigest()
+            if observed_hash != str(record["description_sha256"]):
+                raise ValueError(f"rendered feature-description hash mismatch: {name}")
+            records.append(record)
+        if len(records) != len(expected):
+            raise ValueError(
+                "target-free metadata does not cover the complete candidate universe"
+            )
+        return records
+
+    def build_target_free_prompt(
+        self,
+        metadata: Sequence[Mapping[str, Any]],
+        *,
+        expected_features: Sequence[str],
+    ) -> str:
+        """Render the stability_expert_v3 ranking prompt without data statistics."""
+
+        records = self._validate_target_free_metadata(metadata, expected_features)
+        features_text = "\n".join(
+            str(record["rendered_description"]) for record in records
+        )
+        return f"""
+You are a senior retail credit-risk feature-screening expert.
+
+Context:
+- You are reviewing outcome-independent feature definitions and adapter lineage only, the way a strong credit-risk expert would review a variable pack before modeling.
+- Your job is to create a broad, stability-aware candidate ranking for downstream model development.
+- A downstream statistical selector may perform fold-local supervised stability fitting and final redundancy pruning.
+
+Task:
+Produce a broad, stability-aware candidate ranking of exactly {self.ranking_budget} features for a binary loan-default model.
+Do not try to make the final statistical selection yourself. Downstream consumers will apply the frozen model-specific budgets.
+
+Priority criteria:
+1. Stable out-of-time generalization.
+2. Interpretable credit-risk meaning grounded only in the supplied definitions and lineage.
+3. Durable repayment behavior, indebtedness, leverage, exposure, utilization, capacity, delinquency, and customer-history signals.
+4. Avoid leakage-like artifacts, policy/process contamination, and brittle operational proxies identifiable from definitions alone.
+5. Control redundancy among near-duplicate aggregates, especially within the same source family, unless variants clearly add distinct information.
+6. Prefer representatives that a credit-risk expert could defend in a stable scorecard review.
+
+Rules:
+1. Use only the feature names provided below and copy every selected name verbatim.
+2. You are seeing no rows, targets, split statistics, validation information, OOT information, performance, drift, missingness rates, IV, correlation, mutual information, SHAP, or model importance.
+3. Prefer broad semantic coverage rather than over-concentrating on one narrow family.
+4. Return exactly {self.ranking_budget} distinct features in priority order, best first.
+5. Do not invent, normalize, deduplicate, replace, or silently omit feature names.
+
+Features:
+{features_text}
+
+Return ONLY valid JSON:
+{{
+  "selected_features": ["feature_1", "feature_2"],
+  "reasoning_summary": "One concise high-level reason.",
+  "selection_principles": ["stability", "coverage", "redundancy control"],
+  "feature_reasons": {{}}
+}}
+
+Keep the response compact. Do not include per-feature explanations unless absolutely necessary.
+""".strip()
+
+    def _normalize_target_free_response(
+        self,
+        data: Any,
+        *,
+        candidate_features: Sequence[str],
+        response: Any,
+        content: str,
+        expected_response_model: str,
+    ) -> dict[str, Any]:
+        if not isinstance(data, dict):
+            raise ValueError("LLM response must be a JSON object")
+        raw_selected = data.get("selected_features")
+        if not isinstance(raw_selected, list):
+            raise ValueError("LLM response did not return selected_features as a list")
+        if len(raw_selected) != self.ranking_budget:
+            raise ValueError(
+                "LLM response selected_features count mismatch: "
+                f"{len(raw_selected)} != {self.ranking_budget}"
+            )
+        if any(not isinstance(value, str) for value in raw_selected):
+            raise ValueError("LLM response contains a non-string feature name")
+        selected = list(raw_selected)
+        if len(selected) != len(set(selected)):
+            raise ValueError("LLM response contains duplicate feature names")
+        candidates = set(map(str, candidate_features))
+        unknown = [value for value in selected if value not in candidates]
+        if unknown:
+            raise ValueError(f"LLM response contains unknown feature names: {unknown[:10]}")
+        response_model = str(getattr(response, "model", ""))
+        if response_model != expected_response_model:
+            raise ValueError(
+                "LLM response model identity mismatch: "
+                f"{response_model!r} != {expected_response_model!r}"
+            )
+        raw_principles = data.get("selection_principles", [])
+        principles = (
+            [str(value).strip() for value in raw_principles if str(value).strip()]
+            if isinstance(raw_principles, list)
+            else []
+        )
+        usage = getattr(response, "usage", None)
+        return {
+            "selected_features": selected,
+            "reasoning_summary": str(data.get("reasoning_summary", "")),
+            "selection_principles": principles,
+            "feature_reasons": (
+                data.get("feature_reasons", {})
+                if isinstance(data.get("feature_reasons", {}), dict)
+                else {}
+            ),
+            "provider": "openai",
+            "request_model": self.model,
+            "response_model": response_model,
+            "response_id": getattr(response, "id", None),
+            "temperature": self.temperature,
+            "seed": None,
+            "prompt_tokens": (
+                getattr(usage, "prompt_tokens", None) if usage is not None else None
+            ),
+            "completion_tokens": (
+                getattr(usage, "completion_tokens", None) if usage is not None else None
+            ),
+            "total_tokens": (
+                getattr(usage, "total_tokens", None) if usage is not None else None
+            ),
+            "raw_response": content,
+            "fallback_used": False,
+            "candidate_coverage": {
+                "input_candidates": len(candidates),
+                "ranked_features": len(selected),
+                "unknown_features": 0,
+                "duplicate_features": 0,
+                "missing_required_rank_positions": 0,
+            },
+        }
+
+    def rank_target_free(
+        self,
+        metadata: Sequence[Mapping[str, Any]],
+        *,
+        expected_features: Sequence[str],
+        expected_response_model: str,
+        attempt_recorder: Callable[[Mapping[str, Any]], None] | None = None,
+        maximum_attempts: int = 3,
+    ) -> dict[str, Any]:
+        """Request one strict, outcome-independent ranking with no fallback.
+
+        The OpenAI SDK retains its historical transport retry behavior.  These
+        application attempts are only for malformed JSON or a failed strict
+        candidate-coverage/model-identity check.
+        """
+
+        if maximum_attempts != 3:
+            raise ValueError("the frozen target-free ranking contract requires 3 attempts")
+        prompt = self.build_target_free_prompt(
+            metadata, expected_features=expected_features
+        )
+        client = self._get_client()
+        validation_errors: list[str] = []
+        for attempt in range(1, maximum_attempts + 1):
+            user_prompt = (
+                prompt
+                if attempt == 1
+                else f"{prompt}\n\n{self.TARGET_FREE_RETRY_SUFFIX}"
+            )
+            request = {
+                "provider": "openai",
+                "endpoint": "chat.completions.create",
+                "model": self.model,
+                "temperature": self.temperature,
+                "seed": None,
+                "messages": [
+                    {"role": "system", "content": self.TARGET_FREE_SYSTEM_MESSAGE},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "response_format": {"type": "json_object"},
+            }
+            try:
+                response = client.chat.completions.create(
+                    model=self.model,
+                    temperature=self.temperature,
+                    messages=request["messages"],
+                    response_format=request["response_format"],
+                )
+            except Exception as exc:
+                if attempt_recorder is not None:
+                    attempt_recorder(
+                        {
+                            "attempt": attempt,
+                            "request": request,
+                            "request_sha256": hashlib.sha256(
+                                json.dumps(
+                                    request,
+                                    sort_keys=True,
+                                    separators=(",", ":"),
+                                    ensure_ascii=False,
+                                    allow_nan=False,
+                                ).encode("utf-8")
+                            ).hexdigest(),
+                            "response": {
+                                "id": None,
+                                "model": None,
+                                "raw_content": "",
+                                "raw_content_sha256": hashlib.sha256(b"").hexdigest(),
+                                "transport_error": {
+                                    "class": type(exc).__name__,
+                                    "message": str(exc),
+                                },
+                            },
+                            "validation_error": (
+                                f"transport_error: {type(exc).__name__}: {exc}"
+                            ),
+                            "valid": False,
+                        }
+                    )
+                raise
+            content = (response.choices[0].message.content or "").strip()
+            error: str | None = None
+            payload: dict[str, Any] | None = None
+            try:
+                data = json.loads(content)
+                payload = self._normalize_target_free_response(
+                    data,
+                    candidate_features=expected_features,
+                    response=response,
+                    content=content,
+                    expected_response_model=expected_response_model,
+                )
+            except (json.JSONDecodeError, ValueError) as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                validation_errors.append(f"attempt={attempt}: {error}")
+            attempt_record = {
+                "attempt": attempt,
+                "request": request,
+                "request_sha256": hashlib.sha256(
+                    json.dumps(
+                        request,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                        allow_nan=False,
+                    ).encode("utf-8")
+                ).hexdigest(),
+                "response": {
+                    "id": getattr(response, "id", None),
+                    "model": getattr(response, "model", None),
+                    "raw_content": content,
+                    "raw_content_sha256": hashlib.sha256(
+                        content.encode("utf-8")
+                    ).hexdigest(),
+                },
+                "validation_error": error,
+                "valid": payload is not None,
+            }
+            if attempt_recorder is not None:
+                attempt_recorder(attempt_record)
+            if payload is not None:
+                payload["application_attempt"] = attempt
+                payload["validation_errors_before_success"] = validation_errors
+                payload["prompt_sha256"] = hashlib.sha256(
+                    prompt.encode("utf-8")
+                ).hexdigest()
+                return payload
+        raise ValueError(
+            "LLM response failed the strict target-free ranking contract after "
+            f"{maximum_attempts} attempts: {validation_errors}"
+        )
 
     def _build_metadata_signature(self, metadata: List[Dict], y: pd.Series | None) -> str:
         payload = {

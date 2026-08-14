@@ -41,6 +41,12 @@ def build_parser() -> argparse.ArgumentParser:
     phase.add_argument("--phase", choices=("pilot", "dev", "oot"), required=True)
     phase.add_argument("--fold-id", type=int, choices=(1, 2, 3, 4, 5))
     phase.add_argument("--oot-analysis-plan", type=Path)
+
+    supplement = subparsers.add_parser(
+        "supplemental-dev",
+        help="Run/resume the authenticated two-method supplement across all five DEV folds",
+    )
+    supplement.add_argument("--authorization", type=Path, required=True)
     return parser
 
 
@@ -114,6 +120,9 @@ def _run_with_automatic_resource_retries(
 
 
 def _run_supervised(args: argparse.Namespace) -> int:
+    if args.operation == "supplemental-dev":
+        return _run_supplemental_dev_supervised(args)
+
     from credit_risk_fs.experiments.atomic_io import write_csv_atomic, write_json_atomic
     from credit_risk_fs.experiments.prompt_16_third_dataset import (
         Prompt16ExecutionError,
@@ -211,11 +220,10 @@ def _run_supervised(args: argparse.Namespace) -> int:
             max_seconds = float(plan["wall_time_limits_seconds"]["dev_fold_total"])
             name = f"dev_fold_{args.fold_id}"
         else:
-            if args.fold_id is not None or args.oot_analysis_plan is None:
-                raise Prompt16ExecutionError("OOT command requires the frozen analysis plan and no fold")
-            output_root = Path(paths["oot_root"])
-            max_seconds = float(plan["wall_time_limits_seconds"]["oot_total"])
-            name = "oot"
+            raise Prompt16ExecutionError(
+                "the former classical-only OOT command is revoked; no Prompt-16 OOT "
+                "operation is authorized until the complete amended 170-cell DEV gate passes"
+            )
         target = "credit_risk_fs.experiments.prompt_16_third_dataset:run_phase_worker"
         worker_kwargs = {
             "matrix_root": paths["matrix_root"],
@@ -397,6 +405,249 @@ def _run_supervised(args: argparse.Namespace) -> int:
                     }
                     for item in sealed_infeasibilities
                 ],
+            },
+            indent=2,
+        )
+    )
+    return 0 if result.status == "completed" else 2
+
+
+def _run_supplemental_dev_supervised(args: argparse.Namespace) -> int:
+    """Supervise the one all-fold DEV-only successor operation."""
+
+    from credit_risk_fs.experiments.atomic_io import write_csv_atomic, write_json_atomic
+    from credit_risk_fs.experiments.prompt_16_llm_supplement import (
+        active_prompt16_workers,
+        load_supplemental_authorization,
+        prompt16_execution_locks,
+        record_supplemental_resource_stop,
+    )
+    from credit_risk_fs.experiments.prompt_16_third_dataset import (
+        Prompt16ExecutionError,
+        acquire_execution_lock,
+        canonical_registry,
+        directory_size_bytes,
+        free_disk_bytes,
+        load_execution_plan,
+        release_execution_lock,
+    )
+    from credit_risk_fs.experiments.ram_control import load_ram_control_policy
+    from credit_risk_fs.experiments.research_logging import (
+        ResearchLogSession as SupplementalResearchLogSession,
+        emit_research_event,
+    )
+    from credit_risk_fs.experiments.resource_monitor import (
+        supervise_worker as supervise_supplemental_worker,
+    )
+    from credit_risk_fs.experiments.resource_policy import (
+        GIB,
+        detect_hardware,
+        load_execution_policy,
+        resolve_execution_policy,
+    )
+
+    authorization_path = args.authorization.resolve()
+    authorization, _ = load_supplemental_authorization(authorization_path)
+    plan_path = PROJECT_ROOT / str(authorization["execution_plan_path"])
+    plan = load_execution_plan(plan_path)
+    paths = plan["paths"]
+    workers = active_prompt16_workers()
+    if workers:
+        raise Prompt16ExecutionError(
+            f"another Prompt-16 Python worker is active: {workers}"
+        )
+    execution_locks = prompt16_execution_locks(plan)
+    if execution_locks:
+        raise Prompt16ExecutionError(
+            f"a Prompt-16 execution lock already exists: {execution_locks}"
+        )
+    output_root = Path(authorization["paths"]["output_root"])
+    log_root = Path(authorization["paths"]["log_root"])
+    temp_root = Path(paths["temp_root"])
+    log_root.mkdir(parents=True, exist_ok=True)
+    temp_root.mkdir(parents=True, exist_ok=True)
+
+    free_bytes = free_disk_bytes(output_root.parent)
+    forecast_total = int(plan["resource_forecast"]["forecast_total_output_bytes"])
+    existing_bytes = sum(
+        directory_size_bytes(path)
+        for path in plan["resource_forecast"]["forecast_roots"]
+    )
+    remaining_forecast = max(0, forecast_total - existing_bytes)
+    forecast_factor = float(
+        plan["resource_controls"]["disk_remaining_output_safety_factor"]
+    )
+    floor_bytes = max(
+        int(plan["resource_controls"]["disk_free_hard_floor_bytes"]),
+        int(math.ceil(forecast_factor * remaining_forecast)),
+    )
+    if free_bytes < floor_bytes:
+        raise Prompt16ExecutionError(
+            f"results-volume free space is below the frozen floor: {free_bytes} < {floor_bytes}"
+        )
+
+    policy_path = Path(plan["resource_controls"]["execution_policy_path"])
+    configured = load_execution_policy(PROJECT_ROOT, policy_path)
+    capacity = detect_hardware(output_root.parent, temp_root)
+    policy = resolve_execution_policy(configured, capacity)
+    ram_control = load_ram_control_policy(
+        PROJECT_ROOT,
+        "configs/execution/prompt_16_ram_wait_resume_v1.yaml",
+        total_physical_ram_bytes=int(capacity.total_ram_gb * GIB),
+    )
+    if policy.memory.abort_process_tree_rss_gb > 24.0 + 1e-12:
+        raise Prompt16ExecutionError("resolved RSS cap exceeds the Prompt-16 hard ceiling")
+    if abs(policy.memory.abort_if_system_available_below_gb - 1.0) > 1e-12:
+        raise Prompt16ExecutionError("Prompt-16 system-available floor must remain 1 GiB")
+    if policy.parallelism.concurrent_experiment_runs != 1:
+        raise Prompt16ExecutionError("Prompt-16 requires one experiment cell at a time")
+    if policy.parallelism.concurrent_folds != 1:
+        raise Prompt16ExecutionError("Prompt-16 requires one fold at a time")
+    if policy.parallelism.data_loader_workers != 0:
+        raise Prompt16ExecutionError("Prompt-16 requires zero data-loader workers")
+    if policy.parallelism.estimator_threads > 4:
+        raise Prompt16ExecutionError("Prompt-16 permits at most four estimator threads")
+    if ram_control.emergency_margin_bytes != 1 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM wait threshold must remain 1 GiB")
+    if ram_control.recovery_threshold_bytes != 2 * GIB:
+        raise Prompt16ExecutionError("Prompt-16 RAM recovery threshold must remain 2 GiB")
+    if ram_control.log_interval_seconds != 300:
+        raise Prompt16ExecutionError("Prompt-16 RAM wait logging must remain five-minute")
+
+    name = "llm_supplement_v2_all_folds_dev"
+    terminal_log_path = log_root / f"{name}.log"
+    stage_wall_clock_limits = dict(
+        canonical_registry(paths["protocol_lock"])["resource_controls"][
+            "wall_clock_limits_seconds"
+        ]
+    )
+    max_seconds = float(plan["wall_time_limits_seconds"]["dev_total"])
+    target = (
+        "credit_risk_fs.experiments.prompt_16_llm_supplement:"
+        "run_supplemental_dev_worker"
+    )
+    worker_kwargs = {"authorization_path": str(authorization_path)}
+    lock = acquire_execution_lock(output_root)
+    try:
+        with SupplementalResearchLogSession(
+            terminal_log_path,
+            repository_root=PROJECT_ROOT,
+            command_arguments=[str(value) for value in sys.argv],
+        ) as supplemental_session:
+
+            supervisor_attempt = 0
+
+            def supervise_attempt() -> Any:
+                nonlocal supervisor_attempt
+                supervisor_attempt += 1
+                attempt_result = supervise_supplemental_worker(
+                    worker_target=target,
+                    worker_kwargs=worker_kwargs,
+                    policy=policy,
+                    results_root=output_root.parent,
+                    temp_root=temp_root,
+                    run_association="prompt16:llm_supplement_v2:all_folds_dev",
+                    heartbeat_interval_seconds=30.0,
+                    max_wall_clock_seconds=max_seconds,
+                    stage_wall_clock_limits_seconds=stage_wall_clock_limits,
+                    enforce_process_tree_rss_limit=True,
+                    ram_control_policy=ram_control,
+                )
+                attempt_name = f"{name}_attempt_{supervisor_attempt:03d}"
+                _write_supervision(
+                    result=attempt_result,
+                    log_root=log_root,
+                    name=attempt_name,
+                    write_json_atomic=write_json_atomic,
+                    write_csv_atomic=write_csv_atomic,
+                )
+                _write_supervision(
+                    result=attempt_result,
+                    log_root=log_root,
+                    name=name,
+                    write_json_atomic=write_json_atomic,
+                    write_csv_atomic=write_csv_atomic,
+                )
+                return attempt_result
+
+            def seal_resource_stop(result: Any) -> Mapping[str, Any] | None:
+                evidence = result.to_dict()
+                evidence.pop("samples", None)
+                return record_supplemental_resource_stop(
+                    authorization_path=authorization_path,
+                    supervisor_evidence=evidence,
+                )
+
+            def announce_retry(
+                retry_count: int,
+                result: Any,
+                sealed: Mapping[str, Any],
+            ) -> None:
+                emit_research_event(
+                    "plan_resume_decision",
+                    message=(
+                        f"{name} preserved {sealed['id']}; resuming the identical "
+                        f"all-fold command ({retry_count}/{MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES})"
+                    ),
+                    priority=True,
+                    retry_count=retry_count,
+                    retry_limit=MAX_AUTOMATIC_PHASE_RESOURCE_RETRIES,
+                    stop_code=result.stop_code,
+                    sealed_kind=sealed["kind"],
+                    sealed_id=sealed["id"],
+                    sealed_manifest_sha256=sealed["manifest_sha256"],
+                )
+
+            result, infeasibility, sealed_stops = _run_with_automatic_resource_retries(
+                supervise_attempt=supervise_attempt,
+                seal_resource_stop=seal_resource_stop,
+                announce_retry=announce_retry,
+            )
+            if result.status == "completed":
+                supplemental_session.finish(
+                    "session_completed",
+                    message=(
+                        "all five supplemental DEV folds completed and supervisor "
+                        "cleanup authenticated; OOT was not accessible"
+                    ),
+                )
+            elif result.status in {
+                "aborted_resource_limit",
+                "interrupted",
+                "timed_out",
+            }:
+                supplemental_session.finish(
+                    "session_controlled_stop",
+                    message="supplemental DEV stopped with resumable evidence preserved",
+                    stop_code=result.stop_code,
+                )
+            else:
+                supplemental_session.finish(
+                    "session_failed",
+                    level="ERROR",
+                    message="supplemental DEV failed; rerun the identical command after inspection",
+                    stop_code=result.stop_code,
+                )
+    finally:
+        release_execution_lock(lock)
+
+    print(
+        json.dumps(
+            {
+                "operation": "supplemental_dev_only",
+                "status": result.status,
+                "stop_code": result.stop_code,
+                "peak_process_tree_rss_bytes": result.peak_process_tree_rss_bytes,
+                "minimum_system_available_ram_bytes": result.minimum_system_available_ram_bytes,
+                "output_root": str(output_root),
+                "status_path": str(output_root / "controller_status.json"),
+                "success_marker": str(output_root / "_SUCCESS"),
+                "ranking_provenance_root": str(output_root / "llm_ranking"),
+                "log_root": str(log_root),
+                "terminal_log_path": str(terminal_log_path),
+                "oot_started": False,
+                "sealed_resource_stop": infeasibility,
+                "automatic_resource_retry_count": len(sealed_stops),
             },
             indent=2,
         )

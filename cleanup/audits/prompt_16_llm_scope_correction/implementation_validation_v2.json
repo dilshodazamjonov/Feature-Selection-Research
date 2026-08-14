@@ -1,0 +1,101 @@
+{
+  "schema_version": "prompt_16_two_llm_method_implementation_validation_v2",
+  "status": "pass_ready_for_implementation_commit_then_execution_authorization",
+  "validated_at_utc": "2026-08-14T07:06:20.8110766Z",
+  "repository_entry": {
+    "branch": "main",
+    "head": "b062362e999a9bec516996c6e3fad4fcb80d70dd",
+    "remote_main": "d3d393f5dc58894afac209ccd6f96cc8c5e99f7b",
+    "ahead": 3,
+    "behind": 0,
+    "expected_blocker_head": true
+  },
+  "preserved_authorities": {
+    "blocker_path": "cleanup/audits/prompt_16_llm_scope_correction/method_identity_blocker.json",
+    "blocker_sha256": "51cd24903642a25cad1b7b1ebd541ec29a9478e5f5a957035ee490ee49d6729d",
+    "v1_protocol_path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "v1_protocol_file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "v1_protocol_internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "blocker_and_v1_rewritten": false
+  },
+  "v2_artifacts": [
+    {"path":"configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json","sha256":"e9690bfd6f47dbb197686dce1ae8bce4c7216cfd229880ad35639f3f826fbb09","internal_sha256":"321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"},
+    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"bfdede31e0204cf78f29580a7d4dc9a7893008c24aa8b4514ac33c602e5dbd01","internal_sha256":"bc8cef04739990064db9e224578d7b4ca5698f27496aea07cd2bf8f78f464b2e"},
+    {"path":"cleanup/audits/prompt_16_llm_scope_correction/parameter_parity_audit_v2.json","sha256":"0ff437f07b7cc53e154198d12f0f7de42970915b5064c2cad252bfa54dde48b2","internal_sha256":"e852c0d7cf2014684fb332152cbcdcbaf7a6c1c5f3dd68bb2488fe8b083a0a8c"}
+  ],
+  "implementation_files": [
+    {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"6093674e21a8d8338ac8d5468169fb3686cad34e3834e5b4e12f1a69adb79009"},
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"65420295d0ba70418a0f2fef027290c33012e1a08a7d27acd8b286515613f2c6"},
+    {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"870e2724e0b3b87bc55cceb05cf893dbed90fa1a31751df51ba449cb87a67816"},
+    {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"7aa074177a7818c4323a5070b2ad568ab0f644184e0c58ed0e57e37ed7df30b9"},
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"2b09d25042f16b6f52d5e07314838f533df6bbb80d3f278be138edf80589a179"}
+  ],
+  "entry_reauthentication": {
+    "matrix_manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "matrix_declared_artifacts_authenticated": 36,
+    "matrix_rows": 1526659,
+    "matrix_predictors": 1959,
+    "ordered_feature_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "description_and_prompt_freeze_matches_amendment": true,
+    "classical_tree_sha256": "c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
+    "classical_files": 1371,
+    "classical_bytes": 351363036,
+    "classical_evaluation_manifests": 150,
+    "classical_evaluation_manifest_registry_sha256": "047cf137ef68d2142975406e768356c00780b2b309cddda48adea6a7bfc7be99",
+    "active_prompt_16_workers": [],
+    "prompt_16_execution_locks": [],
+    "third_dataset_oot_root_exists": false,
+    "third_dataset_oot_named_paths": [],
+    "old_classical_only_oot_command": "revoked"
+  },
+  "focused_validation": {
+    "command_scope": "tests/test_prompt_16_llm_supplement.py plus LLM selector, shared-ranking, Prompt-16 runner, hybrid, package-refactor, research-matrix, and selector-base regressions",
+    "passed": 76,
+    "failed": 0,
+    "duration_seconds": 5.59,
+    "covers": [
+      "method identity and ordering",
+      "parameter parity and amendment authentication",
+      "outcome-independent description and prompt hashes",
+      "strict rank coverage and response-model identity",
+      "unknown duplicate and missing-rank rejection",
+      "cache/resume byte equivalence",
+      "fold-local five-component stable-core fitting",
+      "DEV-only CLI and revoked OOT command",
+      "classical preservation hashing",
+      "atomic publication and completion-marker-last"
+    ]
+  },
+  "repository_wide_validation": {
+    "passed": 1070,
+    "skipped": 31,
+    "failed": 2,
+    "duration_seconds": 330.52,
+    "supplement_related_failures": 0,
+    "known_unrelated_later_stage_failures": [
+      {
+        "test":"tests/selectors/test_heavy_common.py::test_prompt_06_package_hashes_are_unchanged",
+        "reason":"the current pre-entry repository already contains artifact_manifest.current.json and artifact_manifest.v2.json beyond the old Prompt-7 snapshot"
+      },
+      {
+        "test":"tests/test_third_dataset_protocol_freeze.py::test_method_matrix_and_execution_gates_remain_frozen_closed",
+        "reason":"the old stage-1 freeze test expects the v1 protocol directory not to exist, but Prompt 15/16 had already created and authenticated it before this continuation"
+      }
+    ]
+  },
+  "actions_not_taken": {
+    "openai_api_key_accessed": false,
+    "real_llm_requests": 0,
+    "real_matrix_parts_loaded_for_selector_or_model_execution": 0,
+    "supplemental_dev_selector_fits": 0,
+    "supplemental_dev_model_fits": 0,
+    "supplemental_dev_predictions": 0,
+    "classical_cells_rerun": 0,
+    "oot_paths_opened_for_data": 0,
+    "oot_workers_started": 0,
+    "prompt_14_numeric_findings_opened": false,
+    "commits_pushed": 0
+  },
+  "verdict": "pass_the_narrow_v2_amendment_and_controller_are_ready_to_commit; execution_remains_blocked_until_a_separate_committed_authorization_binds_the_implementation_commit",
+  "artifact_authentication_sha256": "0559d14aec202c49a79f81f3fe8113270111665149aca48fa42110a7503683dc"
+}

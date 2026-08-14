@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         llm_selector_cls: type | None = None,
         llm_selector_kwargs: dict[str, Any] | None = None,
         iv_filter_kwargs: dict[str, Any] | None = None,
+        allow_unranked_padding: bool = True,
     ) -> None:
         self.description_csv_path = description_csv_path
         self.cache_dir = cache_dir
@@ -56,6 +58,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         self.llm_selector_cls = llm_selector_cls
         self.llm_selector_kwargs = dict(llm_selector_kwargs or {})
         self.iv_filter_kwargs = dict(iv_filter_kwargs or {})
+        self.allow_unranked_padding = bool(allow_unranked_padding)
         if self.final_feature_budget < 0:
             raise ValueError("final_feature_budget must be non-negative.")
         if self.bootstrap_iterations <= 0:
@@ -72,6 +75,8 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         self.stable_core_features_: list[str] | None = None
         self.stable_core_frequency_: pd.DataFrame | None = None
         self.selected_features_ = None
+        self.authenticated_ranking_sha256_: str | None = None
+        self.bootstrap_trace_: list[dict[str, Any]] = []
         self.select_before_preprocessing = True
         self.apply_post_preprocessing = True
 
@@ -118,6 +123,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
             return [], empty
 
         rows: list[dict[str, Any]] = []
+        self.bootstrap_trace_ = []
         sample_size = max(2, int(np.ceil(len(X) * self.bootstrap_fraction)))
         k = min(self.final_feature_budget, X.shape[1])
         for iteration in range(self.bootstrap_iterations):
@@ -126,6 +132,20 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
                 replace=True,
                 random_state=self.random_state + iteration,
             ).index
+            sample_digest = hashlib.sha256()
+            for value in sampled_indices:
+                sample_digest.update(f"{value}\n".encode("utf-8"))
+            self.bootstrap_trace_.append(
+                {
+                    "iteration": iteration + 1,
+                    "random_state": self.random_state + iteration,
+                    "sample_size": len(sampled_indices),
+                    "unique_training_index_count": len(set(sampled_indices)),
+                    "ordered_sampled_training_index_sha256": sample_digest.hexdigest(),
+                    "replace": True,
+                    "training_index_only": True,
+                }
+            )
             selector = RandomForestRelevanceMRMRSelector(
                 k=k,
                 method="mrmr",
@@ -168,13 +188,18 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         candidate_groups = [
             self.stable_core_features_ or [],
             self.llm_selected_features_ or [],
-            (
-                self.stable_core_frequency_["feature_name"].astype(str).tolist()
-                if self.stable_core_frequency_ is not None
-                else []
-            ),
-            X.columns.astype(str).tolist(),
         ]
+        if self.allow_unranked_padding:
+            candidate_groups.extend(
+                [
+                    (
+                        self.stable_core_frequency_["feature_name"].astype(str).tolist()
+                        if self.stable_core_frequency_ is not None
+                        else []
+                    ),
+                    X.columns.astype(str).tolist(),
+                ]
+            )
         for candidates in candidate_groups:
             for feature in candidates:
                 if len(finalized) >= self.final_feature_budget:
@@ -182,6 +207,34 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
                 if feature in available and feature not in finalized:
                     finalized.append(feature)
         return finalized
+
+    def fit_with_authenticated_ranking(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        *,
+        ranked_features: list[str],
+        ranking_manifest_sha256: str,
+    ) -> StableCoreLLMFillSelector:
+        """Fit only the hybrid's supervised stable core around a sealed LLM rank."""
+
+        validate_feature_frame(X)
+        if y is None:
+            raise ValueError("StableCoreLLMFillSelector requires target labels during fit.")
+        ranking = [str(value) for value in ranked_features]
+        if len(ranking) != self.llm_shared_pool_size:
+            raise ValueError("authenticated LLM ranking has the wrong shared-pool size")
+        if len(ranking) != len(set(ranking)):
+            raise ValueError("authenticated LLM ranking contains duplicates")
+        if not set(ranking).issubset(set(X.columns.astype(str))):
+            raise ValueError("authenticated LLM ranking escaped the training feature universe")
+        if len(ranking_manifest_sha256) != 64:
+            raise ValueError("authenticated LLM ranking manifest digest is invalid")
+        self.llm_selected_features_ = ranking
+        self.authenticated_ranking_sha256_ = str(ranking_manifest_sha256)
+        self.stable_core_features_, self.stable_core_frequency_ = self._bootstrap_core(X, y)
+        self.selected_features_ = self._finalize_features(X)
+        return self
 
     def fit(
         self,
