@@ -194,13 +194,13 @@
     "description_count": 1959,
     "per_feature_description_hashes_sha256": "e851bfe2b0cc56d44a2c70685e9020096f85f283bf43c94c38e762955a2bd8ae",
     "ordered_rendered_descriptions_sha256": "4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
-    "prompt_version": "stability_expert_v3",
+    "prompt_version": "stability_expert_v4",
     "prompt_chunk_count": 1,
     "prompt_chunk_order": [1],
     "prompt_merge_algorithm": "identity_single_chunk_no_cross_chunk_merge",
-    "rendered_prompt_sha256": "caebd18c3cbbfe89f7107ddeebc2df48ea77a07257b20a2ba8f102997a5515f4",
+    "rendered_prompt_sha256": "0d383066c6f728ee2c419eb0c835317d658f01892c5bd33a7dc58cc49054a3a3",
     "system_message_sha256": "ccdbdda09c8db90514fa7a41cc908130f15bbd048e69c33502e911a91919625f",
-    "retry_suffix_sha256": "df47fc7e30089dec00415b6f5d4b89dc7a6f2420f2127fdc5a08f72b275d1277",
+    "retry_suffix_sha256": "59cc72d9bf1cc78f6d7334c0229c0872712bcb267f9cf6253f80750e8916f5a6",
     "provider": "openai",
     "endpoint": "chat.completions.create",
     "request_model": "gpt-4.1-mini-2025-04-14",
@@ -210,10 +210,41 @@
     "temperature": 0.0,
     "seed": null,
     "seed_rule": "not_sent_by_authenticated_historical_chat_completions_call",
-    "response_format": {"type":"json_object"},
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "target_free_feature_ranking",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "selected_features": {
+              "type": "array",
+              "description": "Exactly 100 distinct candidate feature names in priority order.",
+              "items": {"type": "string"},
+              "minItems": 100,
+              "maxItems": 100
+            },
+            "reasoning_summary": {"type": "string"},
+            "selection_principles": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "feature_reasons": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": ["selected_features", "reasoning_summary", "selection_principles", "feature_reasons"],
+          "additionalProperties": false
+        }
+      }
+    },
     "application_parse_or_contract_attempts_maximum": 3,
     "sdk_transport_retry_rule": "OpenAI_Python_SDK_default_transport_retries",
-    "parser": "json.loads_then_exact_100_distinct_known_names",
+    "parser": "strict_json_schema_then_exact_100_distinct_known_names",
     "fallback": "forbidden",
     "cache_reuse": "only_complete_recursively_hashed_identity_exact_success",
     "candidate_coverage": {
@@ -345,5 +376,5 @@
     "no_completed_classical_result_may_be_changed_or_overwritten":true,
     "completion_marker_rule":"controller _SUCCESS is written last after 20 supplemental and 170 total DEV accounting"
   },
-  "artifact_authentication_sha256": "321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"
+  "artifact_authentication_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
 }

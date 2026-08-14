@@ -268,6 +268,13 @@ def test_strict_target_free_ranking_accepts_exact_coverage_and_records_provenanc
     request = attempts[0]["request"]
     assert request["model"] == supplement.FROZEN_LLM_MODEL
     assert request["seed"] is None
+    assert request["response_format"]["type"] == "json_schema"
+    assert request["response_format"]["json_schema"]["strict"] is True
+    selected_schema = request["response_format"]["json_schema"]["schema"][
+        "properties"
+    ]["selected_features"]
+    assert selected_schema["minItems"] == selected_schema["maxItems"] == 100
+    assert "do not omit" not in selector.TARGET_FREE_RETRY_SUFFIX.lower()
     assert "OPENAI_API_KEY" not in json.dumps(request)
 
 

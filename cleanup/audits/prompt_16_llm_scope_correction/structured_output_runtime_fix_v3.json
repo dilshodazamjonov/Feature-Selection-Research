@@ -1,0 +1,94 @@
+{
+  "schema_version": "prompt_16_llm_structured_output_runtime_fix_v3",
+  "status": "pass_ready_for_committed_five_fold_dev_resume",
+  "created_at_utc": "2026-08-14T07:53:52.7199486Z",
+  "scope": "target_free_llm_ranking_request_contract_only",
+  "failed_runtime_evidence": {
+    "controller_status": "worker_crash",
+    "failed_unsealed_ranking_sha256": "e19ede80572cf14d21da4840433c39fdf907a3217c8afd7b946e014df1c70d3f",
+    "attempts": [
+      {"attempt":1,"returned_features":159,"status_sha256":"d331044e0fcf1c223be8054f7f1b479a2a61594dce12ae8ea4ad3164fd98978a"},
+      {"attempt":2,"returned_features":192,"status_sha256":"2a442cd778a0e56220054f81a14be8e236a3aca618f98323a2ce72225c26e685"},
+      {"attempt":3,"returned_features":177,"status_sha256":"7f9856968c0be0885c2db43a5f1abc12dabc503e09deecaa9e9438a689c3863c"}
+    ],
+    "oot_started": false,
+    "resource_limit_triggered": false
+  },
+  "root_cause": {
+    "request_mode": "json_object_only_without_schema_adherence",
+    "prompt_contradiction": "the old prompt required exactly 100 selected names while also instructing the model not to omit feature names",
+    "local_validator_behavior": "correctly rejected every non-100 response without truncation, padding, or fallback"
+  },
+  "correction": {
+    "prompt_version": "stability_expert_v4",
+    "contradictory_omission_language_removed": true,
+    "response_format": "strict_json_schema",
+    "selected_features_min_items": 100,
+    "selected_features_max_items": 100,
+    "local_distinctness_check_retained": true,
+    "local_candidate_membership_check_retained": true,
+    "required_response_model_check_retained": true,
+    "fallback_allowed": false
+  },
+  "official_openai_documentation": [
+    {
+      "url": "https://developers.openai.com/api/docs/models/gpt-4.1-mini",
+      "claim": "the pinned GPT-4.1 mini model supports Structured Outputs"
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/guides/structured-outputs",
+      "claim": "strict Structured Outputs support array minItems and maxItems constraints"
+    }
+  ],
+  "scientific_scope_preserved": {
+    "dataset": "Home Credit model-stability 2024",
+    "development_folds": 5,
+    "methods": ["llm", "stable_core_llm_fill"],
+    "models": ["lr", "catboost"],
+    "supplemental_dev_evaluations": 20,
+    "target_free_ranking_shared_across_folds": true,
+    "classical_cells_rerun": false,
+    "oot_authorized": false,
+    "oot_code_path_available_to_controller": false
+  },
+  "updated_authenticated_artifacts": [
+    {
+      "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
+      "file_sha256": "1e2e79d6e7fb5b03691f00c78cf2e4a52a55dfbbdf45f62f5f6eb7b7e5180392",
+      "internal_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
+    },
+    {
+      "path": "configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json",
+      "file_sha256": "de34c35ccb991bb24fbc0f3ea4c9a47afcb2d8f9e777a4c3b5b36842ed8abde0",
+      "internal_sha256": "edcc672b0ccd03d77fbe46dcaff542b3ecfe74ab912c48c48ccb20e6bc9f945b"
+    }
+  ],
+  "implementation_files": [
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"b4faee875d4261991719b071348cccd779d5a2437a956154246d9d8169298e62"},
+    {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"3b6b882eb14b5faccde1ec6a6b1b93c2ab18eabae4e0f6372191e431af867123"},
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"8d90179cd35478370c17d3fdb49f312b674399aaf59fc05f507601a277bf3f5a"}
+  ],
+  "focused_validation": {
+    "passed": 78,
+    "failed": 0,
+    "duration_seconds": 33.86,
+    "covers": [
+      "strict 100-item schema construction",
+      "exact distinct known-name validation",
+      "prompt and amendment freeze authentication",
+      "shared LLM ranking",
+      "selector combination runner",
+      "package and research-matrix regressions",
+      "Prompt-16 execution and pilot gates"
+    ]
+  },
+  "actions_not_taken_during_correction": {
+    "additional_real_llm_requests": 0,
+    "supplemental_dev_selector_fits": 0,
+    "supplemental_dev_model_fits": 0,
+    "supplemental_dev_predictions": 0,
+    "classical_cells_rerun": 0,
+    "oot_workloads": 0
+  },
+  "artifact_authentication_sha256": "d50584acc0ed33c2b14cadc6ec346df286aa3164811f769d0a642b0c9e68f871"
+}

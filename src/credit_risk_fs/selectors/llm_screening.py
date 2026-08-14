@@ -212,9 +212,10 @@ Keep the response compact. Do not include per-feature explanations unless absolu
     )
     TARGET_FREE_RETRY_SUFFIX = (
         "CRITICAL RETRY INSTRUCTION: the previous response failed the frozen JSON "
-        "or candidate-coverage contract. Return compact valid JSON only, with exactly "
-        "the requested number of distinct selected_features copied verbatim from the "
-        "candidate list. Do not invent, omit, normalize, or duplicate feature names."
+        "or candidate-coverage contract. Fill exactly the requested number of slots in "
+        "selected_features with distinct names copied verbatim from the candidate list. "
+        "Candidates outside those slots are intentionally not selected. Do not return "
+        "extra names and do not invent, normalize, replace, or duplicate a selected name."
     )
     TARGET_FREE_METADATA_FIELDS = frozenset(
         {
@@ -312,7 +313,8 @@ Rules:
 2. You are seeing no rows, targets, split statistics, validation information, OOT information, performance, drift, missingness rates, IV, correlation, mutual information, SHAP, or model importance.
 3. Prefer broad semantic coverage rather than over-concentrating on one narrow family.
 4. Return exactly {self.ranking_budget} distinct features in priority order, best first.
-5. Do not invent, normalize, deduplicate, replace, or silently omit feature names.
+5. Every candidate not placed in the {self.ranking_budget}-item selected_features array is intentionally not selected.
+6. Do not return more or fewer than {self.ranking_budget} names. Do not invent, normalize, replace, or duplicate a selected name.
 
 Features:
 {features_text}
@@ -404,6 +406,51 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             },
         }
 
+    def target_free_response_format(self) -> dict[str, Any]:
+        """Return the strict schema for one exact-size target-free ranking."""
+
+        budget = int(self.ranking_budget)
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "target_free_feature_ranking",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "selected_features": {
+                            "type": "array",
+                            "description": (
+                                f"Exactly {budget} distinct candidate feature names in "
+                                "priority order."
+                            ),
+                            "items": {"type": "string"},
+                            "minItems": budget,
+                            "maxItems": budget,
+                        },
+                        "reasoning_summary": {"type": "string"},
+                        "selection_principles": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "feature_reasons": {
+                            "type": "object",
+                            "properties": {},
+                            "required": [],
+                            "additionalProperties": False,
+                        },
+                    },
+                    "required": [
+                        "selected_features",
+                        "reasoning_summary",
+                        "selection_principles",
+                        "feature_reasons",
+                    ],
+                    "additionalProperties": False,
+                },
+            },
+        }
+
     def rank_target_free(
         self,
         metadata: Sequence[Mapping[str, Any]],
@@ -426,6 +473,7 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             metadata, expected_features=expected_features
         )
         client = self._get_client()
+        response_format = self.target_free_response_format()
         validation_errors: list[str] = []
         for attempt in range(1, maximum_attempts + 1):
             user_prompt = (
@@ -443,7 +491,7 @@ Keep the response compact. Do not include per-feature explanations unless absolu
                     {"role": "system", "content": self.TARGET_FREE_SYSTEM_MESSAGE},
                     {"role": "user", "content": user_prompt},
                 ],
-                "response_format": {"type": "json_object"},
+                "response_format": response_format,
             }
             try:
                 response = client.chat.completions.create(
