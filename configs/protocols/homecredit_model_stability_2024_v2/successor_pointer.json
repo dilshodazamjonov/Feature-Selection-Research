@@ -1,0 +1,18 @@
+{
+  "schema_version": "homecredit_model_stability_2024_successor_pointer_v2",
+  "status": "canonical_prospective_successor_for_prompt_16_llm_supplement",
+  "parent_protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6"
+  },
+  "successor_amendment": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
+    "file_sha256": "e9690bfd6f47dbb197686dce1ae8bce4c7216cfd229880ad35639f3f826fbb09",
+    "internal_sha256": "321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"
+  },
+  "allowed_operation": "supplemental_dev_only_until_complete_170_cell_dev_gate",
+  "oot_authorized": false,
+  "old_oot_command_status": "revoked",
+  "artifact_authentication_sha256": "bc8cef04739990064db9e224578d7b4ca5698f27496aea07cd2bf8f78f464b2e"
+}

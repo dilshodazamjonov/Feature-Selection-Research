@@ -1,0 +1,349 @@
+{
+  "schema_version": "homecredit_model_stability_2024_amendment_v2",
+  "protocol_id": "homecredit_model_stability_2024_v2",
+  "status": "prospective_authorized_before_supplemental_dev_and_oot",
+  "created_at_utc": "2026-08-14T09:00:00Z",
+  "purpose": "Narrow Prompt-16 successor that preserves the completed classical v1 experiment and prospectively restores only the two uniquely authenticated historical LLM methods.",
+  "parent_protocol": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "internal_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "approved_review_digest_sha256": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+    "stage_1_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+    "freeze_commit": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+    "preservation": "byte_for_byte_no_rewrite"
+  },
+  "scope_authority": {
+    "earlier_prompt_16_request_sha256": "a825895d010f817e7f357dfe39667863d59aed569a8a710916b8599506a827ad",
+    "continuation_request_sha256": "3958a1b8b5bcf3b4860df9bf21a8b38351ce0ca6bef5d4b5e466ea96ed51c875",
+    "transport": "user-provided Prompt-16 attachments in this repository session",
+    "resolution": "The continuation supersedes only the earlier whole-supplement stop consequence and authorizes llm plus stable_core_llm_fill while retaining the semantic/mixed-voter limitation.",
+    "continuation_not_prompt_17": true
+  },
+  "blocker": {
+    "path": "cleanup/audits/prompt_16_llm_scope_correction/method_identity_blocker.json",
+    "artifact_sha256": "51cd24903642a25cad1b7b1ebd541ec29a9478e5f5a957035ee490ee49d6729d",
+    "commit": "b062362e999a9bec516996c6e3fad4fcb80d70dd",
+    "scientific_validity": "preserved; the unresolved voter finding is unchanged",
+    "preservation": "byte_for_byte_no_rewrite"
+  },
+  "prospective_timing": {
+    "third_dataset_oot_started": false,
+    "third_dataset_oot_artifacts_exist": false,
+    "real_llm_requests_before_this_amendment": 0,
+    "supplemental_dev_workloads_before_this_amendment": 0,
+    "classical_dev_performance_values_used_to_choose_scope": false,
+    "classical_dev_inspection_before_amendment": "identity_status_schema_accounting_size_and_hash_only",
+    "prompt_14_numeric_findings_opened": false
+  },
+  "method_registry": {
+    "old_registered_configuration_count": 30,
+    "new_registered_configuration_count": 34,
+    "old_to_new_diff": {
+      "preserved_configuration_orders": "1..30",
+      "added_configuration_orders": [31, 32, 33, 34],
+      "removed_or_rewritten_configuration_orders": []
+    },
+    "added_methods": [
+      {
+        "method_id": "llm",
+        "implementation": "credit_risk_fs.selectors.llm_screening.LLMSelector",
+        "historical_registry_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+        "historical_registry_blob_oid": "3f5e1cdf9b92b3c8847c592eaf12a760685fb878",
+        "historical_prompt_version": "stability_expert_v3",
+        "historical_provider": "openai",
+        "historical_request_model": "gpt-4.1-mini",
+        "historical_response_model": "gpt-4.1-mini-2025-04-14",
+        "rank_orientation": "1_is_best",
+        "identity_verdict": "unique"
+      },
+      {
+        "method_id": "stable_core_llm_fill",
+        "implementation": "credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector",
+        "historical_registry_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+        "historical_registry_blob_oid": "3f5e1cdf9b92b3c8847c592eaf12a760685fb878",
+        "historical_config_path": "configs/selectors/hybrids.yaml",
+        "historical_config_blob_oid": "d0d644e2cc37c108c567c37ad031fcadeb2be4ad",
+        "identity_verdict": "unique"
+      }
+    ],
+    "unavailable_method": {
+      "role": "semantic_mixed_voter",
+      "status": "unavailable_due_to_unresolved_historical_provenance",
+      "execution_cells": 0
+    },
+    "prohibited_additions": [
+      "semantic_or_mixed_voter",
+      "new_llm_voter",
+      "corrected_clip",
+      "contrastive_selector",
+      "directional_transfer_selector",
+      "embedding_only_substitute",
+      "deterministic_rule_ranker_relabelled_as_llm",
+      "additional_llm_hybrid_or_sensitivity"
+    ]
+  },
+  "evaluation_registry": {
+    "supplemental_cells": [
+      {
+        "configuration_order": 31,
+        "configuration_id": "p16v2-c031-llm-lr",
+        "method_id": "llm",
+        "implementation": "credit_risk_fs.selectors.llm_screening.LLMSelector",
+        "model": "lr",
+        "requested_feature_budget": 20,
+        "ranking_budget": 100,
+        "seed": 42
+      },
+      {
+        "configuration_order": 32,
+        "configuration_id": "p16v2-c032-llm-catboost",
+        "method_id": "llm",
+        "implementation": "credit_risk_fs.selectors.llm_screening.LLMSelector",
+        "model": "catboost",
+        "requested_feature_budget": 40,
+        "ranking_budget": 100,
+        "seed": 42
+      },
+      {
+        "configuration_order": 33,
+        "configuration_id": "p16v2-c033-stable_core_llm_fill-lr",
+        "method_id": "stable_core_llm_fill",
+        "implementation": "credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector",
+        "model": "lr",
+        "requested_feature_budget": 20,
+        "ranking_budget": 100,
+        "seed": 42
+      },
+      {
+        "configuration_order": 34,
+        "configuration_id": "p16v2-c034-stable_core_llm_fill-catboost",
+        "method_id": "stable_core_llm_fill",
+        "implementation": "credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector",
+        "model": "catboost",
+        "requested_feature_budget": 40,
+        "ranking_budget": 100,
+        "seed": 42
+      }
+    ],
+    "dev_evaluation_identities": [
+      {"evaluation_id":"p16v2-dev-fold-1-c031","fold_id":1,"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-1-c032","fold_id":1,"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-1-c033","fold_id":1,"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-1-c034","fold_id":1,"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-2-c031","fold_id":2,"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-2-c032","fold_id":2,"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-2-c033","fold_id":2,"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-2-c034","fold_id":2,"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-3-c031","fold_id":3,"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-3-c032","fold_id":3,"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-3-c033","fold_id":3,"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-3-c034","fold_id":3,"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-4-c031","fold_id":4,"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-4-c032","fold_id":4,"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-4-c033","fold_id":4,"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-4-c034","fold_id":4,"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-5-c031","fold_id":5,"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-5-c032","fold_id":5,"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-dev-fold-5-c033","fold_id":5,"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-dev-fold-5-c034","fold_id":5,"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40}
+    ],
+    "oot_evaluation_identities": [
+      {"evaluation_id":"p16v2-oot-c031","configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-oot-c032","configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","model":"catboost","requested_feature_budget":40},
+      {"evaluation_id":"p16v2-oot-c033","configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","model":"lr","requested_feature_budget":20},
+      {"evaluation_id":"p16v2-oot-c034","configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","model":"catboost","requested_feature_budget":40}
+    ]
+  },
+  "accounting": {
+    "target_free_llm_ranking_generations": 1,
+    "target_free_llm_api_ranking_is_supervised_selector_fit": false,
+    "global_llm_budget_truncation_states": 2,
+    "added_registered_supervised_selector_fits": 10,
+    "stable_core_outer_fits": 10,
+    "stable_core_rf_mrmr_component_fits_per_outer_fit": 5,
+    "added_internal_supervised_component_fits": 50,
+    "preserved_classical_registered_selector_fits": 135,
+    "amended_registered_supervised_selector_fits": 145,
+    "added_dev_evaluations": 20,
+    "preserved_classical_dev_evaluations": 150,
+    "amended_dev_evaluations": 170,
+    "added_full_dev_selector_refits": 2,
+    "added_full_dev_internal_component_fits": 10,
+    "preserved_classical_full_dev_selector_refits": 27,
+    "amended_full_dev_selector_refits": 29,
+    "added_oot_evaluations": 4,
+    "preserved_classical_oot_evaluations": 30,
+    "amended_oot_evaluations": 34,
+    "unavailable_semantic_mixed_voter_execution_cells": 0
+  },
+  "component_reuse_rules": {
+    "target_free_llm_ranking": "one strict 100-feature ranking, generated once and reused unchanged across all DEV folds, both models, both restored methods, and later full-DEV fitting",
+    "pure_llm": "two deterministic global truncation states, top 20 for LR and top 40 for CatBoost; zero supervised selector fits",
+    "stable_core_llm_fill": "one outer supervised fit for each fold and model budget; each outer fit contains five training-fold-only bootstrap RF-relevance/correlation-mRMR component fits",
+    "cross_budget_stable_core_reuse": "forbidden because final_feature_budget changes the component k and stability membership",
+    "oot": "pure LLM ranking/truncations require no refit; stable-core requires two full-DEV outer refits containing ten internal component fits total",
+    "fit_count_rule": "registered fit accounting counts outer supervised selector states; internal component invocations are reported separately"
+  },
+  "llm_provenance_freeze": {
+    "ordered_feature_count": 1959,
+    "ordered_feature_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "lineage_file_sha256": "4b6af4afc15250e74c5d66355d1364237e9b4fa8681e870f07746ae9d9108f86",
+    "metadata_file_sha256": "c5dec05fa362b0a4fd77c23cf79fc093c338a98bf20899bc50b31d9bf1aa49dc",
+    "description_contract": "prompt_16_target_free_adapter_lineage_v2",
+    "description_count": 1959,
+    "per_feature_description_hashes_sha256": "e851bfe2b0cc56d44a2c70685e9020096f85f283bf43c94c38e762955a2bd8ae",
+    "ordered_rendered_descriptions_sha256": "4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
+    "prompt_version": "stability_expert_v3",
+    "prompt_chunk_count": 1,
+    "prompt_chunk_order": [1],
+    "prompt_merge_algorithm": "identity_single_chunk_no_cross_chunk_merge",
+    "rendered_prompt_sha256": "caebd18c3cbbfe89f7107ddeebc2df48ea77a07257b20a2ba8f102997a5515f4",
+    "system_message_sha256": "ccdbdda09c8db90514fa7a41cc908130f15bbd048e69c33502e911a91919625f",
+    "retry_suffix_sha256": "df47fc7e30089dec00415b6f5d4b89dc7a6f2420f2127fdc5a08f72b275d1277",
+    "provider": "openai",
+    "endpoint": "chat.completions.create",
+    "request_model": "gpt-4.1-mini-2025-04-14",
+    "required_response_model": "gpt-4.1-mini-2025-04-14",
+    "historical_request_alias": "gpt-4.1-mini",
+    "historical_authenticated_response_model": "gpt-4.1-mini-2025-04-14",
+    "temperature": 0.0,
+    "seed": null,
+    "seed_rule": "not_sent_by_authenticated_historical_chat_completions_call",
+    "response_format": {"type":"json_object"},
+    "application_parse_or_contract_attempts_maximum": 3,
+    "sdk_transport_retry_rule": "OpenAI_Python_SDK_default_transport_retries",
+    "parser": "json.loads_then_exact_100_distinct_known_names",
+    "fallback": "forbidden",
+    "cache_reuse": "only_complete_recursively_hashed_identity_exact_success",
+    "candidate_coverage": {
+      "descriptions_required": 1959,
+      "ranked_features_required": 100,
+      "unknown_allowed": 0,
+      "duplicates_allowed": 0,
+      "missing_rank_positions_allowed": 0,
+      "silent_fill_allowed": false
+    }
+  },
+  "parameter_parity_audit": [
+    {
+      "method_id":"llm","model":"lr","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","historical_source":"configs/protocols/credit_scoring_extension_v1.yaml#/selectors/llm","historical_source_sha256":"f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0","candidate_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a","final_feature_budget":20,"candidate_pool":100,"components":[],"fit_boundary":"outcome-independent global ranking; deterministic top-20 state","seed":null,"weights":null,"normalization":null,"missing_rank_behavior":"strict_failure","tie_rule":"LLM priority order; no post-hoc tie resolution","preprocessing_sha256":"5b3c7010dd1889374dbf6d2c53adaac72a5274370e895f96c15a49868a9babf3","final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835","sampling_rule":"none","natural_support":"exact top-20 only; no padding","fold_registry_sha256":"766e65ed4a4342fc5fa46601ab8307ce3982848bc7e298aa5a08e3a6b27dcaac","oot_membership_sha256":"8fe7faaabcffd4c9a5b0b8efeee5aa39240d7f6052751a54d01f0210772489cf","holm_family":"third_dataset_llm_primary","parity_verdict":"pass"
+    },
+    {
+      "method_id":"llm","model":"catboost","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","historical_source":"configs/protocols/credit_scoring_extension_v1.yaml#/selectors/llm","historical_source_sha256":"f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0","candidate_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a","final_feature_budget":40,"candidate_pool":100,"components":[],"fit_boundary":"outcome-independent global ranking; deterministic top-40 state","seed":null,"weights":null,"normalization":null,"missing_rank_behavior":"strict_failure","tie_rule":"LLM priority order; no post-hoc tie resolution","preprocessing_sha256":"5b3c7010dd1889374dbf6d2c53adaac72a5274370e895f96c15a49868a9babf3","final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835","sampling_rule":"CatBoost Bernoulli subsample=0.55 under frozen final-model settings","natural_support":"exact top-40 only; no padding","fold_registry_sha256":"766e65ed4a4342fc5fa46601ab8307ce3982848bc7e298aa5a08e3a6b27dcaac","oot_membership_sha256":"8fe7faaabcffd4c9a5b0b8efeee5aa39240d7f6052751a54d01f0210772489cf","holm_family":"third_dataset_llm_primary","parity_verdict":"pass"
+    },
+    {
+      "method_id":"stable_core_llm_fill","model":"lr","implementation":"credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector","historical_source":"src/credit_risk_fs/selectors/stable_core_llm_fill.py at registry commit ba4e46d4b545f395f25e1e3c094c16ace7d144aa","historical_source_sha256":"66cd200ddba9aefb55231a6de691f2fd1f0ec6335f28bbc3dbae2896575e6a5c","candidate_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a","final_feature_budget":20,"candidate_pool":100,"components":["five bootstrap RandomForestRelevanceMRMRSelector fits","authenticated LLM ranking fill"],"fit_boundary":"each DEV training fold only","seed":42,"weights":null,"normalization":null,"missing_rank_behavior":"strict ranking failure; no silent fill","tie_rule":"selection_frequency descending, mean_rank ascending, feature_name ascending, then LLM rank order","preprocessing_sha256":"5b3c7010dd1889374dbf6d2c53adaac72a5274370e895f96c15a49868a9babf3","final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835","sampling_rule":"5 bootstrap samples, fraction 0.8 with replacement, seeds 42..46, stability threshold 0.8","natural_support":"stable core then authenticated LLM fill to 20; no unranked padding","fold_registry_sha256":"766e65ed4a4342fc5fa46601ab8307ce3982848bc7e298aa5a08e3a6b27dcaac","oot_membership_sha256":"8fe7faaabcffd4c9a5b0b8efeee5aa39240d7f6052751a54d01f0210772489cf","holm_family":"third_dataset_llm_primary","parity_verdict":"pass"
+    },
+    {
+      "method_id":"stable_core_llm_fill","model":"catboost","implementation":"credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector","historical_source":"src/credit_risk_fs/selectors/stable_core_llm_fill.py at registry commit ba4e46d4b545f395f25e1e3c094c16ace7d144aa","historical_source_sha256":"66cd200ddba9aefb55231a6de691f2fd1f0ec6335f28bbc3dbae2896575e6a5c","candidate_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a","final_feature_budget":40,"candidate_pool":100,"components":["five bootstrap RandomForestRelevanceMRMRSelector fits","authenticated LLM ranking fill"],"fit_boundary":"each DEV training fold only","seed":42,"weights":null,"normalization":null,"missing_rank_behavior":"strict ranking failure; no silent fill","tie_rule":"selection_frequency descending, mean_rank ascending, feature_name ascending, then LLM rank order","preprocessing_sha256":"5b3c7010dd1889374dbf6d2c53adaac72a5274370e895f96c15a49868a9babf3","final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835","sampling_rule":"5 bootstrap samples, fraction 0.8 with replacement, seeds 42..46, stability threshold 0.8; CatBoost Bernoulli subsample=0.55","natural_support":"stable core then authenticated LLM fill to 40; no unranked padding","fold_registry_sha256":"766e65ed4a4342fc5fa46601ab8307ce3982848bc7e298aa5a08e3a6b27dcaac","oot_membership_sha256":"8fe7faaabcffd4c9a5b0b8efeee5aa39240d7f6052751a54d01f0210772489cf","holm_family":"third_dataset_llm_primary","parity_verdict":"pass"
+    }
+  ],
+  "frozen_data_and_fold_identities": {
+    "matrix_root": "outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "matrix_manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "matrix_rows": 1526659,
+    "matrix_parts": 31,
+    "predictor_count": 1959,
+    "ordered_predictor_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "fold_count": 5,
+    "gap_unique_dates": 1,
+    "fold_registry_sha256": "766e65ed4a4342fc5fa46601ab8307ce3982848bc7e298aa5a08e3a6b27dcaac",
+    "fold_train_validation_row_hashes": [
+      {"fold_id":1,"train_rows":200661,"train_ordered_case_id_sha256":"df512d6d27ed1c33c88a08aab6ddacda495077a16f9cd800c27b32242d6603f2","train_ordered_case_id_target_sha256":"19672d734017e44950a1eacbd49be6fc3e99546a3dbce34694ea2822291009cc","validation_rows":204567,"validation_ordered_case_id_sha256":"540abc6244dcec611ba40f8697115f3836d11c33c217ddbec208cb428e6711ff","validation_ordered_case_id_target_sha256":"42b870b3a16ae10c881b2ca042f00e23839992ea948b20ab7c86bdd92c97e44d"},
+      {"fold_id":2,"train_rows":402103,"train_ordered_case_id_sha256":"a4edc4dd33e0f8baee2abd324512fc3aa3e851da96b1636b0baf0f01f64bc558","train_ordered_case_id_target_sha256":"ed6c6ee5ce6e81ef007fa8f2c7de0fb6bdabf827a39b109a882b53e2caf8820d","validation_rows":203798,"validation_ordered_case_id_sha256":"5efb6ff6f7cd730419e4480b8c89070759a49bf2a7727675882efa7ecff7a149","validation_ordered_case_id_target_sha256":"80edbdc8ab85d013d2f845af75ece707d341bb6439d64a5a71dcb54a600c20e0"},
+      {"fold_id":3,"train_rows":604598,"train_ordered_case_id_sha256":"5df3354c2344464fb0ebc721c910118c9b86b7356a6291523c6dc8f1b89c1ff1","train_ordered_case_id_target_sha256":"a7205775dd051170f3bf3dc23d6a82bfa86c6ba092fe623e426898468bed724f","validation_rows":205980,"validation_ordered_case_id_sha256":"ff7ecceca99ae04697f71a796f1eb4e23a08da4d0b75c892f852942c59999677","validation_ordered_case_id_target_sha256":"4171362f88af58d645f2497420e114565a57caf1b83115d59fced9e0c17013a4"},
+      {"fold_id":4,"train_rows":810904,"train_ordered_case_id_sha256":"067beff6659a536ddf4d98b1d2e097c84d8af5a04a5ddd0c90d723989f83f9bc","train_ordered_case_id_target_sha256":"38d031c5e915b097c550a8ebc7e43ddd021e6e2d825bc7ed9492dce38819c709","validation_rows":201466,"validation_ordered_case_id_sha256":"e268b338a102eca44d4209c22df6ed8f72209b6f14c612173faf897da0fb4f3a","validation_ordered_case_id_target_sha256":"df8fa59d3de6b424d90d4eb550f5b21ba503d5b7f505aae675851a2549541012"},
+      {"fold_id":5,"train_rows":1012061,"train_ordered_case_id_sha256":"6be95504a6d2a2784f912aee0557b08efa999cb7e566c065bfe216d9bf6a30a9","train_ordered_case_id_target_sha256":"a073ffa5a633853ad4c13b087671ac06449d6df2aee3f9357c1f75316fb93b73","validation_rows":202820,"validation_ordered_case_id_sha256":"1526f3fd89f8bef401d251231d88f89e05bc043738c23b9e47fa4f5908c1f55e","validation_ordered_case_id_target_sha256":"d01f2d2aafa581f9b4c4d35027bf9da9a1b4b312a787cea3c57edbcbcdfea7cd"}
+    ],
+    "full_dev": {"rows":1221743,"ordered_case_id_sha256":"e2133194cfd839ed8087f127bb949fba9c0408a70d8ea540b4c5b70657ac69ea","ordered_case_id_target_sha256":"395cb48986263c861fdd61141e3a4d30f1a7e42e04723cbdf51c00b59327180c"},
+    "oot": {"rows":304916,"ordered_case_id_sha256":"7b93ae09267aacbb30a2e698716685207d127f0e3d5159a08f0e765e530729d7","ordered_case_id_target_sha256":"f360a3fe5af44ebb4b4d7a734a60809a65f473a888aca0ab3c385fa5c2058b4b"}
+  },
+  "classical_preservation": {
+    "root": "results/prompt_16_homecredit_model_stability_2024/dev_v1",
+    "completed_selector_fits": 135,
+    "completed_evaluations": 150,
+    "files": 1371,
+    "bytes": 351363036,
+    "tree_manifest_sha256": "c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
+    "evaluation_manifest_count": 150,
+    "evaluation_manifest_registry_sha256": "047cf137ef68d2142975406e768356c00780b2b309cddda48adea6a7bfc7be99",
+    "fold_evaluation_manifest_registries": {
+      "fold_1":{"count":30,"manifest_registry_sha256":"750538c73508a90ea015cf82db06b8c99855760f9d60c2d7ea800fb9ba79c6b0"},
+      "fold_2":{"count":30,"manifest_registry_sha256":"d83283617c81ece004d2d47abd462f084023e5999b1439b5010a37adf1c9ab27"},
+      "fold_3":{"count":30,"manifest_registry_sha256":"bc24172e36a3dc11c9521dc5dc8d1ad39255e1ba84029dd2cc19b917e4b5dcb6"},
+      "fold_4":{"count":30,"manifest_registry_sha256":"42806bf2d7b491fca706d5abd608f0ff196215801531f531cb907fc1f0e14fb9"},
+      "fold_5":{"count":30,"manifest_registry_sha256":"8a6921d5e9b8ed04efd06b9da5c7fca3d58ead931712c7b04f3f867ea7285ab5"}
+    },
+    "fold_phase_manifest_sha256": {
+      "fold_1":"bd8c517ab275aae3510ee694de25ede52afc530c347a79cbc4a12916657ab31b",
+      "fold_2":"6f060849c211b044c1daacd4662a112c23cd2c25ec3f6fb6ac80732f8a8320d8",
+      "fold_3":"d2013c5a989b36a1bb426a7c19116d051db619e5db0cc1d2fffc52bc529847d9",
+      "fold_4":"db1384f79c820b857d86d27fcc1c1278809624ee7e4d3620219bb01ea89420dd",
+      "fold_5":"05aa8017d20ac053ef8c357c547648f1c80e68a47ce8714af619de96d27cb395"
+    },
+    "write_policy": "read_only_no_overwrite_no_delete_no_rerun"
+  },
+  "preprocessing_contract": {
+    "implementation":"credit_risk_fs.preprocessing.encoding.Preprocessor",
+    "numeric":{"strategy":"mean","scaler":"standard","output_dtype":"float32"},
+    "categorical":{"max_cardinality":7,"missing_token":"Missing","minimum_frequency":10,"encoding":"dense_one_hot_float32"},
+    "fit_scope":"DEV fold training only",
+    "validation_transform_only":true,
+    "canonical_sha256":"5b3c7010dd1889374dbf6d2c53adaac72a5274370e895f96c15a49868a9babf3"
+  },
+  "frozen_classical_execution_settings": {
+    "seeds": {"experiment_selector_model":42,"paired_bootstrap":20260721},
+    "resource_controls": {
+      "accelerator":"cpu",
+      "concurrent_cells":1,
+      "concurrent_folds":1,
+      "data_loader_workers":0,
+      "estimator_threads_maximum":4,
+      "wall_clock_limits_seconds":{"baseline_lightweight":10800,"baseline_catboost_shap":10800,"baseline_boruta_random_forest":21600,"baseline_rfe_catboost":28800,"statistical_normalized_average_rank":43200,"iv_then_boruta":21600,"boruta_then_mrmr_mutual_information":21600,"boruta_then_rfe_catboost":43200,"final_lr":10800,"final_catboost":43200},
+      "checkpoint":"atomic per-selection and per-evaluation state with declared SHA-256; immutable completed cells; resume only exact authenticated identity; archive interrupted/failed attempts; execution lock required and released"
+    },
+    "final_model_settings": {
+      "lr":{"solver":"liblinear","max_iter":1000,"class_weight":"balanced","random_state":42},
+      "catboost":{"depth":10,"learning_rate":0.01,"l2_leaf_reg":95,"min_data_in_leaf":290,"colsample_bylevel":0.9,"random_strength":0.125,"grow_policy":"Depthwise","one_hot_max_size":21,"leaf_estimation_method":"Newton","bootstrap_type":"Bernoulli","subsample":0.55,"loss_function":"Logloss","eval_metric":"AUC","auto_class_weights":"Balanced","iterations":1500,"early_stopping_rounds":150,"verbose":100,"random_state":42,"allow_writing_files":false}
+    },
+    "seeds_sha256":"20d9a8cf0779fc95c4c24eb6a2f183a2bd41454690806343266c38c6c58c4736",
+    "resource_controls_sha256":"fd1883d896a68ed487f95d3c0301ae57049da5aba0b908095780f5262be99ac5",
+    "final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835"
+  },
+  "comparison_graph": {
+    "frozen_before_supplemental_outcomes": true,
+    "primary_holm_family_id": "third_dataset_llm_primary",
+    "models": ["lr","catboost"],
+    "matched_comparisons_per_model": [
+      {"left":"llm","right":"mrmr_mutual_information"},
+      {"left":"stable_core_llm_fill","right":"mrmr_mutual_information"},
+      {"left":"stable_core_llm_fill","right":"llm"},
+      {"left":"llm","right":"full_features"},
+      {"left":"stable_core_llm_fill","right":"full_features"}
+    ],
+    "primary_family_comparison_count": 10,
+    "completed_statistical_normalized_rank_comparisons": "preserved_from_v1_without_rerun",
+    "semantic_mixed_voter_comparisons": [],
+    "paired_case_rule": "identical frozen OOT cases within model",
+    "inference_rule": "retain the v1 paired-test, confidence-interval, materiality, unavailable-member, numerical-tolerance, and Holm procedures; freeze the executable OOT analysis plan only after complete amended DEV validation and before OOT access"
+  },
+  "oot_revocation": {
+    "status": "former_classical_only_command_remains_revoked",
+    "source_plan":"cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "source_plan_sha256":"9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "revoked_json_pointer":"/commands/oot_template",
+    "successor_oot_authorized":false,
+    "rule":"No OOT command may be issued or executed until all 20 supplemental and all 170 amended DEV evaluations authenticate and a new 34-cell OOT registry/analysis plan is committed."
+  },
+  "execution_boundary": {
+    "authorized_now":"one resumable supplemental DEV controller covering five folds and four cells per fold",
+    "real_llm_request_allowed_only_after_all_entry_and_freeze_authentication":true,
+    "matrix_rebuild_allowed":false,
+    "classical_cell_execution_allowed":false,
+    "oot_resolution_or_access_in_supplemental_mode":false,
+    "no_completed_classical_result_may_be_changed_or_overwritten":true,
+    "completion_marker_rule":"controller _SUCCESS is written last after 20 supplemental and 170 total DEV accounting"
+  },
+  "artifact_authentication_sha256": "321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"
+}
