@@ -1,0 +1,247 @@
+{
+  "schema_version": "prompt_16_llm_scope_correction_method_identity_blocker_v1",
+  "status": "blocked_before_v2_amendment_and_before_supplemental_execution",
+  "created_at_utc": "2026-08-14T05:58:24.2417103Z",
+  "blocking_condition": {
+    "code": "semantic_mixed_voter_identity_not_uniquely_authenticatable",
+    "required_identity_fields": [
+      "canonical_method_id",
+      "component_set",
+      "candidate_pool",
+      "weights",
+      "normalization",
+      "missing_rank_behavior",
+      "tie_rules"
+    ],
+    "resolution": "No immutable pre-outcome repository artifact uniquely specifies all required fields for a semantic/mixed voter.",
+    "user_rule_applied": "If the exact hybrid or semantic/mixed voter cannot be resolved uniquely from immutable pre-outcome artifacts, stop with a narrow method-identity blocker; do not run candidates and do not guess.",
+    "prohibited_inferences": [
+      "adding api_backed_llm to the later statistical voter",
+      "choosing any subset of statistical, LLM, domain-rule, or contrastive rankings",
+      "copying the later statistical voter's pool, weights, normalization, missing-rank behavior, or tie rules into an undocumented semantic voter",
+      "using classical DEV or Prompt 14 outcomes to select a design"
+    ]
+  },
+  "entry_gate": {
+    "repository": {
+      "branch": "main",
+      "head": "eb90e152adaf3ec1f993b85b28b657531fd6ff41",
+      "remote_main": "d3d393f5dc58894afac209ccd6f96cc8c5e99f7b",
+      "ahead": 2,
+      "behind": 0,
+      "pre_blocker_worktree_porcelain": [],
+      "tracked_diff": "clean",
+      "staged_diff": "clean",
+      "untracked_files": 0
+    },
+    "prompt_15_adapter": {
+      "status_path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/status.json",
+      "status_sha256": "2aae5b514745e7b186ea9618b691708f531eb4cf003db44e31d3c1e867c2ec33",
+      "implementation_manifest_path": "cleanup/audits/prompt_15_third_dataset_adapter_implementation/implementation_manifest.json",
+      "implementation_manifest_sha256": "91d48d995de8ca49fa095560a36b14fbdb6ee8c49023401d45919e4d51e67dc8",
+      "declared_artifacts": 11,
+      "artifact_hash_failures": 0,
+      "verdict": "pass"
+    },
+    "original_protocol": {
+      "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+      "file_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+      "internal_authentication_sha256": "638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+      "approved_review_digest_sha256": "3f537d1b5e79faad3a2f047ec13dbe4b1797e11d4d64c4d92a06e09762a53f1e",
+      "stage_1_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+      "freeze_commit": "e2a9a80f2894ce7f9b8ef3769e073b6bbe2228a9",
+      "preservation": "unchanged"
+    },
+    "prompt_16_gate": {
+      "plan_path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+      "plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+      "dev_authorization_path": "cleanup/audits/prompt_16_final_third_dataset_execution/dev_execution_authorization.json",
+      "dev_authorization_sha256": "2fa0309a29eb57c45110ebf4c34918eaebacc538cded421c78bb710d4f3177c7"
+    },
+    "completed_matrix": {
+      "root": "outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+      "manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+      "authenticated_manifest_artifacts": 36,
+      "rows": 1526659,
+      "matrix_parts": 31,
+      "predictors": 1959,
+      "ordered_predictor_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+      "input_inventory_identity_sha256": "0fd57094967df411425000506cf3756f58e321d827dff4726d3dce940f8603fa",
+      "manifest_validation": "pass_all_declared_sizes_and_sha256"
+    },
+    "split_and_folds": {
+      "source": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json#/approved_protocol/split_and_fold_boundaries",
+      "dev_ordered_case_id_sha256": "e2133194cfd839ed8087f127bb949fba9c0408a70d8ea540b4c5b70657ac69ea",
+      "dev_ordered_case_id_target_sha256": "395cb48986263c861fdd61141e3a4d30f1a7e42e04723cbdf51c00b59327180c",
+      "oot_ordered_case_id_sha256": "7b93ae09267aacbb30a2e698716685207d127f0e3d5159a08f0e765e530729d7",
+      "oot_ordered_case_id_target_sha256": "f360a3fe5af44ebb4b4d7a734a60809a65f473a888aca0ab3c385fa5c2058b4b",
+      "folds": 5,
+      "all_fold_case_overlaps_zero": true,
+      "all_fold_date_overlaps_zero": true,
+      "verdict": "pass"
+    },
+    "classical_dev": {
+      "root": "results/prompt_16_homecredit_model_stability_2024/dev_v1",
+      "folds_complete": 5,
+      "selection_fit_manifests_authenticated": 135,
+      "evaluation_manifests_authenticated": 150,
+      "leaf_manifests_authenticated": 285,
+      "leaf_artifacts_authenticated": 776,
+      "files_preserved": 1371,
+      "bytes_preserved": 351363036,
+      "tree_manifest_sha256": "c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
+      "tree_manifest_serialization": "relative POSIX path, TAB, byte length, TAB, lowercase SHA-256, LF; paths sorted by absolute path",
+      "fold_phase_manifest_sha256": {
+        "fold_1": "bd8c517ab275aae3510ee694de25ede52afc530c347a79cbc4a12916657ab31b",
+        "fold_2": "6f060849c211b044c1daacd4662a112c23cd2c25ec3f6fb6ac80732f8a8320d8",
+        "fold_3": "d2013c5a989b36a1bb426a7c19116d051db619e5db0cc1d2fffc52bc529847d9",
+        "fold_4": "db1384f79c820b857d86d27fcc1c1278809624ee7e4d3620219bb01ea89420dd",
+        "fold_5": "05aa8017d20ac053ef8c357c547648f1c80e68a47ce8714af619de96d27cb395"
+      },
+      "all_registered_cells_visible": true,
+      "all_phase_oot_opened_flags": false,
+      "performance_values_opened": false,
+      "inspection_scope": "identity, status, accounting, schema, byte length, and cryptographic hashes only",
+      "verdict": "pass_unchanged"
+    },
+    "classical_fold_5_termination": {
+      "supervisor_summary": "outputs/prompt_16_homecredit_model_stability_2024/logs/dev_fold_5_supervisor_summary.json",
+      "status": "completed",
+      "worker_exit_code": 0,
+      "completed_at_utc": "2026-08-13T21:05:50.579056+00:00",
+      "child_cleanup_confirmed": true,
+      "queue_cleanup_confirmed": true,
+      "survivor_processes": [],
+      "termination_condition": null,
+      "terminal_log_last_event": "dev_fold_5 completed and supervisor cleanup authenticated",
+      "verdict": "normal_termination"
+    },
+    "worker_and_lock_state": {
+      "active_python_workers": [],
+      "prompt_16_execution_locks": [],
+      "verdict": "pass_no_workers_or_execution_locks"
+    },
+    "third_dataset_oot_state": {
+      "oot_root": "results/prompt_16_homecredit_model_stability_2024/oot_v1",
+      "oot_root_exists": false,
+      "oot_named_result_paths": [],
+      "oot_named_output_paths": [],
+      "oot_phase_log_matches": [],
+      "oot_prediction_metric_result_or_completion_markers": [],
+      "verdict": "pass_never_started"
+    },
+    "prompt_14_numeric_findings_opened": false,
+    "experimental_workers_started_by_this_audit": 0
+  },
+  "method_identity_authentication": {
+    "resolvable_methods": [
+      {
+        "canonical_method_id": "llm",
+        "implementation": "credit_risk_fs.selectors.llm_screening.LLMSelector",
+        "historical_registry_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+        "historical_registry_path": "src/credit_risk_fs/selectors/registry.py",
+        "historical_registry_blob_oid": "3f5e1cdf9b92b3c8847c592eaf12a760685fb878",
+        "current_implementation_sha256": "cc7af1cb058ae769934ae68d689ea8bd0d757756f9aab57b32fd7b567c90e7d2",
+        "current_config_sha256": "7a3510864294f23e3004aaa19f6fcbf22ddd3b4deb7b6fff73e66c9f99b18750",
+        "verdict": "unique"
+      },
+      {
+        "canonical_method_id": "stable_core_llm_fill",
+        "implementation": "credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector",
+        "historical_registry_commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+        "historical_registry_path": "src/credit_risk_fs/selectors/registry.py",
+        "historical_registry_blob_oid": "3f5e1cdf9b92b3c8847c592eaf12a760685fb878",
+        "historical_config_path": "configs/selectors/hybrids.yaml",
+        "historical_config_blob_oid": "d0d644e2cc37c108c567c37ad031fcadeb2be4ad",
+        "current_implementation_sha256": "66cd200ddba9aefb55231a6de691f2fd1f0ec6335f28bbc3dbae2896575e6a5c",
+        "current_config_sha256": "368c99d152641d039b2e6aff019f16ff8c7bd8f12346b83f789ddaa8645d2b0a",
+        "verdict": "unique"
+      }
+    ],
+    "unresolved_method": {
+      "requested_role": "exact single canonical semantic/mixed voter",
+      "verdict": "not_unique",
+      "missing_authenticated_fields": [
+        "canonical_method_id",
+        "component_set",
+        "candidate_pool",
+        "weights",
+        "normalization",
+        "missing_rank_behavior",
+        "tie_rules"
+      ]
+    }
+  },
+  "immutable_pre_outcome_evidence": [
+    {
+      "commit": "e767549253698da8e8aa6b002d5610467bc942b6",
+      "path": "README.md",
+      "blob_oid": "df6ff63463e09919d5e18b160daf85653ae1fcfa",
+      "finding": "The first explicit repository voting audit labels both statistical majority voting and normalized average-rank voting missing/planned-only and states that no executable aggregator exists. It identifies stable-core bootstrap frequency as a single-method stability procedure, not voting."
+    },
+    {
+      "commit": "b1e0d5236d8d6ceb6aa889eced45d11c9cdc0a8e",
+      "path": "configs/protocols/credit_scoring_extension_v1.yaml",
+      "blob_oid": "68afa097817fd40a2029180794a6be15a7b4b9ce",
+      "current_file_sha256": "f4137e98b7c89a63e9a73bc495190858f416c586d237f8ac003c8fdb9e40bde0",
+      "finding": "historical_homecredit_voting is explicitly unresolved: voters is empty and aggregation_rule, normalization, tie_rule, and candidate_pool_rule are null."
+    },
+    {
+      "commit": "b1e0d5236d8d6ceb6aa889eced45d11c9cdc0a8e",
+      "path": "configs/protocols/cross_dataset_rank_voting_v1.yaml",
+      "blob_oid": "f0a4fb6a92980a871b2731dbe452ba32864aa86e",
+      "current_file_sha256": "51030e49716fae0a9c09b52628784a237e9581bb14c1a027e9c8238a575f0b49",
+      "finding": "The only fully specified frozen rank voter is expressly new prospective work, not historical replication; it contains only rf_corr_mrmr and boruta and explicitly excludes api_backed_llm, corrected_clip, domain_rule, and rfe."
+    },
+    {
+      "commit": "9bc69d0c25ef09d0df2d7dc71c45bea231c5a3e4",
+      "path": "configs/protocols/selector_combinations_v1/combination_protocol_lock.json",
+      "blob_oid": "7a87cc265b88d10921135fa8e0273497423cb13a",
+      "current_file_sha256": "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9",
+      "finding": "The pre-Prompt-14 combination lock explicitly excludes semantic_or_llm_as_statistical_voter."
+    },
+    {
+      "commit": "ba4e46d4b545f395f25e1e3c094c16ace7d144aa",
+      "path": "src/credit_risk_fs/selectors/registry.py",
+      "blob_oid": "3f5e1cdf9b92b3c8847c592eaf12a760685fb878",
+      "finding": "The pre-Prompt-14 selector registry uniquely resolves llm and stable_core_llm_fill but contains no semantic/mixed voter identity."
+    }
+  ],
+  "outcome_blindness": {
+    "classical_dev_predictions_opened": 0,
+    "classical_dev_metric_values_opened": 0,
+    "prompt_14_numeric_artifacts_opened": 0,
+    "method_membership_selected_from_outcomes": false,
+    "artifact_hashing_read_bytes_without_interpreting_performance": true
+  },
+  "oot_revocation": {
+    "status": "revoked_no_successor_authorized",
+    "source_plan": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+    "source_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+    "revoked_json_pointer": "/commands/oot_template",
+    "old_classical_only_oot_registry_status": "revoked_for_oot_use",
+    "oot_analysis_plan_exists": false,
+    "oot_execution_authorization_exists": false,
+    "successor_oot_command_exists": false,
+    "rule": "No third-dataset OOT command may be executed or issued until a uniquely authenticated three-method amendment exists and the complete amended DEV gate passes."
+  },
+  "actions_not_taken": {
+    "v2_protocol_created": false,
+    "parameter_parity_audit_created": false,
+    "supplemental_registry_created": false,
+    "implementation_changed": false,
+    "tests_changed": false,
+    "llm_requests_made": 0,
+    "supplemental_dev_workers_started": 0,
+    "classical_cells_rerun": 0,
+    "oot_workers_started": 0,
+    "dev_command_issued": false,
+    "oot_command_issued": false
+  },
+  "required_external_resolution": {
+    "description": "Provide or restore an immutable pre-outcome committed artifact that uniquely binds the semantic/mixed voter's canonical method ID, components, pool, weights, normalization, missing-rank behavior, and tie rules.",
+    "acceptable_resolution": "A repository commit/blob predating affected third-dataset outcomes or another already-authenticated pre-outcome protocol artifact with an exact digest.",
+    "unacceptable_resolution": "A new method choice, a choice based on DEV/Prompt 14 outcomes, or an instruction to run all candidates."
+  },
+  "terminal_marker": "PROMPT_16_BLOCKED_SEMANTIC_MIXED_VOTER_IDENTITY"
+}
