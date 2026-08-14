@@ -1,0 +1,131 @@
+{
+  "schema_version": "prompt_16_supplemental_dev_authorization_v2",
+  "status": "authorized_for_one_resumable_five_fold_supplemental_dev_command",
+  "created_at_utc": "2026-08-14T07:10:00Z",
+  "operation": "supplemental_dev_only_no_oot_code_path",
+  "implementation_commit": "50fb1505fbae6e0e6c6c235b6e2019b362949bd1",
+  "implementation_parent_blocker_commit": "b062362e999a9bec516996c6e3fad4fcb80d70dd",
+  "repository_requirements": {
+    "branch": "main",
+    "worktree": "clean_including_untracked_files",
+    "implementation_commit_must_be_ancestor_of_head": true,
+    "authorization_file_must_be_tracked": true,
+    "implementation_files_must_match_sha256": true,
+    "other_prompt_16_workers_allowed": false,
+    "preexisting_prompt_16_execution_locks_allowed": false
+  },
+  "amendment": {
+    "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
+    "file_sha256": "e9690bfd6f47dbb197686dce1ae8bce4c7216cfd229880ad35639f3f826fbb09",
+    "internal_sha256": "321430ef6ee3e92d4f7ce5bad6f79b98e403e4e05b98515a726526ea5630d258"
+  },
+  "v1_protocol_path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+  "blocker_path": "cleanup/audits/prompt_16_llm_scope_correction/method_identity_blocker.json",
+  "execution_plan_path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
+  "execution_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
+  "implementation_files": [
+    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"bfdede31e0204cf78f29580a7d4dc9a7893008c24aa8b4514ac33c602e5dbd01"},
+    {"path":"cleanup/audits/prompt_16_llm_scope_correction/parameter_parity_audit_v2.json","sha256":"0ff437f07b7cc53e154198d12f0f7de42970915b5064c2cad252bfa54dde48b2"},
+    {"path":"cleanup/audits/prompt_16_llm_scope_correction/implementation_validation_v2.json","sha256":"b72e83bca9cf89032ab71480dc560464db48580d23b4a812172b7f5546ab171c"},
+    {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"6093674e21a8d8338ac8d5468169fb3686cad34e3834e5b4e12f1a69adb79009"},
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"65420295d0ba70418a0f2fef027290c33012e1a08a7d27acd8b286515613f2c6"},
+    {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"870e2724e0b3b87bc55cceb05cf893dbed90fa1a31751df51ba449cb87a67816"},
+    {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"7aa074177a7818c4323a5070b2ad568ab0f644184e0c58ed0e57e37ed7df30b9"},
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"2b09d25042f16b6f52d5e07314838f533df6bbb80d3f278be138edf80589a179"}
+  ],
+  "supplemental_cells": [
+    {"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","model":"lr","requested_feature_budget":20,"ranking_budget":100,"seed":42},
+    {"configuration_order":32,"configuration_id":"p16v2-c032-llm-catboost","method_id":"llm","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","model":"catboost","requested_feature_budget":40,"ranking_budget":100,"seed":42},
+    {"configuration_order":33,"configuration_id":"p16v2-c033-stable_core_llm_fill-lr","method_id":"stable_core_llm_fill","implementation":"credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector","model":"lr","requested_feature_budget":20,"ranking_budget":100,"seed":42},
+    {"configuration_order":34,"configuration_id":"p16v2-c034-stable_core_llm_fill-catboost","method_id":"stable_core_llm_fill","implementation":"credit_risk_fs.selectors.stable_core_llm_fill.StableCoreLLMFillSelector","model":"catboost","requested_feature_budget":40,"ranking_budget":100,"seed":42}
+  ],
+  "execution_accounting": {
+    "target_free_llm_ranking_generations": 1,
+    "target_free_llm_api_ranking_is_supervised_selector_fit": false,
+    "global_llm_budget_truncation_states": 2,
+    "added_registered_supervised_selector_fits": 10,
+    "stable_core_outer_fits": 10,
+    "stable_core_rf_mrmr_component_fits_per_outer_fit": 5,
+    "added_internal_supervised_component_fits": 50,
+    "preserved_classical_registered_selector_fits": 135,
+    "amended_registered_supervised_selector_fits": 145,
+    "added_dev_evaluations": 20,
+    "preserved_classical_dev_evaluations": 150,
+    "amended_dev_evaluations": 170,
+    "added_full_dev_selector_refits": 2,
+    "added_full_dev_internal_component_fits": 10,
+    "preserved_classical_full_dev_selector_refits": 27,
+    "amended_full_dev_selector_refits": 29,
+    "added_oot_evaluations": 4,
+    "preserved_classical_oot_evaluations": 30,
+    "amended_oot_evaluations": 34,
+    "unavailable_semantic_mixed_voter_execution_cells": 0
+  },
+  "entry_authentication": {
+    "blocker_sha256":"51cd24903642a25cad1b7b1ebd541ec29a9478e5f5a957035ee490ee49d6729d",
+    "v1_protocol_file_sha256":"e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "v1_protocol_internal_sha256":"638e1fa2aa54bf98b771206b56ac13f6a6b77e2093deb291b794081d1a475df6",
+    "matrix_manifest_sha256":"b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "matrix_declared_artifact_count":36,
+    "ordered_feature_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "classical_tree_sha256":"c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
+    "classical_file_count":1371,
+    "classical_byte_count":351363036,
+    "classical_evaluation_manifest_count":150,
+    "classical_evaluation_manifest_registry_sha256":"047cf137ef68d2142975406e768356c00780b2b309cddda48adea6a7bfc7be99",
+    "fold_count":5,
+    "no_oot_required":true,
+    "prompt_and_description_freeze_must_match":true
+  },
+  "llm_request_boundary": {
+    "provider":"openai",
+    "request_model":"gpt-4.1-mini-2025-04-14",
+    "required_response_model":"gpt-4.1-mini-2025-04-14",
+    "temperature":0.0,
+    "seed":null,
+    "ranking_budget":100,
+    "ordered_rendered_descriptions_sha256":"4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
+    "rendered_prompt_sha256":"caebd18c3cbbfe89f7107ddeebc2df48ea77a07257b20a2ba8f102997a5515f4",
+    "response_parser":"strict JSON, exact 100 distinct known names",
+    "application_attempts_maximum":3,
+    "fallback_allowed":false,
+    "credentials":"OPENAI_API_KEY environment variable only; never serialized"
+  },
+  "paths": {
+    "output_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2",
+    "status_path":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/controller_status.json",
+    "success_marker":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/_SUCCESS",
+    "ranking_provenance_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/llm_ranking",
+    "log_root":"D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/llm_supplement_v2"
+  },
+  "manual_command_contract": {
+    "executable":"D:/python projects/Research/.venv/Scripts/python.exe",
+    "script":"D:/python projects/Research/scripts/run_prompt_16_third_dataset.py",
+    "subcommand":"supplemental-dev",
+    "authorization_flag":"--authorization",
+    "all_folds_in_one_invocation":true,
+    "identical_command_is_safe_resume":true,
+    "stops_before_oot":true
+  },
+  "completion_requirements": {
+    "target_free_ranking_complete":1,
+    "global_llm_selection_states_complete":2,
+    "folds_complete":5,
+    "stable_core_outer_fits_complete":10,
+    "internal_component_fits_complete":50,
+    "supplemental_evaluations_complete":20,
+    "amended_dev_evaluations_authenticated":170,
+    "classical_tree_byte_identical":true,
+    "oot_opened":false,
+    "controller_success_marker_written_last":true
+  },
+  "actions_before_authorization": {
+    "real_llm_requests":0,
+    "real_supplemental_dev_workloads":0,
+    "real_model_or_prediction_workloads":0,
+    "classical_cells_rerun":0,
+    "oot_workloads":0,
+    "prompt_14_numeric_findings_opened":false
+  },
+  "artifact_authentication_sha256": "c2d1b717d3782162d5a5f5672b076f3807dccf1c211294de2ce2feece3bae414"
+}
