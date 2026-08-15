@@ -35,6 +35,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         bootstrap_fraction: float = 0.8,
         stability_threshold: float = 0.8,
         random_state: int = 42,
+        component_n_jobs: int = 1,
         llm_selector_cls: type | None = None,
         llm_selector_kwargs: dict[str, Any] | None = None,
         iv_filter_kwargs: dict[str, Any] | None = None,
@@ -55,6 +56,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         self.bootstrap_fraction = float(bootstrap_fraction)
         self.stability_threshold = float(stability_threshold)
         self.random_state = int(random_state)
+        self.component_n_jobs = int(component_n_jobs)
         self.llm_selector_cls = llm_selector_cls
         self.llm_selector_kwargs = dict(llm_selector_kwargs or {})
         self.iv_filter_kwargs = dict(iv_filter_kwargs or {})
@@ -67,6 +69,8 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
             raise ValueError("bootstrap_fraction must be in (0, 1].")
         if not 0 <= self.stability_threshold <= 1:
             raise ValueError("stability_threshold must be in [0, 1].")
+        if self.component_n_jobs <= 0:
+            raise ValueError("component_n_jobs must be positive.")
 
         self.artifact_dir: Path | None = None
         self.ranking_context: dict[str, Any] = {}
@@ -150,6 +154,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
                 k=k,
                 method="mrmr",
                 random_state=self.random_state + iteration,
+                n_jobs=self.component_n_jobs,
             )
             selector.fit(X.loc[sampled_indices], y.loc[sampled_indices])
             for rank, feature in enumerate(get_selected_features(selector) or [], start=1):

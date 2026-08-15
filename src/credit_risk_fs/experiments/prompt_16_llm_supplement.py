@@ -55,7 +55,7 @@ from credit_risk_fs.selectors.stable_core_llm_fill import StableCoreLLMFillSelec
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-SCHEMA_VERSION = "prompt_16_two_llm_method_supplement_v2"
+SCHEMA_VERSION = "prompt_16_two_llm_method_supplement_v3"
 AMENDMENT_SCHEMA_VERSION = "homecredit_model_stability_2024_amendment_v2"
 AUTHORIZATION_SCHEMA_VERSION = "prompt_16_supplemental_dev_authorization_v2"
 EXPECTED_BLOCKER_COMMIT = "b062362e999a9bec516996c6e3fad4fcb80d70dd"
@@ -86,6 +86,9 @@ FROZEN_METHODS = ("llm", "stable_core_llm_fill")
 FROZEN_MODELS = ("lr", "catboost")
 FROZEN_FEATURE_BUDGETS = {"lr": 20, "catboost": 40}
 FROZEN_FOLDS = (1, 2, 3, 4, 5)
+FEATURE_MISSINGNESS_MAXIMUM = 0.90
+FEATURE_AVAILABILITY_REFERENCE_FOLD = 1
+COMPONENT_N_JOBS = max(1, os.cpu_count() or 1)
 FORBIDDEN_PROMPT_FIELD_TOKENS = (
     "target_rate",
     "target_mean",
@@ -309,11 +312,18 @@ def render_target_free_feature_descriptions(
     """Render one deterministic, outcome-independent line per predictor."""
 
     ordered = [str(value) for value in predictors]
-    if len(ordered) != 1959 or len(ordered) != len(set(ordered)):
-        raise Prompt16ExecutionError("description renderer requires 1,959 unique predictors")
+    if len(ordered) < FROZEN_LLM_RANKING_BUDGET or len(ordered) != len(set(ordered)):
+        raise Prompt16ExecutionError(
+            "description renderer requires at least 100 unique predictors"
+        )
     lineage = lineage_payload.get("features")
-    if not isinstance(lineage, list) or [row.get("output_feature") for row in lineage] != ordered:
-        raise Prompt16ExecutionError("lineage does not exactly cover the ordered predictor universe")
+    if not isinstance(lineage, list):
+        raise Prompt16ExecutionError("matrix lineage feature registry is missing")
+    lineage_by_name = {str(row.get("output_feature")): row for row in lineage}
+    if len(lineage_by_name) != len(lineage) or not set(ordered).issubset(lineage_by_name):
+        raise Prompt16ExecutionError(
+            "lineage does not cover the ordered predictor subset"
+        )
     dtype_by_name = {
         str(row["name"]): str(row["arrow_type"])
         for row in metadata_payload.get("columns", [])
@@ -326,7 +336,8 @@ def render_target_free_feature_descriptions(
     }
     table_depth = {table.family: table.depth for table in contract.tables}
     records: list[dict[str, Any]] = []
-    for row in lineage:
+    for name in ordered:
+        row = lineage_by_name[name]
         name = str(row["output_feature"])
         family = str(row["source_family"])
         original_value = row.get("source_feature")
@@ -382,11 +393,26 @@ def build_description_and_prompt_freeze(
     matrix_root: str | Path,
     protocol_lock: str | Path,
     metadata_payload: Mapping[str, Any] | None = None,
+    predictor_subset: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     root = Path(matrix_root)
     metadata = dict(metadata_payload or _json(root / "metadata.json"))
     lineage = _json(root / "lineage.json")
-    predictors = [str(value) for value in metadata.get("predictor_columns", [])]
+    base_predictors = [str(value) for value in metadata.get("predictor_columns", [])]
+    predictors = (
+        [str(value) for value in predictor_subset]
+        if predictor_subset is not None
+        else base_predictors
+    )
+    base_order = {name: index for index, name in enumerate(base_predictors)}
+    if (
+        len(predictors) != len(set(predictors))
+        or not set(predictors).issubset(base_order)
+        or predictors != sorted(predictors, key=base_order.__getitem__)
+    ):
+        raise Prompt16ExecutionError(
+            "description predictor subset is not an ordered subset of the matrix universe"
+        )
     contract = load_adapter_contract(protocol_lock)
     records = render_target_free_feature_descriptions(
         predictors=predictors,
@@ -403,7 +429,7 @@ def build_description_and_prompt_freeze(
         ranking_budget=FROZEN_LLM_RANKING_BUDGET,
         feature_budget=FROZEN_LLM_RANKING_BUDGET,
         shared_pool_size=FROZEN_LLM_RANKING_BUDGET,
-        prompt_version="stability_expert_v4",
+        prompt_version="stability_expert_v5",
         iv_filter_kwargs={},
     )
     prompt = selector.build_target_free_prompt(records, expected_features=predictors)
@@ -422,7 +448,7 @@ def build_description_and_prompt_freeze(
         "ordered_rendered_descriptions_sha256": canonical_sha256(
             [row["rendered_description"] for row in records]
         ),
-        "prompt_version": "stability_expert_v4",
+        "prompt_version": "stability_expert_v5",
         "prompt_chunk_count": 1,
         "prompt_chunk_order": [1],
         "prompt_merge_algorithm": "identity_single_chunk_no_cross_chunk_merge",
@@ -449,7 +475,7 @@ def build_description_and_prompt_freeze(
         "fallback": "forbidden",
         "cache_reuse": "only_complete_recursively_hashed_identity_exact_success",
         "candidate_coverage": {
-            "descriptions_required": 1959,
+            "descriptions_required": len(predictors),
             "ranked_features_required": 100,
             "unknown_allowed": 0,
             "duplicates_allowed": 0,
@@ -461,6 +487,80 @@ def build_description_and_prompt_freeze(
         "predictors": predictors,
         "records": records,
         "prompt": prompt,
+        "freeze": freeze,
+    }
+
+
+def build_feature_availability_filter(
+    *,
+    matrix_root: str | Path,
+    matrix_manifest: Mapping[str, Any],
+    protocol_payload: Mapping[str, Any],
+    metadata_payload: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Freeze a target-free candidate subset from the earliest DEV train scope."""
+
+    predictors = [str(value) for value in metadata_payload.get("predictor_columns", [])]
+    if canonical_sha256(predictors) != EXPECTED_UNIVERSE_SHA256:
+        raise Prompt16ExecutionError("ordered 1,959-feature universe changed")
+    train_expected, _ = _expected_scope(
+        protocol_payload,
+        "dev",
+        FEATURE_AVAILABILITY_REFERENCE_FOLD,
+    )
+    frame = _read_date_slice(
+        Path(matrix_root),
+        matrix_manifest,
+        date_min=str(train_expected["date_min"]),
+        date_max=str(train_expected["date_max"]),
+        predictors=predictors,
+        stop_event=None,
+        stage_queue=None,
+        stage="feature_availability_authentication",
+        fold_label="fold_1:train",
+    )
+    scope = _validate_scope_frame(frame, train_expected, "feature_availability:fold_1:train")
+    missingness = frame[predictors].isna().mean(axis=0)
+    records = [
+        {
+            "feature": name,
+            "missing_count": int(frame[name].isna().sum()),
+            "row_count": len(frame),
+            "missing_rate": float(missingness[name]),
+            "retained": bool(missingness[name] <= FEATURE_MISSINGNESS_MAXIMUM),
+        }
+        for name in predictors
+    ]
+    retained = [row["feature"] for row in records if row["retained"]]
+    dropped = [row["feature"] for row in records if not row["retained"]]
+    if len(retained) < FROZEN_LLM_RANKING_BUDGET:
+        raise Prompt16ExecutionError("availability filter retained fewer than 100 features")
+    freeze = {
+        "rule": "retain predictor when fold-1 DEV-training missing rate <= 0.90",
+        "target_or_validation_used": False,
+        "reference_fold": FEATURE_AVAILABILITY_REFERENCE_FOLD,
+        "reference_scope": "earliest_frozen_dev_training_fold_only",
+        "reference_date_min": str(train_expected["date_min"]),
+        "reference_date_max": str(train_expected["date_max"]),
+        "reference_rows": len(frame),
+        "reference_ordered_case_id_sha256": scope["observed"][
+            "ordered_case_id_sha256"
+        ],
+        "missingness_maximum_inclusive": FEATURE_MISSINGNESS_MAXIMUM,
+        "base_feature_count": len(predictors),
+        "base_feature_universe_sha256": canonical_sha256(predictors),
+        "retained_feature_count": len(retained),
+        "retained_feature_universe_sha256": canonical_sha256(retained),
+        "dropped_feature_count": len(dropped),
+        "dropped_feature_universe_sha256": canonical_sha256(dropped),
+        "ordered_missingness_registry_sha256": canonical_sha256(records),
+    }
+    del frame
+    gc.collect()
+    return {
+        "retained_features": retained,
+        "dropped_features": dropped,
+        "records": records,
         "freeze": freeze,
     }
 
@@ -711,10 +811,34 @@ def authenticate_supplemental_entry(
     predictors = list(metadata.get("predictor_columns", []))
     if canonical_sha256(predictors) != EXPECTED_UNIVERSE_SHA256:
         raise Prompt16ExecutionError("ordered 1,959-feature universe changed")
+    availability_filter = build_feature_availability_filter(
+        matrix_root=matrix_root,
+        matrix_manifest=matrix_manifest,
+        protocol_payload=v1_payload,
+        metadata_payload=metadata,
+    )
+    if availability_filter["freeze"] != amendment.get(
+        "feature_availability_filter"
+    ):
+        raise Prompt16ExecutionError(
+            "feature-availability filter differs from the authenticated freeze"
+        )
+    performance = amendment.get("supplemental_performance_controls", {})
+    if performance != {
+        "component_n_jobs_rule": "all_detected_logical_cpus",
+        "component_n_jobs": COMPONENT_N_JOBS,
+        "parallel_folds": 1,
+        "parallel_outer_selector_fits": 1,
+        "scientific_parameters_changed": False,
+    }:
+        raise Prompt16ExecutionError(
+            "supplemental maximum-performance controls changed"
+        )
     description_freeze = build_description_and_prompt_freeze(
         matrix_root=matrix_root,
         protocol_lock=v1_path,
         metadata_payload=metadata,
+        predictor_subset=availability_filter["retained_features"],
     )
     if description_freeze["freeze"] != amendment.get("llm_provenance_freeze"):
         raise Prompt16ExecutionError("rendered descriptions or prompt differ from v2 freeze")
@@ -749,6 +873,7 @@ def authenticate_supplemental_entry(
         "matrix_manifest": matrix_manifest,
         "matrix_manifest_sha256": matrix_manifest_sha,
         "matrix_metadata": metadata,
+        "feature_availability_filter": availability_filter,
         "description_freeze": description_freeze,
         "classical_tree": classical,
         "classical_evaluation_manifests": classical_evaluations,
@@ -922,7 +1047,7 @@ def ensure_target_free_ranking(
             ranking_budget=FROZEN_LLM_RANKING_BUDGET,
             feature_budget=FROZEN_LLM_RANKING_BUDGET,
             shared_pool_size=FROZEN_LLM_RANKING_BUDGET,
-            prompt_version="stability_expert_v4",
+            prompt_version="stability_expert_v5",
             iv_filter_kwargs={},
         )
     )
@@ -1099,8 +1224,7 @@ def _load_fold_frames(
 ) -> tuple[pd.DataFrame, pd.DataFrame, list[str], dict[str, Any]]:
     root = Path(entry["plan"]["paths"]["matrix_root"])
     manifest = entry["matrix_manifest"]
-    metadata = entry["matrix_metadata"]
-    predictors = list(metadata["predictor_columns"])
+    predictors = list(entry["description_freeze"]["predictors"])
     protocol = _json(entry["plan"]["paths"]["protocol_lock"])
     train_expected, validation_expected = _expected_scope(protocol, "dev", fold_id)
     label = f"fold_{fold_id}"
@@ -1202,13 +1326,14 @@ def _fit_stable_core_state(
         llm_config_hash=entry["description_freeze"]["freeze"][
             "rendered_prompt_sha256"
         ],
-        llm_prompt_version="stability_expert_v3",
+        llm_prompt_version="stability_expert_v5",
         llm_shared_pool_size=FROZEN_LLM_RANKING_BUDGET,
         final_feature_budget=FROZEN_FEATURE_BUDGETS[model],
         bootstrap_iterations=5,
         bootstrap_fraction=0.8,
         stability_threshold=0.8,
         random_state=42,
+        component_n_jobs=COMPONENT_N_JOBS,
         iv_filter_kwargs={},
         allow_unranked_padding=False,
     )
@@ -1257,6 +1382,8 @@ def _fit_stable_core_state(
                 ),
                 "component_method": "mrmr",
                 "component_fit_count": 5,
+                "component_n_jobs": COMPONENT_N_JOBS,
+                "component_n_jobs_rule": "all_detected_logical_cpus",
                 "trace": selector.bootstrap_trace_,
             },
             "fit_seconds": time.perf_counter() - started,
@@ -1720,6 +1847,27 @@ def run_supplemental_dev_worker(
     if completed is not None:
         return completed
     output_root.mkdir(parents=True, exist_ok=True)
+    availability = entry["feature_availability_filter"]
+    write_json_atomic(
+        output_root / "feature_availability_filter.json",
+        {
+            "freeze": availability["freeze"],
+            "retained_features": availability["retained_features"],
+            "dropped_features": availability["dropped_features"],
+        },
+    )
+    write_csv_atomic(
+        output_root / "feature_missingness.csv",
+        pd.DataFrame(availability["records"]),
+        required_columns=(
+            "feature",
+            "missing_count",
+            "row_count",
+            "missing_rate",
+            "retained",
+        ),
+        ordered_row_identity_column="feature",
+    )
     write_json_atomic(
         output_root / "controller_status.json",
         {
@@ -1731,6 +1879,11 @@ def run_supplemental_dev_worker(
                 for fold_id in FROZEN_FOLDS
                 if (output_root / f"fold_{fold_id}" / "_SUCCESS").is_file()
             ],
+            "candidate_count": availability["freeze"]["retained_feature_count"],
+            "dropped_over_90_percent_missing": availability["freeze"][
+                "dropped_feature_count"
+            ],
+            "stable_core_component_n_jobs": COMPONENT_N_JOBS,
             "oot_capability": False,
             "updated_at_utc": _utc_now(),
         },
@@ -1771,6 +1924,10 @@ def run_supplemental_dev_worker(
                 "operation": "supplemental_dev_only",
                 "completed_folds": list(FROZEN_FOLDS[:fold_id]),
                 "completed_supplemental_evaluations": fold_id * 4,
+                "candidate_count": availability["freeze"][
+                    "retained_feature_count"
+                ],
+                "stable_core_component_n_jobs": COMPONENT_N_JOBS,
                 "oot_capability": False,
                 "updated_at_utc": _utc_now(),
             },
@@ -1806,6 +1963,8 @@ def run_supplemental_dev_worker(
         "operation": "supplemental_dev_only",
         "completed_folds": list(FROZEN_FOLDS),
         "completed_supplemental_evaluations": 20,
+        "candidate_count": availability["freeze"]["retained_feature_count"],
+        "stable_core_component_n_jobs": COMPONENT_N_JOBS,
         "authenticated_complete_amended_dev_evaluations": 170,
         "classical_tree_byte_identical": True,
         "oot_opened": False,
@@ -1825,6 +1984,9 @@ def run_supplemental_dev_worker(
             "internal_sha256"
         ],
         "matrix_manifest_sha256": entry["matrix_manifest_sha256"],
+        "feature_availability_filter_sha256": file_sha256(
+            output_root / "feature_availability_filter.json"
+        ),
         "ranking_manifest_sha256": ranking_manifest_sha,
         "fold_manifest_sha256": {
             f"fold_{fold_id}": file_sha256(

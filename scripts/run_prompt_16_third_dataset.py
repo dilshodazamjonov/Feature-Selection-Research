@@ -514,7 +514,7 @@ def _run_supplemental_dev_supervised(args: argparse.Namespace) -> int:
     if ram_control.log_interval_seconds != 300:
         raise Prompt16ExecutionError("Prompt-16 RAM wait logging must remain five-minute")
 
-    name = "llm_supplement_v2_all_folds_dev"
+    name = "llm_supplement_v3_all_folds_dev"
     terminal_log_path = log_root / f"{name}.log"
     stage_wall_clock_limits = dict(
         canonical_registry(paths["protocol_lock"])["resource_controls"][
@@ -546,7 +546,7 @@ def _run_supplemental_dev_supervised(args: argparse.Namespace) -> int:
                     policy=policy,
                     results_root=output_root.parent,
                     temp_root=temp_root,
-                    run_association="prompt16:llm_supplement_v2:all_folds_dev",
+                    run_association="prompt16:llm_supplement_v3:all_folds_dev",
                     heartbeat_interval_seconds=30.0,
                     max_wall_clock_seconds=max_seconds,
                     stage_wall_clock_limits_seconds=stage_wall_clock_limits,

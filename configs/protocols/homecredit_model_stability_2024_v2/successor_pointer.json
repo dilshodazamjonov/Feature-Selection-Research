@@ -8,11 +8,11 @@
   },
   "successor_amendment": {
     "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
-    "file_sha256": "1e2e79d6e7fb5b03691f00c78cf2e4a52a55dfbbdf45f62f5f6eb7b7e5180392",
-    "internal_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
+    "file_sha256": "f03522da10980366ca66365e26b03c7f3268e25906555ac127030a90338f52e8",
+    "internal_sha256": "b9a7a6803ad765b2a1e3b2fdeb1744b12599fde7dab36a5d572e51141df0c111"
   },
   "allowed_operation": "supplemental_dev_only_until_complete_170_cell_dev_gate",
   "oot_authorized": false,
   "old_oot_command_status": "revoked",
-  "artifact_authentication_sha256": "edcc672b0ccd03d77fbe46dcaff542b3ecfe74ab912c48c48ccb20e6bc9f945b"
+  "artifact_authentication_sha256": "7025c92a053df5689d6b2d4f25c09078f939d965fb0a321c627785b9af122400"
 }

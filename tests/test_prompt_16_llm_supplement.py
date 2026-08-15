@@ -222,13 +222,26 @@ def test_v2_amendment_authenticates_exact_methods_registries_and_accounting():
 
 def test_real_target_free_description_and_prompt_hashes_match_the_freeze():
     amendment, _, _ = supplement.load_supplemental_amendment(AMENDMENT)
+    protocol = json.loads(V1_LOCK.read_text(encoding="utf-8"))
+    metadata = json.loads((MATRIX_ROOT / "metadata.json").read_text(encoding="utf-8"))
+    availability = supplement.build_feature_availability_filter(
+        matrix_root=MATRIX_ROOT,
+        matrix_manifest=supplement.validate_output_manifest(MATRIX_ROOT),
+        protocol_payload=protocol,
+        metadata_payload=metadata,
+    )
+    assert availability["freeze"] == amendment["feature_availability_filter"]
     bundle = supplement.build_description_and_prompt_freeze(
         matrix_root=MATRIX_ROOT,
         protocol_lock=V1_LOCK,
+        metadata_payload=metadata,
+        predictor_subset=availability["retained_features"],
     )
     assert bundle["freeze"] == amendment["llm_provenance_freeze"]
-    assert len(bundle["records"]) == len(bundle["predictors"]) == 1959
-    assert canonical_sha256(bundle["predictors"]) == supplement.EXPECTED_UNIVERSE_SHA256
+    assert len(bundle["records"]) == len(bundle["predictors"]) == 1068
+    assert canonical_sha256(bundle["predictors"]) == amendment[
+        "feature_availability_filter"
+    ]["retained_feature_universe_sha256"]
     forbidden_keys = {
         "target",
         "target_mean",
@@ -393,6 +406,47 @@ def test_stable_core_supervised_components_are_fold_local_and_exactly_five():
     assert all(row["sample_size"] == 32 for row in selector.bootstrap_trace_)
     assert len(selector.selected_features_) == 3
     assert set(selector.selected_features_).issubset(X.columns)
+
+
+def test_stable_core_passes_all_core_setting_to_each_rf_component(monkeypatch):
+    observed_n_jobs: list[int] = []
+
+    class _RecordingRFSelector:
+        def __init__(self, *, k, method, random_state, n_jobs):
+            assert method == "mrmr"
+            observed_n_jobs.append(n_jobs)
+            self.k = k
+            self.random_state = random_state
+            self.selected_features_: list[str] = []
+
+        def fit(self, X, y):
+            assert X.index.equals(y.index)
+            self.selected_features_ = list(X.columns[: self.k])
+            return self
+
+    monkeypatch.setattr(
+        "credit_risk_fs.selectors.stable_core_llm_fill."
+        "RandomForestRelevanceMRMRSelector",
+        _RecordingRFSelector,
+    )
+    X = pd.DataFrame({"a": [0.0, 1.0, 2.0, 3.0], "b": [3.0, 2.0, 1.0, 0.0]})
+    y = pd.Series([0, 1, 0, 1])
+    selector = StableCoreLLMFillSelector(
+        description_csv_path="unused",
+        llm_shared_pool_size=2,
+        final_feature_budget=1,
+        bootstrap_iterations=2,
+        bootstrap_fraction=1.0,
+        component_n_jobs=16,
+        allow_unranked_padding=False,
+    )
+    selector.fit_with_authenticated_ranking(
+        X,
+        y,
+        ranked_features=list(X.columns),
+        ranking_manifest_sha256="e" * 64,
+    )
+    assert observed_n_jobs == [16, 16]
 
 
 def test_supplemental_cli_has_one_all_fold_mode_and_old_oot_is_revoked():
