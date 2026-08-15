@@ -2,8 +2,9 @@
   "schema_version": "prompt_16_supplemental_dev_authorization_v2",
   "status": "authorized_for_one_resumable_five_fold_supplemental_dev_command",
   "created_at_utc": "2026-08-14T07:10:00Z",
+  "updated_at_utc": "2026-08-15T08:30:00Z",
   "operation": "supplemental_dev_only_no_oot_code_path",
-  "implementation_commit": "50fb1505fbae6e0e6c6c235b6e2019b362949bd1",
+  "implementation_commit": "082517191cdfd932e0d74dd3d47ba8952fae3c72",
   "implementation_parent_blocker_commit": "b062362e999a9bec516996c6e3fad4fcb80d70dd",
   "repository_requirements": {
     "branch": "main",
@@ -16,23 +17,24 @@
   },
   "amendment": {
     "path": "configs/protocols/homecredit_model_stability_2024_v2/prompt_16_llm_supplement_amendment.json",
-    "file_sha256": "1e2e79d6e7fb5b03691f00c78cf2e4a52a55dfbbdf45f62f5f6eb7b7e5180392",
-    "internal_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
+    "file_sha256": "f03522da10980366ca66365e26b03c7f3268e25906555ac127030a90338f52e8",
+    "internal_sha256": "b9a7a6803ad765b2a1e3b2fdeb1744b12599fde7dab36a5d572e51141df0c111"
   },
   "v1_protocol_path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
   "blocker_path": "cleanup/audits/prompt_16_llm_scope_correction/method_identity_blocker.json",
   "execution_plan_path": "cleanup/audits/prompt_16_final_third_dataset_execution/resource_pilot_plan.json",
   "execution_plan_sha256": "9fbad83000f6822e523b76add1b78f232a3d7e882bbf1e590216585b5745a31e",
   "implementation_files": [
-    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"de34c35ccb991bb24fbc0f3ea4c9a47afcb2d8f9e777a4c3b5b36842ed8abde0"},
+    {"path":"configs/protocols/homecredit_model_stability_2024_v2/successor_pointer.json","sha256":"d3c3c10fbaf95fd6034bef52220670cba7e91a9633fe1764ce5a74fff71e9c1f"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/parameter_parity_audit_v2.json","sha256":"0ff437f07b7cc53e154198d12f0f7de42970915b5064c2cad252bfa54dde48b2"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/implementation_validation_v2.json","sha256":"b72e83bca9cf89032ab71480dc560464db48580d23b4a812172b7f5546ab171c"},
     {"path":"cleanup/audits/prompt_16_llm_scope_correction/structured_output_runtime_fix_v3.json","sha256":"bddcec572512aeb95d7075f28b03960cbd417a3388b43c10daa850acc14374de"},
-    {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"6093674e21a8d8338ac8d5468169fb3686cad34e3834e5b4e12f1a69adb79009"},
-    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"b4faee875d4261991719b071348cccd779d5a2437a956154246d9d8169298e62"},
+    {"path":"cleanup/audits/prompt_16_llm_scope_correction/maximum_performance_prefilter_v3.json","sha256":"e1c619d31df74cec4025918aaca86ea28abc96d903be039298d12529c0c0475b"},
+    {"path":"scripts/run_prompt_16_third_dataset.py","sha256":"a8aa10c504130126d3e1ce7b377eb456096043f6a875ec1af97077d47d40c398"},
+    {"path":"src/credit_risk_fs/experiments/prompt_16_llm_supplement.py","sha256":"fbb18578367a20ed4f77ae25116464ba4d820a9d76e44885c20acf72083d9be9"},
     {"path":"src/credit_risk_fs/selectors/llm_screening.py","sha256":"3b6b882eb14b5faccde1ec6a6b1b93c2ab18eabae4e0f6372191e431af867123"},
-    {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"7aa074177a7818c4323a5070b2ad568ab0f644184e0c58ed0e57e37ed7df30b9"},
-    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"8d90179cd35478370c17d3fdb49f312b674399aaf59fc05f507601a277bf3f5a"}
+    {"path":"src/credit_risk_fs/selectors/stable_core_llm_fill.py","sha256":"a96092983ff1df92ee3057bee59e48fd6edb7cc3168ff2f55b7f50d1caf01b49"},
+    {"path":"tests/test_prompt_16_llm_supplement.py","sha256":"7b60190ff8e1b70559132518586b3ed8de633ac421e8f78bfbb4de4f39ef37c9"}
   ],
   "supplemental_cells": [
     {"configuration_order":31,"configuration_id":"p16v2-c031-llm-lr","method_id":"llm","implementation":"credit_risk_fs.selectors.llm_screening.LLMSelector","model":"lr","requested_feature_budget":20,"ranking_budget":100,"seed":42},
@@ -69,6 +71,12 @@
     "matrix_manifest_sha256":"b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
     "matrix_declared_artifact_count":36,
     "ordered_feature_universe_sha256":"882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "availability_filter_reference_fold":1,
+    "availability_filter_missingness_maximum_inclusive":0.9,
+    "availability_filter_retained_feature_count":1068,
+    "availability_filter_dropped_feature_count":891,
+    "availability_filter_retained_universe_sha256":"b1ab10dc47cd6527f0fa601dfbfa1eec1d959bd0913a8740ae51c248581f16e3",
+    "availability_filter_registry_sha256":"4196fa9cb811f2a4e2a104bad916fbf37d043388cdd40c0545ae06a51543dea6",
     "classical_tree_sha256":"c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
     "classical_file_count":1371,
     "classical_byte_count":351363036,
@@ -85,9 +93,10 @@
     "temperature":0.0,
     "seed":null,
     "ranking_budget":100,
-    "prompt_version":"stability_expert_v4",
-    "ordered_rendered_descriptions_sha256":"4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
-    "rendered_prompt_sha256":"0d383066c6f728ee2c419eb0c835317d658f01892c5bd33a7dc58cc49054a3a3",
+    "prompt_version":"stability_expert_v5",
+    "candidate_feature_count":1068,
+    "ordered_rendered_descriptions_sha256":"7a4d2ff22d0bb063de226bf09611d3f948aab69b768245c3b4a1cb393b6a2fc6",
+    "rendered_prompt_sha256":"6240689533c6f5e5d8df58ca1aa96d0e93b2448497999165bc86eabe9f631048",
     "response_format_type":"json_schema",
     "response_format_strict":true,
     "selected_features_min_items":100,
@@ -97,12 +106,20 @@
     "fallback_allowed":false,
     "credentials":"OPENAI_API_KEY environment variable only; never serialized"
   },
+  "supplemental_performance_controls": {
+    "component_n_jobs_rule":"all_detected_logical_cpus",
+    "component_n_jobs":16,
+    "parallel_folds":1,
+    "parallel_outer_selector_fits":1,
+    "memory_limit_resume":"supervisor restarts an interrupted worker from the last recursively authenticated atomic selection or evaluation checkpoint",
+    "scientific_selector_parameters_changed":false
+  },
   "paths": {
-    "output_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2",
-    "status_path":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/controller_status.json",
-    "success_marker":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/_SUCCESS",
-    "ranking_provenance_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2/llm_ranking",
-    "log_root":"D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/llm_supplement_v2"
+    "output_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3",
+    "status_path":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/controller_status.json",
+    "success_marker":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/_SUCCESS",
+    "ranking_provenance_root":"D:/python projects/Research/results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/llm_ranking",
+    "log_root":"D:/python projects/Research/outputs/prompt_16_homecredit_model_stability_2024/logs/llm_supplement_v3"
   },
   "manual_command_contract": {
     "executable":"D:/python projects/Research/.venv/Scripts/python.exe",
@@ -126,12 +143,12 @@
     "controller_success_marker_written_last":true
   },
   "actions_before_authorization": {
-    "real_llm_requests":0,
-    "real_supplemental_dev_workloads":0,
-    "real_model_or_prediction_workloads":0,
+    "real_llm_requests":1,
+    "real_supplemental_dev_workloads":1,
+    "real_model_or_prediction_workloads":12,
     "classical_cells_rerun":0,
     "oot_workloads":0,
     "prompt_14_numeric_findings_opened":false
   },
-  "artifact_authentication_sha256": "cef98841ddac66f73e11b8c8956391538586e09876f18b0c872138646878d821"
+  "artifact_authentication_sha256": "7e83bcae673890b2592e3962c3a4f532670fe6e24b6687cad555254398f854bd"
 }
