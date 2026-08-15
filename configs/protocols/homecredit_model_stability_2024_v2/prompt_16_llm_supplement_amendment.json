@@ -185,20 +185,38 @@
     "oot": "pure LLM ranking/truncations require no refit; stable-core requires two full-DEV outer refits containing ten internal component fits total",
     "fit_count_rule": "registered fit accounting counts outer supervised selector states; internal component invocations are reported separately"
   },
+  "feature_availability_filter": {
+    "rule": "retain predictor when fold-1 DEV-training missing rate <= 0.90",
+    "target_or_validation_used": false,
+    "reference_fold": 1,
+    "reference_scope": "earliest_frozen_dev_training_fold_only",
+    "reference_date_min": "2019-01-01",
+    "reference_date_max": "2019-03-28",
+    "reference_rows": 200661,
+    "reference_ordered_case_id_sha256": "df512d6d27ed1c33c88a08aab6ddacda495077a16f9cd800c27b32242d6603f2",
+    "missingness_maximum_inclusive": 0.9,
+    "base_feature_count": 1959,
+    "base_feature_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "retained_feature_count": 1068,
+    "retained_feature_universe_sha256": "b1ab10dc47cd6527f0fa601dfbfa1eec1d959bd0913a8740ae51c248581f16e3",
+    "dropped_feature_count": 891,
+    "dropped_feature_universe_sha256": "34a067d5ca8c3ec867de045a4f8102d1ad1b6fcd8908e23ed6126f232450c43e",
+    "ordered_missingness_registry_sha256": "4196fa9cb811f2a4e2a104bad916fbf37d043388cdd40c0545ae06a51543dea6"
+  },
   "llm_provenance_freeze": {
-    "ordered_feature_count": 1959,
-    "ordered_feature_universe_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "ordered_feature_count": 1068,
+    "ordered_feature_universe_sha256": "b1ab10dc47cd6527f0fa601dfbfa1eec1d959bd0913a8740ae51c248581f16e3",
     "lineage_file_sha256": "4b6af4afc15250e74c5d66355d1364237e9b4fa8681e870f07746ae9d9108f86",
     "metadata_file_sha256": "c5dec05fa362b0a4fd77c23cf79fc093c338a98bf20899bc50b31d9bf1aa49dc",
     "description_contract": "prompt_16_target_free_adapter_lineage_v2",
-    "description_count": 1959,
-    "per_feature_description_hashes_sha256": "e851bfe2b0cc56d44a2c70685e9020096f85f283bf43c94c38e762955a2bd8ae",
-    "ordered_rendered_descriptions_sha256": "4ecf94f9676807162ece5d3548aa60e6008594395ab1acc281211fc7055e5f13",
-    "prompt_version": "stability_expert_v4",
+    "description_count": 1068,
+    "per_feature_description_hashes_sha256": "e9fee1b58f4af634409a34009a3b45f553d0c690f231f4f7127e3dffd2a746a2",
+    "ordered_rendered_descriptions_sha256": "7a4d2ff22d0bb063de226bf09611d3f948aab69b768245c3b4a1cb393b6a2fc6",
+    "prompt_version": "stability_expert_v5",
     "prompt_chunk_count": 1,
     "prompt_chunk_order": [1],
     "prompt_merge_algorithm": "identity_single_chunk_no_cross_chunk_merge",
-    "rendered_prompt_sha256": "0d383066c6f728ee2c419eb0c835317d658f01892c5bd33a7dc58cc49054a3a3",
+    "rendered_prompt_sha256": "6240689533c6f5e5d8df58ca1aa96d0e93b2448497999165bc86eabe9f631048",
     "system_message_sha256": "ccdbdda09c8db90514fa7a41cc908130f15bbd048e69c33502e911a91919625f",
     "retry_suffix_sha256": "59cc72d9bf1cc78f6d7334c0229c0872712bcb267f9cf6253f80750e8916f5a6",
     "provider": "openai",
@@ -248,7 +266,7 @@
     "fallback": "forbidden",
     "cache_reuse": "only_complete_recursively_hashed_identity_exact_success",
     "candidate_coverage": {
-      "descriptions_required": 1959,
+      "descriptions_required": 1068,
       "ranked_features_required": 100,
       "unknown_allowed": 0,
       "duplicates_allowed": 0,
@@ -342,6 +360,13 @@
     "resource_controls_sha256":"fd1883d896a68ed487f95d3c0301ae57049da5aba0b908095780f5262be99ac5",
     "final_model_settings_sha256":"e87f2c1ba42ac092cfb3b5b3154f1bc7ebac2d13a4b6f50d039b0cb490315835"
   },
+  "supplemental_performance_controls": {
+    "component_n_jobs_rule": "all_detected_logical_cpus",
+    "component_n_jobs": 16,
+    "parallel_folds": 1,
+    "parallel_outer_selector_fits": 1,
+    "scientific_parameters_changed": false
+  },
   "comparison_graph": {
     "frozen_before_supplemental_outcomes": true,
     "primary_holm_family_id": "third_dataset_llm_primary",
@@ -376,5 +401,5 @@
     "no_completed_classical_result_may_be_changed_or_overwritten":true,
     "completion_marker_rule":"controller _SUCCESS is written last after 20 supplemental and 170 total DEV accounting"
   },
-  "artifact_authentication_sha256": "e538df495c3d05503d944d89e9ae9f62f20212244798aa1ea4dc19f5c731fe46"
+  "artifact_authentication_sha256": "b9a7a6803ad765b2a1e3b2fdeb1744b12599fde7dab36a5d572e51141df0c111"
 }

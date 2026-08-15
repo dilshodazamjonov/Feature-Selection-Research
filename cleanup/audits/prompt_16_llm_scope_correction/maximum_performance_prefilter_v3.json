@@ -1,0 +1,74 @@
+{
+  "schema_version": "prompt_16_maximum_performance_prefilter_v3",
+  "status": "authorized_outcome_blind_before_restarted_supplemental_dev",
+  "created_at_utc": "2026-08-15T08:30:00Z",
+  "diagnosis": {
+    "old_stable_core_component_n_jobs": 1,
+    "detected_logical_cpus": 16,
+    "detected_physical_cpus": 10,
+    "original_candidate_count": 1959,
+    "primary_bottleneck": "ten stable-core outer fits each contain five 128-tree random-forest relevance fits; the component random forests were serialized by n_jobs=1",
+    "secondary_bottleneck": "all 1959 matrix predictors were encoded and passed to both the LLM candidate prompt and every supervised stable-core component"
+  },
+  "feature_availability_filter": {
+    "rule": "retain predictor when fold-1 DEV-training missing rate <= 0.90",
+    "threshold_is_inclusive": true,
+    "reference_fold": 1,
+    "reference_scope": "earliest frozen DEV training fold only",
+    "reference_rows": 200661,
+    "reference_date_min": "2019-01-01",
+    "reference_date_max": "2019-03-28",
+    "target_validation_or_oot_used": false,
+    "base_feature_count": 1959,
+    "retained_feature_count": 1068,
+    "dropped_feature_count": 891,
+    "retained_fraction": 0.5451761102603369,
+    "retained_feature_universe_sha256": "b1ab10dc47cd6527f0fa601dfbfa1eec1d959bd0913a8740ae51c248581f16e3",
+    "ordered_missingness_registry_sha256": "4196fa9cb811f2a4e2a104bad916fbf37d043388cdd40c0545ae06a51543dea6"
+  },
+  "method_preservation": {
+    "bootstrap_iterations": 5,
+    "bootstrap_fraction": 0.8,
+    "bootstrap_with_replacement": true,
+    "bootstrap_seeds": [42, 43, 44, 45, 46],
+    "stability_threshold": 0.8,
+    "rf_trees_per_component": 128,
+    "rf_min_samples_split": 0.01,
+    "rf_max_features": 0.15,
+    "mrmr_relevance": "random-forest impurity importance",
+    "mrmr_redundancy": "absolute Pearson correlation",
+    "lr_feature_budget": 20,
+    "catboost_feature_budget": 40,
+    "cross_budget_reuse": false,
+    "changed_scientific_selector_parameters": []
+  },
+  "maximum_performance_controls": {
+    "stable_core_component_n_jobs": 16,
+    "rule": "all detected logical CPUs",
+    "parallel_folds": 1,
+    "parallel_outer_selector_fits": 1,
+    "reason_for_single_outer_fit": "bound peak memory while each random forest parallelizes its trees across all logical CPUs",
+    "memory_recovery": "existing supervised controller stops an owned worker at the authenticated memory boundary and restarts from the last sealed selection or evaluation checkpoint"
+  },
+  "local_microbenchmark": {
+    "benchmark_scope": "first 10000 authenticated fold-1 training rows, exact 1068-feature retained universe, 32 trees, otherwise frozen RF parameters",
+    "single_core_seconds": 12.463636000000406,
+    "sixteen_logical_cpu_seconds": 1.4679169000010006,
+    "observed_rf_fit_speedup": 8.490695897016998,
+    "interpretation": "representative scheduling benchmark only; full-fold scaling is limited by memory bandwidth and is not guaranteed to equal the microbenchmark"
+  },
+  "checkpoint_compatibility": {
+    "prior_output_root": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v2",
+    "new_output_root": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3",
+    "prior_completed_folds_preserved": [1, 2],
+    "prior_completed_folds_reused_in_new_run": [],
+    "new_run_required_folds": [1, 2, 3, 4, 5],
+    "reason": "the missingness filter changes the candidate universe and the shared LLM prompt/ranking, so mixing v2 folds 1-2 with v3 folds 3-5 would invalidate like-for-like five-fold results"
+  },
+  "estimated_runtime": {
+    "five_fold_wall_clock_range_hours": [8, 15],
+    "basis": "observed 8.49x all-core RF microbenchmark, 45.5 percent candidate reduction, prior fold timings, growing training-fold row counts, and conservative memory-bandwidth allowance",
+    "not_a_deadline_or_guarantee": true
+  },
+  "artifact_authentication_sha256": "bbc080d4310608f9d112c404376902573333b412ff6ba091dbe4dbfe49e27423"
+}
