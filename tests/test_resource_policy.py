@@ -21,6 +21,9 @@ from credit_risk_fs.experiments.result_paths import initialize_results_layout
 
 
 POLICY_SOURCE = Path("configs/execution/local_laptop_safe_v1.yaml").resolve()
+FINAL_OOT_POLICY_SOURCE = Path(
+    "configs/execution/prompt_16_final_oot_v1.yaml"
+).resolve()
 
 
 def _repository(tmp_path: Path, text: str | None = None) -> tuple[Path, Path]:
@@ -113,6 +116,20 @@ def test_legacy_ram_capacity_estimates_remain_parseable_for_artifact_identity(tm
     assert resolved.memory.warn_process_tree_rss_gb <= 24
     assert resolved.memory.reserve_system_ram_gb >= 6
     assert resolved.memory.reserve_system_ram_gb >= 24 * 0.25
+
+
+def test_final_oot_high_memory_profile_resolves_to_audited_limits(tmp_path):
+    config = tmp_path / "configs/execution/prompt_16_final_oot_v1.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(FINAL_OOT_POLICY_SOURCE.read_text(encoding="utf-8"))
+    resolved = resolve_execution_policy(
+        load_execution_policy(tmp_path, config),
+        _capacity(total_ram=39.63, available_ram=7.5),
+    )
+    assert resolved.memory.reserve_system_ram_gb == 4
+    assert resolved.memory.warn_process_tree_rss_gb == 28
+    assert resolved.memory.abort_process_tree_rss_gb == 32
+    assert resolved.memory.abort_if_system_available_below_gb == 2
 
 
 def test_capacity_exceeding_gpu_reserve_is_rejected(tmp_path):

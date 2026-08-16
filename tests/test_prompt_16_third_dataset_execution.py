@@ -294,6 +294,34 @@ def test_selector_memmap_cache_reopens_without_dense_copy(tmp_path: Path):
         prompt16._close_selector_memmap(mapping)
         gc.collect()
 
+    successor_identity = {
+        **identity,
+        "execution_authorization_sha256": "5" * 64,
+    }
+    reauthenticated = prompt16._open_selector_memmap_cache(
+        cache_root=cache_root,
+        identity=successor_identity,
+        index=original.index,
+        predictors=original.columns,
+        authorized_predecessor_authorization_sha256=(
+            identity["execution_authorization_sha256"]
+        ),
+    )
+    assert reauthenticated is not None
+    frame, mapping, successor_metadata = reauthenticated
+    try:
+        pd.testing.assert_frame_equal(frame, expected, check_exact=True)
+        assert successor_metadata["cache_original_authorization_sha256"] == (
+            identity["execution_authorization_sha256"]
+        )
+        assert successor_metadata[
+            "cache_reauthenticated_for_authorization_sha256"
+        ] == successor_identity["execution_authorization_sha256"]
+    finally:
+        del frame
+        prompt16._close_selector_memmap(mapping)
+        gc.collect()
+
     reopened = prompt16._open_selector_memmap_cache(
         cache_root=cache_root,
         identity=identity,

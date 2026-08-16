@@ -1,12 +1,13 @@
 schema_version: ram_wait_resume_policy_v1
 profile_name: prompt_16_final_amended_oot_ram_wait_v1
 
-# Final Prompt-16 operational freeze. This is stricter than the earlier
-# supplemental-DEV-only 1/2 GiB emergency/recovery amendment.
-emergency_min_available_ram_gb: 6
+# High-memory Prompt-16 envelope for a 39.6 GiB laptop. Cooperative allocation
+# boundaries retain a Windows reserve; opaque selector/model fits continue to
+# the independent hard limits instead of suspending while holding their arrays.
+emergency_min_available_ram_gb: 3
 emergency_total_ram_fraction: 0.02
-recovery_available_ram_gb: 8
-recovery_consecutive_checks: 3
+recovery_available_ram_gb: 4
+recovery_consecutive_checks: 2
 check_interval_seconds: 5
 log_interval_seconds: 30
-opaque_stage_pause_mode: process_tree_suspend
+opaque_stage_pause_mode: hard_limit_only

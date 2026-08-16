@@ -284,16 +284,20 @@ def main(argv: list[str] | None = None) -> int:
         raise Prompt16ExecutionError("final OOT requires one active refit/fold")
     if policy.parallelism.estimator_threads != 4:
         raise Prompt16ExecutionError("final OOT estimator thread count must be exactly four")
-    if abs(policy.memory.abort_process_tree_rss_gb - 24.0) > 1e-12:
-        raise Prompt16ExecutionError("final OOT process-tree RSS cap must be 24 GiB")
-    if abs(policy.memory.abort_if_system_available_below_gb - 4.0) > 1e-12:
-        raise Prompt16ExecutionError("final OOT hard RAM floor must be 4 GiB")
-    if ram_policy.emergency_margin_bytes != 6 * GIB:
-        raise Prompt16ExecutionError("final OOT soft RAM threshold must be 6 GiB")
-    if ram_policy.recovery_threshold_bytes != 8 * GIB:
-        raise Prompt16ExecutionError("final OOT RAM resume threshold must be 8 GiB")
-    if ram_policy.recovery_consecutive_checks != 3:
-        raise Prompt16ExecutionError("final OOT RAM recovery requires three stable polls")
+    if abs(policy.memory.abort_process_tree_rss_gb - 32.0) > 1e-12:
+        raise Prompt16ExecutionError("final OOT process-tree RSS cap must be 32 GiB")
+    if abs(policy.memory.abort_if_system_available_below_gb - 2.0) > 1e-12:
+        raise Prompt16ExecutionError("final OOT hard RAM floor must be 2 GiB")
+    if ram_policy.emergency_margin_bytes != 3 * GIB:
+        raise Prompt16ExecutionError("final OOT soft RAM threshold must be 3 GiB")
+    if ram_policy.recovery_threshold_bytes != 4 * GIB:
+        raise Prompt16ExecutionError("final OOT RAM resume threshold must be 4 GiB")
+    if ram_policy.recovery_consecutive_checks != 2:
+        raise Prompt16ExecutionError("final OOT RAM recovery requires two stable polls")
+    if ram_policy.opaque_stage_pause_mode != "hard_limit_only":
+        raise Prompt16ExecutionError(
+            "final OOT opaque stages must run to the independent hard limits"
+        )
     if ram_policy.check_interval_seconds > 5:
         raise Prompt16ExecutionError("final OOT resource polling must be at least every 5s")
     if ram_policy.log_interval_seconds > 30:

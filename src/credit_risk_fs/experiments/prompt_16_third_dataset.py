@@ -710,6 +710,7 @@ def _open_selector_memmap_cache(
     identity: Mapping[str, Any],
     index: pd.Index,
     predictors: Sequence[str],
+    authorized_predecessor_authorization_sha256: str | None = None,
 ) -> tuple[pd.DataFrame, np.memmap, dict[str, Any]] | None:
     success_path = cache_root / "_SUCCESS"
     metadata_path = cache_root / "metadata.json"
@@ -720,8 +721,27 @@ def _open_selector_memmap_cache(
     if success.get("metadata_sha256") != file_sha256(metadata_path):
         raise Prompt16ExecutionError("selector memmap cache completion marker changed")
     metadata = _json(metadata_path)
-    if metadata.get("identity") != dict(identity):
-        raise Prompt16ExecutionError("selector memmap cache identity changed")
+    observed_identity = metadata.get("identity")
+    expected_identity = dict(identity)
+    if observed_identity != expected_identity:
+        predecessor_identity = dict(expected_identity)
+        predecessor_identity["execution_authorization_sha256"] = (
+            authorized_predecessor_authorization_sha256
+        )
+        if (
+            authorized_predecessor_authorization_sha256 is None
+            or observed_identity != predecessor_identity
+        ):
+            raise Prompt16ExecutionError("selector memmap cache identity changed")
+        metadata = {
+            **metadata,
+            "cache_reauthenticated_for_authorization_sha256": expected_identity.get(
+                "execution_authorization_sha256"
+            ),
+            "cache_original_authorization_sha256": (
+                authorized_predecessor_authorization_sha256
+            ),
+        }
     artifact = metadata.get("artifact", {})
     if (
         not matrix_path.is_file()
@@ -1402,6 +1422,7 @@ def run_phase_worker(
     memory_bounded_oot: bool = False,
     selector_memmap_root: str | None = None,
     authorized_predecessor_authorization_sha256: str | None = None,
+    authorized_selector_memmap_predecessor_sha256: str | None = None,
     expected_resume_fit_id: str | None = None,
     inherited_resource_infeasible_fit_ids: Sequence[str] = (),
     inherited_resource_infeasible_cell_orders: Sequence[int] = (),
@@ -1445,6 +1466,7 @@ def run_phase_worker(
             memory_bounded_oot,
             selector_memmap_root is not None,
             authorized_predecessor_authorization_sha256 is not None,
+            authorized_selector_memmap_predecessor_sha256 is not None,
             expected_resume_fit_id is not None,
             bool(inherited_resource_infeasible_fit_ids),
             bool(inherited_resource_infeasible_cell_orders),
@@ -1666,6 +1688,9 @@ def run_phase_worker(
                 identity=cache_identity,
                 index=selector_row_index,
                 predictors=predictors,
+                authorized_predecessor_authorization_sha256=(
+                    authorized_selector_memmap_predecessor_sha256
+                ),
             )
             if cached is not None:
                 numeric_train, numeric_train_mapping, cache_metadata = cached

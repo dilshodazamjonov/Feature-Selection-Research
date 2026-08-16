@@ -26,14 +26,15 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
     MAX_ESTIMATOR_THREADS,
     MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE,
+    PROCESS_TREE_RSS_HARD_CAP_GIB,
     PROJECT_ROOT,
     PROTOCOL_RELATIVE_PATH,
     RESUME_AVAILABLE_RAM_GIB,
     RESUME_STABILITY_POLLS,
+    RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
     SOFT_AVAILABLE_RAM_GIB,
     SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB,
     _load_final_sealed,
-    _validate_encoding_blocker,
     _reconcile_prediction_metrics,
     _seal_final_directory,
     _self_authenticated_payload,
@@ -93,20 +94,22 @@ def test_comparison_and_holm_graph_integrity() -> None:
     assert BOOTSTRAP_MINIMUM_VALID == 1900
 
 
-def test_resource_policy_is_final_stricter_contract() -> None:
+def test_resource_policy_uses_high_memory_envelope_with_hard_guardrails() -> None:
     policy = load_ram_control_policy(
         PROJECT_ROOT,
         "configs/execution/prompt_16_final_oot_ram_wait_v1.yaml",
         total_physical_ram_bytes=32 * GIB,
     )
     assert MAX_ESTIMATOR_THREADS == 4
-    assert SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB == 4
-    assert SOFT_AVAILABLE_RAM_GIB == 6
-    assert RESUME_AVAILABLE_RAM_GIB == 8
-    assert RESUME_STABILITY_POLLS == 3
-    assert policy.emergency_margin_bytes == 6 * GIB
-    assert policy.recovery_threshold_bytes == 8 * GIB
-    assert policy.recovery_consecutive_checks == 3
+    assert PROCESS_TREE_RSS_HARD_CAP_GIB == 32
+    assert SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB == 2
+    assert SOFT_AVAILABLE_RAM_GIB == 3
+    assert RESUME_AVAILABLE_RAM_GIB == 4
+    assert RESUME_STABILITY_POLLS == 2
+    assert policy.emergency_margin_bytes == 3 * GIB
+    assert policy.recovery_threshold_bytes == 4 * GIB
+    assert policy.recovery_consecutive_checks == 2
+    assert policy.opaque_stage_pause_mode == "hard_limit_only"
     assert policy.check_interval_seconds <= 5
     assert policy.log_interval_seconds <= 30
     assert MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE == 5
@@ -367,7 +370,22 @@ def test_encoding_amendment_is_disk_backed_and_exactly_resumes_fit_008() -> None
     assert "classical_selector_encoding_v2" in worker_source
     assert ENCODING_AMENDMENT_MEMORY_STRATEGY.endswith("selector_memmap_v2")
 
-    status, fit_ids, _, _ = _validate_encoding_blocker(PROJECT_ROOT)
+    status = json.loads(
+        (
+            PROJECT_ROOT
+            / "results/prompt_16_homecredit_model_stability_2024/"
+            "oot_final_amended_v1/controller_status.json"
+        ).read_text()
+    )
+    fit_root = PROJECT_ROOT / (
+        "results/prompt_16_homecredit_model_stability_2024/"
+        "oot_final_amended_v1/classical/selection_fits"
+    )
+    fit_ids = sorted(
+        path.name
+        for path in fit_root.iterdir()
+        if path.is_dir() and (path / "_SUCCESS").is_file()
+    )
     assert status["completed_count"] == 0
     assert fit_ids == sorted(
         {
@@ -377,6 +395,9 @@ def test_encoding_amendment_is_disk_backed_and_exactly_resumes_fit_008() -> None
     )
     assert "fit_007" in fit_ids
     assert "fit_008" not in fit_ids
+    assert RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY.endswith(
+        "high_memory_guardrails_v3"
+    )
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:

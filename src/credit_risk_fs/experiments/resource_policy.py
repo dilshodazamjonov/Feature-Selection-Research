@@ -403,7 +403,17 @@ def resolve_execution_policy(
     total = capacity.total_ram_gb
     if total <= 1.0:
         raise ExecutionPolicyError(f"detected system RAM is implausibly low: {total:.3f} GiB")
-    minimum_reserve = max(total * 0.25, 6.0 if total >= 8.0 else total * 0.25)
+    if configured.profile_name == "prompt_16_final_amended_oot_v1":
+        # This profile has an independently enforced system-available hard
+        # floor and cooperative RAM boundaries.  Applying the generic 25%
+        # planning reserve would silently clamp its audited 32 GiB process cap
+        # to 29.7 GiB on the target 39.6 GiB laptop.
+        minimum_reserve = max(total * 0.10, 4.0)
+    else:
+        minimum_reserve = max(
+            total * 0.25,
+            6.0 if total >= 8.0 else total * 0.25,
+        )
     reserve = min(total * 0.75, max(configured.memory.reserve_system_ram_gb, minimum_reserve))
     maximum_process = total - reserve
     abort = min(configured.memory.abort_process_tree_rss_gb, maximum_process)

@@ -1423,7 +1423,19 @@ def supervise_worker(
                         pids=(int(process.pid),),
                         log_context=supervisor_log_context,
                     )
-            if ram_transition is None:
+            # Suspending an opaque numerical fit retains its resident arrays and
+            # can therefore create a self-sustaining wait: available RAM never
+            # climbs to the recovery threshold because the process holding the
+            # memory is frozen.  The high-memory policy keeps cooperative and
+            # explicit stage-boundary waits, but lets opaque fits run until the
+            # independently enforced hard RSS/system-available limits.
+            observe_soft_ram = (
+                ram_state.waiting
+                or ram_boundary_pending
+                or stage in _COOPERATIVE_RAM_STAGES
+                or ram_control.opaque_stage_pause_mode == "process_tree_suspend"
+            )
+            if ram_transition is None and observe_soft_ram:
                 ram_transition = ram_state.observe(
                     sample.system_available_ram_bytes,
                     now=now,
