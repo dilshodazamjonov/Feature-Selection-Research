@@ -75,6 +75,11 @@ NON_PREDICTORS = ("case_id", "date_decision", "MONTH", "WEEK_NUM", "target")
 COMBINATION_PROTOCOL_SHA256 = (
     "bce77cf33de1a6d0545c2e8b425d89eb5fab36b0c426fd4c4dc50727b50603e9"
 )
+SELECTOR_MEMMAP_SCHEMA_VERSION = "prompt_16_selector_memmap_cache_v1"
+SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE = 64
+SELECTOR_MEMMAP_MEMORY_STRATEGY = (
+    "feature_split_disk_backed_fortran_float32_memmap_v1"
+)
 
 
 class Prompt16ExecutionError(RuntimeError):
@@ -666,6 +671,172 @@ def _load_authenticated_scope_projection(
     return frame
 
 
+def _selector_memmap_identity(
+    *,
+    execution_authorization_sha256: str,
+    matrix_manifest_sha256: str,
+    expected_observed: Mapping[str, Any],
+    predictors: Sequence[str],
+) -> dict[str, Any]:
+    return {
+        "schema_version": SELECTOR_MEMMAP_SCHEMA_VERSION,
+        "execution_authorization_sha256": execution_authorization_sha256,
+        "matrix_manifest_sha256": matrix_manifest_sha256,
+        "full_dev_scope_sha256": canonical_sha256(dict(expected_observed)),
+        "ordered_predictor_sha256": canonical_sha256(list(predictors)),
+        "row_count": int(expected_observed["rows"]),
+        "column_count": len(predictors),
+        "dtype": "float32",
+        "array_order": "F",
+        "feature_split_size": SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE,
+        "encoder": (
+            "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder"
+        ),
+        "memory_strategy": SELECTOR_MEMMAP_MEMORY_STRATEGY,
+    }
+
+
+def _close_selector_memmap(mapping: np.memmap | None) -> None:
+    if mapping is None:
+        return
+    mmap_owner = getattr(mapping, "_mmap", None)
+    if mmap_owner is not None and not mmap_owner.closed:
+        mmap_owner.close()
+
+
+def _open_selector_memmap_cache(
+    *,
+    cache_root: Path,
+    identity: Mapping[str, Any],
+    index: pd.Index,
+    predictors: Sequence[str],
+) -> tuple[pd.DataFrame, np.memmap, dict[str, Any]] | None:
+    success_path = cache_root / "_SUCCESS"
+    metadata_path = cache_root / "metadata.json"
+    matrix_path = cache_root / "encoded_train.npy"
+    if not success_path.is_file():
+        return None
+    success = _json(success_path)
+    if success.get("metadata_sha256") != file_sha256(metadata_path):
+        raise Prompt16ExecutionError("selector memmap cache completion marker changed")
+    metadata = _json(metadata_path)
+    if metadata.get("identity") != dict(identity):
+        raise Prompt16ExecutionError("selector memmap cache identity changed")
+    artifact = metadata.get("artifact", {})
+    if (
+        not matrix_path.is_file()
+        or matrix_path.stat().st_size != int(artifact.get("byte_size", -1))
+        or file_sha256(matrix_path) != artifact.get("sha256")
+    ):
+        raise Prompt16ExecutionError("selector memmap cache artifact changed")
+    actual_inventory = sorted(
+        path.name for path in cache_root.iterdir() if path.is_file()
+    )
+    if actual_inventory != ["_SUCCESS", "encoded_train.npy", "metadata.json"]:
+        raise Prompt16ExecutionError("selector memmap cache inventory changed")
+    mapping = np.load(matrix_path, mmap_mode="r", allow_pickle=False)
+    if not isinstance(mapping, np.memmap):
+        raise Prompt16ExecutionError("selector cache is not memory mapped")
+    expected_shape = (int(identity["row_count"]), int(identity["column_count"]))
+    if mapping.shape != expected_shape or mapping.dtype != np.dtype("float32"):
+        _close_selector_memmap(mapping)
+        raise Prompt16ExecutionError("selector memmap cache shape or dtype changed")
+    numeric = pd.DataFrame(
+        mapping,
+        index=index.copy(deep=True),
+        columns=list(predictors),
+        copy=False,
+    )
+    if not np.shares_memory(numeric.to_numpy(copy=False), mapping):
+        del numeric
+        _close_selector_memmap(mapping)
+        raise Prompt16ExecutionError("selector cache was copied into process memory")
+    return numeric, mapping, metadata
+
+
+def _build_selector_memmap_cache(
+    *,
+    cache_root: Path,
+    identity: Mapping[str, Any],
+    encoder: OriginalFeatureNumericEncoder,
+    source: pd.DataFrame,
+    stop_event: Any,
+    ram_ready_event: Any,
+) -> tuple[pd.DataFrame, np.memmap, dict[str, Any]]:
+    if cache_root.exists():
+        # Only an unsealed cache reaches this builder. It is an execution-only
+        # temporary artifact rooted under the authorization's dedicated temp
+        # directory, so rebuilding it cannot alter a promoted checkpoint.
+        shutil.rmtree(cache_root)
+    cache_root.mkdir(parents=True, exist_ok=False)
+    partial_path = cache_root / "encoded_train.partial.npy"
+    final_path = cache_root / "encoded_train.npy"
+
+    def before_split(
+        split_index: int, split_count: int, split_names: list[str]
+    ) -> None:
+        _check_stop(stop_event)
+        wait_for_ram_ready(
+            ram_ready_event,
+            stop_event,
+            boundary=f"selector_encoding_feature_split:{split_index}/{split_count}",
+        )
+        if not split_names:
+            raise Prompt16ExecutionError("selector encoding produced an empty split")
+
+    numeric, mapping = encoder.transform_releasing_source_to_memmap(
+        source,
+        partial_path,
+        feature_split_size=SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE,
+        before_split=before_split,
+    )
+    del numeric
+    _close_selector_memmap(mapping)
+    del mapping
+    gc.collect()
+    os.replace(partial_path, final_path)
+    artifact = {
+        "path": final_path.name,
+        "byte_size": final_path.stat().st_size,
+        "sha256": file_sha256(final_path),
+    }
+    metadata = {
+        "schema_version": SELECTOR_MEMMAP_SCHEMA_VERSION,
+        "status": "complete",
+        "identity": dict(identity),
+        "artifact": artifact,
+        "numeric_column_count": len(encoder.numeric_columns_),
+        "categorical_column_count": len(encoder.categorical_columns_),
+        "encoding_semantics": {
+            "numeric": "coerce_nonfinite_median_fill_float32",
+            "categorical": "sorted_casefold_category_map_missing_token_unknown_minus_one_float32",
+            "feature_order_preserved": True,
+            "row_order_preserved": True,
+            "scientific_preprocessing_changed": False,
+        },
+        "completed_at_utc": _utc_now(),
+    }
+    write_json_atomic(cache_root / "metadata.json", metadata, overwrite=False)
+    write_text_atomic(
+        cache_root / "_SUCCESS",
+        json.dumps(
+            {"metadata_sha256": file_sha256(cache_root / "metadata.json")},
+            sort_keys=True,
+        )
+        + "\n",
+        overwrite=False,
+    )
+    opened = _open_selector_memmap_cache(
+        cache_root=cache_root,
+        identity=identity,
+        index=source.index,
+        predictors=encoder.feature_names_ or [],
+    )
+    if opened is None:  # pragma: no cover - marker was written immediately above
+        raise Prompt16ExecutionError("completed selector memmap cache did not reopen")
+    return opened
+
+
 def _archive_incomplete(path: Path, archive_root: Path) -> None:
     if not path.exists() or (path / "_SUCCESS").is_file():
         return
@@ -707,7 +878,12 @@ def _seal_directory(path: Path, identity: Mapping[str, Any]) -> dict[str, Any]:
     return {**manifest, "manifest_sha256": manifest_sha}
 
 
-def _load_sealed(path: Path, identity: Mapping[str, Any]) -> dict[str, Any] | None:
+def _load_sealed(
+    path: Path,
+    identity: Mapping[str, Any],
+    *,
+    authorized_predecessor_authorization_sha256: str | None = None,
+) -> dict[str, Any] | None:
     if not (path / "_SUCCESS").is_file():
         return None
     success = _json(path / "_SUCCESS")
@@ -715,8 +891,27 @@ def _load_sealed(path: Path, identity: Mapping[str, Any]) -> dict[str, Any] | No
     if success.get("manifest_sha256") != file_sha256(manifest_path):
         raise Prompt16ExecutionError(f"completion marker mismatch: {path}")
     manifest = _json(manifest_path)
-    if manifest.get("identity") != dict(identity):
-        raise Prompt16ExecutionError(f"completed artifact identity mismatch: {path}")
+    observed_identity = manifest.get("identity")
+    expected_identity = dict(identity)
+    if observed_identity != expected_identity:
+        predecessor_identity = dict(expected_identity)
+        predecessor_identity["execution_authorization_sha256"] = (
+            authorized_predecessor_authorization_sha256
+        )
+        if (
+            authorized_predecessor_authorization_sha256 is None
+            or observed_identity != predecessor_identity
+        ):
+            raise Prompt16ExecutionError(f"completed artifact identity mismatch: {path}")
+        manifest = {
+            **manifest,
+            "checkpoint_reauthenticated_for_authorization_sha256": expected_identity.get(
+                "execution_authorization_sha256"
+            ),
+            "checkpoint_original_authorization_sha256": (
+                authorized_predecessor_authorization_sha256
+            ),
+        }
     for item in manifest.get("artifacts", []):
         artifact = path / str(item["path"])
         if not artifact.is_file() or artifact.stat().st_size != int(item["byte_size"]):
@@ -1205,6 +1400,9 @@ def run_phase_worker(
     allow_authenticated_oot_recovery: bool = False,
     full_dev_training_ks_threshold: bool = False,
     memory_bounded_oot: bool = False,
+    selector_memmap_root: str | None = None,
+    authorized_predecessor_authorization_sha256: str | None = None,
+    expected_resume_fit_id: str | None = None,
     inherited_resource_infeasible_fit_ids: Sequence[str] = (),
     inherited_resource_infeasible_cell_orders: Sequence[int] = (),
     **_controls: Any,
@@ -1235,12 +1433,19 @@ def run_phase_worker(
             raise Prompt16ExecutionError(
                 "final OOT requires the authorized memory-bounded projection path"
             )
+        if not selector_memmap_root:
+            raise Prompt16ExecutionError(
+                "final OOT requires the authorized selector memmap root"
+            )
     elif any(
         (
             execution_authorization_sha256 is not None,
             allow_authenticated_oot_recovery,
             full_dev_training_ks_threshold,
             memory_bounded_oot,
+            selector_memmap_root is not None,
+            authorized_predecessor_authorization_sha256 is not None,
+            expected_resume_fit_id is not None,
             bool(inherited_resource_infeasible_fit_ids),
             bool(inherited_resource_infeasible_cell_orders),
         )
@@ -1266,6 +1471,8 @@ def run_phase_worker(
     phase_root.mkdir(parents=True, exist_ok=True)
     archive_root = phase_root / "archived_incomplete_attempts"
     matrix_path = Path(matrix_root)
+    selection_target: pd.Series | None = None
+    selector_row_index: pd.Index | None = None
     if phase == "oot":
         matrix_manifest, matrix_metadata = _matrix_identity(matrix_path)
         predictors = list(matrix_metadata["predictor_columns"])
@@ -1323,8 +1530,16 @@ def run_phase_worker(
                 "authenticated": True,
             },
             "case_id_overlap": case_id_overlap,
-            "memory_strategy": "identity_first_bounded_feature_projection_v1",
+            "memory_strategy": (
+                "identity_first_bounded_projection_and_selector_memmap_v2"
+            ),
         }
+        selector_row_index = train_identity_frame.index.copy(deep=True)
+        selection_target = pd.Series(
+            train_identity_frame["target"].to_numpy(dtype=np.int64, copy=True),
+            index=selector_row_index.copy(deep=True),
+            name="target",
+        )
         del train_identity_frame, validation_identity_frame
         pa.default_memory_pool().release_unused()
         gc.collect()
@@ -1379,7 +1594,13 @@ def run_phase_worker(
             matrix_manifest_sha256=matrix_manifest_sha,
             execution_authorization_sha256=execution_authorization_sha256,
         )
-        sealed = _load_sealed(path, identity)
+        sealed = _load_sealed(
+            path,
+            identity,
+            authorized_predecessor_authorization_sha256=(
+                authorized_predecessor_authorization_sha256
+            ),
+        )
         if sealed is None:
             _archive_incomplete(path, archive_root)
             if phase == "oot" and str(fit["fit_id"]) in inherited_fit_ids:
@@ -1411,79 +1632,155 @@ def run_phase_worker(
         else:
             completed_fit_count += 1
 
+    if expected_resume_fit_id is not None:
+        observed_resume_fit_id = (
+            str(incomplete_fits[0]["fit_id"]) if incomplete_fits else None
+        )
+        if observed_resume_fit_id != expected_resume_fit_id:
+            raise Prompt16ExecutionError(
+                "authenticated selector resume point changed: "
+                f"expected={expected_resume_fit_id}, observed={observed_resume_fit_id}"
+            )
+
     numeric_train: pd.DataFrame | None = None
-    selection_target: pd.Series | None = None
+    numeric_train_mapping: np.memmap | None = None
     encoding_path = phase_root / "selector_encoding.json"
     encoding_record: dict[str, Any] | None = (
         _json(encoding_path) if encoding_path.is_file() else None
     )
     if incomplete_fits:
         _check_stop(stop_event)
+        cache_metadata: dict[str, Any] | None = None
         if phase == "oot":
-            train = _load_authenticated_scope_projection(
-                matrix_root=matrix_path,
-                manifest=matrix_manifest,
-                expected=train_expected,
+            if selection_target is None or selector_row_index is None:
+                raise Prompt16ExecutionError("full-DEV selector identity target is absent")
+            cache_identity = _selector_memmap_identity(
+                execution_authorization_sha256=str(execution_authorization_sha256),
+                matrix_manifest_sha256=matrix_manifest_sha,
                 expected_observed=scope_auth["train"]["observed"],
                 predictors=predictors,
-                label="oot:full_dev_selector_projection",
-                stage="full_dev_selector_data_loading",
-                stop_event=stop_event,
-                stage_queue=stage_queue,
-                ram_ready_event=ram_ready_event,
             )
+            cache_root = Path(str(selector_memmap_root))
+            cached = _open_selector_memmap_cache(
+                cache_root=cache_root,
+                identity=cache_identity,
+                index=selector_row_index,
+                predictors=predictors,
+            )
+            if cached is not None:
+                numeric_train, numeric_train_mapping, cache_metadata = cached
+                train = None
+            else:
+                train = _load_authenticated_scope_projection(
+                    matrix_root=matrix_path,
+                    manifest=matrix_manifest,
+                    expected=train_expected,
+                    expected_observed=scope_auth["train"]["observed"],
+                    predictors=predictors,
+                    label="oot:full_dev_selector_projection",
+                    stage="full_dev_selector_data_loading",
+                    stop_event=stop_event,
+                    stage_queue=stage_queue,
+                    ram_ready_event=ram_ready_event,
+                )
         _publish_stage(stage_queue, "selection_encoding", fold_id or "oot")
         encoding_started = time.perf_counter()
-        selection_target = pd.Series(
-            train["target"].to_numpy(dtype=np.int64, copy=True),
-            index=train.index.copy(deep=True),
-            name="target",
-        )
+        if selection_target is None:
+            if train is None:
+                raise Prompt16ExecutionError("selector target source is absent")
+            selection_target = pd.Series(
+                train["target"].to_numpy(dtype=np.int64, copy=True),
+                index=train.index.copy(deep=True),
+                name="target",
+            )
         # Selection uses training rows only. The validation frame is reloaded
         # after all selector fits, so retaining it while materializing the
         # Fold-5 float32 selector matrix only adds an avoidable multi-GiB peak.
         if validation is not None:
             del validation
             validation = None
-        for name in NON_PREDICTORS:
-            if name in train:
-                del train[name]
-        if list(train.columns) != predictors:
-            raise Prompt16ExecutionError(
-                "selector source projection changed candidate order"
-            )
-        gc.collect()
-        encoder = OriginalFeatureNumericEncoder()
-        encoder.fit(train)
-        numeric_train = encoder.transform_releasing_source(train)
-        if train.shape[1] != 0:
-            raise Prompt16ExecutionError(
-                "memory-bounded selector encoding did not release source columns"
-            )
+        encoder: OriginalFeatureNumericEncoder | None = None
+        if numeric_train is None:
+            if train is None:
+                raise Prompt16ExecutionError("selector source projection is absent")
+            if phase == "oot" and not np.array_equal(
+                train["target"].to_numpy(dtype=np.int64, copy=False),
+                selection_target.to_numpy(dtype=np.int64, copy=False),
+            ):
+                raise Prompt16ExecutionError(
+                    "wide selector projection target changed authenticated row order"
+                )
+            for name in NON_PREDICTORS:
+                if name in train:
+                    del train[name]
+            if list(train.columns) != predictors:
+                raise Prompt16ExecutionError(
+                    "selector source projection changed candidate order"
+                )
+            gc.collect()
+            encoder = OriginalFeatureNumericEncoder()
+            encoder.fit(train)
+            if phase == "oot":
+                numeric_train, numeric_train_mapping, cache_metadata = (
+                    _build_selector_memmap_cache(
+                        cache_root=cache_root,
+                        identity=cache_identity,
+                        encoder=encoder,
+                        source=train,
+                        stop_event=stop_event,
+                        ram_ready_event=ram_ready_event,
+                    )
+                )
+            else:
+                numeric_train = encoder.transform_releasing_source(train)
+            if train.shape[1] != 0:
+                raise Prompt16ExecutionError(
+                    "memory-bounded selector encoding did not release source columns"
+                )
         if list(numeric_train.columns) != predictors:
             raise Prompt16ExecutionError("selector encoding changed candidate order")
         encoding_record = {
             "implementation": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
-            "memory_strategy": "destructive_source_column_release_v1",
+            "memory_strategy": (
+                SELECTOR_MEMMAP_MEMORY_STRATEGY
+                if phase == "oot"
+                else "destructive_source_column_release_v1"
+            ),
             "fit_scope": fit_scope,
             "training_rows": len(selection_target),
             "candidate_count": len(predictors),
             "elapsed_seconds": time.perf_counter() - encoding_started,
-            "numeric_column_count": len(encoder.numeric_columns_),
-            "categorical_column_count": len(encoder.categorical_columns_),
+            "numeric_column_count": (
+                len(encoder.numeric_columns_)
+                if encoder is not None
+                else int(cache_metadata["numeric_column_count"])
+            ),
+            "categorical_column_count": (
+                len(encoder.categorical_columns_)
+                if encoder is not None
+                else int(cache_metadata["categorical_column_count"])
+            ),
             "training_only": True,
             "shared_across_registered_selector_invocations": True,
             "sharing_effect": "deterministic identical fold-local encoding; selector fits remain distinct",
             "source_phase_frames_released_before_selector_fits": True,
             "evaluation_phase_frames_reloaded_after_selector_fits": True,
+            "disk_backed": phase == "oot",
+            "feature_split_size": (
+                SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE if phase == "oot" else None
+            ),
+            "cache_reused": phase == "oot" and encoder is None,
+            "encoding_semantics_changed": False,
         }
         write_json_atomic(encoding_path, encoding_record)
-        # The selector matrix owns one C-contiguous float32 buffer and the target
-        # above owns an independent int64 buffer. Keeping the much wider source
-        # train frame and the unused validation frame alive during opaque selector
-        # fits caused the demonstrated 21.9 GiB Lasso peak and made suspension at
-        # the old system-RAM floor unable to recover.
-        del encoder, train
+        # OOT now retains only a read-only file-backed float32 mapping and the
+        # independent int64 target. DEV keeps the legacy C-contiguous owner.
+        # Neither path retains the wider raw source or evaluation frame during
+        # opaque selector fits.
+        if encoder is not None:
+            del encoder
+        if train is not None:
+            del train
         train = None
         pa.default_memory_pool().release_unused()
         gc.collect()
@@ -1498,7 +1795,13 @@ def run_phase_worker(
             matrix_manifest_sha256=matrix_manifest_sha,
             execution_authorization_sha256=execution_authorization_sha256,
         )
-        if _load_sealed(path, identity) is not None:
+        if _load_sealed(
+            path,
+            identity,
+            authorized_predecessor_authorization_sha256=(
+                authorized_predecessor_authorization_sha256
+            ),
+        ) is not None:
             continue
         if numeric_train is None or selection_target is None:
             raise Prompt16ExecutionError("incomplete selector fit lacks training inputs")
@@ -1561,6 +1864,8 @@ def run_phase_worker(
 
     if numeric_train is not None:
         del numeric_train
+    _close_selector_memmap(numeric_train_mapping)
+    numeric_train_mapping = None
     if selection_target is not None:
         del selection_target
     gc.collect()

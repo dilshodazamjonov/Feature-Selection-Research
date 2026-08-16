@@ -1,8 +1,10 @@
 # preprocessing/preprocessing.py
 
-import pandas as pd
 import numpy as np
-from typing import List, Optional
+from pathlib import Path
+from typing import Callable, List, Optional
+
+import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 
 
@@ -117,6 +119,102 @@ class OriginalFeatureNumericEncoder:
             columns=feature_names,
             copy=False,
         )
+
+    def transform_releasing_source_to_memmap(
+        self,
+        X: pd.DataFrame,
+        path: str | Path,
+        *,
+        feature_split_size: int = 64,
+        before_split: Callable[[int, int, list[str]], None] | None = None,
+    ) -> tuple[pd.DataFrame, np.memmap]:
+        """Encode exact values into a batched, disk-backed float32 matrix.
+
+        The dense in-memory implementation allocates the complete output owner
+        before all wide source blocks have been returned to the operating
+        system.  For the Prompt-16 full-DEV projection that transient overlap is
+        larger than the frozen RAM ceiling.  This method instead writes one
+        bounded feature split at a time to a Fortran-ordered ``.npy`` memmap.
+        Each mapping is flushed and closed before the next split, allowing
+        Windows to reclaim file-backed pages under memory pressure.
+
+        Encoding expressions, learned fill values, category maps, row order,
+        feature order, and float32 values are identical to :meth:`transform`.
+        ``X`` is destructively emptied exactly as in
+        :meth:`transform_releasing_source`.
+        """
+
+        feature_names = self._validate_transform_input(X)
+        split_size = int(feature_split_size)
+        if split_size <= 0:
+            raise ValueError("feature_split_size must be positive")
+        output_path = Path(path)
+        if output_path.exists():
+            raise FileExistsError(f"disk-backed selector encoding already exists: {output_path}")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_index = X.index.copy(deep=True)
+        shape = (len(X), len(feature_names))
+
+        # Create only the NPY header and file extent here. Each subsequent
+        # feature split gets its own short-lived mapping, so no complete mapped
+        # working set overlaps the still-resident source frame.
+        mapping = np.lib.format.open_memmap(
+            output_path,
+            mode="w+",
+            dtype=np.float32,
+            shape=shape,
+            fortran_order=True,
+        )
+        mapping.flush()
+        mapping._mmap.close()
+        del mapping
+
+        split_count = (len(feature_names) + split_size - 1) // split_size
+        try:
+            for split_index, start in enumerate(
+                range(0, len(feature_names), split_size), start=1
+            ):
+                stop = min(start + split_size, len(feature_names))
+                split_names = feature_names[start:stop]
+                if before_split is not None:
+                    before_split(split_index, split_count, list(split_names))
+                split = np.empty(
+                    (len(X), len(split_names)),
+                    dtype=np.float32,
+                    order="F",
+                )
+                for offset, name in enumerate(split_names):
+                    source = X.pop(name)
+                    encoded = self._encode_column(name, source)
+                    del source
+                    split[:, offset] = encoded.to_numpy(dtype=np.float32, copy=False)
+                    del encoded
+                mapping = np.lib.format.open_memmap(output_path, mode="r+")
+                mapping[:, start:stop] = split
+                mapping.flush()
+                mapping._mmap.close()
+                del mapping, split
+        except BaseException:
+            # Leave the explicitly named partial artifact to the authenticated
+            # cache owner. It decides whether to archive or rebuild it.
+            raise
+
+        read_only = np.load(output_path, mmap_mode="r", allow_pickle=False)
+        if not isinstance(read_only, np.memmap):
+            raise RuntimeError("disk-backed selector encoding did not reopen as a memmap")
+        if read_only.shape != shape or read_only.dtype != np.dtype("float32"):
+            read_only._mmap.close()
+            raise RuntimeError("disk-backed selector encoding shape or dtype changed")
+        frame = pd.DataFrame(
+            read_only,
+            index=output_index,
+            columns=feature_names,
+            copy=False,
+        )
+        if not np.shares_memory(frame.to_numpy(copy=False), read_only):
+            read_only._mmap.close()
+            raise RuntimeError("pandas copied the disk-backed selector encoding")
+        return frame, read_only
 
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         return self.fit(X).transform(X)
