@@ -1105,6 +1105,7 @@ def _supervisor_logging_context(
         "seed": spec.get("seed"),
         "phase": str(phase).upper() if phase is not None else None,
         "selector": spec.get("method_id"),
+        "attempt": spec.get("attempt"),
     }
 
 
@@ -1136,6 +1137,7 @@ def supervise_worker(
     enforce_memory_limits: bool = False,
     enforce_process_tree_rss_limit: bool = False,
     ram_control_policy: ResolvedRamControlPolicy | None = None,
+    status_callback: Any | None = None,
 ) -> SupervisorResult:
     """Execute expensive work in one spawned child and supervise its process tree."""
 
@@ -1428,6 +1430,32 @@ def supervise_worker(
                 )
             if ram_transition is not None:
                 handle_ram_transition(ram_transition, sample, now=now)
+            if status_callback is not None:
+                status_callback(
+                    {
+                        "timestamp_utc": _utc_now(),
+                        "stage": stage,
+                        "fold_id": fold_id,
+                        "worker_pid": sample.worker_pid,
+                        "child_pids": list(sample.child_pids),
+                        "process_tree_rss_bytes": sample.process_tree_rss_bytes,
+                        "system_available_ram_bytes": sample.system_available_ram_bytes,
+                        "process_tree_cpu_percent": sample.process_tree_cpu_percent,
+                        "process_tree_cpu_seconds": sample.process_tree_cpu_seconds,
+                        "peak_process_tree_rss_bytes": max(
+                            item.process_tree_rss_bytes for item in samples
+                        ),
+                        "minimum_system_available_ram_bytes": min(
+                            item.system_available_ram_bytes for item in samples
+                        ),
+                        "ram_waiting": ram_state.waiting,
+                        "ram_wait_count": ram_state.wait_count,
+                        "ram_wait_seconds": ram_state.waiting_seconds(now=now),
+                        "active_elapsed_seconds": ram_state.active_seconds(
+                            started=supervisor_started, now=now
+                        ),
+                    }
+                )
             if ram_pause_unavailable:
                 computation_ended_at = monotonic()
                 suspension_inclusive_computation_ended_at = (

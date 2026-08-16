@@ -693,8 +693,9 @@ def _fit_identity(
     fold_id: int | None,
     fit: Mapping[str, Any],
     matrix_manifest_sha256: str,
+    execution_authorization_sha256: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    identity = {
         "protocol_file_sha256": EXPECTED_PROTOCOL_FILE_SHA256,
         "protocol_internal_sha256": EXPECTED_PROTOCOL_INTERNAL_SHA256,
         "matrix_manifest_sha256": matrix_manifest_sha256,
@@ -703,6 +704,11 @@ def _fit_identity(
         "fit_id": fit["fit_id"],
         "fit_spec_sha256": canonical_sha256(fit),
     }
+    if execution_authorization_sha256 is not None:
+        identity["execution_authorization_sha256"] = str(
+            execution_authorization_sha256
+        )
+    return identity
 
 
 def _evaluation_identity(
@@ -712,8 +718,9 @@ def _evaluation_identity(
     cell: Mapping[str, Any],
     matrix_manifest_sha256: str,
     selection_manifest_sha256: str,
+    execution_authorization_sha256: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    identity = {
         "protocol_file_sha256": EXPECTED_PROTOCOL_FILE_SHA256,
         "protocol_internal_sha256": EXPECTED_PROTOCOL_INTERNAL_SHA256,
         "matrix_manifest_sha256": matrix_manifest_sha256,
@@ -723,6 +730,11 @@ def _evaluation_identity(
         "cell_sha256": canonical_sha256(cell),
         "selection_manifest_sha256": selection_manifest_sha256,
     }
+    if execution_authorization_sha256 is not None:
+        identity["execution_authorization_sha256"] = str(
+            execution_authorization_sha256
+        )
+    return identity
 
 
 def record_phase_resource_infeasibility(
@@ -1023,6 +1035,7 @@ def _fit_and_evaluate(
     matrix: Mapping[str, Any],
     phase: str,
     frozen_threshold: float | None,
+    full_dev_training_ks_threshold: bool = False,
 ) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any]]:
     if not selected:
         raise Prompt16ExecutionError("zero-feature natural support cannot be modeled")
@@ -1056,9 +1069,18 @@ def _fit_and_evaluate(
     step = time.perf_counter()
     validation_score = np.asarray(predict_proba(model, encoded_validation), dtype=float)
     if phase == "oot":
-        if frozen_threshold is None or not np.isfinite(float(frozen_threshold)):
-            raise Prompt16ExecutionError("OOT evaluation lacks a DEV-frozen threshold")
-        threshold = float(frozen_threshold)
+        if full_dev_training_ks_threshold:
+            if frozen_threshold is not None:
+                raise Prompt16ExecutionError(
+                    "full-DEV threshold rule cannot also receive a numeric threshold"
+                )
+            train_score = np.asarray(predict_proba(model, encoded_train), dtype=float)
+            threshold = determine_threshold(y_train.to_numpy(), train_score)
+            del train_score
+        else:
+            if frozen_threshold is None or not np.isfinite(float(frozen_threshold)):
+                raise Prompt16ExecutionError("OOT evaluation lacks a DEV-frozen threshold")
+            threshold = float(frozen_threshold)
     else:
         train_score = np.asarray(predict_proba(model, encoded_train), dtype=float)
         threshold = determine_threshold(y_train.to_numpy(), train_score)
@@ -1095,6 +1117,14 @@ def _fit_and_evaluate(
         "positive_probability_column": 1,
         "probability_orientation": "class_1_higher_default_risk",
         "validation_target_used_for_fit": False,
+        "threshold_source": (
+            "full_dev_training_scores_maximize_ks"
+            if phase == "oot" and full_dev_training_ks_threshold
+            else "pre_frozen_numeric_threshold"
+            if phase == "oot"
+            else "fold_training_scores_maximize_ks"
+        ),
+        "validation_or_oot_used_to_choose_threshold": False,
         "selected_original_feature_count": len(selected),
         "encoded_feature_count": int(encoded_train.shape[1]),
         "preprocessing": {
@@ -1132,6 +1162,9 @@ def run_phase_worker(
     stop_event: Any = None,
     stage_queue: Any = None,
     ram_ready_event: Any = None,
+    execution_authorization_sha256: str | None = None,
+    allow_authenticated_oot_recovery: bool = False,
+    full_dev_training_ks_threshold: bool = False,
     **_controls: Any,
 ) -> dict[str, Any]:
     """Run one exact pilot/DEV fold or the single locked OOT phase."""
@@ -1147,6 +1180,23 @@ def run_phase_worker(
         raise Prompt16ExecutionError("OOT has no fold id")
     if phase not in {"pilot", "dev", "oot"}:
         raise Prompt16ExecutionError("phase must be pilot, dev, or oot")
+    if phase == "oot":
+        if not execution_authorization_sha256:
+            raise Prompt16ExecutionError(
+                "OOT worker requires the final execution authorization digest"
+            )
+        if not full_dev_training_ks_threshold:
+            raise Prompt16ExecutionError(
+                "final OOT requires the frozen full-DEV training KS threshold rule"
+            )
+    elif any(
+        (
+            execution_authorization_sha256 is not None,
+            allow_authenticated_oot_recovery,
+            full_dev_training_ks_threshold,
+        )
+    ):
+        raise Prompt16ExecutionError("final OOT controls may not be used for pilot/DEV")
     phase_root = Path(output_root)
     if (phase_root / "_SUCCESS").is_file():
         success = _json(phase_root / "_SUCCESS")
@@ -1159,6 +1209,8 @@ def run_phase_worker(
             or completed.get("fold_id") != fold_id
             or completed.get("protocol_file_sha256") != contract.lock_file_sha256
             or completed.get("protocol_internal_sha256") != contract.lock_internal_sha256
+            or completed.get("execution_authorization_sha256")
+            != execution_authorization_sha256
         ):
             raise Prompt16ExecutionError("completed phase identity mismatch")
         return {**completed, "reused_completed_phase": True}
@@ -1199,6 +1251,7 @@ def run_phase_worker(
             fold_id=fold_id,
             fit=fit,
             matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=execution_authorization_sha256,
         )
         sealed = _load_sealed(path, identity)
         if sealed is None:
@@ -1275,6 +1328,7 @@ def run_phase_worker(
             fold_id=fold_id,
             fit=fit,
             matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=execution_authorization_sha256,
         )
         if _load_sealed(path, identity) is not None:
             continue
@@ -1359,6 +1413,56 @@ def run_phase_worker(
             raise Prompt16ExecutionError("evaluation reload changed authenticated fold scope")
         del reloaded_predictors, reloaded_scope_auth
 
+    feature_psi_manifest_sha: str | None = None
+    if phase == "oot":
+        from credit_risk_fs.analysis.voting_inference.psi import feature_psi_record
+
+        feature_psi_path = phase_root / "feature_psi"
+        feature_psi_identity = {
+            "operation": "full_dev_to_oot_source_feature_psi",
+            "execution_authorization_sha256": execution_authorization_sha256,
+            "matrix_manifest_sha256": matrix_manifest_sha,
+            "ordered_predictor_sha256": canonical_sha256(predictors),
+            "predictor_count": len(predictors),
+            "dev_scope_sha256": canonical_sha256(scope_auth["train"]["observed"]),
+            "oot_scope_sha256": canonical_sha256(scope_auth["validation"]["observed"]),
+        }
+        if _load_sealed(feature_psi_path, feature_psi_identity) is None:
+            _archive_incomplete(feature_psi_path, archive_root)
+            feature_psi_path.mkdir(parents=True, exist_ok=False)
+            _publish_stage(
+                stage_queue,
+                "oot_feature_psi",
+                "oot:oot:feature_psi",
+                component="full_dev_to_oot_selected_source_feature_psi",
+                operation="descriptive_drift",
+                ram_recovery_barrier=True,
+            )
+            feature_psi_rows: list[dict[str, Any]] = []
+            for index, feature in enumerate(predictors, start=1):
+                _check_stop(stop_event)
+                if index == 1 or index % 50 == 0:
+                    wait_for_ram_ready(
+                        ram_ready_event,
+                        stop_event,
+                        boundary=f"oot_feature_psi:{index}",
+                    )
+                record, _ = feature_psi_record(
+                    feature=feature,
+                    dev_values=train[feature],
+                    oot_values=validation[feature],
+                )
+                feature_psi_rows.append(record)
+            write_parquet_atomic(
+                feature_psi_path / "all_source_features.parquet",
+                pd.DataFrame(feature_psi_rows),
+                required_columns=("feature", "psi_type_aware"),
+                ordered_row_identity_column="feature",
+                overwrite=False,
+            )
+            _seal_directory(feature_psi_path, feature_psi_identity)
+        feature_psi_manifest_sha = file_sha256(feature_psi_path / "manifest.json")
+
     thresholds = _frozen_thresholds(oot_analysis_plan)
     for cell in cells:
         _check_stop(stop_event)
@@ -1374,6 +1478,7 @@ def run_phase_worker(
             cell=cell,
             matrix_manifest_sha256=matrix_manifest_sha,
             selection_manifest_sha256=selection_manifest_sha,
+            execution_authorization_sha256=execution_authorization_sha256,
         )
         path = evaluation_root / cell_id
         if _load_sealed(path, identity) is not None:
@@ -1381,7 +1486,7 @@ def run_phase_worker(
             completed_eval_count += int(record["status"] == "complete")
             unavailable_eval_count += int(record["status"] != "complete")
             continue
-        if phase == "oot" and path.exists():
+        if phase == "oot" and path.exists() and not allow_authenticated_oot_recovery:
             raise Prompt16ExecutionError(
                 "incomplete OOT evaluation exists; fail closed because a target-linked "
                 "prediction or metric may already have become inspectable"
@@ -1422,6 +1527,7 @@ def run_phase_worker(
                 "realized_support": len(selected),
                 "natural_support_like_for_like": natural_support,
                 "elapsed_seconds": time.perf_counter() - started,
+                "feature_psi_manifest_sha256": feature_psi_manifest_sha,
             }
             write_json_atomic(path / "status.json", status, overwrite=False)
             write_json_atomic(path / "failure.json", selection, overwrite=False)
@@ -1438,6 +1544,7 @@ def run_phase_worker(
                 matrix=matrix,
                 phase=phase,
                 frozen_threshold=thresholds.get(order),
+                full_dev_training_ks_threshold=full_dev_training_ks_threshold,
             )
             prediction_auth = _locked_alignment_summary(
                 predictions["case_id"].tolist(), predictions["target"].tolist()
@@ -1470,6 +1577,7 @@ def run_phase_worker(
                 "natural_support_like_for_like": natural_support,
                 "prediction_alignment": prediction_auth,
                 "elapsed_seconds": time.perf_counter() - started,
+                "feature_psi_manifest_sha256": feature_psi_manifest_sha,
             }
             write_json_atomic(path / "status.json", status, overwrite=False)
             completed_eval_count += 1
@@ -1515,6 +1623,7 @@ def run_phase_worker(
         "fold_id": fold_id,
         "protocol_file_sha256": contract.lock_file_sha256,
         "protocol_internal_sha256": contract.lock_internal_sha256,
+        "execution_authorization_sha256": execution_authorization_sha256,
         "matrix_manifest_sha256": matrix_manifest_sha,
         "selection_fit_count": completed_fit_count,
         "evaluation_accounting": accounting,

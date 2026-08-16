@@ -242,6 +242,20 @@ def _fold_label(payload: Mapping[str, Any]) -> str | None:
     return f"Fold {value}/5" if 1 <= value <= 5 else None
 
 
+def _oot_label(payload: Mapping[str, Any]) -> str | None:
+    order = payload.get("configuration_order")
+    if order is None:
+        scope = str(payload.get("fold_id") or "")
+        match = re.search(r"cell_(\d{3})", scope)
+        if match:
+            order = int(match.group(1))
+    try:
+        value = int(order)
+    except (TypeError, ValueError):
+        return None
+    return f"OOT {value:02d}/34" if 1 <= value <= 34 else None
+
+
 def _stage_label(payload: Mapping[str, Any]) -> str:
     stage = str(payload.get("stage") or "")
     if stage in {"final_model_fit", "full_dev_model_fit"}:
@@ -310,6 +324,7 @@ def _human_line(
     pilot_cell = str(payload.get("pilot_cell") or "")
     pilot_label = f"Pilot {pilot_cell[:2]}" if pilot_cell[:2].isdigit() else None
     fold_label = _fold_label(payload)
+    oot_label = _oot_label(payload)
 
     if event == "logging_initialized":
         parts = ["Logging ready", str(payload.get("log_path") or "logs/runs.log")]
@@ -354,10 +369,12 @@ def _human_line(
             if item
         ]
     elif event == "stage_started":
-        parts = [item for item in (fold_label, f"{_stage_label(payload)} started") if item]
+        parts = [item for item in (oot_label, fold_label, f"{_stage_label(payload)} started") if item]
     elif event == "stage_heartbeat":
         action = "ACTIVE"
-        parts = [item for item in (fold_label, f"{_stage_label(payload)} running") if item]
+        parts = [item for item in (oot_label, fold_label, f"{_stage_label(payload)} running") if item]
+        if payload.get("attempt") is not None:
+            parts.append(f"Attempt {payload.get('attempt')}")
         elapsed = _duration(
             payload.get("elapsed_stage_seconds", payload.get("elapsed_supervisor_seconds"))
         )
@@ -389,7 +406,9 @@ def _human_line(
             activity = f"{dataset or 'Dataset'} loading paused"
         else:
             activity = f"{dataset + ' ' if dataset else ''}{_stage_label(payload)} paused"
-        parts = [activity]
+        parts = [item for item in (oot_label, activity) if item]
+        if oot_label:
+            parts.append("WAITING_FOR_RAM")
         if event == "ram_wait_periodic":
             try:
                 waiting_seconds = float(payload.get("waiting_seconds"))
@@ -412,6 +431,7 @@ def _human_line(
         action = "RESUME"
         available = _gib(payload.get("system_available_ram_bytes"))
         parts = [
+            *([oot_label] if oot_label else []),
             f"Available RAM stable at {available}"
             if available
             else "Available RAM recovered stably"
@@ -433,7 +453,7 @@ def _human_line(
             )
     elif event == "stage_completed":
         action = "DONE"
-        parts = [item for item in (fold_label, f"{_stage_label(payload)} completed") if item]
+        parts = [item for item in (oot_label, fold_label, f"{_stage_label(payload)} completed") if item]
         elapsed = _duration(payload.get("elapsed_stage_seconds"))
         if elapsed:
             parts[-1] += f" in {elapsed}"
@@ -443,7 +463,16 @@ def _human_line(
         parts = [item for item in (fold_label, f"{_stage_label(payload)} stopped: {reason}") if item]
     elif event == "resource_warning":
         action = "WARN"
-        parts = [_stop_reason(payload.get("warning_code"), payload.get("message"))]
+        parts = [item for item in (oot_label, _stop_reason(payload.get("warning_code"), payload.get("message"))) if item]
+    elif event == "resource_recovery_required":
+        action = "WARN"
+        parts = [item for item in (oot_label, "RESOURCE_RECOVERY_REQUIRED", _clean_message(payload.get("message"))) if item]
+    elif event == "resuming_from_checkpoint":
+        action = "RESUME"
+        parts = [item for item in (oot_label, "RESUMING_FROM_CHECKPOINT", _clean_message(payload.get("message"))) if item]
+    elif event == "controller_progress":
+        action = "INFO"
+        parts = [_clean_message(payload.get("message"))]
     elif event == "supervisor_lifecycle":
         state = str(payload.get("lifecycle_state") or "")
         if state == "RESOURCE_STOP_LATCHED":
