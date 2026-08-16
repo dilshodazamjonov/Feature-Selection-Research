@@ -1,0 +1,58 @@
+{
+  "schema_version": "prompt_16_final_oot_preservation_revocation_v1",
+  "status": "frozen_before_oot",
+  "no_oot_state": {
+    "checked_roots": [
+      "results/prompt_16_homecredit_model_stability_2024",
+      "outputs/prompt_16_homecredit_model_stability_2024"
+    ],
+    "unauthorized_oot_paths": [],
+    "final_output_root_exists": false
+  },
+  "classical_dev_tree": {
+    "tree_manifest_sha256": "c956db2b2bb810805a1668916bf12c56f96ed994b03cd2a5c4acfde6fc6bd6ba",
+    "file_count": 1371,
+    "byte_count": 351363036,
+    "serialization": "relative POSIX path, TAB, byte length, TAB, lowercase SHA-256, LF; paths sorted by absolute path"
+  },
+  "supplemental_dev_tree": {
+    "tree_manifest_sha256": "161cf63b2b6be351fcad0f3c36bebe04c068b99ad90652d20eacd4ae377ff83b",
+    "file_count": 221,
+    "byte_count": 59668283,
+    "serialization": "relative POSIX path, TAB, byte length, TAB, lowercase SHA-256, LF; paths sorted by relative path"
+  },
+  "prompt14_closed_tree_identities": [
+    {
+      "path": "configs/protocols/prompt_14_two_dataset_analysis_v1",
+      "tree_manifest_sha256": "660a0f8cf3697799eb9e73d536ab568562fbdcff3454782c1d06ba85f7e3b361",
+      "file_count": 4,
+      "byte_count": 378638,
+      "serialization": "relative POSIX path, TAB, byte length, TAB, lowercase SHA-256, LF; paths sorted by relative path",
+      "numeric_contents_opened_for_prompt16_freeze": false
+    },
+    {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3",
+      "tree_manifest_sha256": "bc5c73edf778c2f5d02a41d6e6d9aeb875768cd927742c99a74c2644b41df49c",
+      "file_count": 25,
+      "byte_count": 2340635,
+      "serialization": "relative POSIX path, TAB, byte length, TAB, lowercase SHA-256, LF; paths sorted by relative path",
+      "numeric_contents_opened_for_prompt16_freeze": false
+    }
+  ],
+  "semantic_mixed_voter": {
+    "status": "unavailable_due_to_unresolved_historical_provenance",
+    "execution_cells": 0,
+    "absence_is_not_zero_effect": true
+  },
+  "revocations": {
+    "former_classical_only_oot_template": "revoked",
+    "all_earlier_prompt16_oot_commands": "revoked",
+    "only_successor": "execution_authorization.json"
+  },
+  "one_time_rule": {
+    "second_scientific_oot_attempt_permitted": false,
+    "automatic_recovery_is_continuation_only_when_no_final_metric_promoted": true,
+    "completed_authenticated_cells_never_retrained": true
+  },
+  "artifact_authentication_sha256": "0a8219d12f96c9ddbec371637cfe8a5e6bccf5a9c0034bcb2bb26c336ad54fd6"
+}

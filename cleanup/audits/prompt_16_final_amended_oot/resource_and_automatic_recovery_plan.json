@@ -1,0 +1,45 @@
+{
+  "schema_version": "prompt_16_final_oot_resource_recovery_plan_v1",
+  "status": "frozen_before_oot",
+  "precedence": [
+    "final_prompt_16_user_instruction_2026_08_16",
+    "prompt_16_final_oot_execution_policy_v1",
+    "earlier_prompt_16_operational_amendments",
+    "base_prompt_16_resource_plan"
+  ],
+  "parallelism": {
+    "max_concurrent_experiment_cells": 1,
+    "max_concurrent_folds_or_refits": 1,
+    "max_estimator_threads": 4,
+    "gpu_enabled": false
+  },
+  "memory": {
+    "process_tree_rss_hard_cap_gib": 24,
+    "system_available_ram_hard_floor_gib": 4,
+    "soft_available_ram_threshold_gib": 6,
+    "resume_available_ram_threshold_gib": 8,
+    "resume_stability_polls": 3,
+    "poll_seconds": 5,
+    "active_log_seconds": 30
+  },
+  "automatic_recovery": {
+    "maximum_restarts_per_incomplete_scope": 5,
+    "prestart_ram_wait_consumes_retry": false,
+    "completed_cells_skipped": true,
+    "partial_artifacts_promoted": false,
+    "restart_identity": "same_authorization_data_code_seed_budget_and_checkpoint",
+    "retry_counter_reset": "after_scope_completion_and_authentication",
+    "identical_command_resume": true
+  },
+  "execution_policy": {
+    "path": "configs/execution/prompt_16_final_oot_v1.yaml",
+    "byte_size": 766,
+    "sha256": "e1fd51d0d9bb05650aa7abba921152b6f424f262b6663cefa01133679629211e"
+  },
+  "ram_wait_policy": {
+    "path": "configs/execution/prompt_16_final_oot_ram_wait_v1.yaml",
+    "byte_size": 457,
+    "sha256": "b0c0875be392450f1a5704370818c8300f544646873cf5731a27d3962dcdb3cc"
+  },
+  "artifact_authentication_sha256": "2e8d65fbb0e36cb0b8ce0bdb36f8925658810bc49ef2cd7470052b4a0c366bcc"
+}

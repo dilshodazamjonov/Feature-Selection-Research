@@ -1,0 +1,24 @@
+{
+  "schema_version": "prompt_16_final_oot_psi_contract_v1",
+  "status": "frozen_before_oot",
+  "score_psi": {
+    "reference": "available_authenticated_DEV_OOF_scores_for_same_configuration",
+    "bin_source": "DEV_OOF_quantiles_only",
+    "requested_bins": 10,
+    "outer_edges": "infinite",
+    "smoothing_epsilon": 1e-06,
+    "oot_used_to_fit_bins": false
+  },
+  "selected_feature_psi": {
+    "reference": "full_DEV_original_source_feature_values",
+    "comparison": "same_original_source_feature_on_frozen_OOT_rows",
+    "requested_bins": 10,
+    "categorical_missing_and_unseen_states": "explicit",
+    "descriptive_references": [
+      0.1,
+      0.25
+    ],
+    "significance_label": "none_descriptive_only"
+  },
+  "artifact_authentication_sha256": "2543cf06e4f53affe254bf8717a19bfb360f8190006be1e26d96e284aef30a68"
+}
