@@ -245,6 +245,16 @@ def test_no_oot_plan_or_help_path_exists_in_final_cli() -> None:
     assert "--threads" not in controller
 
 
+def test_final_worker_detector_excludes_current_python_lineage() -> None:
+    controller = (PROJECT_ROOT / "scripts/run_prompt_16_final_oot.py").read_text(
+        encoding="utf-8"
+    )
+    assert "current_lineage_pids = {current_pid}" in controller
+    assert "parent_pid in current_lineage_pids" in controller
+    assert "pid in current_lineage_pids" in controller
+    assert 'not name.startswith("python")' in controller
+
+
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:
     import credit_risk_fs.experiments.prompt_16_final_oot as final
 
