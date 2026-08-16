@@ -113,6 +113,9 @@ MEMORY_AMENDMENT_RELATIVE_ROOT = Path(
 ENCODING_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_oot_encoding_amendment_v2"
 )
+RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_oot_resource_policy_amendment_v3"
+)
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
 )
@@ -169,11 +172,11 @@ BOOTSTRAP_SEED = 20260721
 HOLM_ALPHA = 0.05
 MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE = 5
 MAX_ESTIMATOR_THREADS = 4
-PROCESS_TREE_RSS_HARD_CAP_GIB = 24
-SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB = 4
-SOFT_AVAILABLE_RAM_GIB = 6
-RESUME_AVAILABLE_RAM_GIB = 8
-RESUME_STABILITY_POLLS = 3
+PROCESS_TREE_RSS_HARD_CAP_GIB = 32
+SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB = 2
+SOFT_AVAILABLE_RAM_GIB = 3
+RESUME_AVAILABLE_RAM_GIB = 4
+RESUME_STABILITY_POLLS = 2
 PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256 = (
     "e9e2b15aa2a0b0330a027ad0414fd225ec3a07460dac501b08fa0faac8205f2a"
 )
@@ -182,6 +185,12 @@ MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
 )
 ENCODING_AMENDMENT_MEMORY_STRATEGY = (
     "identity_first_batched_psi_per_cell_projection_and_selector_memmap_v2"
+)
+ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
+    "58f0fc7d742e14a3e80d824c04fc6c04a66e5df3f899a6c5cedd2be4a7a2b139"
+)
+RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY = (
+    "identity_first_selector_memmap_and_high_memory_guardrails_v3"
 )
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
@@ -3195,6 +3204,349 @@ fit_008.
     }
 
 
+def _validate_resource_policy_blocker(
+    root: Path,
+) -> tuple[dict[str, Any], list[str], list[dict[str, Any]], list[str]]:
+    """Authenticate the zero-cell state stopped at the ``fit_008`` RAM wait."""
+
+    output = root / OOT_RELATIVE_ROOT
+    logs = root / OOT_LOG_RELATIVE_ROOT
+    cache = root / TEMP_RELATIVE_ROOT / "classical_selector_encoding_v2"
+    status = _read_json(output / "controller_status.json")
+    if status.get("execution_authorization_sha256") != (
+        ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("resource-policy blocker authorization changed")
+    if status.get("state") != "ERROR" or status.get("stop_code") != "worker_crash":
+        raise Prompt16ExecutionError("resource-policy blocker terminal state changed")
+    if int(status.get("completed_count", -1)) != 0 or int(
+        status.get("unavailable_count", -1)
+    ) != 0:
+        raise Prompt16ExecutionError(
+            "resource-policy blocker unexpectedly promoted OOT cells"
+        )
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError(
+            "resource-policy blocker unexpectedly contains success"
+        )
+    if list(output.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError(
+            "resource-policy blocker contains final cell artifacts"
+        )
+
+    _, protocol = _protocol_payload(root / PROTOCOL_RELATIVE_PATH)
+    matrix = protocol["approved_protocol"]["method_and_evaluation_matrix"]
+    matrix_manifest_sha = file_sha256(root / MATRIX_RELATIVE_ROOT / "manifest.json")
+    expected_fit_ids = {
+        *(f"fit_{order:03d}" for order in range(1, 8)),
+        *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+    }
+    selection_root = output / "classical/selection_fits"
+    actual_fit_ids = {
+        path.name
+        for path in selection_root.iterdir()
+        if path.is_dir() and (path / "_SUCCESS").is_file()
+    }
+    if actual_fit_ids != expected_fit_ids:
+        raise Prompt16ExecutionError(
+            "resource-policy blocker selector checkpoint inventory changed: "
+            f"expected={sorted(expected_fit_ids)}, observed={sorted(actual_fit_ids)}"
+        )
+    partial_fit = selection_root / "fit_008"
+    if partial_fit.exists() and any(partial_fit.iterdir()):
+        raise Prompt16ExecutionError(
+            "resource-policy blocker partial fit_008 is not empty"
+        )
+    fits = selection_fit_registry(matrix)
+    by_id = {str(fit["fit_id"]): fit for fit in fits}
+    for fit_id in sorted(expected_fit_ids):
+        identity = _fit_identity(
+            phase="oot",
+            fold_id=None,
+            fit=by_id[fit_id],
+            matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=(
+                MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+            ),
+        )
+        _load_sealed(selection_root / fit_id, identity)
+
+    encoding = _read_json(output / "classical/selector_encoding.json")
+    if (
+        encoding.get("memory_strategy")
+        != "feature_split_disk_backed_fortran_float32_memmap_v1"
+        or encoding.get("disk_backed") is not True
+        or int(encoding.get("feature_split_size", -1)) != 64
+        or encoding.get("encoding_semantics_changed") is not False
+    ):
+        raise Prompt16ExecutionError("sealed selector encoding record changed")
+    cache_inventory = sorted(path.name for path in cache.iterdir() if path.is_file())
+    if cache_inventory != ["_SUCCESS", "encoded_train.npy", "metadata.json"]:
+        raise Prompt16ExecutionError("selector memmap cache inventory changed")
+    cache_success = _read_json(cache / "_SUCCESS")
+    cache_metadata = _read_json(cache / "metadata.json")
+    if cache_success.get("metadata_sha256") != file_sha256(cache / "metadata.json"):
+        raise Prompt16ExecutionError("selector memmap completion marker changed")
+    cache_identity = cache_metadata.get("identity", {})
+    if (
+        cache_identity.get("execution_authorization_sha256")
+        != ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        or int(cache_identity.get("row_count", -1)) != 1_221_743
+        or int(cache_identity.get("column_count", -1)) != 1_959
+        or cache_identity.get("dtype") != "float32"
+        or cache_identity.get("array_order") != "F"
+        or int(cache_identity.get("feature_split_size", -1)) != 64
+    ):
+        raise Prompt16ExecutionError("selector memmap authenticated identity changed")
+    encoded = cache / "encoded_train.npy"
+    artifact = cache_metadata.get("artifact", {})
+    encoded_artifact = _artifact(encoded, root) if encoded.is_file() else None
+    if (
+        encoded_artifact is None
+        or int(encoded_artifact["byte_size"]) != int(artifact.get("byte_size", -1))
+        or encoded_artifact["sha256"] != artifact.get("sha256")
+    ):
+        raise Prompt16ExecutionError("selector memmap authenticated artifact changed")
+
+    output_inventory = sorted(
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    )
+    partial_artifacts = [
+        encoded_artifact if path == encoded else _artifact(path, root)
+        for path in sorted(
+            [
+                *(path for path in output.rglob("*") if path.is_file()),
+                *(path for path in logs.rglob("*") if path.is_file()),
+                *(path for path in cache.rglob("*") if path.is_file()),
+            ],
+            key=lambda item: _relative(item, root),
+        )
+    ]
+    return status, sorted(expected_fit_ids), partial_artifacts, output_inventory
+
+
+def build_resource_policy_amendment_authorization(
+    *,
+    repository_root: str | Path = PROJECT_ROOT,
+    implementation_commit: str,
+) -> dict[str, Any]:
+    """Authorize high-memory guardrails and exact continuation from ``fit_008``."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if _git(root, "rev-parse", implementation_commit) != implementation_commit:
+        raise Prompt16ExecutionError("implementation commit must be a full commit identity")
+    if implementation_commit != repository["head"]:
+        raise Prompt16ExecutionError(
+            "resource-policy amendment must bind committed HEAD"
+        )
+    amendment_root = root / RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT
+    if amendment_root.exists():
+        raise Prompt16ExecutionError(
+            f"resource-policy amendment already exists: {amendment_root}"
+        )
+
+    predecessor_path = (
+        root / ENCODING_AMENDMENT_RELATIVE_ROOT / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != (
+        ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("encoding-amendment authorization changed")
+    predecessor_authorization = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor_authorization)
+    predecessor_claimed = predecessor_unsigned.pop(
+        "artifact_authentication_sha256", None
+    )
+    if predecessor_claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("encoding-amendment authorization digest mismatch")
+    status, checkpoint_fit_ids, partial_artifacts, output_inventory = (
+        _validate_resource_policy_blocker(root)
+    )
+    dev = authenticate_complete_dev(root)
+    dev.pop("evaluation_rows")
+    if dev["accounting"]["authenticated_evaluation_identities"] != 170:
+        raise Prompt16ExecutionError("resource-policy amendment DEV gate is not 170/170")
+
+    amendment_root.mkdir(parents=True, exist_ok=False)
+    amendment = {
+        "schema_version": "prompt_16_final_oot_resource_policy_amendment_v3",
+        "status": "authorized_execution_only_high_memory_guardrails_after_zero_promoted_cells",
+        "authorized_by_user_at_utc_date": "2026-08-17",
+        "predecessor_execution_authorization_sha256": (
+            ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "trigger": {
+            "supervisor_attempt_count": int(status["supervisor_attempt_count"]),
+            "blocked_scope": "oot:oot:fit_008",
+            "blocked_stage": "baseline_lightweight",
+            "observed_process_tree_rss_gib": 22.2,
+            "observed_system_available_ram_gib": 7.5,
+            "old_soft_pause_gib": 6,
+            "old_resume_gib": 8,
+            "promoted_evaluation_cells": 0,
+            "next_fit_id": "fit_008",
+        },
+        "scientific_contract_unchanged": [
+            "mrmr_mutual_information_discrete_plugin_v1",
+            "all_selector_algorithms_and_selected_feature_ordering",
+            "original_feature_numeric_encoding_values_and_float32_dtype",
+            "training_rows_candidate_features_and_temporal_boundaries",
+            "seeds_feature_budgets_tie_rules_and_preprocessing",
+            "catboost_and_logistic_regression_parameters",
+            "34_cell_identity_order_threshold_and_analysis_rules",
+        ],
+        "execution_only_changes": [
+            "raise_process_tree_warning_from_20_to_28_gib",
+            "raise_process_tree_hard_cap_from_24_to_32_gib",
+            "lower_system_available_hard_floor_from_4_to_2_gib",
+            "lower_cooperative_soft_pause_from_6_to_3_gib",
+            "lower_cooperative_resume_from_8_to_4_gib",
+            "require_two_stable_resume_polls_instead_of_three",
+            "do_not_suspend_opaque_fits_while_they_hold_resident_arrays",
+            "retain_cooperative_boundary_waits_and_independent_hard_stops",
+            "reuse_authenticated_disk_backed_selector_encoding",
+        ],
+        "resource_envelope": {
+            "observed_total_physical_ram_gib": 39.63,
+            "reserve_system_ram_gib": 4,
+            "warn_process_tree_rss_gib": 28,
+            "abort_process_tree_rss_gib": 32,
+            "abort_if_system_available_below_gib": 2,
+            "soft_pause_available_ram_gib": 3,
+            "resume_available_ram_gib": 4,
+            "resume_consecutive_checks": 2,
+            "opaque_stage_pause_mode": "hard_limit_only",
+        },
+        "memory_strategy": RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+        "checkpoint_fit_ids": checkpoint_fit_ids,
+        "next_fit_id": "fit_008",
+        "selector_memmap_reuse_required": True,
+        "new_llm_request_authorized": False,
+        "dev_rerun_authorized": False,
+        "scientific_oot_restart_authorized": False,
+    }
+    _write_frozen_json(amendment_root / "resource_policy_amendment.json", amendment)
+    write_text_atomic(
+        amendment_root / "README.md",
+        """# Prompt 16 final OOT resource-policy amendment v3
+
+This execution-only amendment resolves the authenticated `fit_008` pause after
+zero OOT model cells, predictions, or metrics were promoted. The old supervisor
+suspended an opaque selector at 22.2 GiB RSS and then required available RAM to
+rise from 7.5 GiB to 8 GiB; suspension retained the arrays and made that wait
+self-sustaining on the observed 39.6 GiB laptop.
+
+The amended envelope uses more of the installed RAM while retaining a 2 GiB
+hard Windows floor, a 32 GiB process-tree cap, cooperative 3/4 GiB pause/resume
+boundaries, and all disk and process-tree monitoring. Opaque numerical fits are
+not suspended at the soft threshold; they remain subject to both hard limits.
+The sealed selector checkpoints and disk-backed encoding are authenticated for
+reuse, so execution continues at `fit_008` without changing scientific methods.
+""",
+        overwrite=False,
+    )
+
+    implementation_paths = [
+        Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+        Path("src/credit_risk_fs/experiments/ram_control.py"),
+        Path("src/credit_risk_fs/experiments/resource_monitor.py"),
+        Path("src/credit_risk_fs/experiments/resource_policy.py"),
+        Path("scripts/run_prompt_16_final_oot.py"),
+        Path("tests/test_prompt_16_final_oot.py"),
+        Path("tests/test_prompt_16_third_dataset_execution.py"),
+        Path("tests/test_ram_wait_resume.py"),
+        Path("tests/test_resource_policy.py"),
+        EXECUTION_POLICY_RELATIVE_PATH,
+        RAM_POLICY_RELATIVE_PATH,
+    ]
+    amendment_files = [
+        _artifact(path, root)
+        for path in sorted(amendment_root.iterdir(), key=lambda item: item.name)
+        if path.is_file() and path.name != "execution_authorization.json"
+    ]
+    authorization_unsigned = dict(predecessor_authorization)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "dev_evaluation_registry_sha256": dev["evaluation_registry_sha256"],
+            "implementation_files": [
+                _artifact(root / path, root) for path in implementation_paths
+            ],
+            "frozen_input_files": [
+                *predecessor_authorization["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor_authorization["freeze_files"],
+                *amendment_files,
+            ],
+            "memory_amendment": {
+                "path": _relative(
+                    amendment_root / "resource_policy_amendment.json", root
+                ),
+                "strategy": RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+                "inherited_resource_infeasible_fit_ids": list(
+                    INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+                ),
+                "inherited_resource_infeasible_cell_orders": list(
+                    INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+                ),
+                "selector_memmap_feature_split_size": 64,
+                "scientific_contract_changed": False,
+                "resource_envelope_changed": True,
+            },
+            "checkpoint_resume": {
+                "accepted_predecessor_authorization_sha256": (
+                    MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "accepted_selector_memmap_authorization_sha256": (
+                    ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "reauthenticated_fit_ids": checkpoint_fit_ids,
+                "expected_next_fit_id": "fit_008",
+                "rewrite_predecessor_payloads": False,
+            },
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": output_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": checkpoint_fit_ids,
+                "next_fit_id": "fit_008",
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    write_json_atomic(
+        amendment_root / "execution_authorization.json",
+        authorization,
+        overwrite=False,
+    )
+    return {
+        "schema_version": "prompt_16_final_oot_resource_policy_amendment_build_v3",
+        "status": "authorized_high_memory_resume_from_fit_008",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(amendment_root / "execution_authorization.json"),
+        "authorization_sha256": file_sha256(
+            amendment_root / "execution_authorization.json"
+        ),
+        "reauthenticated_checkpoint_fit_count": len(checkpoint_fit_ids),
+        "expected_next_fit_id": "fit_008",
+        "registered_cells_unchanged": 34,
+        "promoted_predecessor_cells": 0,
+        "oot_work_executed": False,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -3247,6 +3599,7 @@ def load_final_authorization(
     if strategy not in {
         "identity_first_batched_psi_and_per_cell_selected_projection_v1",
         ENCODING_AMENDMENT_MEMORY_STRATEGY,
+        RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
     }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
@@ -3262,13 +3615,18 @@ def load_final_authorization(
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
     expected_predecessor = (
-        MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY
+        else MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         if strategy == ENCODING_AMENDMENT_MEMORY_STRATEGY
         else PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
     )
     if predecessor.get("execution_authorization_sha256") != expected_predecessor:
         raise Prompt16ExecutionError("predecessor OOT authorization identity changed")
-    if strategy == ENCODING_AMENDMENT_MEMORY_STRATEGY:
+    if strategy in {
+        ENCODING_AMENDMENT_MEMORY_STRATEGY,
+        RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+    }:
         checkpoint_resume = payload.get("checkpoint_resume", {})
         if checkpoint_resume.get(
             "accepted_predecessor_authorization_sha256"
@@ -3286,6 +3644,13 @@ def load_final_authorization(
             raise Prompt16ExecutionError("reauthenticated selector inventory changed")
         if int(memory_amendment.get("selector_memmap_feature_split_size", -1)) != 64:
             raise Prompt16ExecutionError("selector memmap split size changed")
+        if strategy == RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY and (
+            checkpoint_resume.get(
+                "accepted_selector_memmap_authorization_sha256"
+            )
+            != ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        ):
+            raise Prompt16ExecutionError("selector memmap authorization changed")
     return payload, file_sha256(candidate)
 
 
@@ -3343,6 +3708,9 @@ def run_final_oot_worker(
         ),
         authorized_predecessor_authorization_sha256=checkpoint_resume.get(
             "accepted_predecessor_authorization_sha256"
+        ),
+        authorized_selector_memmap_predecessor_sha256=checkpoint_resume.get(
+            "accepted_selector_memmap_authorization_sha256"
         ),
         expected_resume_fit_id=checkpoint_resume.get("expected_next_fit_id"),
         inherited_resource_infeasible_fit_ids=(

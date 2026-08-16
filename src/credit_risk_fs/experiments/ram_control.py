@@ -169,8 +169,10 @@ def resolve_ram_control_policy(
     )
     recovery = max(configured_recovery, emergency)
     pause_mode = str(payload.get("opaque_stage_pause_mode", "")).strip()
-    if pause_mode != "process_tree_suspend":
-        raise ValueError("opaque_stage_pause_mode must be process_tree_suspend")
+    if pause_mode not in {"process_tree_suspend", "hard_limit_only"}:
+        raise ValueError(
+            "opaque_stage_pause_mode must be process_tree_suspend or hard_limit_only"
+        )
     return ResolvedRamControlPolicy(
         schema_version=RAM_CONTROL_SCHEMA_VERSION,
         profile_name=profile,

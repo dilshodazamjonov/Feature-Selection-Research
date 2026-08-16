@@ -54,7 +54,12 @@ def _legacy_policy() -> ResolvedExecutionPolicy:
     )
 
 
-def _ram_policy(*, check: float = 0.01, log: float = 300.0):
+def _ram_policy(
+    *,
+    check: float = 0.01,
+    log: float = 300.0,
+    opaque_mode: str = "process_tree_suspend",
+):
     return resolve_ram_control_policy(
         {
             "schema_version": "ram_wait_resume_policy_v1",
@@ -65,7 +70,7 @@ def _ram_policy(*, check: float = 0.01, log: float = 300.0):
             "recovery_consecutive_checks": 3,
             "check_interval_seconds": check,
             "log_interval_seconds": log,
-            "opaque_stage_pause_mode": "process_tree_suspend",
+            "opaque_stage_pause_mode": opaque_mode,
         },
         total_physical_ram_bytes=32 * GIB,
     )
@@ -188,6 +193,27 @@ def test_opaque_stage_uses_safe_process_tree_boundary_suspend_and_resume(tmp_pat
     )
     assert any(
         item["state"] == "OPAQUE_STAGE_PROCESS_TREE_RESUMED"
+        for item in result.stop_lifecycle
+    )
+
+
+def test_opaque_stage_hard_limit_only_does_not_soft_suspend(tmp_path):
+    result = supervise_worker(
+        worker_target=(
+            "credit_risk_fs.experiments.synthetic_execution:"
+            "opaque_ram_stage_worker"
+        ),
+        worker_kwargs={"duration_seconds": 0.08},
+        policy=_legacy_policy(),
+        ram_control_policy=_ram_policy(opaque_mode="hard_limit_only"),
+        results_root=tmp_path,
+        temp_root=tmp_path,
+        sampler_factory=_sampler_factory([8, 0.5, 0.5, 0.5, 8]),
+    )
+    assert result.status == "completed"
+    assert result.ram_wait_count == 0
+    assert not any(
+        item["state"] == "OPAQUE_STAGE_PROCESS_TREE_SUSPENDED"
         for item in result.stop_lifecycle
     )
 
