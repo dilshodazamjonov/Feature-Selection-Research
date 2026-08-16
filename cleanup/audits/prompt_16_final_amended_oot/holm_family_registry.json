@@ -1,0 +1,310 @@
+{
+  "schema_version": "prompt_16_final_oot_holm_registry_v1",
+  "status": "frozen_before_oot",
+  "alpha": 0.05,
+  "procedure": "Holm_step_down",
+  "scope": "within_named_dataset_model_reference_family_never_across_families",
+  "family_count": 38,
+  "registered_comparison_count": 70,
+  "families": [
+    {
+      "holm_family_id": "baseline_vs_full_features__homecredit_model_stability_2024__catboost",
+      "family_size": 7,
+      "comparison_ids": [
+        "p16-oot-comparison-015",
+        "p16-oot-comparison-016",
+        "p16-oot-comparison-017",
+        "p16-oot-comparison-018",
+        "p16-oot-comparison-019",
+        "p16-oot-comparison-020",
+        "p16-oot-comparison-021"
+      ]
+    },
+    {
+      "holm_family_id": "baseline_vs_full_features__homecredit_model_stability_2024__lr",
+      "family_size": 7,
+      "comparison_ids": [
+        "p16-oot-comparison-001",
+        "p16-oot-comparison-002",
+        "p16-oot-comparison-003",
+        "p16-oot-comparison-004",
+        "p16-oot-comparison-005",
+        "p16-oot-comparison-006",
+        "p16-oot-comparison-007"
+      ]
+    },
+    {
+      "holm_family_id": "baseline_vs_random_k__homecredit_model_stability_2024__catboost",
+      "family_size": 7,
+      "comparison_ids": [
+        "p16-oot-comparison-022",
+        "p16-oot-comparison-023",
+        "p16-oot-comparison-024",
+        "p16-oot-comparison-025",
+        "p16-oot-comparison-026",
+        "p16-oot-comparison-027",
+        "p16-oot-comparison-028"
+      ]
+    },
+    {
+      "holm_family_id": "baseline_vs_random_k__homecredit_model_stability_2024__lr",
+      "family_size": 7,
+      "comparison_ids": [
+        "p16-oot-comparison-008",
+        "p16-oot-comparison-009",
+        "p16-oot-comparison-010",
+        "p16-oot-comparison-011",
+        "p16-oot-comparison-012",
+        "p16-oot-comparison-013",
+        "p16-oot-comparison-014"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_mrmr_mutual_information_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-054"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_mrmr_mutual_information_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-037"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_mrmr_mutual_information_vs_mrmr_mutual_information__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-055"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_mrmr_mutual_information_vs_mrmr_mutual_information__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-038"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_rfe_catboost_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-052"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_rfe_catboost_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-035"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_rfe_catboost_vs_rfe_catboost__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-053"
+      ]
+    },
+    {
+      "holm_family_id": "boruta_then_rfe_catboost_vs_rfe_catboost__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-036"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_100_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-047"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_100_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-030"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_100_vs_iv_woe__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-046"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_100_vs_iv_woe__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-029"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_200_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-049"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_200_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-032"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_200_vs_iv_woe__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-048"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_200_vs_iv_woe__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-031"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_300_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-051"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_300_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-034"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_300_vs_iv_woe__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-050"
+      ]
+    },
+    {
+      "holm_family_id": "iv_then_boruta_pool_300_vs_iv_woe__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-033"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_boruta_random_forest__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-059"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_boruta_random_forest__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-042"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_catboost_shap__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-060"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_catboost_shap__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-043"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_iv_woe__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-056"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_iv_woe__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-039"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_lasso_l1_logistic__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-057"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_lasso_l1_logistic__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-040"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_mrmr_mutual_information__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-061"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_mrmr_mutual_information__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-044"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_rfe_catboost__homecredit_model_stability_2024__catboost",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-058"
+      ]
+    },
+    {
+      "holm_family_id": "statistical_normalized_average_rank_vs_rfe_catboost__homecredit_model_stability_2024__lr",
+      "family_size": 1,
+      "comparison_ids": [
+        "p16-oot-comparison-041"
+      ]
+    },
+    {
+      "holm_family_id": "third_dataset_llm_primary__catboost",
+      "family_size": 5,
+      "comparison_ids": [
+        "p16-oot-comparison-068",
+        "p16-oot-comparison-069",
+        "p16-oot-comparison-070",
+        "p16-oot-comparison-071",
+        "p16-oot-comparison-072"
+      ]
+    },
+    {
+      "holm_family_id": "third_dataset_llm_primary__lr",
+      "family_size": 5,
+      "comparison_ids": [
+        "p16-oot-comparison-063",
+        "p16-oot-comparison-064",
+        "p16-oot-comparison-065",
+        "p16-oot-comparison-066",
+        "p16-oot-comparison-067"
+      ]
+    }
+  ],
+  "artifact_authentication_sha256": "8ad36596b142bde4c22a33f745ee11aeaa354af9ef382ee7c434e9c88724c653"
+}

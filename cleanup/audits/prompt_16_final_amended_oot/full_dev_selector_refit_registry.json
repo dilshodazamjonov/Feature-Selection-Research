@@ -1,0 +1,505 @@
+{
+  "schema_version": "prompt_16_final_full_dev_refit_registry_v1",
+  "status": "immutable_frozen_before_oot",
+  "registered_outer_refits": 29,
+  "classical_outer_refits": 27,
+  "stable_core_outer_refits": 2,
+  "stable_core_internal_rf_mrmr_component_fits": 10,
+  "total_internal_fit_invocations_including_outer_classical": 37,
+  "cached_llm_truncation_states": 2,
+  "llm_api_calls": 0,
+  "refits": [
+    {
+      "fit_order": 1,
+      "fit_id": "fit_001",
+      "family": "canonical_baseline",
+      "method_id": "full_features",
+      "iv_pool_budget": null,
+      "requested_feature_budget": null,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        1
+      ],
+      "refit_order": 1,
+      "refit_id": "fit_001",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 2,
+      "fit_id": "fit_002",
+      "family": "canonical_baseline",
+      "method_id": "full_features",
+      "iv_pool_budget": null,
+      "requested_feature_budget": null,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        2
+      ],
+      "refit_order": 2,
+      "refit_id": "fit_002",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 3,
+      "fit_id": "fit_003",
+      "family": "canonical_baseline",
+      "method_id": "random_k",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        3
+      ],
+      "refit_order": 3,
+      "refit_id": "fit_003",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 4,
+      "fit_id": "fit_004",
+      "family": "canonical_baseline",
+      "method_id": "random_k",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        4
+      ],
+      "refit_order": 4,
+      "refit_id": "fit_004",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 5,
+      "fit_id": "fit_005",
+      "family": "canonical_baseline",
+      "method_id": "iv_woe",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        5
+      ],
+      "refit_order": 5,
+      "refit_id": "fit_005",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 6,
+      "fit_id": "fit_006",
+      "family": "canonical_baseline",
+      "method_id": "iv_woe",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        6
+      ],
+      "refit_order": 6,
+      "refit_id": "fit_006",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 7,
+      "fit_id": "fit_007",
+      "family": "canonical_baseline",
+      "method_id": "mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        7
+      ],
+      "refit_order": 7,
+      "refit_id": "fit_007",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 8,
+      "fit_id": "fit_008",
+      "family": "canonical_baseline",
+      "method_id": "mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        8
+      ],
+      "refit_order": 8,
+      "refit_id": "fit_008",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 9,
+      "fit_id": "fit_009",
+      "family": "canonical_baseline",
+      "method_id": "lasso_l1_logistic",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        9
+      ],
+      "refit_order": 9,
+      "refit_id": "fit_009",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 10,
+      "fit_id": "fit_010",
+      "family": "canonical_baseline",
+      "method_id": "lasso_l1_logistic",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        10
+      ],
+      "refit_order": 10,
+      "refit_id": "fit_010",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 11,
+      "fit_id": "fit_011",
+      "family": "canonical_baseline",
+      "method_id": "legacy_rf_relevance_corr",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        11
+      ],
+      "refit_order": 11,
+      "refit_id": "fit_011",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 12,
+      "fit_id": "fit_012",
+      "family": "canonical_baseline",
+      "method_id": "legacy_rf_relevance_corr",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        12
+      ],
+      "refit_order": 12,
+      "refit_id": "fit_012",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 13,
+      "fit_id": "fit_013",
+      "family": "canonical_baseline",
+      "method_id": "catboost_shap",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        13
+      ],
+      "refit_order": 13,
+      "refit_id": "fit_013",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 14,
+      "fit_id": "fit_014",
+      "family": "canonical_baseline",
+      "method_id": "catboost_shap",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        14
+      ],
+      "refit_order": 14,
+      "refit_id": "fit_014",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 15,
+      "fit_id": "fit_015",
+      "family": "canonical_baseline",
+      "method_id": "boruta_random_forest",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        15
+      ],
+      "refit_order": 15,
+      "refit_id": "fit_015",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 16,
+      "fit_id": "fit_016",
+      "family": "canonical_baseline",
+      "method_id": "boruta_random_forest",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        16
+      ],
+      "refit_order": 16,
+      "refit_id": "fit_016",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 17,
+      "fit_id": "fit_017",
+      "family": "canonical_baseline",
+      "method_id": "rfe_catboost",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        17
+      ],
+      "refit_order": 17,
+      "refit_id": "fit_017",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 18,
+      "fit_id": "fit_018",
+      "family": "canonical_baseline",
+      "method_id": "rfe_catboost",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        18
+      ],
+      "refit_order": 18,
+      "refit_id": "fit_018",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 19,
+      "fit_id": "fit_019",
+      "family": "approved_combination",
+      "method_id": "statistical_normalized_average_rank",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        19
+      ],
+      "refit_order": 19,
+      "refit_id": "fit_019",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 20,
+      "fit_id": "fit_020",
+      "family": "approved_combination",
+      "method_id": "statistical_normalized_average_rank",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        20
+      ],
+      "refit_order": 20,
+      "refit_id": "fit_020",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 21,
+      "fit_id": "fit_021",
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 100,
+      "requested_feature_budget": null,
+      "model_budget_owner": null,
+      "dependent_configuration_orders": [
+        21,
+        22
+      ],
+      "refit_order": 21,
+      "refit_id": "fit_021",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 22,
+      "fit_id": "fit_022",
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 200,
+      "requested_feature_budget": null,
+      "model_budget_owner": null,
+      "dependent_configuration_orders": [
+        23,
+        24
+      ],
+      "refit_order": 22,
+      "refit_id": "fit_022",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 23,
+      "fit_id": "fit_023",
+      "family": "approved_combination",
+      "method_id": "iv_then_boruta",
+      "iv_pool_budget": 300,
+      "requested_feature_budget": null,
+      "model_budget_owner": null,
+      "dependent_configuration_orders": [
+        25,
+        26
+      ],
+      "refit_order": 23,
+      "refit_id": "fit_023",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 24,
+      "fit_id": "fit_024",
+      "family": "approved_combination",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        27
+      ],
+      "refit_order": 24,
+      "refit_id": "fit_024",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 25,
+      "fit_id": "fit_025",
+      "family": "approved_combination",
+      "method_id": "boruta_then_mrmr_mutual_information",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        28
+      ],
+      "refit_order": 25,
+      "refit_id": "fit_025",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 26,
+      "fit_id": "fit_026",
+      "family": "approved_combination",
+      "method_id": "boruta_then_rfe_catboost",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 20,
+      "model_budget_owner": "lr",
+      "dependent_configuration_orders": [
+        29
+      ],
+      "refit_order": 26,
+      "refit_id": "fit_026",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "fit_order": 27,
+      "fit_id": "fit_027",
+      "family": "approved_combination",
+      "method_id": "boruta_then_rfe_catboost",
+      "iv_pool_budget": null,
+      "requested_feature_budget": 40,
+      "model_budget_owner": "catboost",
+      "dependent_configuration_orders": [
+        30
+      ],
+      "refit_order": 27,
+      "refit_id": "fit_027",
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 1
+    },
+    {
+      "refit_order": 28,
+      "refit_id": "fit_028_stable_core_llm_fill_lr",
+      "family": "llm_supplement",
+      "method_id": "stable_core_llm_fill",
+      "model_budget_owner": "lr",
+      "requested_feature_budget": 20,
+      "dependent_configuration_orders": [
+        33
+      ],
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 5
+    },
+    {
+      "refit_order": 29,
+      "refit_id": "fit_029_stable_core_llm_fill_catboost",
+      "family": "llm_supplement",
+      "method_id": "stable_core_llm_fill",
+      "model_budget_owner": "catboost",
+      "requested_feature_budget": 40,
+      "dependent_configuration_orders": [
+        34
+      ],
+      "scope": "full_dev_only",
+      "supervised": true,
+      "internal_component_fits": 5
+    }
+  ],
+  "refits_sha256": "2a8efb574c7fe161869553722d302e2950d4cce06b46ae5bd738448700d7e398",
+  "artifact_authentication_sha256": "44161dff089d393b869b8309ef546994531e7e48b52a52c1cc3c014f8d4d87ea"
+}
