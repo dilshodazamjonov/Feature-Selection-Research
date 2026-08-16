@@ -110,6 +110,9 @@ FREEZE_RELATIVE_ROOT = Path("cleanup/audits/prompt_16_final_amended_oot")
 MEMORY_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_oot_memory_amendment_v1"
 )
+ENCODING_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_oot_encoding_amendment_v2"
+)
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
 )
@@ -173,6 +176,12 @@ RESUME_AVAILABLE_RAM_GIB = 8
 RESUME_STABILITY_POLLS = 3
 PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256 = (
     "e9e2b15aa2a0b0330a027ad0414fd225ec3a07460dac501b08fa0faac8205f2a"
+)
+MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
+    "33b009bd685a2df66b97e0cc16906c1b7947c8e08c4da5b846490c47c32bc739"
+)
+ENCODING_AMENDMENT_MEMORY_STRATEGY = (
+    "identity_first_batched_psi_per_cell_projection_and_selector_memmap_v2"
 )
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
@@ -2914,6 +2923,278 @@ effect. The same 34-cell order remains authoritative.
     }
 
 
+def _validate_encoding_blocker(
+    root: Path,
+) -> tuple[dict[str, Any], list[str], list[dict[str, Any]], list[str]]:
+    """Authenticate the exact zero-cell state blocked before ``fit_008``."""
+
+    output = root / OOT_RELATIVE_ROOT
+    logs = root / OOT_LOG_RELATIVE_ROOT
+    status = _read_json(output / "controller_status.json")
+    if status.get("execution_authorization_sha256") != (
+        MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("encoding blocker authorization changed")
+    if status.get("stop_code") != "resource_recovery_retry_ceiling":
+        raise Prompt16ExecutionError("encoding blocker stop code changed")
+    if int(status.get("completed_count", -1)) != 0 or int(
+        status.get("unavailable_count", -1)
+    ) != 0:
+        raise Prompt16ExecutionError("encoding blocker unexpectedly promoted OOT cells")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("encoding blocker unexpectedly contains success")
+    if list(output.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError("encoding blocker contains final cell artifacts")
+
+    _, protocol = _protocol_payload(root / PROTOCOL_RELATIVE_PATH)
+    matrix = protocol["approved_protocol"]["method_and_evaluation_matrix"]
+    matrix_manifest_sha = file_sha256(root / MATRIX_RELATIVE_ROOT / "manifest.json")
+    expected_fit_ids = {
+        *(f"fit_{order:03d}" for order in range(1, 8)),
+        *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+    }
+    selection_root = output / "classical/selection_fits"
+    actual_fit_ids = {
+        path.name
+        for path in selection_root.iterdir()
+        if path.is_dir() and (path / "_SUCCESS").is_file()
+    }
+    if actual_fit_ids != expected_fit_ids:
+        raise Prompt16ExecutionError(
+            "encoding blocker selector checkpoint inventory changed: "
+            f"expected={sorted(expected_fit_ids)}, observed={sorted(actual_fit_ids)}"
+        )
+    if (selection_root / "fit_008").exists():
+        raise Prompt16ExecutionError("encoding blocker contains a partial fit_008")
+    fits = selection_fit_registry(matrix)
+    by_id = {str(fit["fit_id"]): fit for fit in fits}
+    for fit_id in sorted(expected_fit_ids):
+        identity = _fit_identity(
+            phase="oot",
+            fold_id=None,
+            fit=by_id[fit_id],
+            matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=(
+                MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+            ),
+        )
+        _load_sealed(selection_root / fit_id, identity)
+    fit_007 = _read_json(selection_root / "fit_007/selection.json")
+    if fit_007.get("status") != "complete" or len(
+        fit_007.get("selected_features", [])
+    ) != 20:
+        raise Prompt16ExecutionError("completed fit_007 selected-feature identity changed")
+
+    output_inventory = sorted(
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    )
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            [
+                *(path for path in output.rglob("*") if path.is_file()),
+                *(path for path in logs.rglob("*") if path.is_file()),
+            ],
+            key=lambda item: _relative(item, root),
+        )
+    ]
+    return status, sorted(expected_fit_ids), partial_artifacts, output_inventory
+
+
+def build_encoding_amendment_authorization(
+    *,
+    repository_root: str | Path = PROJECT_ROOT,
+    implementation_commit: str,
+) -> dict[str, Any]:
+    """Authorize the disk-backed encoding repair and exact ``fit_008`` resume."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if _git(root, "rev-parse", implementation_commit) != implementation_commit:
+        raise Prompt16ExecutionError("implementation commit must be a full commit identity")
+    if implementation_commit != repository["head"]:
+        raise Prompt16ExecutionError("encoding amendment must bind committed HEAD")
+    amendment_root = root / ENCODING_AMENDMENT_RELATIVE_ROOT
+    if amendment_root.exists():
+        raise Prompt16ExecutionError(f"encoding amendment already exists: {amendment_root}")
+
+    predecessor_path = (
+        root / MEMORY_AMENDMENT_RELATIVE_ROOT / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != (
+        MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("memory-amendment authorization changed")
+    predecessor_authorization = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor_authorization)
+    predecessor_claimed = predecessor_unsigned.pop(
+        "artifact_authentication_sha256", None
+    )
+    if predecessor_claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("memory-amendment authorization digest mismatch")
+    status, checkpoint_fit_ids, partial_artifacts, output_inventory = (
+        _validate_encoding_blocker(root)
+    )
+    dev = authenticate_complete_dev(root)
+    dev.pop("evaluation_rows")
+    if dev["accounting"]["authenticated_evaluation_identities"] != 170:
+        raise Prompt16ExecutionError("encoding amendment DEV gate is not 170/170")
+
+    amendment_root.mkdir(parents=True, exist_ok=False)
+    amendment = {
+        "schema_version": "prompt_16_final_oot_encoding_amendment_v2",
+        "status": "authorized_execution_only_encoding_repair_after_zero_promoted_cells",
+        "authorized_by_user_at_utc_date": "2026-08-17",
+        "predecessor_execution_authorization_sha256": (
+            MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "trigger": {
+            "supervisor_attempt_count": int(status["supervisor_attempt_count"]),
+            "failed_stage": "selection_encoding",
+            "observed_process_tree_rss_gib": 24.9,
+            "observed_system_available_ram_gib": 2.6,
+            "promoted_evaluation_cells": 0,
+            "next_fit_id": "fit_008",
+        },
+        "scientific_contract_unchanged": [
+            "mrmr_mutual_information_discrete_plugin_v1",
+            "selected_feature_identity_and_order",
+            "original_feature_numeric_encoding_values_and_float32_dtype",
+            "training_row_and_candidate_feature_order",
+            "seeds_feature_budgets_and_tie_rules",
+            "catboost_and_logistic_regression_parameters",
+            "34_cell_identity_order_threshold_and_analysis_rules",
+            "24_gib_process_tree_cap_and_4_gib_system_available_floor",
+        ],
+        "execution_only_changes": [
+            "encode_one_64_feature_split_at_a_time",
+            "write_fortran_order_float32_npy_memmap",
+            "flush_and_close_each_split_mapping_before_the_next_split",
+            "reopen_completed_encoding_read_only_without_dense_copy",
+            "authenticate_and_reuse_exact_predecessor_selector_checkpoints",
+            "require_first_incomplete_selector_fit_to_be_fit_008",
+        ],
+        "memory_strategy": ENCODING_AMENDMENT_MEMORY_STRATEGY,
+        "checkpoint_fit_ids": checkpoint_fit_ids,
+        "next_fit_id": "fit_008",
+        "encoding_equivalence_required": True,
+        "new_llm_request_authorized": False,
+        "dev_rerun_authorized": False,
+        "scientific_oot_restart_authorized": False,
+    }
+    _write_frozen_json(amendment_root / "encoding_amendment.json", amendment)
+    write_text_atomic(
+        amendment_root / "README.md",
+        """# Prompt 16 final OOT encoding amendment v2
+
+This execution-only amendment responds to the authenticated RAM stop during
+full-DEV selection encoding after seven feasible selector fits and ten inherited
+resource-infeasible selector records were sealed, with zero OOT model cells,
+predictions, or metrics promoted.
+
+The final selector matrix is encoded in exact candidate order as float32, one
+64-feature split at a time, into a disk-backed Fortran-order NPY memmap. The
+frozen encoder expressions and every scientific selector/model setting remain
+unchanged. Exact predecessor checkpoints are authenticated for reuse without
+rewriting their payloads, and the first incomplete selector is required to be
+fit_008.
+""",
+        overwrite=False,
+    )
+
+    implementation_paths = [
+        Path("src/credit_risk_fs/preprocessing/encoding.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+        Path("scripts/run_prompt_16_final_oot.py"),
+        Path("tests/test_lendingclub_memory_refinement.py"),
+        Path("tests/test_prompt_16_final_oot.py"),
+        Path("tests/test_prompt_16_third_dataset_execution.py"),
+        EXECUTION_POLICY_RELATIVE_PATH,
+        RAM_POLICY_RELATIVE_PATH,
+    ]
+    amendment_files = [
+        _artifact(path, root)
+        for path in sorted(amendment_root.iterdir(), key=lambda item: item.name)
+        if path.is_file() and path.name != "execution_authorization.json"
+    ]
+    authorization_unsigned = dict(predecessor_authorization)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "dev_evaluation_registry_sha256": dev["evaluation_registry_sha256"],
+            "implementation_files": [
+                _artifact(root / path, root) for path in implementation_paths
+            ],
+            "frozen_input_files": [
+                *predecessor_authorization["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor_authorization["freeze_files"],
+                *amendment_files,
+            ],
+            "memory_amendment": {
+                "path": _relative(
+                    amendment_root / "encoding_amendment.json", root
+                ),
+                "strategy": ENCODING_AMENDMENT_MEMORY_STRATEGY,
+                "inherited_resource_infeasible_fit_ids": list(
+                    INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+                ),
+                "inherited_resource_infeasible_cell_orders": list(
+                    INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+                ),
+                "selector_memmap_feature_split_size": 64,
+                "scientific_contract_changed": False,
+            },
+            "checkpoint_resume": {
+                "accepted_predecessor_authorization_sha256": (
+                    MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "reauthenticated_fit_ids": checkpoint_fit_ids,
+                "expected_next_fit_id": "fit_008",
+                "rewrite_predecessor_payloads": False,
+            },
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": output_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": checkpoint_fit_ids,
+                "next_fit_id": "fit_008",
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    write_json_atomic(
+        amendment_root / "execution_authorization.json",
+        authorization,
+        overwrite=False,
+    )
+    return {
+        "schema_version": "prompt_16_final_oot_encoding_amendment_build_v2",
+        "status": "authorized_disk_backed_resume_from_fit_008",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(amendment_root / "execution_authorization.json"),
+        "authorization_sha256": file_sha256(
+            amendment_root / "execution_authorization.json"
+        ),
+        "reauthenticated_checkpoint_fit_count": len(checkpoint_fit_ids),
+        "expected_next_fit_id": "fit_008",
+        "registered_cells_unchanged": 34,
+        "promoted_predecessor_cells": 0,
+        "oot_work_executed": False,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -2962,9 +3243,11 @@ def load_final_authorization(
     if payload.get("llm_api_requests_authorized") != 0:
         raise Prompt16ExecutionError("final authorization unexpectedly permits an LLM request")
     memory_amendment = payload.get("memory_amendment", {})
-    if memory_amendment.get("strategy") != (
-        "identity_first_batched_psi_and_per_cell_selected_projection_v1"
-    ):
+    strategy = memory_amendment.get("strategy")
+    if strategy not in {
+        "identity_first_batched_psi_and_per_cell_selected_projection_v1",
+        ENCODING_AMENDMENT_MEMORY_STRATEGY,
+    }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
         INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
@@ -2978,10 +3261,31 @@ def load_final_authorization(
     ) != INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS:
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
-    if predecessor.get("execution_authorization_sha256") != (
-        PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
-    ):
+    expected_predecessor = (
+        MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == ENCODING_AMENDMENT_MEMORY_STRATEGY
+        else PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
+    )
+    if predecessor.get("execution_authorization_sha256") != expected_predecessor:
         raise Prompt16ExecutionError("predecessor OOT authorization identity changed")
+    if strategy == ENCODING_AMENDMENT_MEMORY_STRATEGY:
+        checkpoint_resume = payload.get("checkpoint_resume", {})
+        if checkpoint_resume.get(
+            "accepted_predecessor_authorization_sha256"
+        ) != MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256:
+            raise Prompt16ExecutionError("selector checkpoint authorization changed")
+        if checkpoint_resume.get("expected_next_fit_id") != "fit_008":
+            raise Prompt16ExecutionError("selector resume point changed")
+        expected_fits = sorted(
+            {
+                *(f"fit_{order:03d}" for order in range(1, 8)),
+                *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+            }
+        )
+        if checkpoint_resume.get("reauthenticated_fit_ids") != expected_fits:
+            raise Prompt16ExecutionError("reauthenticated selector inventory changed")
+        if int(memory_amendment.get("selector_memmap_feature_split_size", -1)) != 64:
+            raise Prompt16ExecutionError("selector memmap split size changed")
     return payload, file_sha256(candidate)
 
 
@@ -3017,6 +3321,8 @@ def run_final_oot_worker(
 
     from credit_risk_fs.experiments.prompt_16_third_dataset import run_phase_worker
 
+    checkpoint_resume = authorization.get("checkpoint_resume", {})
+
     classical = run_phase_worker(
         matrix_root=str(project / MATRIX_RELATIVE_ROOT),
         output_root=str(output / "classical"),
@@ -3031,6 +3337,14 @@ def run_final_oot_worker(
         allow_authenticated_oot_recovery=True,
         full_dev_training_ks_threshold=True,
         memory_bounded_oot=True,
+        selector_memmap_root=str(
+            Path(authorization["paths"]["temp_root"])
+            / "classical_selector_encoding_v2"
+        ),
+        authorized_predecessor_authorization_sha256=checkpoint_resume.get(
+            "accepted_predecessor_authorization_sha256"
+        ),
+        expected_resume_fit_id=checkpoint_resume.get("expected_next_fit_id"),
         inherited_resource_infeasible_fit_ids=(
             INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
         ),

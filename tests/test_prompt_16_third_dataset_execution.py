@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import gc
 import hashlib
 import importlib.util
 import json
@@ -200,6 +201,115 @@ def test_selector_fit_releases_wide_phase_frames_before_opaque_work(
 def test_execution_lock_is_outside_atomic_output_root(tmp_path: Path):
     output = tmp_path / "matrix_v1"
     assert execution_lock_path(output) == tmp_path / ".matrix_v1.execution.lock"
+
+
+def test_sealed_selector_checkpoint_accepts_only_authorized_predecessor_identity(
+    tmp_path: Path,
+):
+    checkpoint = tmp_path / "fit_007"
+    checkpoint.mkdir()
+    prompt16.write_json_atomic(
+        checkpoint / "selection.json",
+        {"status": "complete", "selected_features": ["a", "b"]},
+        overwrite=False,
+    )
+    predecessor_sha = "1" * 64
+    current_sha = "2" * 64
+    base_identity = {
+        "phase": "oot",
+        "fit_id": "fit_007",
+        "fit_spec_sha256": "3" * 64,
+        "execution_authorization_sha256": predecessor_sha,
+    }
+    prompt16._seal_directory(checkpoint, base_identity)
+    current_identity = {
+        **base_identity,
+        "execution_authorization_sha256": current_sha,
+    }
+
+    loaded = prompt16._load_sealed(
+        checkpoint,
+        current_identity,
+        authorized_predecessor_authorization_sha256=predecessor_sha,
+    )
+    assert loaded is not None
+    assert loaded["checkpoint_original_authorization_sha256"] == predecessor_sha
+    assert loaded["checkpoint_reauthenticated_for_authorization_sha256"] == current_sha
+    assert json.loads((checkpoint / "manifest.json").read_text())["identity"] == (
+        base_identity
+    )
+
+    with pytest.raises(Prompt16ExecutionError, match="identity mismatch"):
+        prompt16._load_sealed(
+            checkpoint,
+            current_identity,
+            authorized_predecessor_authorization_sha256="4" * 64,
+        )
+
+
+def test_selector_memmap_cache_reopens_without_dense_copy(tmp_path: Path):
+    original = pd.DataFrame(
+        {
+            "a": [1.0, np.nan, 3.0, np.inf, -1.0],
+            "b": pd.array(["x", None, "Y", "x", "z"], dtype="string"),
+            "c": [5.0, 4.0, 3.0, 2.0, 1.0],
+        },
+        index=pd.Index([11, 12, 13, 14, 15], name="row"),
+    )
+    encoder = prompt16.OriginalFeatureNumericEncoder().fit(original)
+    expected = encoder.transform(original)
+    source = original.copy(deep=True)
+    identity = {
+        "schema_version": prompt16.SELECTOR_MEMMAP_SCHEMA_VERSION,
+        "execution_authorization_sha256": "1" * 64,
+        "matrix_manifest_sha256": "2" * 64,
+        "full_dev_scope_sha256": "3" * 64,
+        "ordered_predictor_sha256": "4" * 64,
+        "row_count": len(source),
+        "column_count": source.shape[1],
+        "dtype": "float32",
+        "array_order": "F",
+        "feature_split_size": prompt16.SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE,
+        "encoder": (
+            "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder"
+        ),
+        "memory_strategy": prompt16.SELECTOR_MEMMAP_MEMORY_STRATEGY,
+    }
+    cache_root = tmp_path / "selector_cache"
+    frame, mapping, metadata = prompt16._build_selector_memmap_cache(
+        cache_root=cache_root,
+        identity=identity,
+        encoder=encoder,
+        source=source,
+        stop_event=None,
+        ram_ready_event=None,
+    )
+    try:
+        pd.testing.assert_frame_equal(frame, expected, check_exact=True)
+        assert source.empty
+        assert metadata["identity"] == identity
+        assert np.shares_memory(frame.to_numpy(copy=False), mapping)
+    finally:
+        del frame
+        prompt16._close_selector_memmap(mapping)
+        gc.collect()
+
+    reopened = prompt16._open_selector_memmap_cache(
+        cache_root=cache_root,
+        identity=identity,
+        index=original.index,
+        predictors=original.columns,
+    )
+    assert reopened is not None
+    frame, mapping, reopened_metadata = reopened
+    try:
+        pd.testing.assert_frame_equal(frame, expected, check_exact=True)
+        assert reopened_metadata == metadata
+        assert np.shares_memory(frame.to_numpy(copy=False), mapping)
+    finally:
+        del frame
+        prompt16._close_selector_memmap(mapping)
+        gc.collect()
 
 
 def test_all_frozen_selectors_map_to_canonical_wall_clock_stages():

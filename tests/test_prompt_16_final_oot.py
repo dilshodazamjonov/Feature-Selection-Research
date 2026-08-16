@@ -20,6 +20,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     BOOTSTRAP_MINIMUM_VALID,
     BOOTSTRAP_REPETITIONS,
     FREEZE_RELATIVE_ROOT,
+    ENCODING_AMENDMENT_MEMORY_STRATEGY,
     HOLM_ALPHA,
     INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS,
     INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
@@ -32,6 +33,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     SOFT_AVAILABLE_RAM_GIB,
     SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB,
     _load_final_sealed,
+    _validate_encoding_blocker,
     _reconcile_prediction_metrics,
     _seal_final_directory,
     _self_authenticated_payload,
@@ -344,6 +346,37 @@ def test_memory_amendment_stages_wide_data_and_migrates_only_exact_predecessor()
     assert "memory_bounded_oot=True" in final_source
     assert "_authenticate_predecessor_partial_state" in controller
     assert "predecessor partial OOT inventory changed" in controller
+
+
+def test_encoding_amendment_is_disk_backed_and_exactly_resumes_fit_008() -> None:
+    import credit_risk_fs.experiments.prompt_16_final_oot as final
+    import credit_risk_fs.experiments.prompt_16_third_dataset as third
+    from credit_risk_fs.preprocessing.encoding import OriginalFeatureNumericEncoder
+
+    encoder_source = inspect.getsource(
+        OriginalFeatureNumericEncoder.transform_releasing_source_to_memmap
+    )
+    phase_source = inspect.getsource(third.run_phase_worker)
+    worker_source = inspect.getsource(final.run_final_oot_worker)
+    assert "feature_split_size" in encoder_source
+    assert "fortran_order=True" in encoder_source
+    assert 'mmap_mode="r"' in encoder_source
+    assert "np.shares_memory" in encoder_source
+    assert "expected_resume_fit_id" in phase_source
+    assert "authorized_predecessor_authorization_sha256" in phase_source
+    assert "classical_selector_encoding_v2" in worker_source
+    assert ENCODING_AMENDMENT_MEMORY_STRATEGY.endswith("selector_memmap_v2")
+
+    status, fit_ids, _, _ = _validate_encoding_blocker(PROJECT_ROOT)
+    assert status["completed_count"] == 0
+    assert fit_ids == sorted(
+        {
+            *(f"fit_{order:03d}" for order in range(1, 8)),
+            *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+        }
+    )
+    assert "fit_007" in fit_ids
+    assert "fit_008" not in fit_ids
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:

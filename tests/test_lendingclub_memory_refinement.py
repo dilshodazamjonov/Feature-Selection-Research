@@ -28,6 +28,9 @@ from credit_risk_fs.experiments.rank_voting import (
     fit_voters_sequentially_memory_safe,
 )
 from credit_risk_fs.preprocessing.encoding import OriginalFeatureNumericEncoder
+from credit_risk_fs.selectors.lightweight.mi_mrmr import (
+    MutualInformationMRMRSelector,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -119,6 +122,77 @@ def test_destructive_encoder_is_exact_and_releases_every_source_column():
     assert list(source.columns) == []
     assert observed.to_numpy(copy=False).flags.c_contiguous
     assert set(observed.dtypes.astype(str)) == {"float32"}
+
+
+def test_disk_backed_split_encoder_is_exact_and_preserves_mrmr_identity(
+    tmp_path: Path,
+):
+    original = pd.DataFrame(
+        {
+            "numeric_a": [1.0, np.nan, np.inf, -2.0, 8.0, 3.0, 1.5, -4.0],
+            "category": pd.array(
+                ["b", None, "A", "b", "c", "A", "z", None], dtype="string"
+            ),
+            "nullable_integer": pd.array(
+                [1, None, 3, 4, None, 2, None, -1], dtype="Int64"
+            ),
+            "numeric_b": [0.5, 0.1, np.nan, 4.0, 2.0, -1.0, 0.0, 3.5],
+            "category_case": pd.array(
+                ["x", "X", "y", None, "z", "x", "Y", "z"], dtype="string"
+            ),
+        },
+        index=pd.Index([80, 10, 70, 20, 60, 30, 50, 40], name="frozen_row"),
+    )
+    dense_encoder = OriginalFeatureNumericEncoder().fit(original)
+    dense = dense_encoder.transform(original)
+    source = original.copy(deep=True)
+    disk_encoder = OriginalFeatureNumericEncoder().fit(source)
+    observed_splits: list[tuple[int, int, list[str]]] = []
+    disk, mapping = disk_encoder.transform_releasing_source_to_memmap(
+        source,
+        tmp_path / "selector.npy",
+        feature_split_size=2,
+        before_split=lambda index, count, names: observed_splits.append(
+            (index, count, names)
+        ),
+    )
+    try:
+        pd.testing.assert_frame_equal(disk, dense, check_exact=True)
+        assert source.empty
+        assert np.shares_memory(disk.to_numpy(copy=False), mapping)
+        assert mapping.flags.f_contiguous
+        assert observed_splits == [
+            (1, 3, ["numeric_a", "category"]),
+            (2, 3, ["nullable_integer", "numeric_b"]),
+            (3, 3, ["category_case"]),
+        ]
+
+        target = pd.Series([0, 1, 0, 1, 1, 0, 1, 0], index=original.index)
+        dense_selector = MutualInformationMRMRSelector(
+            k=4,
+            n_bins=3,
+            objective="mid",
+            random_state=42,
+            fit_scope="equivalence_test",
+        ).fit(dense, target)
+        disk_selector = MutualInformationMRMRSelector(
+            k=4,
+            n_bins=3,
+            objective="mid",
+            random_state=42,
+            fit_scope="equivalence_test",
+        ).fit(disk, target)
+        assert disk_selector.selected_features_ == dense_selector.selected_features_
+        assert disk_selector.relevance_ == dense_selector.relevance_
+        pd.testing.assert_frame_equal(
+            disk_selector.selection_trace_,
+            dense_selector.selection_trace_,
+            check_exact=True,
+        )
+    finally:
+        del disk
+        mapping._mmap.close()
+        gc.collect()
 
 
 class _MRMR:
