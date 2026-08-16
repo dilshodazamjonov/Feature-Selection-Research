@@ -1,0 +1,58 @@
+{
+  "schema_version": "prompt_16_final_oot_encoding_amendment_v2",
+  "status": "authorized_execution_only_encoding_repair_after_zero_promoted_cells",
+  "authorized_by_user_at_utc_date": "2026-08-17",
+  "predecessor_execution_authorization_sha256": "33b009bd685a2df66b97e0cc16906c1b7947c8e08c4da5b846490c47c32bc739",
+  "trigger": {
+    "supervisor_attempt_count": 13,
+    "failed_stage": "selection_encoding",
+    "observed_process_tree_rss_gib": 24.9,
+    "observed_system_available_ram_gib": 2.6,
+    "promoted_evaluation_cells": 0,
+    "next_fit_id": "fit_008"
+  },
+  "scientific_contract_unchanged": [
+    "mrmr_mutual_information_discrete_plugin_v1",
+    "selected_feature_identity_and_order",
+    "original_feature_numeric_encoding_values_and_float32_dtype",
+    "training_row_and_candidate_feature_order",
+    "seeds_feature_budgets_and_tie_rules",
+    "catboost_and_logistic_regression_parameters",
+    "34_cell_identity_order_threshold_and_analysis_rules",
+    "24_gib_process_tree_cap_and_4_gib_system_available_floor"
+  ],
+  "execution_only_changes": [
+    "encode_one_64_feature_split_at_a_time",
+    "write_fortran_order_float32_npy_memmap",
+    "flush_and_close_each_split_mapping_before_the_next_split",
+    "reopen_completed_encoding_read_only_without_dense_copy",
+    "authenticate_and_reuse_exact_predecessor_selector_checkpoints",
+    "require_first_incomplete_selector_fit_to_be_fit_008"
+  ],
+  "memory_strategy": "identity_first_batched_psi_per_cell_projection_and_selector_memmap_v2",
+  "checkpoint_fit_ids": [
+    "fit_001",
+    "fit_002",
+    "fit_003",
+    "fit_004",
+    "fit_005",
+    "fit_006",
+    "fit_007",
+    "fit_009",
+    "fit_010",
+    "fit_015",
+    "fit_016",
+    "fit_019",
+    "fit_020",
+    "fit_024",
+    "fit_025",
+    "fit_026",
+    "fit_027"
+  ],
+  "next_fit_id": "fit_008",
+  "encoding_equivalence_required": true,
+  "new_llm_request_authorized": false,
+  "dev_rerun_authorized": false,
+  "scientific_oot_restart_authorized": false,
+  "artifact_authentication_sha256": "fa6dbe2a58911c3871892d35679ac8ebe1a7ee71a0dbba9fe2254700008c4a36"
+}
