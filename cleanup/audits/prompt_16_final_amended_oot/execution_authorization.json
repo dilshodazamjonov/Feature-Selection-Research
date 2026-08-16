@@ -2,9 +2,9 @@
   "schema_version": "prompt_16_final_amended_oot_authorization_v1",
   "status": "authorized_for_one_resumable_final_34_cell_oot_command",
   "operation": "prompt_16_final_amended_oot_once",
-  "created_at_utc": "2026-08-16T07:33:19.625300+00:00",
+  "created_at_utc": "2026-08-16T08:08:19.885010+00:00",
   "created_before_third_dataset_oot_outcome_inspection": true,
-  "implementation_commit": "1743b493daca03afc2ad0a1c501ee0a4110d594a",
+  "implementation_commit": "c6af1654d0b3448fc66f3e77dd387120b0cac2f5",
   "required_ancestor_commits": [
     "50fb1505fbae6e0e6c6c235b6e2019b362949bd1",
     "3b43c47f9e08621906f9c1171e7c7e3844337d59"
@@ -46,8 +46,8 @@
     },
     {
       "path": "scripts/run_prompt_16_final_oot.py",
-      "byte_size": 24566,
-      "sha256": "a3686a395d525b9c29f0708e13f9e0f642efc5e51717f1bb2d38a9819617b12c"
+      "byte_size": 25066,
+      "sha256": "56a8c725b13f57f6cb1aed3b9784e8008159f3fc36b0805fc71bc2a77dc3b351"
     },
     {
       "path": "configs/execution/prompt_16_final_oot_v1.yaml",
@@ -61,8 +61,8 @@
     },
     {
       "path": "tests/test_prompt_16_final_oot.py",
-      "byte_size": 10621,
-      "sha256": "a0267e28ec4e71b5f08a7d2eab216cd71419ea3be270f6da01f1904458709f7b"
+      "byte_size": 11048,
+      "sha256": "810629dc5575492f3367e6af3cdbb63d5951bc21ba89b0697c661d5168093192"
     }
   ],
   "frozen_input_files": [
@@ -131,7 +131,7 @@
     {
       "path": "cleanup/audits/prompt_16_final_amended_oot/complete_amended_dev_authentication.json",
       "byte_size": 37453,
-      "sha256": "72792b486783102b14af06ba8e9235b8554d2a76ed2f918c1e139d009b6df830"
+      "sha256": "45c0b3f9e36246d2e551563d38b136d3eff8a9a6e35521cc69104b1ee978acc8"
     },
     {
       "path": "cleanup/audits/prompt_16_final_amended_oot/final_34_cell_oot_registry.json",
@@ -204,5 +204,5 @@
   "old_oot_commands": "revoked",
   "second_scientific_oot_attempt": "forbidden",
   "completion_marker_rule": "overall_success_written_last_after_34_cells_and_analysis_authenticate",
-  "artifact_authentication_sha256": "b9757d7663c1c0393a1785a5f0f617776fcd76e09be071478b9f4cd92475f658"
+  "artifact_authentication_sha256": "3893ddda52bcd5651b41bb502ddfba6f74b923610782110c07dfb3247311220d"
 }
