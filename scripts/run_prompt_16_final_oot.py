@@ -133,6 +133,53 @@ def _active_final_oot_workers() -> list[dict[str, Any]]:
     return workers
 
 
+def _authenticate_predecessor_partial_state(
+    *,
+    repository_root: Path,
+    output_root: Path,
+    authorization: Mapping[str, Any],
+    observed_authorization_sha256: str,
+) -> None:
+    from credit_risk_fs.data.homecredit_model_stability_2024.contract import (
+        file_sha256,
+    )
+    from credit_risk_fs.experiments.prompt_16_third_dataset import (
+        Prompt16ExecutionError,
+    )
+
+    predecessor = authorization.get("predecessor_partial_state", {})
+    if predecessor.get("execution_authorization_sha256") != (
+        observed_authorization_sha256
+    ):
+        raise Prompt16ExecutionError(
+            "existing controller checkpoint authorization changed"
+        )
+    artifacts = predecessor.get("artifacts", [])
+    if not artifacts:
+        raise Prompt16ExecutionError("predecessor partial artifact registry is empty")
+    for row in artifacts:
+        path = repository_root / str(row.get("path", ""))
+        if (
+            not path.is_file()
+            or path.stat().st_size != int(row.get("byte_size", -1))
+            or file_sha256(path) != row.get("sha256")
+        ):
+            raise Prompt16ExecutionError(
+                f"predecessor partial artifact changed: {row.get('path')}"
+            )
+    actual_output_files = sorted(
+        path.relative_to(output_root).as_posix()
+        for path in output_root.rglob("*")
+        if path.is_file()
+    )
+    if actual_output_files != list(predecessor.get("output_file_inventory", [])):
+        raise Prompt16ExecutionError("predecessor partial OOT inventory changed")
+    if (output_root / "_SUCCESS").exists() or (output_root / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("predecessor unexpectedly contains success marker")
+    if list(output_root.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError("predecessor unexpectedly contains cell artifacts")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     from credit_risk_fs.experiments.atomic_io import (
@@ -212,7 +259,14 @@ def main(argv: list[str] | None = None) -> int:
     if status_path.is_file():
         prior_status = json.loads(status_path.read_text(encoding="utf-8"))
         if prior_status.get("execution_authorization_sha256") != authorization_sha:
-            raise Prompt16ExecutionError("existing controller checkpoint authorization changed")
+            _authenticate_predecessor_partial_state(
+                repository_root=PROJECT_ROOT,
+                output_root=output_root,
+                authorization=authorization,
+                observed_authorization_sha256=str(
+                    prior_status.get("execution_authorization_sha256", "")
+                ),
+            )
 
     configured = load_execution_policy(
         PROJECT_ROOT, authorization["paths"]["execution_policy"]
