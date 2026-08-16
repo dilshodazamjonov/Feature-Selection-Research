@@ -107,6 +107,12 @@ SCHEMA_VERSION = "prompt_16_final_amended_oot_v1"
 DEV_AUTH_SCHEMA_VERSION = "prompt_16_complete_amended_dev_authentication_v1"
 AUTHORIZATION_SCHEMA_VERSION = "prompt_16_final_amended_oot_authorization_v1"
 FREEZE_RELATIVE_ROOT = Path("cleanup/audits/prompt_16_final_amended_oot")
+MEMORY_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_oot_memory_amendment_v1"
+)
+RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
+)
 CLASSICAL_DEV_RELATIVE_ROOT = Path(
     "results/prompt_16_homecredit_model_stability_2024/dev_v1"
 )
@@ -165,6 +171,25 @@ SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB = 4
 SOFT_AVAILABLE_RAM_GIB = 6
 RESUME_AVAILABLE_RAM_GIB = 8
 RESUME_STABILITY_POLLS = 3
+PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256 = (
+    "e9e2b15aa2a0b0330a027ad0414fd225ec3a07460dac501b08fa0faac8205f2a"
+)
+RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
+    "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
+)
+INHERITED_RESOURCE_INFEASIBLE_FIT_IDS = (
+    "fit_009",
+    "fit_010",
+    "fit_015",
+    "fit_016",
+    "fit_019",
+    "fit_020",
+    "fit_024",
+    "fit_025",
+    "fit_026",
+    "fit_027",
+)
+INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS = (1, 2)
 
 
 def _utc_now() -> str:
@@ -2593,6 +2618,302 @@ artifact authenticates.
     }
 
 
+def _validate_resource_blocker(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    blocker_path = root / RESOURCE_BLOCKER_RELATIVE_ROOT / "blocker.json"
+    blocker = _read_json(blocker_path)
+    unsigned = dict(blocker)
+    claimed = unsigned.pop("artifact_authentication_sha256", None)
+    if claimed != RESOURCE_BLOCKER_AUTHENTICATION_SHA256:
+        raise Prompt16ExecutionError("resource blocker authentication identity changed")
+    if claimed != canonical_sha256(unsigned):
+        raise Prompt16ExecutionError("resource blocker internal digest mismatch")
+    if blocker.get("promoted_evaluation_cells") != 0:
+        raise Prompt16ExecutionError("resource blocker contains promoted OOT cells")
+    if blocker.get("overall_success_marker_present") is not False:
+        raise Prompt16ExecutionError("resource blocker unexpectedly records success")
+
+    output = root / OOT_RELATIVE_ROOT
+    logs = root / OOT_LOG_RELATIVE_ROOT
+    expected_output_files = [
+        "classical/scope_authentication.json",
+        "controller_status.json",
+    ]
+    actual_output_files = sorted(
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    )
+    if actual_output_files != expected_output_files:
+        raise Prompt16ExecutionError("blocked partial OOT output inventory changed")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("blocked partial OOT unexpectedly has success marker")
+    if list(output.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError("blocked partial OOT contains cell artifacts")
+
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            [
+                *(item for item in output.rglob("*") if item.is_file()),
+                *(item for item in logs.rglob("*") if item.is_file()),
+            ],
+            key=lambda item: _relative(item, root),
+        )
+    ]
+    bound = blocker["bound_artifacts"]
+    bound_paths = {
+        "controller_status_sha256": output / "controller_status.json",
+        "scope_authentication_sha256": output / "classical/scope_authentication.json",
+        "terminal_log_sha256": logs / "prompt_16_final_amended_oot.log",
+        "events_log_sha256": logs / "events.jsonl",
+        "debug_log_sha256": logs / "debug.log",
+    }
+    for key, path in bound_paths.items():
+        if file_sha256(path) != bound[key]:
+            raise Prompt16ExecutionError(f"blocked execution artifact changed: {key}")
+    for row in blocker["attempts"]:
+        attempt = int(row["attempt"])
+        summary = logs / f"attempts/attempt_{attempt:03d}_supervisor_summary.json"
+        trace = logs / f"attempts/attempt_{attempt:03d}_resource_samples.csv"
+        if file_sha256(summary) != row["summary_sha256"]:
+            raise Prompt16ExecutionError("blocked supervisor summary changed")
+        if file_sha256(trace) != row["resource_trace_sha256"]:
+            raise Prompt16ExecutionError("blocked resource trace changed")
+    return blocker, partial_artifacts
+
+
+def build_memory_amendment_authorization(
+    *,
+    repository_root: str | Path = PROJECT_ROOT,
+    implementation_commit: str,
+) -> dict[str, Any]:
+    """Authorize only the audited memory-layout repair after zero promoted cells."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if _git(root, "rev-parse", implementation_commit) != implementation_commit:
+        raise Prompt16ExecutionError("implementation commit must be a full commit identity")
+    if implementation_commit != repository["head"]:
+        raise Prompt16ExecutionError("memory amendment must bind the current committed HEAD")
+    amendment_root = root / MEMORY_AMENDMENT_RELATIVE_ROOT
+    if amendment_root.exists():
+        raise Prompt16ExecutionError(f"memory amendment already exists: {amendment_root}")
+
+    predecessor_path = root / FREEZE_RELATIVE_ROOT / "execution_authorization.json"
+    if file_sha256(predecessor_path) != PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256:
+        raise Prompt16ExecutionError("predecessor execution authorization changed")
+    predecessor_authorization = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor_authorization)
+    predecessor_claimed = predecessor_unsigned.pop(
+        "artifact_authentication_sha256", None
+    )
+    if predecessor_claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("predecessor authorization internal digest mismatch")
+    blocker, partial_artifacts = _validate_resource_blocker(root)
+    dev = authenticate_complete_dev(root)
+    dev.pop("evaluation_rows")
+    if dev["accounting"]["authenticated_evaluation_identities"] != 170:
+        raise Prompt16ExecutionError("memory amendment DEV gate is not 170/170")
+
+    inherited_fit_sources: list[dict[str, Any]] = []
+    fold5_selection_root = root / CLASSICAL_DEV_RELATIVE_ROOT / "fold_5/selection_fits"
+    for fit_id in INHERITED_RESOURCE_INFEASIBLE_FIT_IDS:
+        selection_path = fold5_selection_root / fit_id / "selection.json"
+        selection = _read_json(selection_path)
+        if selection.get("status") != "resource_infeasible":
+            raise Prompt16ExecutionError(
+                f"largest DEV fold resource conclusion changed: {fit_id}"
+            )
+        inherited_fit_sources.append(_artifact(selection_path, root))
+
+    inherited_cell_sources: list[dict[str, Any]] = []
+    for order in INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS:
+        for fold in range(1, 6):
+            status_path = (
+                root
+                / CLASSICAL_DEV_RELATIVE_ROOT
+                / f"fold_{fold}/evaluations/cell_{order:03d}/status.json"
+            )
+            status = _read_json(status_path)
+            if status.get("status") != "unavailable" or status.get("reason") != (
+                "resource_infeasible"
+            ):
+                raise Prompt16ExecutionError(
+                    f"all-feature DEV resource conclusion changed: fold={fold}, cell={order}"
+                )
+            inherited_cell_sources.append(_artifact(status_path, root))
+
+    amendment_root.mkdir(parents=True, exist_ok=False)
+    amendment = {
+        "schema_version": "prompt_16_final_oot_memory_amendment_v1",
+        "status": "authorized_execution_only_repair_after_zero_promoted_cells",
+        "authorized_by_user_at_utc_date": "2026-08-16",
+        "predecessor_execution_authorization_sha256": (
+            PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "resource_blocker_authentication_sha256": (
+            RESOURCE_BLOCKER_AUTHENTICATION_SHA256
+        ),
+        "trigger": {
+            "attempt_count": int(blocker["attempt_count"]),
+            "failed_scope": blocker["failed_scope"],
+            "failed_stage": blocker["failed_stage"],
+            "promoted_evaluation_cells": 0,
+            "promoted_predictions": 0,
+            "promoted_metrics": 0,
+        },
+        "scientific_contract_unchanged": [
+            "34_cell_identity_and_order",
+            "matrix_rows_and_temporal_boundaries",
+            "feature_universe_and_selected_feature_budgets",
+            "selector_and_model_implementations",
+            "seeds_hyperparameters_class_handling_and_threshold_rules",
+            "paired_comparisons_holm_psi_materiality_and_failure_visibility",
+            "24_gib_process_tree_cap_and_4_gib_system_available_floor",
+        ],
+        "execution_only_changes": [
+            "authenticate_scope_with_ids_and_targets_before_feature_projection",
+            "never_hold_wide_full_dev_and_wide_oot_frames_together",
+            "fit_feasible_selectors_from_full_dev_without_resident_oot_features",
+            "compute_feature_psi_in_authenticated_128_feature_batches",
+            "load_only_each_cells_selected_features_for_model_fit_and_scoring",
+            "release_pyarrow_mimalloc_pages_at_projection_boundaries",
+            "migrate_the_exact_zero_cell_predecessor_checkpoint_once",
+        ],
+        "memory_strategy": (
+            "identity_first_batched_psi_and_per_cell_selected_projection_v1"
+        ),
+        "inherited_resource_infeasible_fit_ids": list(
+            INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+        ),
+        "inherited_resource_infeasible_cell_orders": list(
+            INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+        ),
+        "inherited_fit_sources": inherited_fit_sources,
+        "inherited_cell_sources": inherited_cell_sources,
+        "oot_target_or_performance_used_for_resource_inheritance": False,
+        "new_llm_request_authorized": False,
+        "dev_rerun_authorized": False,
+        "second_scientific_oot_attempt_authorized": False,
+    }
+    _write_frozen_json(amendment_root / "memory_amendment.json", amendment)
+    write_text_atomic(
+        amendment_root / "README.md",
+        """# Prompt 16 final OOT memory amendment v1
+
+This execution-only amendment responds to the authenticated six-attempt RAM
+blocker after zero OOT cells, predictions, or metrics were promoted. It keeps
+the full frozen scientific contract and hard resource limits unchanged while
+preventing simultaneous residency of wide full-DEV and OOT feature frames.
+
+Resource-unavailable states are inherited only from authenticated DEV evidence:
+the two all-feature model cells failed for resources in all five folds, and ten
+selector fits were already resource-infeasible in the largest temporal DEV fold.
+They remain visible unavailable outcomes and are never interpreted as zero
+effect. The same 34-cell order remains authoritative.
+""",
+        overwrite=False,
+    )
+
+    implementation_paths = [
+        Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+        Path("src/credit_risk_fs/experiments/research_logging.py"),
+        Path("src/credit_risk_fs/experiments/resource_monitor.py"),
+        Path("scripts/run_prompt_16_final_oot.py"),
+        EXECUTION_POLICY_RELATIVE_PATH,
+        RAM_POLICY_RELATIVE_PATH,
+        Path("tests/test_prompt_16_final_oot.py"),
+    ]
+    immutable_inputs = [
+        _artifact(predecessor_path, root),
+        _artifact(root / RESOURCE_BLOCKER_RELATIVE_ROOT / "blocker.json", root),
+        _artifact(root / RESOURCE_BLOCKER_RELATIVE_ROOT / "README.md", root),
+        *inherited_fit_sources,
+        *inherited_cell_sources,
+    ]
+    base_freeze_files = [
+        _artifact(path, root)
+        for path in sorted(
+            (
+                item
+                for item in (root / FREEZE_RELATIVE_ROOT).iterdir()
+                if item.is_file() and item.name != "execution_authorization.json"
+            ),
+            key=lambda item: item.name,
+        )
+    ]
+    amendment_files = [
+        _artifact(path, root)
+        for path in sorted(amendment_root.iterdir(), key=lambda item: item.name)
+        if path.is_file() and path.name != "execution_authorization.json"
+    ]
+    authorization_unsigned = dict(predecessor_authorization)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "created_before_third_dataset_oot_outcome_inspection": False,
+            "created_after_oot_membership_authentication_before_any_oot_prediction_or_metric": True,
+            "implementation_commit": implementation_commit,
+            "dev_evaluation_registry_sha256": dev["evaluation_registry_sha256"],
+            "implementation_files": [
+                _artifact(root / path, root) for path in implementation_paths
+            ],
+            "frozen_input_files": [
+                *predecessor_authorization["frozen_input_files"],
+                *immutable_inputs,
+            ],
+            "freeze_files": [*base_freeze_files, *amendment_files],
+            "memory_amendment": {
+                "path": _relative(amendment_root / "memory_amendment.json", root),
+                "strategy": amendment["memory_strategy"],
+                "inherited_resource_infeasible_fit_ids": list(
+                    INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+                ),
+                "inherited_resource_infeasible_cell_orders": list(
+                    INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+                ),
+                "scientific_contract_changed": False,
+            },
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "blocker_authentication_sha256": (
+                    RESOURCE_BLOCKER_AUTHENTICATION_SHA256
+                ),
+                "output_file_inventory": [
+                    "classical/scope_authentication.json",
+                    "controller_status.json",
+                ],
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    write_json_atomic(
+        amendment_root / "execution_authorization.json",
+        authorization,
+        overwrite=False,
+    )
+    return {
+        "schema_version": "prompt_16_final_oot_memory_amendment_build_v1",
+        "status": "authorized_memory_only_resume_after_zero_promoted_cells",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(amendment_root / "execution_authorization.json"),
+        "authorization_sha256": file_sha256(
+            amendment_root / "execution_authorization.json"
+        ),
+        "dev_identities_authenticated": 170,
+        "registered_cells_unchanged": 34,
+        "promoted_predecessor_cells": 0,
+        "oot_work_executed": False,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -2640,6 +2961,27 @@ def load_final_authorization(
         raise Prompt16ExecutionError("authorized OOT cell count changed")
     if payload.get("llm_api_requests_authorized") != 0:
         raise Prompt16ExecutionError("final authorization unexpectedly permits an LLM request")
+    memory_amendment = payload.get("memory_amendment", {})
+    if memory_amendment.get("strategy") != (
+        "identity_first_batched_psi_and_per_cell_selected_projection_v1"
+    ):
+        raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
+    if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
+        INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+    ):
+        raise Prompt16ExecutionError("resource-infeasible selector registry changed")
+    if tuple(
+        int(value)
+        for value in memory_amendment.get(
+            "inherited_resource_infeasible_cell_orders", []
+        )
+    ) != INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS:
+        raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
+    predecessor = payload.get("predecessor_partial_state", {})
+    if predecessor.get("execution_authorization_sha256") != (
+        PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("predecessor OOT authorization identity changed")
     return payload, file_sha256(candidate)
 
 
@@ -2688,6 +3030,13 @@ def run_final_oot_worker(
         execution_authorization_sha256=authorization_sha,
         allow_authenticated_oot_recovery=True,
         full_dev_training_ks_threshold=True,
+        memory_bounded_oot=True,
+        inherited_resource_infeasible_fit_ids=(
+            INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+        ),
+        inherited_resource_infeasible_cell_orders=(
+            INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+        ),
     )
     supplemental = run_supplemental_oot_worker(
         repository_root=str(project),

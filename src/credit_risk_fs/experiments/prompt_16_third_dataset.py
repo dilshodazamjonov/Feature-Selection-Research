@@ -487,6 +487,10 @@ def _read_date_slice(
     del selected_tables
     frame = table.to_pandas(split_blocks=True, self_destruct=True)
     del table
+    # PyArrow uses mimalloc in the locked Windows environment.  Returning
+    # unused pages at each projection boundary prevents prior Parquet buffers
+    # from remaining resident while the next authenticated projection loads.
+    pa.default_memory_pool().release_unused()
     # The lock requires nullable booleans to become 0/1 numeric with missing
     # preserved before fold-local imputation.
     for name in predictors:
@@ -625,6 +629,41 @@ def _load_phase_frames(
     if authentication["case_id_overlap"] != 0:
         raise Prompt16ExecutionError("training and held-out case IDs overlap")
     return train, validation, predictors, authentication
+
+
+def _load_authenticated_scope_projection(
+    *,
+    matrix_root: Path,
+    manifest: Mapping[str, Any],
+    expected: Mapping[str, Any],
+    expected_observed: Mapping[str, Any] | None,
+    predictors: Sequence[str],
+    label: str,
+    stage: str,
+    stop_event: Any,
+    stage_queue: Any,
+    ram_ready_event: Any = None,
+) -> pd.DataFrame:
+    """Load one bounded projection and re-authenticate its immutable rows."""
+
+    frame = _read_date_slice(
+        matrix_root,
+        manifest,
+        date_min=str(expected["date_min"]),
+        date_max=str(expected["date_max"]),
+        predictors=predictors,
+        stop_event=stop_event,
+        stage_queue=stage_queue,
+        stage=stage,
+        fold_label=label,
+        ram_ready_event=ram_ready_event,
+    )
+    observed = _validate_scope_frame(frame, expected, label)["observed"]
+    if expected_observed is not None and observed != dict(expected_observed):
+        raise Prompt16ExecutionError(
+            f"{label} bounded projection changed authenticated row identity"
+        )
+    return frame
 
 
 def _archive_incomplete(path: Path, archive_root: Path) -> None:
@@ -1165,6 +1204,9 @@ def run_phase_worker(
     execution_authorization_sha256: str | None = None,
     allow_authenticated_oot_recovery: bool = False,
     full_dev_training_ks_threshold: bool = False,
+    memory_bounded_oot: bool = False,
+    inherited_resource_infeasible_fit_ids: Sequence[str] = (),
+    inherited_resource_infeasible_cell_orders: Sequence[int] = (),
     **_controls: Any,
 ) -> dict[str, Any]:
     """Run one exact pilot/DEV fold or the single locked OOT phase."""
@@ -1189,11 +1231,18 @@ def run_phase_worker(
             raise Prompt16ExecutionError(
                 "final OOT requires the frozen full-DEV training KS threshold rule"
             )
+        if not memory_bounded_oot:
+            raise Prompt16ExecutionError(
+                "final OOT requires the authorized memory-bounded projection path"
+            )
     elif any(
         (
             execution_authorization_sha256 is not None,
             allow_authenticated_oot_recovery,
             full_dev_training_ks_threshold,
+            memory_bounded_oot,
+            bool(inherited_resource_infeasible_fit_ids),
+            bool(inherited_resource_infeasible_cell_orders),
         )
     ):
         raise Prompt16ExecutionError("final OOT controls may not be used for pilot/DEV")
@@ -1216,15 +1265,81 @@ def run_phase_worker(
         return {**completed, "reused_completed_phase": True}
     phase_root.mkdir(parents=True, exist_ok=True)
     archive_root = phase_root / "archived_incomplete_attempts"
-    train, validation, predictors, scope_auth = _load_phase_frames(
-        matrix_root=matrix_root,
-        protocol=protocol,
-        phase=phase,
-        fold_id=fold_id,
-        stop_event=stop_event,
-        stage_queue=stage_queue,
-        ram_ready_event=ram_ready_event,
-    )
+    matrix_path = Path(matrix_root)
+    if phase == "oot":
+        matrix_manifest, matrix_metadata = _matrix_identity(matrix_path)
+        predictors = list(matrix_metadata["predictor_columns"])
+        train_expected, validation_expected = _expected_scope(protocol, phase, fold_id)
+        train_identity_frame = _load_authenticated_scope_projection(
+            matrix_root=matrix_path,
+            manifest=matrix_manifest,
+            expected=train_expected,
+            expected_observed=None,
+            predictors=[],
+            label="oot:train_identity",
+            stage="full_dev_identity_authentication",
+            stop_event=stop_event,
+            stage_queue=stage_queue,
+            ram_ready_event=ram_ready_event,
+        )
+        validation_identity_frame = _load_authenticated_scope_projection(
+            matrix_root=matrix_path,
+            manifest=matrix_manifest,
+            expected=validation_expected,
+            expected_observed=None,
+            predictors=[],
+            label="oot:validation_identity",
+            stage="locked_oot_identity_authentication",
+            stop_event=stop_event,
+            stage_queue=stage_queue,
+            ram_ready_event=ram_ready_event,
+        )
+        train_observed = _validate_scope_frame(
+            train_identity_frame, train_expected, "oot:train_identity"
+        )["observed"]
+        validation_observed = _validate_scope_frame(
+            validation_identity_frame,
+            validation_expected,
+            "oot:validation_identity",
+        )["observed"]
+        case_id_overlap = int(
+            len(
+                set(train_identity_frame["case_id"].tolist())
+                & set(validation_identity_frame["case_id"].tolist())
+            )
+        )
+        if case_id_overlap != 0:
+            raise Prompt16ExecutionError("training and held-out case IDs overlap")
+        scope_auth = {
+            "matrix_manifest_sha256": file_sha256(matrix_path / "manifest.json"),
+            "train": {
+                "expected": dict(train_observed),
+                "observed": dict(train_observed),
+                "authenticated": True,
+            },
+            "validation": {
+                "expected": dict(validation_observed),
+                "observed": dict(validation_observed),
+                "authenticated": True,
+            },
+            "case_id_overlap": case_id_overlap,
+            "memory_strategy": "identity_first_bounded_feature_projection_v1",
+        }
+        del train_identity_frame, validation_identity_frame
+        pa.default_memory_pool().release_unused()
+        gc.collect()
+        train: pd.DataFrame | None = None
+        validation: pd.DataFrame | None = None
+    else:
+        train, validation, predictors, scope_auth = _load_phase_frames(
+            matrix_root=matrix_root,
+            protocol=protocol,
+            phase=phase,
+            fold_id=fold_id,
+            stop_event=stop_event,
+            stage_queue=stage_queue,
+            ram_ready_event=ram_ready_event,
+        )
     matrix_manifest_sha = scope_auth["matrix_manifest_sha256"]
     write_json_atomic(phase_root / "scope_authentication.json", scope_auth)
     fits = selection_fit_registry(matrix)
@@ -1242,6 +1357,17 @@ def run_phase_worker(
     completed_eval_count = 0
     unavailable_eval_count = 0
     fit_scope = "full_dev_only" if phase == "oot" else "dev_fold_training_only"
+    inherited_fit_ids = {str(value) for value in inherited_resource_infeasible_fit_ids}
+    registered_fit_ids = {str(fit["fit_id"]) for fit in fits}
+    if not inherited_fit_ids.issubset(registered_fit_ids):
+        raise Prompt16ExecutionError("inherited resource-infeasible fit registry changed")
+    inherited_cell_orders = {
+        int(value) for value in inherited_resource_infeasible_cell_orders
+    }
+    if not inherited_cell_orders.issubset(
+        {int(cell["configuration_order"]) for cell in cells}
+    ):
+        raise Prompt16ExecutionError("inherited resource-infeasible cell registry changed")
 
     incomplete_fits: list[Mapping[str, Any]] = []
     for fit in fits:
@@ -1256,7 +1382,32 @@ def run_phase_worker(
         sealed = _load_sealed(path, identity)
         if sealed is None:
             _archive_incomplete(path, archive_root)
-            incomplete_fits.append(fit)
+            if phase == "oot" and str(fit["fit_id"]) in inherited_fit_ids:
+                path.mkdir(parents=True, exist_ok=False)
+                evidence = {
+                    "status": "resource_infeasible",
+                    "fit_spec": dict(fit),
+                    "requested_feature_budget": fit.get("requested_feature_budget"),
+                    "realized_support": None,
+                    "selected_features": [],
+                    "natural_support_unpadded": True,
+                    "selector_result": None,
+                    "fit_seconds": 0.0,
+                    "error": None,
+                    "reason": "inherited_from_authenticated_largest_dev_fold_resource_stop",
+                    "oot_target_or_performance_used": False,
+                    "full_dev_fit_started": False,
+                }
+                write_json_atomic(path / "selection.json", evidence, overwrite=False)
+                write_csv_atomic(
+                    path / "selected_features.csv",
+                    pd.DataFrame(columns=["rank", "feature"]),
+                    overwrite=False,
+                )
+                _seal_directory(path, identity)
+                completed_fit_count += 1
+            else:
+                incomplete_fits.append(fit)
         else:
             completed_fit_count += 1
 
@@ -1268,6 +1419,19 @@ def run_phase_worker(
     )
     if incomplete_fits:
         _check_stop(stop_event)
+        if phase == "oot":
+            train = _load_authenticated_scope_projection(
+                matrix_root=matrix_path,
+                manifest=matrix_manifest,
+                expected=train_expected,
+                expected_observed=scope_auth["train"]["observed"],
+                predictors=predictors,
+                label="oot:full_dev_selector_projection",
+                stage="full_dev_selector_data_loading",
+                stop_event=stop_event,
+                stage_queue=stage_queue,
+                ram_ready_event=ram_ready_event,
+            )
         _publish_stage(stage_queue, "selection_encoding", fold_id or "oot")
         encoding_started = time.perf_counter()
         selection_target = pd.Series(
@@ -1278,7 +1442,9 @@ def run_phase_worker(
         # Selection uses training rows only. The validation frame is reloaded
         # after all selector fits, so retaining it while materializing the
         # Fold-5 float32 selector matrix only adds an avoidable multi-GiB peak.
-        del validation
+        if validation is not None:
+            del validation
+            validation = None
         for name in NON_PREDICTORS:
             if name in train:
                 del train[name]
@@ -1318,6 +1484,8 @@ def run_phase_worker(
         # fits caused the demonstrated 21.9 GiB Lasso peak and made suspension at
         # the old system-RAM floor unable to recover.
         del encoder, train
+        train = None
+        pa.default_memory_pool().release_unused()
         gc.collect()
 
     for fit in fits:
@@ -1397,7 +1565,7 @@ def run_phase_worker(
         del selection_target
     gc.collect()
 
-    if incomplete_fits:
+    if incomplete_fits and phase != "oot":
         train, validation, reloaded_predictors, reloaded_scope_auth = _load_phase_frames(
             matrix_root=matrix_root,
             protocol=protocol,
@@ -1428,8 +1596,15 @@ def run_phase_worker(
             "oot_scope_sha256": canonical_sha256(scope_auth["validation"]["observed"]),
         }
         if _load_sealed(feature_psi_path, feature_psi_identity) is None:
-            _archive_incomplete(feature_psi_path, archive_root)
-            feature_psi_path.mkdir(parents=True, exist_ok=False)
+            identity_path = feature_psi_path / "checkpoint_identity.json"
+            if feature_psi_path.exists():
+                if not identity_path.is_file() or _json(identity_path) != feature_psi_identity:
+                    _archive_incomplete(feature_psi_path, archive_root)
+            if not feature_psi_path.exists():
+                feature_psi_path.mkdir(parents=True, exist_ok=False)
+                write_json_atomic(
+                    identity_path, feature_psi_identity, overwrite=False
+                )
             _publish_stage(
                 stage_queue,
                 "oot_feature_psi",
@@ -1438,29 +1613,104 @@ def run_phase_worker(
                 operation="descriptive_drift",
                 ram_recovery_barrier=True,
             )
-            feature_psi_rows: list[dict[str, Any]] = []
-            for index, feature in enumerate(predictors, start=1):
+            batches_root = feature_psi_path / "batches"
+            batches_root.mkdir(exist_ok=True)
+            batch_size = 128
+            batch_frames: list[pd.DataFrame] = []
+            for batch_index, start in enumerate(
+                range(0, len(predictors), batch_size), start=1
+            ):
                 _check_stop(stop_event)
-                if index == 1 or index % 50 == 0:
+                batch_predictors = predictors[start : start + batch_size]
+                batch_path = batches_root / f"batch_{batch_index:03d}"
+                batch_identity = {
+                    **feature_psi_identity,
+                    "batch_index": batch_index,
+                    "batch_size": len(batch_predictors),
+                    "ordered_batch_predictor_sha256": canonical_sha256(
+                        batch_predictors
+                    ),
+                }
+                if _load_sealed(batch_path, batch_identity) is None:
+                    _archive_incomplete(batch_path, archive_root)
+                    batch_path.mkdir(parents=True, exist_ok=False)
                     wait_for_ram_ready(
                         ram_ready_event,
                         stop_event,
-                        boundary=f"oot_feature_psi:{index}",
+                        boundary=f"oot_feature_psi_batch:{batch_index}",
                     )
-                record, _ = feature_psi_record(
-                    feature=feature,
-                    dev_values=train[feature],
-                    oot_values=validation[feature],
+                    train_batch = _load_authenticated_scope_projection(
+                        matrix_root=matrix_path,
+                        manifest=matrix_manifest,
+                        expected=train_expected,
+                        expected_observed=scope_auth["train"]["observed"],
+                        predictors=batch_predictors,
+                        label=f"oot:feature_psi_train_batch_{batch_index:03d}",
+                        stage="full_dev_feature_psi_batch_loading",
+                        stop_event=stop_event,
+                        stage_queue=stage_queue,
+                        ram_ready_event=ram_ready_event,
+                    )
+                    validation_batch = _load_authenticated_scope_projection(
+                        matrix_root=matrix_path,
+                        manifest=matrix_manifest,
+                        expected=validation_expected,
+                        expected_observed=scope_auth["validation"]["observed"],
+                        predictors=batch_predictors,
+                        label=f"oot:feature_psi_oot_batch_{batch_index:03d}",
+                        stage="locked_oot_feature_psi_batch_loading",
+                        stop_event=stop_event,
+                        stage_queue=stage_queue,
+                        ram_ready_event=ram_ready_event,
+                    )
+                    batch_rows: list[dict[str, Any]] = []
+                    for feature in batch_predictors:
+                        record, _ = feature_psi_record(
+                            feature=feature,
+                            dev_values=train_batch[feature],
+                            oot_values=validation_batch[feature],
+                        )
+                        batch_rows.append(record)
+                    write_parquet_atomic(
+                        batch_path / "feature_psi.parquet",
+                        pd.DataFrame(batch_rows),
+                        required_columns=("feature", "psi_type_aware"),
+                        ordered_row_identity_column="feature",
+                        overwrite=False,
+                    )
+                    _seal_directory(batch_path, batch_identity)
+                    del train_batch, validation_batch, batch_rows
+                    pa.default_memory_pool().release_unused()
+                    gc.collect()
+                batch_frames.append(pd.read_parquet(batch_path / "feature_psi.parquet"))
+            feature_psi_frame = pd.concat(batch_frames, ignore_index=True)
+            if feature_psi_frame["feature"].tolist() != predictors:
+                raise Prompt16ExecutionError("batched feature PSI order changed")
+            final_psi_path = feature_psi_path / "all_source_features.parquet"
+            if final_psi_path.is_file():
+                existing_feature_psi = pd.read_parquet(final_psi_path)
+                try:
+                    pd.testing.assert_frame_equal(
+                        existing_feature_psi,
+                        feature_psi_frame,
+                        check_exact=True,
+                    )
+                except AssertionError as exc:
+                    raise Prompt16ExecutionError(
+                        "partial final feature PSI checkpoint changed"
+                    ) from exc
+                del existing_feature_psi
+            else:
+                write_parquet_atomic(
+                    final_psi_path,
+                    feature_psi_frame,
+                    required_columns=("feature", "psi_type_aware"),
+                    ordered_row_identity_column="feature",
+                    overwrite=False,
                 )
-                feature_psi_rows.append(record)
-            write_parquet_atomic(
-                feature_psi_path / "all_source_features.parquet",
-                pd.DataFrame(feature_psi_rows),
-                required_columns=("feature", "psi_type_aware"),
-                ordered_row_identity_column="feature",
-                overwrite=False,
-            )
             _seal_directory(feature_psi_path, feature_psi_identity)
+            del batch_frames, feature_psi_frame
+            gc.collect()
         feature_psi_manifest_sha = file_sha256(feature_psi_path / "manifest.json")
 
     thresholds = _frozen_thresholds(oot_analysis_plan)
@@ -1510,6 +1760,34 @@ def run_phase_worker(
             operation="oot_evaluation" if phase == "oot" else "fold_evaluation",
         )
         started = time.perf_counter()
+        if phase == "oot" and order in inherited_cell_orders:
+            status = {
+                "status": "unavailable",
+                "reason": "inherited_from_all_five_authenticated_dev_resource_stops",
+                "configuration_order": order,
+                "cell": dict(cell),
+                "fit_id": fit["fit_id"],
+                "requested_feature_budget": requested,
+                "realized_support": len(selected),
+                "natural_support_like_for_like": natural_support,
+                "elapsed_seconds": time.perf_counter() - started,
+                "feature_psi_manifest_sha256": feature_psi_manifest_sha,
+                "oot_target_or_performance_used": False,
+                "full_dev_model_fit_started": False,
+            }
+            write_json_atomic(path / "status.json", status, overwrite=False)
+            write_json_atomic(
+                path / "failure.json",
+                {
+                    "reason": status["reason"],
+                    "scientific_configuration_changed": False,
+                    "visible_unavailable_not_zero_effect": True,
+                },
+                overwrite=False,
+            )
+            _seal_directory(path, identity)
+            unavailable_eval_count += 1
+            continue
         if selection.get("status") in {"failed", "resource_infeasible"} or not selected:
             status = {
                 "status": "unavailable",
@@ -1535,6 +1813,31 @@ def run_phase_worker(
             unavailable_eval_count += 1
             continue
         try:
+            if phase == "oot":
+                train = _load_authenticated_scope_projection(
+                    matrix_root=matrix_path,
+                    manifest=matrix_manifest,
+                    expected=train_expected,
+                    expected_observed=scope_auth["train"]["observed"],
+                    predictors=selected,
+                    label=f"oot:{cell_id}:full_dev_selected_projection",
+                    stage="full_dev_selected_projection_loading",
+                    stop_event=stop_event,
+                    stage_queue=stage_queue,
+                    ram_ready_event=ram_ready_event,
+                )
+                validation = _load_authenticated_scope_projection(
+                    matrix_root=matrix_path,
+                    manifest=matrix_manifest,
+                    expected=validation_expected,
+                    expected_observed=scope_auth["validation"]["observed"],
+                    predictors=selected,
+                    label=f"oot:{cell_id}:oot_selected_projection",
+                    stage="locked_oot_selected_projection_loading",
+                    stop_event=stop_event,
+                    stage_queue=stage_queue,
+                    ram_ready_event=ram_ready_event,
+                )
             predictions, metrics, details = _fit_and_evaluate(
                 cell=cell,
                 selected=selected,
@@ -1598,6 +1901,12 @@ def run_phase_worker(
             write_json_atomic(path / "failure.json", status["error"], overwrite=False)
             unavailable_eval_count += 1
         _seal_directory(path, identity)
+        if phase == "oot":
+            del train, validation
+            train = None
+            validation = None
+            pa.default_memory_pool().release_unused()
+            gc.collect()
 
     accounting = {
         "schema_version": SCHEMA_VERSION,
@@ -1639,7 +1948,11 @@ def run_phase_worker(
         )
         + "\n",
     )
-    del train, validation
+    if train is not None:
+        del train
+    if validation is not None:
+        del validation
+    pa.default_memory_pool().release_unused()
     gc.collect()
     return phase_manifest
 

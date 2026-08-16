@@ -21,6 +21,8 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     BOOTSTRAP_REPETITIONS,
     FREEZE_RELATIVE_ROOT,
     HOLM_ALPHA,
+    INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS,
+    INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
     MAX_ESTIMATOR_THREADS,
     MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE,
     PROJECT_ROOT,
@@ -39,6 +41,8 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
 )
 from credit_risk_fs.experiments.prompt_16_third_dataset import (
     Prompt16ExecutionError,
+    _fit_and_evaluate,
+    _protocol_payload,
     run_phase_worker,
 )
 from credit_risk_fs.experiments.ram_control import load_ram_control_policy
@@ -253,6 +257,93 @@ def test_final_worker_detector_excludes_current_python_lineage() -> None:
     assert "parent_pid in current_lineage_pids" in controller
     assert "pid in current_lineage_pids" in controller
     assert 'not name.startswith("python")' in controller
+
+
+def test_memory_bounded_selected_projection_is_scientifically_equivalent() -> None:
+    matrix = _protocol_payload(PROTOCOL)[1]["approved_protocol"][
+        "method_and_evaluation_matrix"
+    ]
+    train = pd.DataFrame(
+        {
+            "case_id": np.arange(1, 41),
+            "target": np.tile([0, 1], 20),
+            "selected_numeric": np.linspace(-2.0, 2.0, 40),
+            "selected_category": np.tile(["a", "b", None, "a"], 10),
+            "unselected_wide_column": np.linspace(100.0, 200.0, 40),
+        }
+    )
+    validation = pd.DataFrame(
+        {
+            "case_id": np.arange(101, 113),
+            "target": np.tile([0, 1], 6),
+            "selected_numeric": np.linspace(-1.5, 1.5, 12),
+            "selected_category": np.tile(["b", "a", None], 4),
+            "unselected_wide_column": np.linspace(300.0, 400.0, 12),
+        }
+    )
+    selected = ["selected_numeric", "selected_category"]
+    predictors = [*selected, "unselected_wide_column"]
+    cell = {"model": "lr"}
+    full_predictions, full_metrics, full_details = _fit_and_evaluate(
+        cell=cell,
+        selected=selected,
+        train=train,
+        validation=validation,
+        predictors=predictors,
+        matrix=matrix,
+        phase="oot",
+        frozen_threshold=None,
+        full_dev_training_ks_threshold=True,
+    )
+    projected_predictions, projected_metrics, projected_details = _fit_and_evaluate(
+        cell=cell,
+        selected=selected,
+        train=train[["case_id", "target", *selected]].copy(),
+        validation=validation[["case_id", "target", *selected]].copy(),
+        predictors=predictors,
+        matrix=matrix,
+        phase="oot",
+        frozen_threshold=None,
+        full_dev_training_ks_threshold=True,
+    )
+    pd.testing.assert_frame_equal(full_predictions, projected_predictions)
+    assert full_metrics == projected_metrics
+    assert full_details["configuration"] == projected_details["configuration"]
+
+
+def test_memory_amendment_uses_only_authenticated_dev_resource_conclusions() -> None:
+    fold5 = PROJECT_ROOT / (
+        "results/prompt_16_homecredit_model_stability_2024/dev_v1/"
+        "fold_5/selection_fits"
+    )
+    for fit_id in INHERITED_RESOURCE_INFEASIBLE_FIT_IDS:
+        selection = json.loads((fold5 / fit_id / "selection.json").read_text())
+        assert selection["status"] == "resource_infeasible"
+    for order in INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS:
+        for fold in range(1, 6):
+            path = PROJECT_ROOT / (
+                "results/prompt_16_homecredit_model_stability_2024/dev_v1/"
+                f"fold_{fold}/evaluations/cell_{order:03d}/status.json"
+            )
+            status = json.loads(path.read_text())
+            assert status["status"] == "unavailable"
+            assert status["reason"] == "resource_infeasible"
+
+
+def test_memory_amendment_stages_wide_data_and_migrates_only_exact_predecessor() -> None:
+    import credit_risk_fs.experiments.prompt_16_final_oot as final
+    import credit_risk_fs.experiments.prompt_16_third_dataset as third
+
+    phase_source = inspect.getsource(third.run_phase_worker)
+    final_source = inspect.getsource(final.run_final_oot_worker)
+    controller = (PROJECT_ROOT / "scripts/run_prompt_16_final_oot.py").read_text()
+    assert "full_dev_identity_authentication" in phase_source
+    assert "locked_oot_identity_authentication" in phase_source
+    assert "batch_size = 128" in phase_source
+    assert "predictors=selected" in phase_source
+    assert "memory_bounded_oot=True" in final_source
+    assert "_authenticate_predecessor_partial_state" in controller
+    assert "predecessor partial OOT inventory changed" in controller
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:
