@@ -1,0 +1,54 @@
+{
+  "schema_version": "prompt_16_final_oot_execution_blocker_v1",
+  "status": "authenticated_resumable_non_success",
+  "created_at_utc": "2026-08-16T09:00:29.3213497Z",
+  "repository_head": "d841ea6178ff50cf8e252076898cf65cf9b1ac59",
+  "execution_authorization_sha256": "e9e2b15aa2a0b0330a027ad0414fd225ec3a07460dac501b08fa0faac8205f2a",
+  "controller_stop_code": "resource_recovery_retry_ceiling",
+  "failed_scope": "oot:validation",
+  "failed_stage": "locked_oot_data_loading",
+  "attempt_count": 6,
+  "automatic_resource_restart_count": 5,
+  "registered_cells": 34,
+  "completed_cells": 0,
+  "unavailable_cells": 0,
+  "failed_or_corrupt_cells": 0,
+  "incomplete_cells": 34,
+  "next_cell": 1,
+  "oot_membership_authenticated": true,
+  "promoted_evaluation_cells": 0,
+  "promoted_predictions": 0,
+  "promoted_metrics": 0,
+  "worker_success_marker_present": false,
+  "overall_success_marker_present": false,
+  "active_prompt16_workers_after_stop": 0,
+  "all_attempt_child_cleanup_confirmed": true,
+  "all_attempt_queue_cleanup_confirmed": true,
+  "surviving_child_processes": 0,
+  "hard_limits": {
+    "process_tree_rss_gib": 24.0,
+    "system_available_ram_floor_gib": 4.0
+  },
+  "attempts": [
+    {"attempt": 1, "stop_code": "ram_system_headroom", "peak_process_tree_rss_bytes": 25683447808, "minimum_system_available_ram_bytes": 4288462848, "summary_sha256": "422ded8d7ef9603e5735a15ecb9d4c4a62e46c36e299fafa25a4260e8c081a19", "resource_trace_sha256": "36a11fc4bcc160e9b1a4aa1ec27d79f863f5cab1d8f51ce7b70f07ae6a136fe0"},
+    {"attempt": 2, "stop_code": "ram_process_limit", "peak_process_tree_rss_bytes": 26640363520, "minimum_system_available_ram_bytes": 4881559552, "summary_sha256": "4ab71be291f8749dd839f0847f937ca1f0eef5599a2273655de12b103e416172", "resource_trace_sha256": "82f8945cacff25f092ce8e03e2dce1f52e0c00fcaa4ac039eb002ee34dad4f2c"},
+    {"attempt": 3, "stop_code": "ram_process_limit", "peak_process_tree_rss_bytes": 25791660032, "minimum_system_available_ram_bytes": 5713805312, "summary_sha256": "a1dea45c24dbd8579b799f7ef752b78bd5aea04807b28082f741fbf7ec8135d9", "resource_trace_sha256": "d1a66a0d57e4bf0b81f7d7583f3edacae205926a20e057aa286b6305b3120a82"},
+    {"attempt": 4, "stop_code": "ram_process_limit", "peak_process_tree_rss_bytes": 25812041728, "minimum_system_available_ram_bytes": 5472292864, "summary_sha256": "553722f2a76fab3f1abf6a8a33ea5ae5d43ed955e48ba988702c446920bad621", "resource_trace_sha256": "59b46ca6e04fa52fe7e5172f5b1689453331187b7c4df6034c1c218a3819479c"},
+    {"attempt": 5, "stop_code": "ram_process_limit", "peak_process_tree_rss_bytes": 26638692352, "minimum_system_available_ram_bytes": 4916367360, "summary_sha256": "ed96b51713acbabdf7a522eb3e8cc852120f1d942846618168f141eccff9e137", "resource_trace_sha256": "be874ccdee95d8fc93a50b66294acd96f284b7da0860fb4c449d48c99951cb35"},
+    {"attempt": 6, "stop_code": "ram_process_limit", "peak_process_tree_rss_bytes": 27902177280, "minimum_system_available_ram_bytes": 3517878272, "summary_sha256": "626a05ad52351008dd9fe8fd078432f4d223c132d60899f06a0e5b0aa63fe087", "resource_trace_sha256": "c609af622a3caa99e4117679adc60fb6069701cd01fa01cb55b6d6f3a4c1211d"}
+  ],
+  "bound_artifacts": {
+    "controller_status_sha256": "be1d15157a8d993ee74b3b732264c6e749b7cc181541a6d2ad664b47dfb6135f",
+    "scope_authentication_sha256": "7ebad0a0b805374770fbfa92c08df178bbb1215d99636361acd372a28c932d59",
+    "terminal_log_sha256": "56ab713a7955ceb4e6ec408c660d042a56cbec44a87baafe2d167cfc19464e13",
+    "events_log_sha256": "a9331700ab3d81c3c9eacf3669ded1778324654715532eb35e42984c962a94bc",
+    "debug_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resume_assessment": {
+    "checkpoint_integrity": "safe_for_identical_command_resume",
+    "completion_likelihood_under_unchanged_conditions": "not_credible_after_six_same_boundary_resource_stops",
+    "recommended_action": "do_not_rerun_until_a_protocol-governed_operational_resolution_is_authorized",
+    "scientific_contract_changed": false
+  },
+  "artifact_authentication_sha256": "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
+}
