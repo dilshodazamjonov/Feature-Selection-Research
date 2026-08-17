@@ -1,0 +1,45 @@
+{
+  "schema_version": "prompt_16_final_oot_psi_performance_amendment_v5",
+  "status": "authorized_after_exact_psi_semantic_equivalence",
+  "authorized_by_user_at_utc_date": "2026-08-18",
+  "predecessor_execution_authorization_sha256": "056af6b6f5fd2b8153b1d9148b27d1c8cc3cf33933ab69a14f796d4b0d24cc06",
+  "trigger": {
+    "blocked_scope": "oot:feature_psi_batch_005",
+    "failure": "pathological_repeated_unseen_set_construction",
+    "promoted_evaluation_cells": 0,
+    "next_psi_batch": 5
+  },
+  "preserved_exactly": [
+    "1959_ordered_classical_features",
+    "1221743_full_dev_rows_and_304916_locked_oot_rows",
+    "frozen_numeric_and_type_aware_psi_formulas",
+    "numeric_quantile_bins_and_infinite_outer_edges",
+    "categorical_string_missing_and_unseen_semantics",
+    "feature_order_and_128_feature_checkpoint_boundaries",
+    "all_selection_rankings_seeds_preprocessing_and_model_settings",
+    "all_completed_selection_and_psi_checkpoints"
+  ],
+  "execution_only_changes": [
+    "construct_categorical_level_sets_once_per_feature",
+    "replace_per_row_python_unseen_mapping_with_vectorized_hash_membership",
+    "calculate_independent_features_on_shared_memory_threads",
+    "reserve_two_of_sixteen_logical_cpus_for_supervision_and_operating_system",
+    "publish_a_distinct_feature_psi_calculation_stage"
+  ],
+  "parallel_worker_count": 14,
+  "scientific_contract_changed": false,
+  "rows_sampled_or_removed": 0,
+  "features_removed": 0,
+  "completed_psi_batches": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "next_psi_batch": 5,
+  "equivalence_report_sha256": "c398d9731a73dd3fe9d8aad3893f70312f8ce3955be1fffa54800cd4942dbb89",
+  "new_llm_request_authorized": false,
+  "dev_rerun_authorized": false,
+  "oot_work_executed_during_validation": false,
+  "artifact_authentication_sha256": "fd6c9fd350960107e6139433d693bb86a76f5252faa1c61808b1961619977405"
+}
