@@ -78,6 +78,7 @@ from credit_risk_fs.experiments.prompt_16_llm_supplement import (
 from credit_risk_fs.experiments.prompt_16_third_dataset import (
     EXPECTED_PROTOCOL_FILE_SHA256,
     EXPECTED_PROTOCOL_INTERNAL_SHA256,
+    FEATURE_PSI_MAX_WORKERS,
     NON_PREDICTORS,
     Prompt16ExecutionError,
     _archive_incomplete,
@@ -118,6 +119,9 @@ RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT = Path(
 )
 MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_oot_mrmr_compact_amendment_v4"
+)
+PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_oot_psi_performance_amendment_v5"
 )
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
@@ -200,6 +204,12 @@ RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
 )
 MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY = (
     "identity_first_batched_compact_mrmr_checkpoints_v4"
+)
+MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256 = (
+    "056af6b6f5fd2b8153b1d9148b27d1c8cc3cf33933ab69a14f796d4b0d24cc06"
+)
+PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY = (
+    "identity_first_compact_mrmr_parallel_feature_psi_v5"
 )
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
@@ -4106,6 +4116,342 @@ The successor resumes at fit_008 and reuses the authenticated fit_007 MI work.
     }
 
 
+def _validate_psi_performance_predecessor(
+    root: Path,
+) -> tuple[list[str], list[int], list[dict[str, Any]], list[str]]:
+    """Authenticate the stopped v4 run without recomputing any OOT result."""
+
+    predecessor_path = (
+        root / MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256:
+        raise Prompt16ExecutionError("compact mRMR predecessor authorization changed")
+    predecessor = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor)
+    claimed = predecessor_unsigned.pop("artifact_authentication_sha256", None)
+    if claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("compact mRMR predecessor digest changed")
+
+    output = root / OOT_RELATIVE_ROOT
+    status = _read_json(output / "controller_status.json")
+    if (
+        status.get("execution_authorization_sha256")
+        != MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+        or status.get("status") != "resumable_non_success"
+        or status.get("stop_code") != "manual_interrupt"
+        or int(status.get("accounted_count", -1)) != 0
+    ):
+        raise Prompt16ExecutionError("PSI performance predecessor state changed")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("PSI predecessor unexpectedly completed")
+    if list(output.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError("PSI predecessor unexpectedly promoted OOT cells")
+
+    _, protocol = _protocol_payload(root / PROTOCOL_RELATIVE_PATH)
+    matrix = protocol["approved_protocol"]["method_and_evaluation_matrix"]
+    fits = selection_fit_registry(matrix)
+    expected_fit_ids = [str(fit["fit_id"]) for fit in fits]
+    selection_root = output / "classical/selection_fits"
+    actual_fit_ids = sorted(
+        path.name
+        for path in selection_root.iterdir()
+        if path.is_dir() and (path / "_SUCCESS").is_file()
+    )
+    if actual_fit_ids != sorted(expected_fit_ids):
+        raise Prompt16ExecutionError("completed selector inventory changed before PSI resume")
+    matrix_manifest_sha = file_sha256(root / MATRIX_RELATIVE_ROOT / "manifest.json")
+    for fit in fits:
+        identity = _fit_identity(
+            phase="oot",
+            fold_id=None,
+            fit=fit,
+            matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=(
+                MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+            ),
+        )
+        _load_sealed(
+            selection_root / str(fit["fit_id"]),
+            identity,
+            authorized_predecessor_authorization_sha256=(
+                MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+            ),
+        )
+
+    _, matrix_metadata = _matrix_identity(root / MATRIX_RELATIVE_ROOT)
+    predictors = list(matrix_metadata["predictor_columns"])
+    if len(predictors) != 1_959:
+        raise Prompt16ExecutionError("PSI predecessor feature universe changed")
+    scope_auth = _read_json(output / "classical/scope_authentication.json")
+    feature_identity = {
+        "operation": "full_dev_to_oot_source_feature_psi",
+        "execution_authorization_sha256": (
+            MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "matrix_manifest_sha256": matrix_manifest_sha,
+        "ordered_predictor_sha256": canonical_sha256(predictors),
+        "predictor_count": len(predictors),
+        "dev_scope_sha256": canonical_sha256(scope_auth["train"]["observed"]),
+        "oot_scope_sha256": canonical_sha256(scope_auth["validation"]["observed"]),
+    }
+    feature_root = output / "classical/feature_psi"
+    if _read_json(feature_root / "checkpoint_identity.json") != feature_identity:
+        raise Prompt16ExecutionError("PSI root checkpoint identity changed")
+    batch_root = feature_root / "batches"
+    completed_batches: list[int] = []
+    batch_size = 128
+    for batch_index, start in enumerate(
+        range(0, len(predictors), batch_size), start=1
+    ):
+        batch_path = batch_root / f"batch_{batch_index:03d}"
+        batch_predictors = predictors[start : start + batch_size]
+        if not (batch_path / "_SUCCESS").is_file():
+            continue
+        batch_identity = {
+            **feature_identity,
+            "batch_index": batch_index,
+            "batch_size": len(batch_predictors),
+            "ordered_batch_predictor_sha256": canonical_sha256(batch_predictors),
+        }
+        _load_sealed(batch_path, batch_identity)
+        batch_frame = pd.read_parquet(batch_path / "feature_psi.parquet")
+        if batch_frame["feature"].tolist() != batch_predictors:
+            raise Prompt16ExecutionError(
+                f"sealed PSI batch {batch_index} feature order changed"
+            )
+        completed_batches.append(batch_index)
+    if completed_batches != [1, 2, 3, 4]:
+        raise Prompt16ExecutionError(
+            f"PSI completed batch boundary changed: {completed_batches}"
+        )
+    if (batch_root / "batch_005" / "_SUCCESS").exists():
+        raise Prompt16ExecutionError("PSI batch 5 unexpectedly completed")
+
+    output_inventory = sorted(
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    )
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            (path for path in output.rglob("*") if path.is_file()),
+            key=lambda item: _relative(item, root),
+        )
+    ]
+    return (
+        expected_fit_ids,
+        completed_batches,
+        partial_artifacts,
+        output_inventory,
+    )
+
+
+def _authenticate_psi_performance_validation(root: Path) -> dict[str, Any]:
+    audit_root = root / PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT
+    report_path = audit_root / "psi_performance_equivalence.json"
+    marker_path = audit_root / "_VALIDATION_SUCCESS"
+    marker = _read_json(marker_path)
+    if marker.get("report_sha256") != file_sha256(report_path):
+        raise Prompt16ExecutionError("PSI performance validation marker changed")
+    report = _read_json(report_path)
+    if (
+        report.get("status") != "validated_exact_equivalence"
+        or report.get("scientific_semantics_changed") is not False
+        or report.get("first_incomplete_psi_batch") != 5
+        or report.get("sealed_psi_batches") != [1, 2, 3, 4]
+        or report.get("parallel_worker_count") != FEATURE_PSI_MAX_WORKERS
+        or report.get("oot_workload_executed") is not False
+    ):
+        raise Prompt16ExecutionError("PSI performance validation contract changed")
+    return report
+
+
+def build_psi_performance_amendment_authorization(
+    *,
+    repository_root: str | Path = PROJECT_ROOT,
+    implementation_commit: str,
+) -> dict[str, Any]:
+    """Authorize continuation at PSI batch 5 after exact optimization checks."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if _git(root, "rev-parse", implementation_commit) != implementation_commit:
+        raise Prompt16ExecutionError("implementation commit must be a full identity")
+    if implementation_commit != repository["head"]:
+        raise Prompt16ExecutionError("PSI performance amendment must bind committed HEAD")
+    audit_root = root / PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT
+    if (audit_root / "execution_authorization.json").exists():
+        raise Prompt16ExecutionError("PSI performance authorization already exists")
+    allowed = {"_VALIDATION_SUCCESS", "psi_performance_equivalence.json"}
+    actual = {path.name for path in audit_root.iterdir() if path.is_file()}
+    if actual != allowed:
+        raise Prompt16ExecutionError(
+            f"PSI performance validation inventory changed: {sorted(actual)}"
+        )
+
+    predecessor_path = (
+        root / MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT / "execution_authorization.json"
+    )
+    predecessor = _read_json(predecessor_path)
+    fit_ids, completed_batches, partial_artifacts, output_inventory = (
+        _validate_psi_performance_predecessor(root)
+    )
+    report = _authenticate_psi_performance_validation(root)
+    dev = authenticate_complete_dev(root)
+    dev.pop("evaluation_rows")
+    if dev["accounting"]["authenticated_evaluation_identities"] != 170:
+        raise Prompt16ExecutionError("PSI amendment DEV gate is not 170/170")
+
+    amendment = {
+        "schema_version": "prompt_16_final_oot_psi_performance_amendment_v5",
+        "status": "authorized_after_exact_psi_semantic_equivalence",
+        "authorized_by_user_at_utc_date": "2026-08-18",
+        "predecessor_execution_authorization_sha256": (
+            MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "trigger": {
+            "blocked_scope": "oot:feature_psi_batch_005",
+            "failure": "pathological_repeated_unseen_set_construction",
+            "promoted_evaluation_cells": 0,
+            "next_psi_batch": 5,
+        },
+        "preserved_exactly": [
+            "1959_ordered_classical_features",
+            "1221743_full_dev_rows_and_304916_locked_oot_rows",
+            "frozen_numeric_and_type_aware_psi_formulas",
+            "numeric_quantile_bins_and_infinite_outer_edges",
+            "categorical_string_missing_and_unseen_semantics",
+            "feature_order_and_128_feature_checkpoint_boundaries",
+            "all_selection_rankings_seeds_preprocessing_and_model_settings",
+            "all_completed_selection_and_psi_checkpoints",
+        ],
+        "execution_only_changes": [
+            "construct_categorical_level_sets_once_per_feature",
+            "replace_per_row_python_unseen_mapping_with_vectorized_hash_membership",
+            "calculate_independent_features_on_shared_memory_threads",
+            "reserve_two_of_sixteen_logical_cpus_for_supervision_and_operating_system",
+            "publish_a_distinct_feature_psi_calculation_stage",
+        ],
+        "parallel_worker_count": FEATURE_PSI_MAX_WORKERS,
+        "scientific_contract_changed": False,
+        "rows_sampled_or_removed": 0,
+        "features_removed": 0,
+        "completed_psi_batches": completed_batches,
+        "next_psi_batch": 5,
+        "equivalence_report_sha256": file_sha256(
+            audit_root / "psi_performance_equivalence.json"
+        ),
+        "new_llm_request_authorized": False,
+        "dev_rerun_authorized": False,
+        "oot_work_executed_during_validation": False,
+    }
+    _write_frozen_json(audit_root / "psi_performance_amendment.json", amendment)
+    write_text_atomic(
+        audit_root / "README.md",
+        """# Prompt 16 feature-PSI performance amendment v5
+
+This execution-only amendment removes a repeated categorical membership-set
+construction and evaluates independent PSI features on fourteen shared-memory
+threads. It preserves every frozen PSI definition and all data, feature, model,
+ordering, and checkpoint identities. No OOT workload was run for validation.
+
+All 27 classical selection fits and PSI batches 1 through 4 authenticate. The
+successor begins at the first incomplete unit, PSI batch 5 of 16.
+""",
+        overwrite=False,
+    )
+
+    implementation_paths = {
+        *(Path(row["path"]) for row in predecessor["implementation_files"]),
+        Path("src/credit_risk_fs/analysis/voting_inference/psi.py"),
+        Path("scripts/validate_prompt_16_psi_performance.py"),
+        Path("tests/test_voting_psi.py"),
+    }
+    amendment_files = [
+        _artifact(path, root)
+        for path in sorted(audit_root.iterdir(), key=lambda item: item.name)
+        if path.is_file() and path.name != "execution_authorization.json"
+    ]
+    checkpoint_resume = dict(predecessor["checkpoint_resume"])
+    checkpoint_resume.update(
+        {
+            "accepted_output_predecessor_authorization_sha256s": [
+                MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+            ],
+            "reauthenticated_fit_ids": fit_ids,
+            "expected_next_fit_id": None,
+            "completed_feature_psi_batches": completed_batches,
+            "expected_next_feature_psi_batch": 5,
+            "feature_psi_parallel_worker_count": FEATURE_PSI_MAX_WORKERS,
+            "rewrite_predecessor_payloads": False,
+        }
+    )
+    authorization_unsigned = dict(predecessor)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "dev_evaluation_registry_sha256": dev["evaluation_registry_sha256"],
+            "implementation_files": [
+                _artifact(root / path, root) for path in sorted(implementation_paths)
+            ],
+            "frozen_input_files": [
+                *predecessor["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor["freeze_files"],
+                *amendment_files,
+            ],
+            "memory_amendment": {
+                **predecessor["memory_amendment"],
+                "path": _relative(
+                    audit_root / "psi_performance_amendment.json", root
+                ),
+                "strategy": PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+                "feature_psi_batch_size": 128,
+                "feature_psi_parallel_worker_count": FEATURE_PSI_MAX_WORKERS,
+                "feature_psi_cpu_reserve": 2,
+                "scientific_contract_changed": False,
+                "resource_envelope_changed": False,
+            },
+            "checkpoint_resume": checkpoint_resume,
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": output_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": fit_ids,
+                "completed_feature_psi_batches": completed_batches,
+                "next_feature_psi_batch": 5,
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    authorization_path = audit_root / "execution_authorization.json"
+    write_json_atomic(authorization_path, authorization, overwrite=False)
+    return {
+        "schema_version": "prompt_16_final_oot_psi_performance_build_v5",
+        "status": "authorized_parallel_psi_resume_from_batch_005",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(authorization_path),
+        "authorization_sha256": file_sha256(authorization_path),
+        "reauthenticated_checkpoint_fit_count": len(fit_ids),
+        "reauthenticated_feature_psi_batches": completed_batches,
+        "expected_next_feature_psi_batch": 5,
+        "feature_psi_parallel_worker_count": FEATURE_PSI_MAX_WORKERS,
+        "registered_cells_unchanged": 34,
+        "promoted_predecessor_cells": 0,
+        "oot_work_executed": False,
+        "validation": report,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -4160,6 +4506,7 @@ def load_final_authorization(
         ENCODING_AMENDMENT_MEMORY_STRATEGY,
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+        PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
     }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
@@ -4175,6 +4522,9 @@ def load_final_authorization(
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
     expected_predecessor = (
+        MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
+        else
         RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         if strategy == MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY
         else ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
@@ -4189,19 +4539,29 @@ def load_final_authorization(
         ENCODING_AMENDMENT_MEMORY_STRATEGY,
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+        PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
     }:
         checkpoint_resume = payload.get("checkpoint_resume", {})
         if checkpoint_resume.get(
             "accepted_predecessor_authorization_sha256"
         ) != MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256:
             raise Prompt16ExecutionError("selector checkpoint authorization changed")
-        if checkpoint_resume.get("expected_next_fit_id") != "fit_008":
+        expected_next_fit_id = (
+            None
+            if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
+            else "fit_008"
+        )
+        if checkpoint_resume.get("expected_next_fit_id") != expected_next_fit_id:
             raise Prompt16ExecutionError("selector resume point changed")
-        expected_fits = sorted(
-            {
-                *(f"fit_{order:03d}" for order in range(1, 8)),
-                *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
-            }
+        expected_fits = (
+            [f"fit_{order:03d}" for order in range(1, 28)]
+            if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
+            else sorted(
+                {
+                    *(f"fit_{order:03d}" for order in range(1, 8)),
+                    *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+                }
+            )
         )
         if checkpoint_resume.get("reauthenticated_fit_ids") != expected_fits:
             raise Prompt16ExecutionError("reauthenticated selector inventory changed")
@@ -4210,6 +4570,7 @@ def load_final_authorization(
         if strategy in {
             RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
             MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+            PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
         } and (
             checkpoint_resume.get(
                 "accepted_selector_memmap_authorization_sha256"
@@ -4217,7 +4578,10 @@ def load_final_authorization(
             != ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         ):
             raise Prompt16ExecutionError("selector memmap authorization changed")
-        if strategy == MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY:
+        if strategy in {
+            MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+            PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+        }:
             if (
                 int(memory_amendment.get("mrmr_compact_feature_batch_size", -1))
                 != 32
@@ -4239,6 +4603,27 @@ def load_final_authorization(
             ):
                 raise Prompt16ExecutionError(
                     "compact mRMR authorization checkpoints changed"
+                )
+        if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY:
+            if (
+                checkpoint_resume.get(
+                    "accepted_output_predecessor_authorization_sha256s"
+                )
+                != [MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256]
+                or checkpoint_resume.get("completed_feature_psi_batches")
+                != [1, 2, 3, 4]
+                or checkpoint_resume.get("expected_next_feature_psi_batch") != 5
+                or checkpoint_resume.get("feature_psi_parallel_worker_count")
+                != FEATURE_PSI_MAX_WORKERS
+                or int(memory_amendment.get("feature_psi_batch_size", -1)) != 128
+                or int(
+                    memory_amendment.get("feature_psi_parallel_worker_count", -1)
+                )
+                != FEATURE_PSI_MAX_WORKERS
+                or int(memory_amendment.get("feature_psi_cpu_reserve", -1)) != 2
+            ):
+                raise Prompt16ExecutionError(
+                    "parallel feature PSI authorization checkpoints changed"
                 )
     return payload, file_sha256(candidate)
 
@@ -4304,6 +4689,11 @@ def run_final_oot_worker(
         ),
         authorized_predecessor_authorization_sha256=checkpoint_resume.get(
             "accepted_predecessor_authorization_sha256"
+        ),
+        authorized_output_predecessor_authorization_sha256s=tuple(
+            checkpoint_resume.get(
+                "accepted_output_predecessor_authorization_sha256s", []
+            )
         ),
         authorized_selector_memmap_predecessor_sha256=checkpoint_resume.get(
             "accepted_selector_memmap_authorization_sha256"
@@ -4388,6 +4778,7 @@ __all__ = [
     "authenticate_complete_dev",
     "build_freeze",
     "build_mrmr_compact_amendment_authorization",
+    "build_psi_performance_amendment_authorization",
     "final_full_dev_refits",
     "final_oot_cells",
     "load_final_authorization",

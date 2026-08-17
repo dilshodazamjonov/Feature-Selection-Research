@@ -27,6 +27,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     MAX_ESTIMATOR_THREADS,
     MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE,
     MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+    PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
     PROCESS_TREE_RSS_HARD_CAP_GIB,
     PROJECT_ROOT,
     PROTOCOL_RELATIVE_PATH,
@@ -44,6 +45,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     paired_comparison_graph,
 )
 from credit_risk_fs.experiments.prompt_16_third_dataset import (
+    FEATURE_PSI_MAX_WORKERS,
     Prompt16ExecutionError,
     _fit_and_evaluate,
     _protocol_payload,
@@ -371,31 +373,24 @@ def test_encoding_amendment_is_disk_backed_and_exactly_resumes_fit_008() -> None
     assert "classical_selector_encoding_v2" in worker_source
     assert ENCODING_AMENDMENT_MEMORY_STRATEGY.endswith("selector_memmap_v2")
 
-    status = json.loads(
+    amendment_authorization = json.loads(
         (
             PROJECT_ROOT
-            / "results/prompt_16_homecredit_model_stability_2024/"
-            "oot_final_amended_v1/controller_status.json"
+            / "cleanup/audits/prompt_16_final_oot_resource_policy_amendment_v3/"
+            "execution_authorization.json"
         ).read_text()
     )
-    fit_root = PROJECT_ROOT / (
-        "results/prompt_16_homecredit_model_stability_2024/"
-        "oot_final_amended_v1/classical/selection_fits"
+    assert amendment_authorization["checkpoint_resume"]["expected_next_fit_id"] == (
+        "fit_008"
     )
-    fit_ids = sorted(
-        path.name
-        for path in fit_root.iterdir()
-        if path.is_dir() and (path / "_SUCCESS").is_file()
+    assert amendment_authorization["checkpoint_resume"]["reauthenticated_fit_ids"] == (
+        sorted(
+            {
+                *(f"fit_{order:03d}" for order in range(1, 8)),
+                *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+            }
+        )
     )
-    assert status["completed_count"] == 0
-    assert fit_ids == sorted(
-        {
-            *(f"fit_{order:03d}" for order in range(1, 8)),
-            *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
-        }
-    )
-    assert "fit_007" in fit_ids
-    assert "fit_008" not in fit_ids
     assert RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY.endswith(
         "high_memory_guardrails_v3"
     )
@@ -427,6 +422,28 @@ def test_compact_mrmr_amendment_preserves_science_and_resume_boundary() -> None:
     assert "missing_value_code_minus_one" in builder_source
     assert "features_removed\": 0" in builder_source
     assert "rows_sampled_or_removed\": 0" in builder_source
+
+
+def test_psi_performance_amendment_uses_shared_memory_and_preserves_resume() -> None:
+    import credit_risk_fs.experiments.prompt_16_final_oot as final
+    import credit_risk_fs.experiments.prompt_16_third_dataset as third
+
+    phase_source = inspect.getsource(third.run_phase_worker)
+    batch_source = inspect.getsource(third._calculate_feature_psi_batch)
+    builder_source = inspect.getsource(
+        final.build_psi_performance_amendment_authorization
+    )
+    assert PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY.endswith(
+        "parallel_feature_psi_v5"
+    )
+    assert FEATURE_PSI_MAX_WORKERS == 14
+    assert "ThreadPoolExecutor" in batch_source
+    assert "executor.map" in batch_source
+    assert "feature_psi_batch_calculation" in phase_source
+    assert "completed_psi_batches" in builder_source
+    assert '"next_psi_batch": 5' in builder_source
+    assert '"rows_sampled_or_removed": 0' in builder_source
+    assert '"features_removed": 0' in builder_source
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:

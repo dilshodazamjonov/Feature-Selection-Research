@@ -18,6 +18,36 @@ from credit_risk_fs.analysis.voting_inference.psi import (
 from scripts.independently_verify_voting_metrics import independent_score_psi
 
 
+def _legacy_categorical_psi(
+    dev: pd.Series, oot: pd.Series
+) -> tuple[float, pd.DataFrame, dict[str, object]]:
+    """Small-fixture reference for the exact pre-optimization semantics."""
+
+    from credit_risk_fs.analysis.voting_inference.psi import (
+        FEATURE_PSI_EPSILON,
+        _share_table,
+    )
+
+    dev_states = dev.astype("object").map(
+        lambda value: MISSING_STATE if pd.isna(value) else str(value)
+    )
+    oot_states = oot.astype("object").map(
+        lambda value: MISSING_STATE if pd.isna(value) else str(value)
+    )
+    dev_levels = sorted(set(dev_states.unique()))
+    unseen = sorted(set(oot_states.unique()) - set(dev_levels))
+    oot_states = oot_states.map(
+        lambda value: UNSEEN_STATE if value in set(unseen) else value
+    )
+    states = [*dev_levels, UNSEEN_STATE]
+    frame, psi = _share_table(dev_states, oot_states, states)
+    return psi, frame, {
+        "dev_levels": dev_levels,
+        "unseen_oot_level_count": len(unseen),
+        "smoothing_epsilon": FEATURE_PSI_EPSILON,
+    }
+
+
 def test_unchanged_score_distribution_gives_approximately_zero_psi() -> None:
     generator = np.random.default_rng(2)
     scores = generator.random(5_000)
@@ -168,6 +198,56 @@ def test_categorical_missing_values_become_an_explicit_state() -> None:
     row = distribution.loc[distribution["state"] == MISSING_STATE].iloc[0]
     assert row["dev_share"] == pytest.approx(0.5)
     assert row["oot_share"] == pytest.approx(0.1)
+
+
+@pytest.mark.parametrize(
+    ("dev", "oot"),
+    [
+        (
+            pd.Series(["a", None, "b", "a", pd.NA], dtype="object"),
+            pd.Series(["b", "c", None, "a", "c"], dtype="object"),
+        ),
+        (
+            pd.Series([1, 2, None, 2, 1], dtype="Int64"),
+            pd.Series([1, 3, None, 3, 2], dtype="Int64"),
+        ),
+        (
+            pd.Series([True, False, None, True], dtype="boolean"),
+            pd.Series([False, None, True, False], dtype="boolean"),
+        ),
+        (
+            pd.Series([1.25, np.nan, 1.25, 1.25]),
+            pd.Series([2.5, np.nan, 1.25, 2.5]),
+        ),
+    ],
+)
+def test_optimized_categorical_psi_is_exactly_equivalent_to_legacy_semantics(
+    dev: pd.Series, oot: pd.Series
+) -> None:
+    expected_psi, expected_distribution, expected = _legacy_categorical_psi(
+        dev, oot
+    )
+    actual_psi, actual_distribution, actual = type_aware_feature_psi(dev, oot)
+    assert actual_psi == expected_psi
+    pd.testing.assert_frame_equal(
+        actual_distribution,
+        expected_distribution,
+        check_exact=True,
+    )
+    assert actual["unseen_oot_level_count"] == expected["unseen_oot_level_count"]
+    assert actual["smoothing_epsilon"] == expected["smoothing_epsilon"]
+
+
+def test_all_missing_dev_high_cardinality_oot_collapses_without_losing_rows() -> None:
+    dev = pd.Series([np.nan] * 20_000)
+    oot = pd.Series(np.arange(10_000, dtype=float))
+    psi, distribution, definition = type_aware_feature_psi(dev, oot)
+    assert np.isfinite(psi)
+    assert definition["feature_type"] == "all_missing_in_dev"
+    assert definition["unseen_oot_level_count"] == 10_000
+    assert list(distribution["state"]) == [MISSING_STATE, UNSEEN_STATE]
+    assert distribution["dev_count"].tolist() == [20_000, 0]
+    assert distribution["oot_count"].tolist() == [0, 10_000]
 
 
 def test_feature_type_classification_covers_the_reported_families() -> None:
