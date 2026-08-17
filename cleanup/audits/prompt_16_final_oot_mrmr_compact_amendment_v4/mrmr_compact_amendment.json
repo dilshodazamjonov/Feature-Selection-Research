@@ -1,0 +1,42 @@
+{
+  "schema_version": "prompt_16_final_oot_mrmr_compact_amendment_v4",
+  "status": "authorized_after_exact_full_dev_fit_007_equivalence",
+  "authorized_by_user_at_utc_date": "2026-08-17",
+  "predecessor_execution_authorization_sha256": "753c545059c6b4cb8cfcf1f057b091a25eaf544ea48bf187e8f087ad70d45fad",
+  "trigger": {
+    "blocked_scope": "oot:oot:fit_008",
+    "blocked_stage": "baseline_lightweight",
+    "failure": "dense_int64_mrmr_code_materialization_exceeded_ram",
+    "promoted_evaluation_cells": 0,
+    "next_fit_id": "fit_008"
+  },
+  "preserved_exactly": [
+    "1959_ordered_classical_features",
+    "1221743_full_dev_rows",
+    "missing_value_code_minus_one",
+    "existing_discretization_and_category_mappings",
+    "sklearn_mutual_info_score_argument_order_and_float_values",
+    "mrmr_greedy_objective_tie_breaking_and_ranking_order",
+    "all_seeds_feature_budgets_preprocessing_and_catboost_settings",
+    "all_completed_selection_checkpoints"
+  ],
+  "execution_only_changes": [
+    "replace_eager_per_feature_int64_dictionary_with_int8_npy_batches",
+    "map_one_32_feature_code_batch_at_a_time",
+    "atomically_seal_and_sha256_authenticate_every_code_batch",
+    "atomically_seal_and_sha256_authenticate_relevance_and_pair_mi_vectors",
+    "reuse_full_fit_007_mi_checkpoints_when_fit_008_replays_ranks_1_to_20"
+  ],
+  "memory_strategy": "identity_first_batched_compact_mrmr_checkpoints_v4",
+  "checkpoint_authorization_identity_sha256": "35e7a901e04eab9d959ce8b75f82e3aed85b4364ab7ea7401ec4586263212b7b",
+  "full_fit_007_equivalence_report_sha256": "fad2d2f7bf15212173248da29eed721dc188807fb177b676b19f4a6db5e63309",
+  "scientific_contract_changed": false,
+  "llm_filter_applied": false,
+  "rows_sampled_or_removed": 0,
+  "features_removed": 0,
+  "new_llm_request_authorized": false,
+  "dev_rerun_authorized": false,
+  "oot_work_executed_during_validation": false,
+  "next_fit_id": "fit_008",
+  "artifact_authentication_sha256": "a3ec924f691e0eb8be0d0a71e304279fa71b6905ac290f43d70fa353f591bf9f"
+}
