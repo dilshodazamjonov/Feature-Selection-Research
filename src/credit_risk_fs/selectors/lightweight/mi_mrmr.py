@@ -28,7 +28,8 @@ changes the estimator, not merely a tuning knob.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, ClassVar
 
 import numpy as np
@@ -38,6 +39,10 @@ from sklearn.metrics import mutual_info_score
 from credit_risk_fs.selectors.lightweight.contract import (
     ControlledSelectorFailure,
     LightweightSelector,
+)
+from credit_risk_fs.selectors.lightweight.mrmr_compact_cache import (
+    DEFAULT_FEATURE_BATCH_SIZE,
+    CompactMRMRCheckpointStore,
 )
 
 MISSING_CODE = -1
@@ -141,6 +146,38 @@ class MutualInformationMRMRSelector(LightweightSelector):
         self.selection_trace_: pd.DataFrame | None = None
         self._mi_cache: dict[tuple[str, str], float] = {}
         self._codes: dict[str, np.ndarray] = {}
+        self._execution_cache_root: Path | None = None
+        self._execution_cache_identity: dict[str, Any] | None = None
+        self._execution_cache_batch_size = DEFAULT_FEATURE_BATCH_SIZE
+        self._execution_progress_callback: (
+            Callable[[str, Mapping[str, Any]], None] | None
+        ) = None
+        self.execution_checkpoint_summary_: dict[str, Any] | None = None
+
+    def configure_execution_cache(
+        self,
+        root: str | Path,
+        *,
+        execution_identity: Mapping[str, Any],
+        feature_batch_size: int = DEFAULT_FEATURE_BATCH_SIZE,
+        progress_callback: (
+            Callable[[str, Mapping[str, Any]], None] | None
+        ) = None,
+    ) -> MutualInformationMRMRSelector:
+        """Enable a restartable storage strategy without changing the method.
+
+        This execution-only setting is intentionally absent from
+        :meth:`describe_configuration`: it changes neither the scientific
+        implementation identity nor any ranking semantics.
+        """
+
+        self._execution_cache_root = Path(root)
+        self._execution_cache_identity = dict(execution_identity)
+        self._execution_cache_batch_size = int(feature_batch_size)
+        self._execution_progress_callback = progress_callback
+        if self._execution_cache_batch_size <= 0:
+            raise ValueError("mRMR execution-cache batch size must be positive")
+        return self
 
     def describe_configuration(self) -> dict[str, Any]:
         configuration = super().describe_configuration()
@@ -186,14 +223,79 @@ class MutualInformationMRMRSelector(LightweightSelector):
         target_codes = np.asarray(y.reset_index(drop=True).to_numpy(), dtype="int64")
 
         self._mi_cache = {}
-        self._codes = {
-            name: _discretize_column(X[name].reset_index(drop=True), self.n_bins)
-            for name in candidate_order
+        self.execution_checkpoint_summary_ = None
+        if self._execution_cache_root is None:
+            self._codes = {
+                name: _discretize_column(X[name].reset_index(drop=True), self.n_bins)
+                for name in candidate_order
+            }
+            relevance = {
+                name: float(mutual_info_score(self._codes[name], target_codes))
+                for name in candidate_order
+            }
+            return self._rank_from_relevance(
+                candidate_order=candidate_order,
+                relevance=relevance,
+                pair_mi=self._pair_mi,
+            )
+
+        if self._execution_cache_identity is None:
+            raise ControlledSelectorFailure(
+                method_id=self.method_id,
+                stage="execution_cache_validation",
+                cause="mRMR execution cache lacks an authenticated identity",
+                configuration=self.describe_configuration(),
+            )
+        self._codes = {}
+        store = CompactMRMRCheckpointStore.prepare(
+            self._execution_cache_root,
+            X=X,
+            execution_identity=self._execution_cache_identity,
+            candidate_order=candidate_order,
+            n_bins=self.n_bins,
+            discretize=_discretize_column,
+            feature_batch_size=self._execution_cache_batch_size,
+            progress_callback=self._execution_progress_callback,
+        )
+        pair_vectors: dict[str, np.memmap] = {}
+        feature_positions = {
+            name: index for index, name in enumerate(store.candidate_order)
         }
-        relevance = {
-            name: float(mutual_info_score(self._codes[name], target_codes))
-            for name in candidate_order
-        }
+
+        def cached_pair_mi(left: str, right: str) -> float:
+            selected = str(right)
+            mapping = pair_vectors.get(selected)
+            if mapping is None:
+                mapping = store.pair_vector(selected)
+                pair_vectors[selected] = mapping
+            return float(mapping[feature_positions[str(left)]])
+
+        try:
+            relevance = store.relevance(target_codes)
+            result = self._rank_from_relevance(
+                candidate_order=candidate_order,
+                relevance=relevance,
+                pair_mi=cached_pair_mi,
+            )
+            self.execution_checkpoint_summary_ = store.summary()
+            return result
+        finally:
+            for mapping in pair_vectors.values():
+                owner = getattr(mapping, "_mmap", None)
+                if owner is not None and not owner.closed:
+                    owner.close()
+            store.close()
+
+    def _rank_from_relevance(
+        self,
+        *,
+        candidate_order: Sequence[str],
+        relevance: Mapping[str, float],
+        pair_mi: Callable[[str, str], float],
+    ) -> tuple[list[str], dict[str, float] | None, list[str] | None]:
+        """Run the frozen greedy ranking over precomputed exact MI values."""
+
+        relevance = {name: float(relevance[name]) for name in candidate_order}
         self.relevance_ = dict(relevance)
 
         steps = len(candidate_order) if self.k is None else min(int(self.k), len(candidate_order))
@@ -254,7 +356,7 @@ class MutualInformationMRMRSelector(LightweightSelector):
             best_key: tuple[float, str] | None = None
             best_parts: tuple[float, float] = (0.0, 0.0)
             for name in remaining:
-                redundancy = sum(self._pair_mi(name, chosen) for chosen in selected) / len(
+                redundancy = sum(pair_mi(name, chosen) for chosen in selected) / len(
                     selected
                 )
                 if self.objective == "mid":

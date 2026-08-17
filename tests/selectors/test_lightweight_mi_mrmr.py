@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,6 +14,9 @@ from credit_risk_fs.selectors.lightweight.mi_mrmr import (
     MISSING_CODE,
     MutualInformationMRMRSelector,
     _discretize_column,
+)
+from credit_risk_fs.selectors.lightweight.mrmr_compact_cache import (
+    CompactMRMRCheckpointError,
 )
 from credit_risk_fs.selectors.mrmr import RandomForestRelevanceMRMRSelector
 
@@ -139,6 +145,109 @@ def test_categorical_codes_do_not_depend_on_row_order() -> None:
     # sorted level names rather than from first appearance.
     assert forward[1] == backward[1]
     assert forward[0] == backward[2]
+
+
+def test_compact_disk_checkpoints_are_exact_restartable_and_authenticated(
+    tmp_path: Path,
+) -> None:
+    generator = np.random.default_rng(20260817)
+    rows = 257
+    latent = generator.normal(size=rows).astype("float32")
+    frame = pd.DataFrame(
+        {
+            "signal": latent,
+            "duplicate": latent.copy(),
+            "weak": (latent + generator.normal(scale=2.0, size=rows)).astype(
+                "float32"
+            ),
+            "missing": np.where(
+                np.arange(rows) % 7 == 0, np.nan, latent * 0.25
+            ).astype("float32"),
+            "nonfinite": np.where(
+                np.arange(rows) % 11 == 0, np.inf, -latent
+            ).astype("float32"),
+            "noise": generator.normal(size=rows).astype("float32"),
+        }
+    )
+    target = pd.Series(
+        (latent + generator.normal(scale=0.65, size=rows) > 0).astype("int64")
+    )
+    legacy = MutualInformationMRMRSelector(k=5, n_bins=10).fit(frame, target)
+    identity = {
+        "fixture": "representative_numeric_float32_with_missing_nonfinite_v1",
+        "rows": rows,
+        "features": list(frame.columns),
+    }
+    root = tmp_path / "compact"
+    cached = MutualInformationMRMRSelector(k=5, n_bins=10)
+    cached.configure_execution_cache(
+        root,
+        execution_identity=identity,
+        feature_batch_size=2,
+    ).fit(frame, target)
+
+    assert cached.result.selected_features == legacy.result.selected_features
+    assert cached.result.ranking == legacy.result.ranking
+    assert cached.result.raw_scores == legacy.result.raw_scores
+    assert cached.result.configuration == legacy.result.configuration
+    assert cached.relevance_ == legacy.relevance_
+    pd.testing.assert_frame_equal(
+        cached.selection_trace_, legacy.selection_trace_, check_exact=True
+    )
+    summary = cached.execution_checkpoint_summary_
+    assert summary["storage_dtype"] == "int8"
+    assert summary["row_count"] == rows
+    assert summary["candidate_count"] == len(frame.columns)
+    assert summary["scientific_semantics_changed"] is False
+
+    first_batch = np.load(
+        root / "code_batches" / "batch_001" / "codes.npy",
+        mmap_mode="r",
+        allow_pickle=False,
+    )
+    try:
+        assert first_batch.dtype == np.dtype("int8")
+        assert np.array_equal(
+            first_batch[0].astype("int64"),
+            _discretize_column(frame["signal"], 10),
+        )
+        assert np.array_equal(
+            first_batch[1].astype("int64"),
+            _discretize_column(frame["duplicate"], 10),
+        )
+    finally:
+        first_batch._mmap.close()
+
+    manifests_before = {
+        path.relative_to(root).as_posix(): path.stat().st_mtime_ns
+        for path in root.rglob("manifest.json")
+    }
+    resumed = MutualInformationMRMRSelector(k=5, n_bins=10)
+    resumed.configure_execution_cache(
+        root,
+        execution_identity=identity,
+        feature_batch_size=2,
+    ).fit(frame, target)
+    manifests_after = {
+        path.relative_to(root).as_posix(): path.stat().st_mtime_ns
+        for path in root.rglob("manifest.json")
+    }
+    assert resumed.result.selected_features == legacy.result.selected_features
+    assert resumed.result.raw_scores == legacy.result.raw_scores
+    assert manifests_after == manifests_before
+
+    relevance_manifest = root / "mi" / "relevance" / "manifest.json"
+    manifest = json.loads(relevance_manifest.read_text(encoding="utf-8"))
+    manifest["identity"]["shape"] = [999]
+    relevance_manifest.write_text(json.dumps(manifest), encoding="utf-8")
+    rejected = MutualInformationMRMRSelector(k=5, n_bins=10)
+    rejected.configure_execution_cache(
+        root,
+        execution_identity=identity,
+        feature_batch_size=2,
+    )
+    with pytest.raises(CompactMRMRCheckpointError, match="marker changed"):
+        rejected.fit(frame, target)
 
 
 def test_objective_choice_is_recorded_and_validated(signal_fixture) -> None:

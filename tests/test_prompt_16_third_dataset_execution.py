@@ -294,6 +294,7 @@ def test_selector_memmap_cache_reopens_without_dense_copy(tmp_path: Path):
         prompt16._close_selector_memmap(mapping)
         gc.collect()
 
+
     successor_identity = {
         **identity,
         "execution_authorization_sha256": "5" * 64,
@@ -338,6 +339,55 @@ def test_selector_memmap_cache_reopens_without_dense_copy(tmp_path: Path):
         del frame
         prompt16._close_selector_memmap(mapping)
         gc.collect()
+
+
+def test_phase_fit_plumbing_uses_compact_mrmr_without_changing_result(
+    tmp_path: Path,
+) -> None:
+    payload = json.loads(LOCK.read_text(encoding="utf-8"))
+    matrix = payload["approved_protocol"]["method_and_evaluation_matrix"]
+    fit = next(
+        value
+        for value in selection_fit_registry(matrix)
+        if value["fit_id"] == "fit_007"
+    )
+    generator = np.random.default_rng(1607)
+    rows = 241
+    latent = generator.normal(size=rows).astype("float32")
+    frame = pd.DataFrame(
+        {
+            "a": latent,
+            "b": latent.copy(),
+            "c": generator.normal(size=rows).astype("float32"),
+            "d": (latent + generator.normal(size=rows)).astype("float32"),
+        }
+    )
+    target = pd.Series((latent > 0).astype("int64"))
+    expected_selected, expected_result = prompt16._fit_one_selection(
+        fit=fit,
+        matrix=matrix,
+        numeric_train=frame,
+        y_train=target,
+        fit_scope="full_dev_only",
+    )
+    observed_selected, observed_result = prompt16._fit_one_selection(
+        fit=fit,
+        matrix=matrix,
+        numeric_train=frame,
+        y_train=target,
+        fit_scope="full_dev_only",
+        mrmr_checkpoint_root=tmp_path / "compact",
+        mrmr_execution_identity={"fixture": "phase_plumbing_v1"},
+    )
+    assert observed_selected == expected_selected
+    for key, expected in expected_result.items():
+        if key in {"fit_seconds", "execution_checkpoint"}:
+            continue
+        assert observed_result[key] == expected
+    checkpoint = observed_result["execution_checkpoint"]
+    assert checkpoint["candidate_count"] == 4
+    assert checkpoint["row_count"] == rows
+    assert checkpoint["storage_dtype"] == "int8"
 
 
 def test_all_frozen_selectors_map_to_canonical_wall_clock_stages():
