@@ -1,0 +1,96 @@
+{
+  "schema_version": "prompt_16_final_oot_psi_performance_validation_v5",
+  "status": "validated_exact_equivalence",
+  "implementation_commit": "bdd91046c896db0acf005952bf63fd2ff5ef441b",
+  "created_at_utc": "2026-08-17T20:20:35.438706+00:00",
+  "scientific_semantics_changed": false,
+  "categorical_equivalence_fixtures": [
+    {
+      "fixture": "object_categories",
+      "psi": 5.436946802662526,
+      "distribution_rows": 4,
+      "exact_frame_match": true,
+      "exact_float_match": true
+    },
+    {
+      "fixture": "nullable_integer",
+      "psi": 5.436946802662526,
+      "distribution_rows": 4,
+      "exact_frame_match": true,
+      "exact_float_match": true
+    },
+    {
+      "fixture": "nullable_boolean",
+      "psi": 0.34657259028297277,
+      "distribution_rows": 4,
+      "exact_frame_match": true,
+      "exact_float_match": true
+    },
+    {
+      "fixture": "constant_float",
+      "psi": 7.1104874997054415,
+      "distribution_rows": 3,
+      "exact_frame_match": true,
+      "exact_float_match": true
+    }
+  ],
+  "parallel_equivalence": {
+    "feature_count": 16,
+    "dev_rows": 20000,
+    "oot_rows": 5000,
+    "parallel_worker_count": 14,
+    "serial_seconds": 0.15015120001044124,
+    "parallel_seconds": 0.14037029998144135,
+    "ordered_records_exact_match": true
+  },
+  "pathological_full_shape_fixture": {
+    "dev_rows": 1221743,
+    "oot_rows": 304916,
+    "unseen_oot_level_count": 136290,
+    "elapsed_seconds": 0.32427919999463484,
+    "psi": 27.631023115927544,
+    "all_rows_assigned": true
+  },
+  "parallel_worker_count": 14,
+  "completed_selection_fit_count": 27,
+  "completed_selection_fit_ids": [
+    "fit_001",
+    "fit_002",
+    "fit_003",
+    "fit_004",
+    "fit_005",
+    "fit_006",
+    "fit_007",
+    "fit_008",
+    "fit_009",
+    "fit_010",
+    "fit_011",
+    "fit_012",
+    "fit_013",
+    "fit_014",
+    "fit_015",
+    "fit_016",
+    "fit_017",
+    "fit_018",
+    "fit_019",
+    "fit_020",
+    "fit_021",
+    "fit_022",
+    "fit_023",
+    "fit_024",
+    "fit_025",
+    "fit_026",
+    "fit_027"
+  ],
+  "sealed_psi_batches": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "first_incomplete_psi_batch": 5,
+  "authenticated_predecessor_artifact_count": 124,
+  "oot_workload_executed": false,
+  "rows_sampled_or_removed": 0,
+  "features_removed": 0
+}
