@@ -7,6 +7,7 @@ third-dataset lock; the execution plan supplies only paths and resource limits.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import date, datetime, timezone
 import gc
@@ -89,6 +90,8 @@ SELECTOR_MEMMAP_MEMORY_STRATEGY = (
     "feature_split_disk_backed_fortran_float32_memmap_v1"
 )
 MRMR_COMPACT_CACHE_ROOT_NAME = "classical_mrmr_compact_v4"
+FEATURE_PSI_CPU_RESERVE = 2
+FEATURE_PSI_MAX_WORKERS = max(1, (os.cpu_count() or 1) - FEATURE_PSI_CPU_RESERVE)
 
 
 class Prompt16ExecutionError(RuntimeError):
@@ -953,6 +956,7 @@ def _load_sealed(
     identity: Mapping[str, Any],
     *,
     authorized_predecessor_authorization_sha256: str | None = None,
+    authorized_predecessor_authorization_sha256s: Sequence[str] = (),
 ) -> dict[str, Any] | None:
     if not (path / "_SUCCESS").is_file():
         return None
@@ -964,23 +968,34 @@ def _load_sealed(
     observed_identity = manifest.get("identity")
     expected_identity = dict(identity)
     if observed_identity != expected_identity:
-        predecessor_identity = dict(expected_identity)
-        predecessor_identity["execution_authorization_sha256"] = (
-            authorized_predecessor_authorization_sha256
+        authorized_predecessors = {
+            str(value)
+            for value in (
+                authorized_predecessor_authorization_sha256,
+                *authorized_predecessor_authorization_sha256s,
+            )
+            if value is not None
+        }
+        matched_predecessor = next(
+            (
+                value
+                for value in sorted(authorized_predecessors)
+                if observed_identity
+                == {
+                    **expected_identity,
+                    "execution_authorization_sha256": value,
+                }
+            ),
+            None,
         )
-        if (
-            authorized_predecessor_authorization_sha256 is None
-            or observed_identity != predecessor_identity
-        ):
+        if matched_predecessor is None:
             raise Prompt16ExecutionError(f"completed artifact identity mismatch: {path}")
         manifest = {
             **manifest,
             "checkpoint_reauthenticated_for_authorization_sha256": expected_identity.get(
                 "execution_authorization_sha256"
             ),
-            "checkpoint_original_authorization_sha256": (
-                authorized_predecessor_authorization_sha256
-            ),
+            "checkpoint_original_authorization_sha256": matched_predecessor,
         }
     for item in manifest.get("artifacts", []):
         artifact = path / str(item["path"])
@@ -989,6 +1004,71 @@ def _load_sealed(
         if file_sha256(artifact) != item["sha256"]:
             raise Prompt16ExecutionError(f"completed artifact digest mismatch: {artifact}")
     return manifest
+
+
+def _identity_matches_authorized_predecessor(
+    observed_identity: Mapping[str, Any],
+    expected_identity: Mapping[str, Any],
+    authorized_predecessor_authorization_sha256s: Sequence[str],
+) -> bool:
+    """Return whether only the explicitly authorized run identity differs."""
+
+    expected = dict(expected_identity)
+    return any(
+        dict(observed_identity)
+        == {**expected, "execution_authorization_sha256": str(predecessor)}
+        for predecessor in authorized_predecessor_authorization_sha256s
+    )
+
+
+def _calculate_feature_psi_batch(
+    *,
+    train_batch: pd.DataFrame,
+    validation_batch: pd.DataFrame,
+    predictors: Sequence[str],
+    stop_event: Any = None,
+    max_workers: int | None = None,
+) -> list[dict[str, Any]]:
+    """Calculate one PSI batch concurrently without copying its source frames."""
+
+    from credit_risk_fs.analysis.voting_inference.psi import feature_psi_record
+
+    ordered_predictors = list(predictors)
+    if not ordered_predictors:
+        return []
+    missing_train = [name for name in ordered_predictors if name not in train_batch]
+    missing_validation = [
+        name for name in ordered_predictors if name not in validation_batch
+    ]
+    if missing_train or missing_validation:
+        raise Prompt16ExecutionError(
+            "PSI batch projection is incomplete: "
+            f"missing_train={missing_train}, missing_validation={missing_validation}"
+        )
+    worker_count = min(
+        len(ordered_predictors),
+        FEATURE_PSI_MAX_WORKERS if max_workers is None else max(1, int(max_workers)),
+    )
+
+    def calculate(feature: str) -> dict[str, Any]:
+        _check_stop(stop_event)
+        record, _ = feature_psi_record(
+            feature=feature,
+            dev_values=train_batch[feature],
+            oot_values=validation_batch[feature],
+        )
+        return record
+
+    executor = ThreadPoolExecutor(
+        max_workers=worker_count,
+        thread_name_prefix="prompt16-feature-psi",
+    )
+    try:
+        # Executor.map yields in input order, preserving the frozen predictor
+        # ordering regardless of individual feature completion order.
+        return list(executor.map(calculate, ordered_predictors))
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
 
 
 def _fit_identity(
@@ -1494,6 +1574,7 @@ def run_phase_worker(
     mrmr_checkpoint_root: str | None = None,
     mrmr_checkpoint_identity_sha256: str | None = None,
     authorized_predecessor_authorization_sha256: str | None = None,
+    authorized_output_predecessor_authorization_sha256s: Sequence[str] = (),
     authorized_selector_memmap_predecessor_sha256: str | None = None,
     expected_resume_fit_id: str | None = None,
     inherited_resource_infeasible_fit_ids: Sequence[str] = (),
@@ -1548,6 +1629,7 @@ def run_phase_worker(
             mrmr_checkpoint_root is not None,
             mrmr_checkpoint_identity_sha256 is not None,
             authorized_predecessor_authorization_sha256 is not None,
+            bool(authorized_output_predecessor_authorization_sha256s),
             authorized_selector_memmap_predecessor_sha256 is not None,
             expected_resume_fit_id is not None,
             bool(inherited_resource_infeasible_fit_ids),
@@ -1703,6 +1785,9 @@ def run_phase_worker(
             identity,
             authorized_predecessor_authorization_sha256=(
                 authorized_predecessor_authorization_sha256
+            ),
+            authorized_predecessor_authorization_sha256s=(
+                authorized_output_predecessor_authorization_sha256s
             ),
         )
         if sealed is None:
@@ -1926,6 +2011,9 @@ def run_phase_worker(
             authorized_predecessor_authorization_sha256=(
                 authorized_predecessor_authorization_sha256
             ),
+            authorized_predecessor_authorization_sha256s=(
+                authorized_output_predecessor_authorization_sha256s
+            ),
         ) is not None:
             continue
         if numeric_train is None or selection_target is None:
@@ -2017,8 +2105,6 @@ def run_phase_worker(
 
     feature_psi_manifest_sha: str | None = None
     if phase == "oot":
-        from credit_risk_fs.analysis.voting_inference.psi import feature_psi_record
-
         feature_psi_path = phase_root / "feature_psi"
         feature_psi_identity = {
             "operation": "full_dev_to_oot_source_feature_psi",
@@ -2032,7 +2118,16 @@ def run_phase_worker(
         if _load_sealed(feature_psi_path, feature_psi_identity) is None:
             identity_path = feature_psi_path / "checkpoint_identity.json"
             if feature_psi_path.exists():
-                if not identity_path.is_file() or _json(identity_path) != feature_psi_identity:
+                observed_feature_psi_identity = (
+                    _json(identity_path) if identity_path.is_file() else {}
+                )
+                if observed_feature_psi_identity != feature_psi_identity and not (
+                    _identity_matches_authorized_predecessor(
+                        observed_feature_psi_identity,
+                        feature_psi_identity,
+                        authorized_output_predecessor_authorization_sha256s,
+                    )
+                ):
                     _archive_incomplete(feature_psi_path, archive_root)
             if not feature_psi_path.exists():
                 feature_psi_path.mkdir(parents=True, exist_ok=False)
@@ -2065,7 +2160,13 @@ def run_phase_worker(
                         batch_predictors
                     ),
                 }
-                if _load_sealed(batch_path, batch_identity) is None:
+                if _load_sealed(
+                    batch_path,
+                    batch_identity,
+                    authorized_predecessor_authorization_sha256s=(
+                        authorized_output_predecessor_authorization_sha256s
+                    ),
+                ) is None:
                     _archive_incomplete(batch_path, archive_root)
                     batch_path.mkdir(parents=True, exist_ok=False)
                     wait_for_ram_ready(
@@ -2097,14 +2198,27 @@ def run_phase_worker(
                         stage_queue=stage_queue,
                         ram_ready_event=ram_ready_event,
                     )
-                    batch_rows: list[dict[str, Any]] = []
-                    for feature in batch_predictors:
-                        record, _ = feature_psi_record(
-                            feature=feature,
-                            dev_values=train_batch[feature],
-                            oot_values=validation_batch[feature],
-                        )
-                        batch_rows.append(record)
+                    psi_worker_count = min(
+                        FEATURE_PSI_MAX_WORKERS, len(batch_predictors)
+                    )
+                    _publish_stage(
+                        stage_queue,
+                        "feature_psi_batch_calculation",
+                        f"oot:feature_psi_batch_{batch_index:03d}",
+                        component="full_dev_to_oot_source_feature_psi",
+                        operation="parallel_feature_psi",
+                        batch_index=batch_index,
+                        batch_count=(len(predictors) + batch_size - 1) // batch_size,
+                        feature_count=len(batch_predictors),
+                        worker_count=psi_worker_count,
+                    )
+                    batch_rows = _calculate_feature_psi_batch(
+                        train_batch=train_batch,
+                        validation_batch=validation_batch,
+                        predictors=batch_predictors,
+                        stop_event=stop_event,
+                        max_workers=psi_worker_count,
+                    )
                     write_parquet_atomic(
                         batch_path / "feature_psi.parquet",
                         pd.DataFrame(batch_rows),
@@ -2441,6 +2555,7 @@ def free_disk_bytes(path: str | Path) -> int:
 
 
 __all__ = [
+    "FEATURE_PSI_MAX_WORKERS",
     "PLAN_SCHEMA_VERSION",
     "Prompt16ExecutionError",
     "acquire_execution_lock",

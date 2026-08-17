@@ -147,15 +147,19 @@ def _numeric_type_aware_psi(
 def _categorical_type_aware_psi(
     dev_values: pd.Series, oot_values: pd.Series
 ) -> tuple[float, pd.DataFrame, dict[str, Any]]:
-    dev_series = dev_values.astype("object").map(
-        lambda value: MISSING_STATE if pd.isna(value) else str(value)
-    )
-    oot_series = oot_values.astype("object").map(
-        lambda value: MISSING_STATE if pd.isna(value) else str(value)
-    )
-    dev_levels = sorted(set(dev_series.unique()))
-    unseen = sorted(set(oot_series.unique()) - set(dev_levels))
-    oot_series = oot_series.map(lambda value: UNSEEN_STATE if value in set(unseen) else value)
+    dev_series = _categorical_state_series(dev_values)
+    oot_series = _categorical_state_series(oot_values)
+    dev_level_set = set(dev_series.unique())
+    dev_levels = sorted(dev_level_set)
+    unseen = set(oot_series.unique()) - dev_level_set
+    if unseen:
+        # The former row lambda constructed ``set(unseen)`` afresh for every
+        # OOT observation.  On a temporally introduced feature with 136k OOT
+        # levels that turned a single membership pass into tens of billions of
+        # repeated set insertions.  Membership in the DEV set is the exact
+        # complement after canonicalization and pandas performs it once in a
+        # vectorized hash-table pass.
+        oot_series = oot_series.mask(~oot_series.isin(dev_level_set), UNSEEN_STATE)
     states = [*dev_levels, UNSEEN_STATE]
     frame, psi = _share_table(dev_series, oot_series, states)
     definition = {
@@ -169,6 +173,23 @@ def _categorical_type_aware_psi(
         "smoothing_epsilon": FEATURE_PSI_EPSILON,
     }
     return psi, frame, definition
+
+
+def _categorical_state_series(values: pd.Series) -> pd.Series:
+    """Canonicalize source values with the frozen categorical PSI semantics.
+
+    ``astype(str)`` applies the same Python string representation used by the
+    former element-wise lambda for the matrix's supported scalar dtypes.  The
+    missing mask is captured first so every missing scalar is still replaced
+    by the explicit frozen state rather than its textual representation.
+    """
+
+    object_values = values.astype("object")
+    missing = pd.isna(object_values)
+    states = object_values.astype(str)
+    if bool(missing.any()):
+        states = states.mask(missing, MISSING_STATE)
+    return states
 
 
 def _share_table(

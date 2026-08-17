@@ -247,6 +247,76 @@ def test_sealed_selector_checkpoint_accepts_only_authorized_predecessor_identity
         )
 
 
+def test_sealed_checkpoint_accepts_one_of_multiple_authorized_predecessors(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "batch_004"
+    checkpoint.mkdir()
+    prompt16.write_json_atomic(
+        checkpoint / "feature_psi.parquet",
+        {"fixture": True},
+        overwrite=False,
+    )
+    predecessor_sha = "4" * 64
+    current_sha = "5" * 64
+    predecessor_identity = {
+        "operation": "full_dev_to_oot_source_feature_psi",
+        "batch_index": 4,
+        "execution_authorization_sha256": predecessor_sha,
+    }
+    prompt16._seal_directory(checkpoint, predecessor_identity)
+    current_identity = {
+        **predecessor_identity,
+        "execution_authorization_sha256": current_sha,
+    }
+    loaded = prompt16._load_sealed(
+        checkpoint,
+        current_identity,
+        authorized_predecessor_authorization_sha256="3" * 64,
+        authorized_predecessor_authorization_sha256s=(
+            "2" * 64,
+            predecessor_sha,
+        ),
+    )
+    assert loaded is not None
+    assert loaded["checkpoint_original_authorization_sha256"] == predecessor_sha
+    assert loaded["checkpoint_reauthenticated_for_authorization_sha256"] == current_sha
+
+
+def test_feature_psi_batch_uses_multiple_threads_and_preserves_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import threading
+    import time
+
+    predictors = [f"f_{index:02d}" for index in range(32)]
+    train = pd.DataFrame({name: [1, 2, 3] for name in predictors})
+    validation = pd.DataFrame({name: [2, 3] for name in predictors})
+    thread_ids: set[int] = set()
+    lock = threading.Lock()
+
+    def observed_record(*, feature, dev_values, oot_values):
+        assert len(dev_values) == 3
+        assert len(oot_values) == 2
+        with lock:
+            thread_ids.add(threading.get_ident())
+        time.sleep(0.01)
+        return {"feature": feature}, pd.DataFrame()
+
+    monkeypatch.setattr(
+        "credit_risk_fs.analysis.voting_inference.psi.feature_psi_record",
+        observed_record,
+    )
+    rows = prompt16._calculate_feature_psi_batch(
+        train_batch=train,
+        validation_batch=validation,
+        predictors=predictors,
+        max_workers=8,
+    )
+    assert [row["feature"] for row in rows] == predictors
+    assert len(thread_ids) >= 4
+
+
 def test_selector_memmap_cache_reopens_without_dense_copy(tmp_path: Path):
     original = pd.DataFrame(
         {
