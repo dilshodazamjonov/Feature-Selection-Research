@@ -58,6 +58,14 @@ from credit_risk_fs.selectors.combinations import (
     StatisticalNormalizedAverageRankSelector,
 )
 from credit_risk_fs.selectors.lightweight.registry import get_method_descriptor
+from credit_risk_fs.selectors.lightweight.mi_mrmr import (
+    MutualInformationMRMRSelector,
+)
+from credit_risk_fs.selectors.lightweight.mrmr_compact_cache import (
+    COMPACT_MRMR_CACHE_SCHEMA_VERSION,
+    COMPACT_MRMR_MEMORY_STRATEGY,
+    DEFAULT_FEATURE_BATCH_SIZE,
+)
 
 
 SCHEMA_VERSION = "prompt_16_third_dataset_execution_v1"
@@ -80,6 +88,7 @@ SELECTOR_MEMMAP_FEATURE_SPLIT_SIZE = 64
 SELECTOR_MEMMAP_MEMORY_STRATEGY = (
     "feature_split_disk_backed_fortran_float32_memmap_v1"
 )
+MRMR_COMPACT_CACHE_ROOT_NAME = "classical_mrmr_compact_v4"
 
 
 class Prompt16ExecutionError(RuntimeError):
@@ -696,6 +705,47 @@ def _selector_memmap_identity(
     }
 
 
+def _mrmr_compact_execution_identity(
+    *,
+    checkpoint_authorization_identity_sha256: str,
+    matrix_manifest_sha256: str,
+    expected_observed: Mapping[str, Any],
+    predictors: Sequence[str],
+    selector_cache_metadata: Mapping[str, Any],
+    selector_settings: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Bind execution checkpoints to the frozen data, method, and source array."""
+
+    artifact = dict(selector_cache_metadata.get("artifact", {}))
+    if not artifact.get("sha256") or int(artifact.get("byte_size", -1)) <= 0:
+        raise Prompt16ExecutionError(
+            "mRMR compact checkpoints require an authenticated selector source"
+        )
+    return {
+        "schema_version": COMPACT_MRMR_CACHE_SCHEMA_VERSION,
+        "checkpoint_authorization_identity_sha256": (
+            checkpoint_authorization_identity_sha256
+        ),
+        "matrix_manifest_sha256": matrix_manifest_sha256,
+        "full_dev_scope_sha256": canonical_sha256(dict(expected_observed)),
+        "ordered_predictor_sha256": canonical_sha256(list(predictors)),
+        "row_count": int(expected_observed["rows"]),
+        "column_count": len(predictors),
+        "selector_source_artifact_sha256": str(artifact["sha256"]),
+        "selector_source_artifact_byte_size": int(artifact["byte_size"]),
+        "selector_source_identity_sha256": canonical_sha256(
+            dict(selector_cache_metadata.get("identity", {}))
+        ),
+        "implementation_id": (
+            MutualInformationMRMRSelector.implementation_id
+        ),
+        "selector_settings": dict(selector_settings),
+        "missing_code": -1,
+        "memory_strategy": COMPACT_MRMR_MEMORY_STRATEGY,
+        "scientific_semantics_changed": False,
+    }
+
+
 def _close_selector_memmap(mapping: np.memmap | None) -> None:
     if mapping is None:
         return
@@ -1237,11 +1287,26 @@ def _fit_one_selection(
     numeric_train: pd.DataFrame,
     y_train: pd.Series,
     fit_scope: str,
+    mrmr_checkpoint_root: str | Path | None = None,
+    mrmr_execution_identity: Mapping[str, Any] | None = None,
+    mrmr_progress_callback: Any = None,
 ) -> tuple[list[str], dict[str, Any]]:
     if fit["family"] == "canonical_baseline":
         selector = _baseline_selector(fit, matrix, fit_scope)
     else:
         selector = _combination_selector(fit, matrix, fit_scope)
+    if isinstance(selector, MutualInformationMRMRSelector):
+        if (mrmr_checkpoint_root is None) != (mrmr_execution_identity is None):
+            raise Prompt16ExecutionError(
+                "mRMR compact checkpoint root and identity must be supplied together"
+            )
+        if mrmr_checkpoint_root is not None:
+            selector.configure_execution_cache(
+                mrmr_checkpoint_root,
+                execution_identity=dict(mrmr_execution_identity or {}),
+                feature_batch_size=DEFAULT_FEATURE_BATCH_SIZE,
+                progress_callback=mrmr_progress_callback,
+            )
     selector.fit(numeric_train, y_train)
     selected = list(get_selected_features(selector) or [])
     if len(selected) != len(set(selected)):
@@ -1249,6 +1314,11 @@ def _fit_one_selection(
     if not set(selected).issubset(set(numeric_train.columns)):
         raise Prompt16ExecutionError(f"selector escaped candidate universe: {fit['fit_id']}")
     payload = _selection_result_payload(selector)
+    execution_checkpoint = getattr(
+        selector, "execution_checkpoint_summary_", None
+    )
+    if execution_checkpoint is not None:
+        payload["execution_checkpoint"] = dict(execution_checkpoint)
     del selector
     gc.collect()
     return selected, payload
@@ -1421,6 +1491,8 @@ def run_phase_worker(
     full_dev_training_ks_threshold: bool = False,
     memory_bounded_oot: bool = False,
     selector_memmap_root: str | None = None,
+    mrmr_checkpoint_root: str | None = None,
+    mrmr_checkpoint_identity_sha256: str | None = None,
     authorized_predecessor_authorization_sha256: str | None = None,
     authorized_selector_memmap_predecessor_sha256: str | None = None,
     expected_resume_fit_id: str | None = None,
@@ -1458,6 +1530,14 @@ def run_phase_worker(
             raise Prompt16ExecutionError(
                 "final OOT requires the authorized selector memmap root"
             )
+        if not mrmr_checkpoint_root:
+            raise Prompt16ExecutionError(
+                "final OOT requires the authorized compact mRMR checkpoint root"
+            )
+        if not mrmr_checkpoint_identity_sha256:
+            raise Prompt16ExecutionError(
+                "final OOT requires the authorized compact mRMR identity"
+            )
     elif any(
         (
             execution_authorization_sha256 is not None,
@@ -1465,6 +1545,8 @@ def run_phase_worker(
             full_dev_training_ks_threshold,
             memory_bounded_oot,
             selector_memmap_root is not None,
+            mrmr_checkpoint_root is not None,
+            mrmr_checkpoint_identity_sha256 is not None,
             authorized_predecessor_authorization_sha256 is not None,
             authorized_selector_memmap_predecessor_sha256 is not None,
             expected_resume_fit_id is not None,
@@ -1666,6 +1748,7 @@ def run_phase_worker(
 
     numeric_train: pd.DataFrame | None = None
     numeric_train_mapping: np.memmap | None = None
+    mrmr_execution_identity: dict[str, Any] | None = None
     encoding_path = phase_root / "selector_encoding.json"
     encoding_record: dict[str, Any] | None = (
         _json(encoding_path) if encoding_path.is_file() else None
@@ -1764,6 +1847,23 @@ def run_phase_worker(
                 )
         if list(numeric_train.columns) != predictors:
             raise Prompt16ExecutionError("selector encoding changed candidate order")
+        if phase == "oot":
+            if cache_metadata is None:
+                raise Prompt16ExecutionError(
+                    "compact mRMR identity lacks selector cache authentication"
+                )
+            mrmr_execution_identity = _mrmr_compact_execution_identity(
+                checkpoint_authorization_identity_sha256=str(
+                    mrmr_checkpoint_identity_sha256
+                ),
+                matrix_manifest_sha256=matrix_manifest_sha,
+                expected_observed=scope_auth["train"]["observed"],
+                predictors=predictors,
+                selector_cache_metadata=cache_metadata,
+                selector_settings=matrix["selector_settings"][
+                    "mrmr_mutual_information"
+                ],
+            )
         encoding_record = {
             "implementation": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
             "memory_strategy": (
@@ -1848,6 +1948,10 @@ def run_phase_worker(
                 numeric_train=numeric_train,
                 y_train=selection_target,
                 fit_scope=fit_scope,
+                mrmr_checkpoint_root=(
+                    mrmr_checkpoint_root if phase == "oot" else None
+                ),
+                mrmr_execution_identity=mrmr_execution_identity,
             )
             status = "complete" if selected else "infeasible_natural_support"
             evidence = {

@@ -116,6 +116,9 @@ ENCODING_AMENDMENT_RELATIVE_ROOT = Path(
 RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_oot_resource_policy_amendment_v3"
 )
+MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_final_oot_mrmr_compact_amendment_v4"
+)
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
 )
@@ -192,6 +195,12 @@ ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
 RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY = (
     "identity_first_selector_memmap_and_high_memory_guardrails_v3"
 )
+RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256 = (
+    "753c545059c6b4cb8cfcf1f057b091a25eaf544ea48bf187e8f087ad70d45fad"
+)
+MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY = (
+    "identity_first_batched_compact_mrmr_checkpoints_v4"
+)
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
 )
@@ -208,6 +217,82 @@ INHERITED_RESOURCE_INFEASIBLE_FIT_IDS = (
     "fit_027",
 )
 INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS = (1, 2)
+MRMR_COMPACT_IMPLEMENTATION_RELATIVE_PATHS = (
+    Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+    Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+    Path("src/credit_risk_fs/selectors/lightweight/mi_mrmr.py"),
+    Path("src/credit_risk_fs/selectors/lightweight/mrmr_compact_cache.py"),
+    Path("scripts/validate_prompt_16_mrmr_compact.py"),
+)
+
+
+def mrmr_compact_implementation_identity(
+    repository_root: str | Path = PROJECT_ROOT,
+) -> str:
+    root = Path(repository_root).resolve()
+    rows = []
+    for relative in MRMR_COMPACT_IMPLEMENTATION_RELATIVE_PATHS:
+        path = root / relative
+        if not path.is_file():
+            raise Prompt16ExecutionError(
+                f"compact mRMR implementation file is missing: {relative}"
+            )
+        rows.append(
+            {
+                "path": relative.as_posix(),
+                "byte_size": int(path.stat().st_size),
+                "sha256": file_sha256(path),
+            }
+        )
+    return canonical_sha256(rows)
+
+
+def mrmr_compact_checkpoint_authorization_identity(
+    *,
+    implementation_identity_sha256: str,
+    matrix_manifest_sha256: str,
+    full_dev_observed: Mapping[str, Any],
+    predictors: Sequence[str],
+    selector_cache_metadata: Mapping[str, Any],
+    selector_settings: Mapping[str, Any],
+) -> str:
+    """Return the stable identity shared by validation and authorized resume."""
+
+    artifact = dict(selector_cache_metadata.get("artifact", {}))
+    payload = {
+        "schema_version": "prompt_16_mrmr_compact_authorization_identity_v1",
+        "implementation_identity_sha256": str(
+            implementation_identity_sha256
+        ),
+        "matrix_manifest_sha256": str(matrix_manifest_sha256),
+        "full_dev_scope_sha256": canonical_sha256(dict(full_dev_observed)),
+        "full_dev_row_count": int(full_dev_observed["rows"]),
+        "ordered_predictor_sha256": canonical_sha256(list(predictors)),
+        "predictor_count": len(predictors),
+        "selector_source_artifact_sha256": str(artifact.get("sha256", "")),
+        "selector_source_artifact_byte_size": int(
+            artifact.get("byte_size", -1)
+        ),
+        "mrmr_implementation_id": (
+            "mrmr_mutual_information_discrete_plugin_v1"
+        ),
+        "selector_settings": dict(selector_settings),
+        "missing_code": -1,
+        "compact_code_dtype": "int8",
+        "feature_batch_size": 32,
+        "mi_estimator": "sklearn.metrics.mutual_info_score",
+        "scientific_semantics_changed": False,
+    }
+    if (
+        payload["full_dev_row_count"] != 1_221_743
+        or payload["predictor_count"] != 1_959
+        or not payload["selector_source_artifact_sha256"]
+        or payload["selector_source_artifact_byte_size"] <= 0
+    ):
+        raise Prompt16ExecutionError(
+            "compact mRMR authorization identity invariants changed"
+        )
+    return canonical_sha256(payload)
 
 
 def _utc_now() -> str:
@@ -3547,6 +3632,480 @@ reuse, so execution continues at `fit_008` without changing scientific methods.
     }
 
 
+def _authenticate_compact_mrmr_validation(
+    root: Path,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    audit_root = root / MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT
+    report_path = audit_root / "full_fit_007_equivalence.json"
+    marker_path = audit_root / "_VALIDATION_SUCCESS"
+    marker = _read_json(marker_path)
+    if marker.get("report_sha256") != file_sha256(report_path):
+        raise Prompt16ExecutionError("full fit_007 validation marker changed")
+    report = _read_json(report_path)
+    if (
+        report.get("status") != "exact_equivalence_confirmed"
+        or report.get("implementation_identity_sha256")
+        != mrmr_compact_implementation_identity(root)
+        or report.get("scope", {}).get("rows") != 1_221_743
+        or report.get("scope", {}).get("candidate_features") != 1_959
+        or report.get("scope", {}).get("locked_oot_rows_loaded") != 0
+        or report.get("scope", {}).get("locked_oot_outcomes_inspected") is not False
+        or report.get("resume", {}).get("expected_next_fit_id") != "fit_008"
+        or report.get("resume", {}).get("identical_command_resume_verified") is not True
+    ):
+        raise Prompt16ExecutionError("full fit_007 validation invariants changed")
+    comparison = report.get("fit_007_comparison", {})
+    for key in (
+        "selected_features_identical",
+        "ranking_identical",
+        "raw_scores_identical",
+        "configuration_identical",
+        "training_identity_identical",
+    ):
+        if comparison.get(key) is not True:
+            raise Prompt16ExecutionError(
+                f"full fit_007 validation failed equivalence gate: {key}"
+            )
+
+    cache = root / TEMP_RELATIVE_ROOT / "classical_mrmr_compact_v4"
+    success = _read_json(cache / "_SUCCESS")
+    manifest_path = cache / "manifest.json"
+    if success.get("manifest_sha256") != file_sha256(manifest_path):
+        raise Prompt16ExecutionError("compact mRMR code-store marker changed")
+    identity = _read_json(cache / "identity.json")
+    summary = report.get("checkpoint_summary", {})
+    if (
+        canonical_sha256(identity) != summary.get("root_identity_sha256")
+        or identity.get("row_count") != 1_221_743
+        or identity.get("candidate_count") != 1_959
+        or identity.get("missing_code") != -1
+        or identity.get("storage_dtype") != "int8"
+        or identity.get("feature_batch_size") != 32
+        or identity.get("execution_identity", {}).get(
+            "checkpoint_authorization_identity_sha256"
+        )
+        != report.get("checkpoint_authorization_identity_sha256")
+    ):
+        raise Prompt16ExecutionError("compact mRMR code-store identity changed")
+    manifest = _read_json(manifest_path)
+    batches = manifest.get("batches", [])
+    if len(batches) != 62 or manifest.get("batch_count") != 62:
+        raise Prompt16ExecutionError("compact mRMR code-batch count changed")
+
+    sealed_roots = [
+        path.parent
+        for path in cache.rglob("_SUCCESS")
+        if path.parent != cache
+    ]
+    pair_roots = [
+        path for path in sealed_roots if path.parent.name == "pair_vectors"
+    ]
+    relevance_roots = [path for path in sealed_roots if path.name == "relevance"]
+    code_roots = [path for path in sealed_roots if path.parent.name == "code_batches"]
+    if len(code_roots) != 62 or len(relevance_roots) != 1 or len(pair_roots) != 19:
+        raise Prompt16ExecutionError("compact mRMR sealed checkpoint inventory changed")
+
+    artifact_rows: list[dict[str, Any]] = []
+    observed_batch_rows: list[dict[str, Any]] = []
+    observed_pair_manifests: dict[str, str] = {}
+    observed_relevance_manifest: str | None = None
+    for path in sorted(sealed_roots, key=lambda value: value.as_posix()):
+        marker_payload = _read_json(path / "_SUCCESS")
+        leaf_manifest_path = path / "manifest.json"
+        if marker_payload.get("manifest_sha256") != file_sha256(
+            leaf_manifest_path
+        ):
+            raise Prompt16ExecutionError(
+                f"compact mRMR leaf marker changed: {path}"
+            )
+        leaf = _read_json(leaf_manifest_path)
+        leaf_identity = leaf.get("identity", {})
+        artifact = leaf.get("artifact", {})
+        artifact_path = path / str(artifact.get("path", ""))
+        if (
+            not artifact_path.is_file()
+            or artifact_path.stat().st_size
+            != int(artifact.get("byte_size", -1))
+            or file_sha256(artifact_path) != artifact.get("sha256")
+        ):
+            raise Prompt16ExecutionError(
+                f"compact mRMR leaf artifact changed: {path}"
+            )
+        expected_inventory = sorted(
+            ["_SUCCESS", "manifest.json", str(artifact.get("path"))]
+        )
+        actual_inventory = sorted(
+            child.name for child in path.iterdir() if child.is_file()
+        )
+        if actual_inventory != expected_inventory:
+            raise Prompt16ExecutionError(
+                f"compact mRMR leaf inventory changed: {path}"
+            )
+        artifact_rows.extend(
+            _artifact(child, root)
+            for child in sorted(path.iterdir(), key=lambda item: item.name)
+            if child.is_file()
+        )
+        operation = leaf_identity.get("operation")
+        if operation == "compact_mrmr_discrete_code_batch":
+            observed_batch_rows.append(
+                {
+                    "batch_index": int(leaf_identity["batch_index"]),
+                    "path": path.relative_to(cache).as_posix(),
+                    "manifest_sha256": file_sha256(leaf_manifest_path),
+                    "artifact_sha256": artifact["sha256"],
+                    "feature_count": len(
+                        leaf_identity.get("ordered_features", [])
+                    ),
+                }
+            )
+        elif operation == "compact_mrmr_relevance_vector":
+            observed_relevance_manifest = file_sha256(leaf_manifest_path)
+        elif operation == "compact_mrmr_pair_mi_vector":
+            observed_pair_manifests[str(leaf_identity["selected_feature"])] = (
+                file_sha256(leaf_manifest_path)
+            )
+
+    top_level_files = [cache / "_SUCCESS", cache / "identity.json", manifest_path]
+    artifact_rows.extend(_artifact(path, root) for path in top_level_files)
+    if any(path.name.endswith(".partial") for path in cache.rglob("*")):
+        raise Prompt16ExecutionError("compact mRMR cache contains partial artifacts")
+    if summary.get("code_store_manifest_sha256") != file_sha256(manifest_path):
+        raise Prompt16ExecutionError("compact mRMR validation summary changed")
+    if sorted(observed_batch_rows, key=lambda row: row["batch_index"]) != batches:
+        raise Prompt16ExecutionError("compact mRMR root-to-batch authentication changed")
+    if observed_relevance_manifest != summary.get("relevance_manifest_sha256"):
+        raise Prompt16ExecutionError("compact mRMR relevance authentication changed")
+    if dict(sorted(observed_pair_manifests.items())) != dict(
+        sorted(summary.get("pair_vector_manifest_sha256s", {}).items())
+    ):
+        raise Prompt16ExecutionError("compact mRMR pair authentication changed")
+    return report, sorted(artifact_rows, key=lambda row: row["path"])
+
+
+def _validate_compact_mrmr_predecessor(
+    root: Path,
+) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+    predecessor_path = (
+        root
+        / RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT
+        / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != (
+        RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+    ):
+        raise Prompt16ExecutionError("resource-policy authorization changed")
+    predecessor = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor)
+    claimed = predecessor_unsigned.pop("artifact_authentication_sha256", None)
+    if claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("resource-policy authorization digest changed")
+
+    output = root / OOT_RELATIVE_ROOT
+    logs = root / OOT_LOG_RELATIVE_ROOT
+    selector_cache = root / TEMP_RELATIVE_ROOT / "classical_selector_encoding_v2"
+    status = _read_json(output / "controller_status.json")
+    if (
+        status.get("execution_authorization_sha256")
+        != RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        or status.get("state") != "RESOURCE_RECOVERY_REQUIRED"
+        or status.get("stop_code") != "ram_system_headroom"
+        or int(status.get("accounted_count", -1)) != 0
+    ):
+        raise Prompt16ExecutionError("compact mRMR predecessor state changed")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("predecessor unexpectedly completed")
+    if list(output.glob("*/evaluations/cell_*/*")):
+        raise Prompt16ExecutionError("predecessor unexpectedly promoted OOT cells")
+
+    _, protocol = _protocol_payload(root / PROTOCOL_RELATIVE_PATH)
+    matrix = protocol["approved_protocol"]["method_and_evaluation_matrix"]
+    fits = selection_fit_registry(matrix)
+    by_id = {str(fit["fit_id"]): fit for fit in fits}
+    expected_fit_ids = sorted(
+        {
+            *(f"fit_{order:03d}" for order in range(1, 8)),
+            *INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
+        }
+    )
+    selection_root = output / "classical/selection_fits"
+    actual_fit_ids = sorted(
+        path.name
+        for path in selection_root.iterdir()
+        if path.is_dir() and (path / "_SUCCESS").is_file()
+    )
+    if actual_fit_ids != expected_fit_ids:
+        raise Prompt16ExecutionError("completed selector checkpoint inventory changed")
+    partial_fit = selection_root / "fit_008"
+    if partial_fit.exists() and any(partial_fit.iterdir()):
+        raise Prompt16ExecutionError("partial fit_008 is not empty")
+    matrix_manifest_sha = file_sha256(root / MATRIX_RELATIVE_ROOT / "manifest.json")
+    for fit_id in expected_fit_ids:
+        identity = _fit_identity(
+            phase="oot",
+            fold_id=None,
+            fit=by_id[fit_id],
+            matrix_manifest_sha256=matrix_manifest_sha,
+            execution_authorization_sha256=(
+                MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+            ),
+        )
+        _load_sealed(selection_root / fit_id, identity)
+
+    cache_metadata = _read_json(selector_cache / "metadata.json")
+    cache_success = _read_json(selector_cache / "_SUCCESS")
+    encoded = selector_cache / "encoded_train.npy"
+    artifact = cache_metadata.get("artifact", {})
+    cache_identity = cache_metadata.get("identity", {})
+    if (
+        cache_success.get("metadata_sha256")
+        != file_sha256(selector_cache / "metadata.json")
+        or cache_identity.get("execution_authorization_sha256")
+        != ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        or cache_identity.get("row_count") != 1_221_743
+        or cache_identity.get("column_count") != 1_959
+        or not encoded.is_file()
+        or encoded.stat().st_size != int(artifact.get("byte_size", -1))
+        or file_sha256(encoded) != artifact.get("sha256")
+    ):
+        raise Prompt16ExecutionError("selector source cache changed")
+
+    _, compact_artifacts = _authenticate_compact_mrmr_validation(root)
+    output_inventory = sorted(
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    )
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            [
+                *(path for path in output.rglob("*") if path.is_file()),
+                *(path for path in logs.rglob("*") if path.is_file()),
+                *(path for path in selector_cache.rglob("*") if path.is_file()),
+            ],
+            key=lambda item: _relative(item, root),
+        )
+    ]
+    partial_artifacts.extend(compact_artifacts)
+    return expected_fit_ids, sorted(
+        partial_artifacts, key=lambda row: row["path"]
+    ), output_inventory
+
+
+def build_mrmr_compact_amendment_authorization(
+    *,
+    repository_root: str | Path = PROJECT_ROOT,
+    implementation_commit: str,
+) -> dict[str, Any]:
+    """Authorize exact continuation from fit_008 after full-DEV validation."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if _git(root, "rev-parse", implementation_commit) != implementation_commit:
+        raise Prompt16ExecutionError("implementation commit must be a full identity")
+    if implementation_commit != repository["head"]:
+        raise Prompt16ExecutionError("compact mRMR amendment must bind committed HEAD")
+    audit_root = root / MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT
+    if (audit_root / "execution_authorization.json").exists():
+        raise Prompt16ExecutionError("compact mRMR authorization already exists")
+    allowed = {"_VALIDATION_SUCCESS", "full_fit_007_equivalence.json"}
+    actual = {path.name for path in audit_root.iterdir() if path.is_file()}
+    if actual != allowed:
+        raise Prompt16ExecutionError(
+            f"compact mRMR validation inventory changed: {sorted(actual)}"
+        )
+
+    predecessor_path = (
+        root
+        / RESOURCE_POLICY_AMENDMENT_RELATIVE_ROOT
+        / "execution_authorization.json"
+    )
+    predecessor = _read_json(predecessor_path)
+    checkpoint_fit_ids, partial_artifacts, output_inventory = (
+        _validate_compact_mrmr_predecessor(root)
+    )
+    report, _ = _authenticate_compact_mrmr_validation(root)
+    dev = authenticate_complete_dev(root)
+    dev.pop("evaluation_rows")
+    if dev["accounting"]["authenticated_evaluation_identities"] != 170:
+        raise Prompt16ExecutionError("compact mRMR amendment DEV gate is not 170/170")
+
+    amendment = {
+        "schema_version": "prompt_16_final_oot_mrmr_compact_amendment_v4",
+        "status": "authorized_after_exact_full_dev_fit_007_equivalence",
+        "authorized_by_user_at_utc_date": "2026-08-17",
+        "predecessor_execution_authorization_sha256": (
+            RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "trigger": {
+            "blocked_scope": "oot:oot:fit_008",
+            "blocked_stage": "baseline_lightweight",
+            "failure": "dense_int64_mrmr_code_materialization_exceeded_ram",
+            "promoted_evaluation_cells": 0,
+            "next_fit_id": "fit_008",
+        },
+        "preserved_exactly": [
+            "1959_ordered_classical_features",
+            "1221743_full_dev_rows",
+            "missing_value_code_minus_one",
+            "existing_discretization_and_category_mappings",
+            "sklearn_mutual_info_score_argument_order_and_float_values",
+            "mrmr_greedy_objective_tie_breaking_and_ranking_order",
+            "all_seeds_feature_budgets_preprocessing_and_catboost_settings",
+            "all_completed_selection_checkpoints",
+        ],
+        "execution_only_changes": [
+            "replace_eager_per_feature_int64_dictionary_with_int8_npy_batches",
+            "map_one_32_feature_code_batch_at_a_time",
+            "atomically_seal_and_sha256_authenticate_every_code_batch",
+            "atomically_seal_and_sha256_authenticate_relevance_and_pair_mi_vectors",
+            "reuse_full_fit_007_mi_checkpoints_when_fit_008_replays_ranks_1_to_20",
+        ],
+        "memory_strategy": MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+        "checkpoint_authorization_identity_sha256": report[
+            "checkpoint_authorization_identity_sha256"
+        ],
+        "full_fit_007_equivalence_report_sha256": file_sha256(
+            audit_root / "full_fit_007_equivalence.json"
+        ),
+        "scientific_contract_changed": False,
+        "llm_filter_applied": False,
+        "rows_sampled_or_removed": 0,
+        "features_removed": 0,
+        "new_llm_request_authorized": False,
+        "dev_rerun_authorized": False,
+        "oot_work_executed_during_validation": False,
+        "next_fit_id": "fit_008",
+    }
+    _write_frozen_json(audit_root / "mrmr_compact_amendment.json", amendment)
+    write_text_atomic(
+        audit_root / "README.md",
+        """# Prompt 16 compact mRMR amendment v4
+
+This execution-only amendment replaces the failed eager int64 mRMR code
+dictionary with atomic, SHA-256-authenticated int8 NPY batches and separately
+sealed MI vectors. It preserves all 1,959 ordered features and all 1,221,743
+full-DEV rows. The canonical discretizer, missing code -1, sklearn MI estimator,
+greedy arithmetic, name tie-break, ranking, seeds, preprocessing, and model
+settings are unchanged.
+
+Representative fixtures and a full-DEV replay of fit_007 matched the sealed
+predecessor exactly. The locked OOT slice was not opened during validation.
+The successor resumes at fit_008 and reuses the authenticated fit_007 MI work.
+""",
+        overwrite=False,
+    )
+
+    implementation_paths = [
+        *MRMR_COMPACT_IMPLEMENTATION_RELATIVE_PATHS,
+        Path("scripts/run_prompt_16_final_oot.py"),
+        Path("tests/selectors/test_lightweight_mi_mrmr.py"),
+        Path("tests/test_prompt_16_final_oot.py"),
+        Path("tests/test_prompt_16_third_dataset_execution.py"),
+        Path("src/credit_risk_fs/experiments/atomic_io.py"),
+        EXECUTION_POLICY_RELATIVE_PATH,
+        RAM_POLICY_RELATIVE_PATH,
+    ]
+    amendment_files = [
+        _artifact(path, root)
+        for path in sorted(audit_root.iterdir(), key=lambda item: item.name)
+        if path.is_file() and path.name != "execution_authorization.json"
+    ]
+    authorization_unsigned = dict(predecessor)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "dev_evaluation_registry_sha256": dev["evaluation_registry_sha256"],
+            "implementation_files": [
+                _artifact(root / path, root) for path in implementation_paths
+            ],
+            "frozen_input_files": [
+                *predecessor["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor["freeze_files"],
+                *amendment_files,
+            ],
+            "memory_amendment": {
+                "path": _relative(
+                    audit_root / "mrmr_compact_amendment.json", root
+                ),
+                "strategy": MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+                "inherited_resource_infeasible_fit_ids": list(
+                    INHERITED_RESOURCE_INFEASIBLE_FIT_IDS
+                ),
+                "inherited_resource_infeasible_cell_orders": list(
+                    INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
+                ),
+                "selector_memmap_feature_split_size": 64,
+                "mrmr_compact_feature_batch_size": 32,
+                "mrmr_compact_dtype": "int8",
+                "full_dev_rows": 1_221_743,
+                "classical_features": 1_959,
+                "missing_code": -1,
+                "scientific_contract_changed": False,
+                "resource_envelope_changed": False,
+            },
+            "checkpoint_resume": {
+                "accepted_predecessor_authorization_sha256": (
+                    MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "accepted_selector_memmap_authorization_sha256": (
+                    ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "accepted_controller_authorization_sha256": (
+                    RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "mrmr_checkpoint_authorization_identity_sha256": report[
+                    "checkpoint_authorization_identity_sha256"
+                ],
+                "mrmr_code_store_manifest_sha256": report[
+                    "checkpoint_summary"
+                ]["code_store_manifest_sha256"],
+                "mrmr_relevance_manifest_sha256": report[
+                    "checkpoint_summary"
+                ]["relevance_manifest_sha256"],
+                "mrmr_fit_007_pair_vector_manifest_sha256s": report[
+                    "checkpoint_summary"
+                ]["pair_vector_manifest_sha256s"],
+                "reauthenticated_fit_ids": checkpoint_fit_ids,
+                "expected_next_fit_id": "fit_008",
+                "rewrite_predecessor_payloads": False,
+            },
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": output_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": checkpoint_fit_ids,
+                "next_fit_id": "fit_008",
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    authorization_path = audit_root / "execution_authorization.json"
+    write_json_atomic(authorization_path, authorization, overwrite=False)
+    return {
+        "schema_version": "prompt_16_final_oot_mrmr_compact_build_v4",
+        "status": "authorized_compact_mrmr_resume_from_fit_008",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(authorization_path),
+        "authorization_sha256": file_sha256(authorization_path),
+        "reauthenticated_checkpoint_fit_count": len(checkpoint_fit_ids),
+        "expected_next_fit_id": "fit_008",
+        "registered_cells_unchanged": 34,
+        "promoted_predecessor_cells": 0,
+        "oot_work_executed": False,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -3600,6 +4159,7 @@ def load_final_authorization(
         "identity_first_batched_psi_and_per_cell_selected_projection_v1",
         ENCODING_AMENDMENT_MEMORY_STRATEGY,
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+        MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
     }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
@@ -3615,7 +4175,9 @@ def load_final_authorization(
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
     expected_predecessor = (
-        ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        RESOURCE_POLICY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY
+        else ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         if strategy == RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY
         else MEMORY_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         if strategy == ENCODING_AMENDMENT_MEMORY_STRATEGY
@@ -3626,6 +4188,7 @@ def load_final_authorization(
     if strategy in {
         ENCODING_AMENDMENT_MEMORY_STRATEGY,
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+        MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
     }:
         checkpoint_resume = payload.get("checkpoint_resume", {})
         if checkpoint_resume.get(
@@ -3644,13 +4207,39 @@ def load_final_authorization(
             raise Prompt16ExecutionError("reauthenticated selector inventory changed")
         if int(memory_amendment.get("selector_memmap_feature_split_size", -1)) != 64:
             raise Prompt16ExecutionError("selector memmap split size changed")
-        if strategy == RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY and (
+        if strategy in {
+            RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
+            MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
+        } and (
             checkpoint_resume.get(
                 "accepted_selector_memmap_authorization_sha256"
             )
             != ENCODING_AMENDMENT_EXECUTION_AUTHORIZATION_SHA256
         ):
             raise Prompt16ExecutionError("selector memmap authorization changed")
+        if strategy == MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY:
+            if (
+                int(memory_amendment.get("mrmr_compact_feature_batch_size", -1))
+                != 32
+                or memory_amendment.get("mrmr_compact_dtype") != "int8"
+                or int(memory_amendment.get("full_dev_rows", -1)) != 1_221_743
+                or int(memory_amendment.get("classical_features", -1)) != 1_959
+                or int(memory_amendment.get("missing_code", 0)) != -1
+                or not checkpoint_resume.get(
+                    "mrmr_checkpoint_authorization_identity_sha256"
+                )
+                or not checkpoint_resume.get("mrmr_code_store_manifest_sha256")
+                or not checkpoint_resume.get("mrmr_relevance_manifest_sha256")
+                or len(
+                    checkpoint_resume.get(
+                        "mrmr_fit_007_pair_vector_manifest_sha256s", {}
+                    )
+                )
+                != 19
+            ):
+                raise Prompt16ExecutionError(
+                    "compact mRMR authorization checkpoints changed"
+                )
     return payload, file_sha256(candidate)
 
 
@@ -3705,6 +4294,13 @@ def run_final_oot_worker(
         selector_memmap_root=str(
             Path(authorization["paths"]["temp_root"])
             / "classical_selector_encoding_v2"
+        ),
+        mrmr_checkpoint_root=str(
+            Path(authorization["paths"]["temp_root"])
+            / "classical_mrmr_compact_v4"
+        ),
+        mrmr_checkpoint_identity_sha256=checkpoint_resume.get(
+            "mrmr_checkpoint_authorization_identity_sha256"
         ),
         authorized_predecessor_authorization_sha256=checkpoint_resume.get(
             "accepted_predecessor_authorization_sha256"
@@ -3791,9 +4387,12 @@ __all__ = [
     "MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE",
     "authenticate_complete_dev",
     "build_freeze",
+    "build_mrmr_compact_amendment_authorization",
     "final_full_dev_refits",
     "final_oot_cells",
     "load_final_authorization",
+    "mrmr_compact_checkpoint_authorization_identity",
+    "mrmr_compact_implementation_identity",
     "paired_comparison_graph",
     "run_final_oot_analysis",
     "run_final_oot_worker",

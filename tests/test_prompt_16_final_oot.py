@@ -26,6 +26,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     INHERITED_RESOURCE_INFEASIBLE_FIT_IDS,
     MAX_ESTIMATOR_THREADS,
     MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE,
+    MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
     PROCESS_TREE_RSS_HARD_CAP_GIB,
     PROJECT_ROOT,
     PROTOCOL_RELATIVE_PATH,
@@ -398,6 +399,34 @@ def test_encoding_amendment_is_disk_backed_and_exactly_resumes_fit_008() -> None
     assert RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY.endswith(
         "high_memory_guardrails_v3"
     )
+
+
+def test_compact_mrmr_amendment_preserves_science_and_resume_boundary() -> None:
+    import credit_risk_fs.experiments.prompt_16_final_oot as final
+    import credit_risk_fs.experiments.prompt_16_third_dataset as third
+    from credit_risk_fs.selectors.lightweight.mi_mrmr import (
+        MutualInformationMRMRSelector,
+    )
+
+    worker_source = inspect.getsource(final.run_final_oot_worker)
+    phase_source = inspect.getsource(third.run_phase_worker)
+    builder_source = inspect.getsource(
+        final.build_mrmr_compact_amendment_authorization
+    )
+    assert MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY.endswith(
+        "compact_mrmr_checkpoints_v4"
+    )
+    assert MutualInformationMRMRSelector.implementation_id == (
+        "mrmr_mutual_information_discrete_plugin_v1"
+    )
+    assert "classical_mrmr_compact_v4" in worker_source
+    assert "mrmr_checkpoint_identity_sha256" in worker_source + phase_source
+    assert "expected_resume_fit_id" in phase_source
+    assert "1959_ordered_classical_features" in builder_source
+    assert "1221743_full_dev_rows" in builder_source
+    assert "missing_value_code_minus_one" in builder_source
+    assert "features_removed\": 0" in builder_source
+    assert "rows_sampled_or_removed\": 0" in builder_source
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:

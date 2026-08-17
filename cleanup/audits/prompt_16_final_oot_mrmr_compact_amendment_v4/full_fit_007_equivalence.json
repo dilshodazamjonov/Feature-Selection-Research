@@ -1,0 +1,106 @@
+{
+  "schema_version": "prompt_16_mrmr_compact_full_fit_007_validation_v1",
+  "status": "exact_equivalence_confirmed",
+  "completed_at_utc": "2026-08-17T08:16:39.605822+00:00",
+  "implementation_identity_sha256": "ba4009880cb26eb179e668a416dbc366baf00770d65a7e9536cf4b3e90133533",
+  "checkpoint_authorization_identity_sha256": "35e7a901e04eab9d959ce8b75f82e3aed85b4364ab7ea7401ec4586263212b7b",
+  "scope": {
+    "dataset": "full_dev_only",
+    "rows": 1221743,
+    "candidate_features": 1959,
+    "ordered_predictor_sha256": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "locked_oot_rows_loaded": 0,
+    "locked_oot_outcomes_inspected": false
+  },
+  "preserved": {
+    "missing_value_code": -1,
+    "discretization_and_category_mappings": true,
+    "mutual_information_estimator_and_argument_order": true,
+    "tie_breaking_ranking_order_and_seeds": true,
+    "catboost_settings": true,
+    "completed_checkpoints_rewritten": false
+  },
+  "fit_007_comparison": {
+    "expected_checkpoint_sha256": "28e1f82f77eb0743c841a985f66871347971a397bbca6c81db98aa08236700d5",
+    "selected_features_identical": true,
+    "ranking_identical": true,
+    "raw_scores_identical": true,
+    "configuration_identical": true,
+    "training_identity_identical": true,
+    "compared_scientific_payload_sha256": "9f192a0095c0fba3e324cb049c0c5cdcbde7c826ac663d3259b01dbec8fd9798"
+  },
+  "compact_code_inventory": {
+    "batch_count": 62,
+    "feature_count": 1959,
+    "row_count": 1221743,
+    "dtypes": [
+      "int8"
+    ],
+    "payload_bytes": 2393394537,
+    "theoretical_legacy_int64_payload_bytes": 19147156296,
+    "payload_reduction_factor": 8.0,
+    "one_feature_batch_mapped_at_a_time": true
+  },
+  "checkpoint_summary": {
+    "schema_version": "mrmr_compact_checkpoint_v1",
+    "memory_strategy": "batched_disk_backed_compact_integer_codes_and_atomic_mi_v1",
+    "root": "D:\\python projects\\Research\\outputs\\prompt_16_homecredit_model_stability_2024\\temp\\final_amended_oot_v1\\classical_mrmr_compact_v4",
+    "root_identity_sha256": "cfe945a2489a269b44acd743102f6d6a790d479d5ea39933d6da912f01a59f5a",
+    "code_store_manifest_sha256": "e5a782ac6dd675b61a82d9ac5166ae475e4a090ce67cdbf92a44108c097ccf7b",
+    "candidate_count": 1959,
+    "row_count": 1221743,
+    "storage_dtype": "int8",
+    "feature_batch_size": 32,
+    "relevance_manifest_sha256": "6d3911cc47fd0a9eb6936ca4a16c2be13da787e0aa80c6901a8f0e6122bba872",
+    "pair_vector_manifest_sha256s": {
+      "d0__static__lastcancelreason_561M": "57e06c48a2204588707e567d31f20bbda4081292106b627daabbb1a0e2d139a1",
+      "d0__static__lastrepayingdate_696D": "eaa0c5b3b0318daeec33343f87aefb643d02fde71ea05323319cfc3f5a642a53",
+      "d0__static__pctinstlsallpaidlate1d_3546856L": "ce9eda290b8eab7304d80c5014b70082e03cc574ccbc1389f6b525c570b84b99",
+      "d0__static_cb__days30_165L": "10f4e980a424698d30492fc25a5db01887a4fa6331d7022e9275a84d03037164",
+      "d0__static_cb__requesttype_4525192L": "b8b17198115fcc178b9bc9afb7cdfbce2745031889b888aea04b1e6774d978d2",
+      "d0__static_cb__riskassesment_940T": "e43724b00c6e3c630c293afa8f708a116e63b04c69d0de61b6c3aec79052d676",
+      "d1__credit_bureau_a__dpdmax_139P__first_by_num_group1": "568e00702bd507c0cddb98dd2e44f185cbf263c7f55a7ef28b4071c0f30ebc5f",
+      "d1__credit_bureau_a__dpdmaxdateyear_596T__last_by_num_group1": "76334fa3b03f14a947436be9779027bebf6f2de5786369de75d7a183fb1af56b",
+      "d1__credit_bureau_a__numberofcontrsvalue_258L__sample_variance_ddof_1": "fe73d019f22753d08e4bcd19ea7f140b710fd37ae1160fad13b49a4e0dff141e",
+      "d1__credit_bureau_a__numberofoutstandinstls_59L__last_by_num_group1": "5a85bf719554d52d621fde3f4cb1a56aff73c12ffa1ca31321080b53af679699",
+      "d1__credit_bureau_a__overdueamountmaxdateyear_2T__last_by_num_group1": "745cf84aeccbac76d563105a20e409a4c9dac3f3c77bd161d85968fd17bc0ec0",
+      "d1__credit_bureau_a__periodicityofpmts_1102L__last_by_num_group1": "b7d226cc4a2c3b7ddf0c659e37b669212fced579ccdd7eedec7a91b32598f88f",
+      "d1__credit_bureau_a__residualamount_856A__sample_variance_ddof_1": "45234aa407d8fcd0df35f232c49bf6e45ecd69d8b64945e1aef4e6097ec022ed",
+      "d1__credit_bureau_a__totalamount_996A__last_by_num_group1": "d36ef039521d53f21db14a93aa32cf1dd9a1cdadcefa786082ad7f12e7c86019",
+      "d1__credit_bureau_b__pmtmethod_731M__lexical_mode": "903c76128713bfc23e755043abba2a347760a63a264dcc5ef7898858a4034051",
+      "d1__debitcard__last180dayaveragebalance_704A__first_by_num_group1": "88c21c293c283efcfe4a0b0855867ad91235e5c403ea36e8ac088884d03ebb0a",
+      "d1__debitcard__last180dayturnover_1134A__sample_variance_ddof_1": "dad898105de117d8f981813eeb36254f4ba45a7ddf8932a543094794e9b2ffd5",
+      "d1__person__empl_employedfrom_271D__last_by_num_group1": "139cf4d6ff23920d6f7e5b4790b98fac85365b5d1f1e5f131ca3f77cd37fa874",
+      "d1__person__sex_738L__first_by_num_group1": "507efd54389449d6dd6937fddbaa36928bebad5ab3e4f0913348ceddb9d4a9a6"
+    },
+    "scientific_semantics_changed": false
+  },
+  "resource_observation": {
+    "elapsed_seconds": 1793.4089671000256,
+    "peak_process_rss_bytes": 449196032,
+    "minimum_system_available_ram_bytes": 26753843200
+  },
+  "resume": {
+    "reauthenticated_completed_fit_ids": [
+      "fit_001",
+      "fit_002",
+      "fit_003",
+      "fit_004",
+      "fit_005",
+      "fit_006",
+      "fit_007",
+      "fit_009",
+      "fit_010",
+      "fit_015",
+      "fit_016",
+      "fit_019",
+      "fit_020",
+      "fit_024",
+      "fit_025",
+      "fit_026",
+      "fit_027"
+    ],
+    "expected_next_fit_id": "fit_008",
+    "identical_command_resume_verified": true
+  }
+}
