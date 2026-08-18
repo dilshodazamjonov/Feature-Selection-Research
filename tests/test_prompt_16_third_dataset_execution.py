@@ -4,6 +4,7 @@ import ast
 import gc
 import hashlib
 import importlib.util
+import inspect
 import json
 import weakref
 from pathlib import Path
@@ -281,6 +282,17 @@ def test_sealed_checkpoint_accepts_one_of_multiple_authorized_predecessors(
     assert loaded is not None
     assert loaded["checkpoint_original_authorization_sha256"] == predecessor_sha
     assert loaded["checkpoint_reauthenticated_for_authorization_sha256"] == current_sha
+
+
+def test_oot_phase_routes_every_sealed_scope_through_predecessor_bridge() -> None:
+    source = inspect.getsource(prompt16.run_phase_worker)
+
+    # The only direct seal loader is inside the local bridge. Selection scans,
+    # Feature PSI, PSI batches, and evaluation cells must all use that bridge.
+    assert source.count("_load_sealed(") == 1
+    assert source.count("load_phase_checkpoint(") == 6
+    assert "load_phase_checkpoint(feature_psi_path, feature_psi_identity)" in source
+    assert "load_phase_checkpoint(batch_path, batch_identity)" in source
 
 
 def test_feature_psi_batch_uses_multiple_threads_and_preserves_order(

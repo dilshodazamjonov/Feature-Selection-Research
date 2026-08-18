@@ -116,6 +116,9 @@ PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT = Path(
 SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6"
 )
+SPARSE_RESUME_IDENTITY_BRIDGE_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_sparse_resume_identity_bridge_v7"
+)
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
 )
@@ -209,6 +212,12 @@ PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256 = (
 )
 SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY = (
     "canonical_float32_csr_batched_scoring_isolated_cell_process_v6"
+)
+SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256 = (
+    "551d4ea6d3491cca7824ab2b9fa183df1e3ec5f7f7ab83d845a0811141399e9b"
+)
+SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY = (
+    "canonical_float32_csr_all_sealed_scope_identity_bridge_v7"
 )
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
@@ -4871,6 +4880,397 @@ superseded by the new hash-authenticated authorization in this directory.
     }
 
 
+def build_sparse_resume_identity_bridge_authorization(
+    *,
+    repository_root: str | Path,
+    implementation_commit: str,
+    regression_report_path: str | Path,
+) -> dict[str, Any]:
+    """Authorize the seal-identity bridge after the failed v6 handoff."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if repository["head"] != implementation_commit:
+        raise Prompt16ExecutionError(
+            "sparse identity-bridge authorization must bind committed HEAD"
+        )
+    audit_root = root / SPARSE_RESUME_IDENTITY_BRIDGE_RELATIVE_ROOT
+    authorization_path = audit_root / "execution_authorization.json"
+    if authorization_path.exists():
+        raise Prompt16ExecutionError(
+            "sparse identity-bridge execution authorization already exists"
+        )
+    allowed_dirty_prefix = (
+        SPARSE_RESUME_IDENTITY_BRIDGE_RELATIVE_ROOT.as_posix() + "/"
+    )
+    dirty = _git(root, "status", "--porcelain=v1", "--untracked-files=all")
+    unexpected = [
+        line
+        for line in dirty.splitlines()
+        if line and not line[3:].replace("\\", "/").startswith(allowed_dirty_prefix)
+    ]
+    if unexpected:
+        raise Prompt16ExecutionError(
+            "identity-bridge authorization worktree has unrelated changes: "
+            + unexpected[0]
+        )
+
+    predecessor_path = (
+        root
+        / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT
+        / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256:
+        raise Prompt16ExecutionError("sparse v6 predecessor authorization changed")
+    predecessor = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor)
+    predecessor_claimed = predecessor_unsigned.pop(
+        "artifact_authentication_sha256", None
+    )
+    if predecessor_claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("sparse v6 predecessor digest changed")
+
+    regression_path = Path(regression_report_path).resolve()
+    regression = _read_json(regression_path)
+    if (
+        regression.get("status") != "passed"
+        or int(regression.get("failed", -1)) != 0
+        or int(regression.get("passed", 0)) <= 0
+        or regression.get("historical_identity_bridge_passed") is not True
+    ):
+        raise Prompt16ExecutionError("identity-bridge regression validation is incomplete")
+
+    validation_path = (
+        root
+        / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT
+        / "dev_only_resource_certification.json"
+    )
+    validation_marker = (
+        root / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT / "_VALIDATION_SUCCESS"
+    )
+    marker = _read_json(validation_marker)
+    validation = _read_json(validation_path)
+    measurements = validation.get("measurements", {})
+    if (
+        marker.get("report_sha256") != file_sha256(validation_path)
+        or validation.get("status")
+        != "validated_in_memory_csr_no_disk_fallback_required"
+        or int(validation.get("locked_oot_rows_loaded", -1)) != 0
+        or int(measurements.get("peak_process_tree_rss_bytes", 24 * 1024**3))
+        > 16 * 1024**3
+        or int(measurements.get("minimum_system_available_ram_bytes", 0))
+        < 8 * 1024**3
+    ):
+        raise Prompt16ExecutionError("sparse DEV-only certification changed")
+
+    output = root / OOT_RELATIVE_ROOT
+    controller_path = output / "controller_status.json"
+    controller = _read_json(controller_path)
+    expected_accounting = {
+        "completed_cell_orders": [],
+        "unavailable_cell_orders": [1, 2],
+        "failed_or_corrupt_cell_orders": [],
+        "completed_count": 0,
+        "unavailable_count": 2,
+        "failed_count": 0,
+        "accounted_count": 2,
+        "incomplete_count": 32,
+        "next_cell": 3,
+    }
+    if (
+        controller.get("execution_authorization_sha256")
+        != SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+        or controller.get("implementation_commit")
+        != "67dd6417be8ea4ecaca607d3a09baa2346260779"
+        or controller.get("state") != "ERROR"
+        or controller.get("status") != "resumable_non_success"
+        or controller.get("expected_total") != 34
+        or controller.get("completed_cell_orders") != []
+        or controller.get("unavailable_cell_orders") != [1, 2]
+        or controller.get("failed_or_corrupt_cell_orders") != []
+        or controller.get("next_cell") != 3
+        or controller.get("final_success") is not False
+        or controller.get("stop_code") != "worker_crash"
+        or int(controller.get("current_attempt", -1)) != 26
+    ):
+        raise Prompt16ExecutionError("failed v6 controller handoff changed")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("failed v6 handoff unexpectedly completed OOT")
+    execution_lock = output.parent / f".{output.name}.execution.lock"
+    if execution_lock.exists():
+        raise Prompt16ExecutionError("Prompt-16 execution lock is still active")
+
+    prior_state = predecessor.get("predecessor_partial_state", {})
+    current_inventory = [
+        path.relative_to(output).as_posix()
+        for path in sorted(
+            (item for item in output.rglob("*") if item.is_file()),
+            key=lambda item: item.relative_to(output).as_posix(),
+        )
+    ]
+    if current_inventory != prior_state.get("output_file_inventory"):
+        raise Prompt16ExecutionError(
+            "failed v6 launch changed the production output inventory"
+        )
+    changed_predecessor_files: list[str] = []
+    for row in prior_state.get("artifacts", []):
+        artifact = root / str(row.get("path", ""))
+        unchanged = (
+            artifact.is_file()
+            and artifact.stat().st_size == int(row.get("byte_size", -1))
+            and file_sha256(artifact) == row.get("sha256")
+        )
+        if not unchanged:
+            changed_predecessor_files.append(str(row.get("path", "")))
+    if changed_predecessor_files != [_relative(controller_path, root)]:
+        raise Prompt16ExecutionError(
+            "failed v6 launch changed files beyond controller status"
+        )
+
+    cells = final_oot_cells(root / PROTOCOL_RELATIVE_PATH)
+    if (
+        len(cells) != 34
+        or [int(cell["configuration_order"]) for cell in cells]
+        != list(range(1, 35))
+        or [
+            (cell["method_id"], cell["model"], cell["requested_feature_budget"])
+            for cell in cells[30:]
+        ]
+        != [
+            ("llm", "lr", 20),
+            ("llm", "catboost", 40),
+            ("stable_core_llm_fill", "lr", 20),
+            ("stable_core_llm_fill", "catboost", 40),
+        ]
+    ):
+        raise Prompt16ExecutionError("34-cell registry changed after failed v6 handoff")
+
+    selection_root = output / "classical/selection_fits"
+    fit_ids: list[str] = []
+    for order in range(1, 28):
+        fit_id = f"fit_{order:03d}"
+        path = selection_root / fit_id
+        manifest = _read_json(path / "manifest.json")
+        if _load_sealed(path, manifest["identity"]) is None:
+            raise Prompt16ExecutionError(f"selection checkpoint changed: {fit_id}")
+        fit_ids.append(fit_id)
+    feature_psi_root = output / "classical/feature_psi"
+    feature_psi_manifest = _read_json(feature_psi_root / "manifest.json")
+    if _load_sealed(feature_psi_root, feature_psi_manifest["identity"]) is None:
+        raise Prompt16ExecutionError("completed Feature PSI checkpoint changed")
+    for order in range(1, 17):
+        path = feature_psi_root / "batches" / f"batch_{order:03d}"
+        manifest = _read_json(path / "manifest.json")
+        if _load_sealed(path, manifest["identity"]) is None:
+            raise Prompt16ExecutionError(f"Feature PSI batch changed: {order}")
+    for order in (1, 2):
+        path = output / "classical/evaluations" / f"cell_{order:03d}"
+        manifest = _read_json(path / "manifest.json")
+        if _load_sealed(path, manifest["identity"]) is None:
+            raise Prompt16ExecutionError(f"unavailable OOT cell changed: {order}")
+        if _read_json(path / "status.json").get("status") != "unavailable":
+            raise Prompt16ExecutionError("historical unavailable cell became numeric")
+    if any(
+        (
+            output
+            / ("classical" if order <= 30 else "supplemental")
+            / "evaluations"
+            / f"cell_{order:03d}"
+            / "_SUCCESS"
+        ).is_file()
+        for order in range(3, 35)
+    ):
+        raise Prompt16ExecutionError("an executable OOT cell completed in failed v6 run")
+    cell_003 = output / "classical/evaluations/cell_003"
+    if cell_003.exists() and any(item.is_file() for item in cell_003.rglob("*")):
+        raise Prompt16ExecutionError("failed v6 cell-3 workspace contains evidence")
+
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            (item for item in output.rglob("*") if item.is_file()),
+            key=lambda item: item.relative_to(output).as_posix(),
+        )
+    ]
+    implementation_paths = {
+        Path("configs/execution/prompt_16_final_oot_v1.yaml"),
+        Path("configs/execution/prompt_16_final_oot_ram_wait_v1.yaml"),
+        Path("scripts/run_prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+        Path("src/credit_risk_fs/models/catboost_model.py"),
+        Path("src/credit_risk_fs/models/logistic_regression.py"),
+        Path("src/credit_risk_fs/preprocessing/encoding.py"),
+        Path("tests/test_prompt_16_final_oot.py"),
+        Path("tests/test_prompt_16_third_dataset_execution.py"),
+        Path("tests/test_sparse_final_model_preprocessing.py"),
+    }
+    for path in implementation_paths:
+        if not (root / path).is_file():
+            raise Prompt16ExecutionError(f"identity-bridge implementation file missing: {path}")
+
+    failure_authentication = {
+        "schema_version": "prompt_16_sparse_resume_failed_handoff_authentication_v1",
+        "status": "safe_failed_before_checkpoint_or_model_execution",
+        "failed_authorization_sha256": SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256,
+        "attempt": 26,
+        "stop_code": "worker_crash",
+        "exception": (
+            "completed artifact identity mismatch: classical/feature_psi"
+        ),
+        "root_cause": (
+            "run_phase_worker omitted the authorized predecessor identities when "
+            "loading the top-level Feature PSI and evaluation-cell seals"
+        ),
+        "production_output_inventory_changed": False,
+        "production_files_changed": [_relative(controller_path, root)],
+        "completed_executable_oot_cells": 0,
+        "next_cell": 3,
+        "controller_handoff_fit_id": "fit_008",
+        "selection_checkpoint_fit_id": "fit_003",
+        "execution_lock_present": False,
+    }
+    failure_path = audit_root / "failed_handoff_authentication.json"
+    write_json_atomic(
+        failure_path, _self_authenticated_payload(failure_authentication), overwrite=False
+    )
+    amendment = {
+        "schema_version": "prompt_16_sparse_resume_identity_bridge_amendment_v7",
+        "status": "validated_checkpoint_identity_bridge_only",
+        "predecessor_execution_authorization_sha256": (
+            SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "failure_path": _relative(failure_path, root),
+        "implementation_change": (
+            "route selection, Feature PSI, PSI batch, and evaluation seal reads "
+            "through one strict authorized-predecessor helper"
+        ),
+        "content_size_and_sha256_validation_preserved": True,
+        "checkpoint_payloads_rewritten": False,
+        "scientific_contract_changed": False,
+        "new_llm_request_authorized": False,
+        "selector_or_dev_experiment_rerun_authorized": False,
+        "production_oot_validation_authorized": False,
+    }
+    amendment_path = audit_root / "resume_identity_bridge_amendment.json"
+    write_json_atomic(amendment_path, _self_authenticated_payload(amendment), overwrite=False)
+    supersession_path = audit_root / "authorization_supersession.json"
+    write_json_atomic(
+        supersession_path,
+        _self_authenticated_payload(
+            {
+                "schema_version": "prompt_16_authorization_supersession_v1",
+                "status": "predecessor_superseded_preserved_as_historical_evidence",
+                "superseded_authorization_path": _relative(predecessor_path, root),
+                "superseded_authorization_sha256": (
+                    SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "successor_authorization_path": _relative(authorization_path, root),
+                "reason": "sealed_checkpoint_resume_identity_bridge_fix",
+                "historical_file_modified_or_deleted": False,
+            }
+        ),
+        overwrite=False,
+    )
+    write_text_atomic(
+        audit_root / "README.md",
+        """# Prompt 16 sparse resume identity bridge v7
+
+The v6 sparse implementation and DEV-only memory certification remain valid.
+The first manual v6 launch failed before cell execution because two seal-load
+sites did not receive the already-authorized historical identity list. This
+amendment routes every phase seal through one strict bridge. Artifact size and
+SHA-256 validation remain mandatory, and no historical payload is rewritten.
+""",
+        overwrite=False,
+    )
+    validation_files = [
+        _artifact(path, root)
+        for path in sorted(
+            (item for item in audit_root.rglob("*") if item.is_file()),
+            key=lambda item: item.relative_to(audit_root).as_posix(),
+        )
+        if path != authorization_path
+    ]
+    checkpoint_resume = dict(predecessor["checkpoint_resume"])
+    checkpoint_resume.update(
+        {
+            "accepted_controller_authorization_sha256": (
+                SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+            ),
+            "expected_next_cell_order": 3,
+            "expected_controller_handoff_fit_id": "fit_008",
+            "cell_003_selection_checkpoint_fit_id": "fit_003",
+            "sealed_scope_identity_bridge": [
+                "selection_fits",
+                "feature_psi",
+                "feature_psi_batches",
+                "evaluation_cells",
+            ],
+            "rewrite_predecessor_payloads": False,
+        }
+    )
+    authorization_unsigned = dict(predecessor)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "implementation_files": [
+                _artifact(root / path, root) for path in sorted(implementation_paths)
+            ],
+            "frozen_input_files": [
+                *predecessor["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor["freeze_files"],
+                *validation_files,
+            ],
+            "memory_amendment": {
+                **predecessor["memory_amendment"],
+                "path": _relative(amendment_path, root),
+                "strategy": SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
+                "all_phase_seals_use_one_identity_bridge": True,
+                "artifact_content_authentication_weakened": False,
+                "scientific_contract_changed": False,
+            },
+            "checkpoint_resume": checkpoint_resume,
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": current_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": fit_ids,
+                "completed_feature_psi_batches": list(range(1, 17)),
+                "next_cell": 3,
+                "controller_handoff_fit_id": "fit_008",
+                "cell_accounting": expected_accounting,
+                "failed_handoff_authentication_sha256": file_sha256(failure_path),
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    write_json_atomic(authorization_path, authorization, overwrite=False)
+    return {
+        "schema_version": "prompt_16_sparse_resume_identity_bridge_build_v7",
+        "status": "authorized_manual_resume_at_oot_03_of_34",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(authorization_path),
+        "authorization_sha256": file_sha256(authorization_path),
+        "next_cell": 3,
+        "controller_handoff_fit_id": "fit_008",
+        "selection_checkpoint_fit_id": "fit_003",
+        "authenticated_selection_fit_count": len(fit_ids),
+        "authenticated_feature_psi_batches": list(range(1, 17)),
+        "completed_executable_oot_cells": 0,
+        "new_llm_requests": 0,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -4927,6 +5327,7 @@ def load_final_authorization(
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
         PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
         SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+        SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
     }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
@@ -4942,6 +5343,9 @@ def load_final_authorization(
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
     expected_predecessor = (
+        SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY
+        else
         PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
         if strategy == SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY
         else
@@ -4964,6 +5368,7 @@ def load_final_authorization(
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
         PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
         SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+        SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
     }:
         checkpoint_resume = payload.get("checkpoint_resume", {})
         if checkpoint_resume.get(
@@ -4975,6 +5380,7 @@ def load_final_authorization(
             if strategy in {
                 PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
                 SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+                SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
             }
             else "fit_008"
         )
@@ -4985,6 +5391,7 @@ def load_final_authorization(
             if strategy in {
                 PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
                 SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+                SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
             }
             else sorted(
                 {
@@ -5002,6 +5409,7 @@ def load_final_authorization(
             MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
             PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
             SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+            SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
         } and (
             checkpoint_resume.get(
                 "accepted_selector_memmap_authorization_sha256"
@@ -5013,6 +5421,7 @@ def load_final_authorization(
             MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
             PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
             SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+            SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
         }:
             if (
                 int(memory_amendment.get("mrmr_compact_feature_batch_size", -1))
@@ -5057,7 +5466,10 @@ def load_final_authorization(
                 raise Prompt16ExecutionError(
                     "parallel feature PSI authorization checkpoints changed"
                 )
-        if strategy == SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY:
+        if strategy in {
+            SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+            SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY,
+        }:
             validation_path = (
                 root
                 / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT
@@ -5107,6 +5519,13 @@ def load_final_authorization(
                 > 16 * 1024**3
                 or int(measurements.get("minimum_system_available_ram_bytes", 0))
                 < 8 * 1024**3
+                or (
+                    strategy == SPARSE_RESUME_IDENTITY_BRIDGE_MEMORY_STRATEGY
+                    and checkpoint_resume.get(
+                        "accepted_controller_authorization_sha256"
+                    )
+                    != SPARSE_FINAL_MODEL_EXECUTION_AUTHORIZATION_SHA256
+                )
             ):
                 raise Prompt16ExecutionError(
                     "sparse final-model authorization checkpoints changed"
@@ -5279,6 +5698,7 @@ __all__ = [
     "build_freeze",
     "build_mrmr_compact_amendment_authorization",
     "build_psi_performance_amendment_authorization",
+    "build_sparse_resume_identity_bridge_authorization",
     "final_full_dev_refits",
     "final_oot_cells",
     "load_final_authorization",
