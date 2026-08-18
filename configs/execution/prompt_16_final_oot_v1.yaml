@@ -9,11 +9,11 @@ parallelism:
   allow_nested_parallelism: false
 
 memory:
-  reserve_system_ram_gb: 4
-  warn_process_tree_rss_gb: 28
-  abort_process_tree_rss_gb: 32
-  abort_if_system_available_below_gb: 2
-  estimated_peak_safety_factor: 1.15
+  reserve_system_ram_gb: 10
+  warn_process_tree_rss_gb: 20
+  abort_process_tree_rss_gb: 24
+  abort_if_system_available_below_gb: 4
+  estimated_peak_safety_factor: 1.35
 
 gpu:
   reserve_vram_gb: 1.5

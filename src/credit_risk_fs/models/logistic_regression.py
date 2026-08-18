@@ -33,7 +33,12 @@ class LogisticRegressionModel:
         """
         Fit the Logistic Regression model on training data.
         """
-        self.feature_names = X.columns
+        names = getattr(X, "columns", None)
+        if names is None:
+            names = getattr(X, "feature_names", None)
+        self.feature_names = (
+            list(names) if names is not None else list(range(int(X.shape[1])))
+        )
         self.model.fit(X, y)
         self.fitted = True
         return self

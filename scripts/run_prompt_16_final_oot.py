@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
-import math
 import os
 from pathlib import Path
 import re
@@ -176,8 +175,27 @@ def _authenticate_predecessor_partial_state(
         raise Prompt16ExecutionError("predecessor partial OOT inventory changed")
     if (output_root / "_SUCCESS").exists() or (output_root / "_WORKER_SUCCESS").exists():
         raise Prompt16ExecutionError("predecessor unexpectedly contains success marker")
-    if list(output_root.glob("*/evaluations/cell_*/*")):
-        raise Prompt16ExecutionError("predecessor unexpectedly contains cell artifacts")
+    expected_accounting = predecessor.get("cell_accounting")
+    if expected_accounting is None:
+        if list(output_root.glob("*/evaluations/cell_*/*")):
+            raise Prompt16ExecutionError("predecessor unexpectedly contains cell artifacts")
+    else:
+        observed_accounting = _count_cells(output_root)
+        for key in (
+            "completed_cell_orders",
+            "unavailable_cell_orders",
+            "failed_or_corrupt_cell_orders",
+            "completed_count",
+            "unavailable_count",
+            "failed_count",
+            "accounted_count",
+            "incomplete_count",
+            "next_cell",
+        ):
+            if observed_accounting.get(key) != expected_accounting.get(key):
+                raise Prompt16ExecutionError(
+                    f"predecessor partial OOT accounting changed: {key}"
+                )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -284,19 +302,19 @@ def main(argv: list[str] | None = None) -> int:
         raise Prompt16ExecutionError("final OOT requires one active refit/fold")
     if policy.parallelism.estimator_threads != 4:
         raise Prompt16ExecutionError("final OOT estimator thread count must be exactly four")
-    if abs(policy.memory.abort_process_tree_rss_gb - 32.0) > 1e-12:
-        raise Prompt16ExecutionError("final OOT process-tree RSS cap must be 32 GiB")
-    if abs(policy.memory.abort_if_system_available_below_gb - 2.0) > 1e-12:
-        raise Prompt16ExecutionError("final OOT hard RAM floor must be 2 GiB")
-    if ram_policy.emergency_margin_bytes != 3 * GIB:
-        raise Prompt16ExecutionError("final OOT soft RAM threshold must be 3 GiB")
-    if ram_policy.recovery_threshold_bytes != 4 * GIB:
-        raise Prompt16ExecutionError("final OOT RAM resume threshold must be 4 GiB")
-    if ram_policy.recovery_consecutive_checks != 2:
-        raise Prompt16ExecutionError("final OOT RAM recovery requires two stable polls")
-    if ram_policy.opaque_stage_pause_mode != "hard_limit_only":
+    if abs(policy.memory.abort_process_tree_rss_gb - 24.0) > 1e-12:
+        raise Prompt16ExecutionError("final OOT process-tree RSS cap must be 24 GiB")
+    if abs(policy.memory.abort_if_system_available_below_gb - 4.0) > 1e-12:
+        raise Prompt16ExecutionError("final OOT hard RAM floor must be 4 GiB")
+    if ram_policy.emergency_margin_bytes != 6 * GIB:
+        raise Prompt16ExecutionError("final OOT soft RAM threshold must be 6 GiB")
+    if ram_policy.recovery_threshold_bytes != 8 * GIB:
+        raise Prompt16ExecutionError("final OOT RAM resume threshold must be 8 GiB")
+    if ram_policy.recovery_consecutive_checks != 3:
+        raise Prompt16ExecutionError("final OOT RAM recovery requires three stable polls")
+    if ram_policy.opaque_stage_pause_mode != "process_tree_suspend":
         raise Prompt16ExecutionError(
-            "final OOT opaque stages must run to the independent hard limits"
+            "final OOT opaque stages must use process-tree suspension"
         )
     if ram_policy.check_interval_seconds > 5:
         raise Prompt16ExecutionError("final OOT resource polling must be at least every 5s")
@@ -503,6 +521,36 @@ def main(argv: list[str] | None = None) -> int:
                     pd.DataFrame(samples),
                 )
                 if result.status == "completed":
+                    handoff = (
+                        result.return_value
+                        if isinstance(result.return_value, Mapping)
+                        and result.return_value.get("status") == "checkpoint_handoff"
+                        else None
+                    )
+                    if handoff is not None:
+                        emit_research_event(
+                            "isolated_cell_checkpoint_handoff",
+                            message=(
+                                "One final-model cell exited after sealing its checkpoint; "
+                                "a fresh worker will authenticate and continue"
+                            ),
+                            priority=True,
+                            configuration_order=handoff.get("configuration_order"),
+                            fit_id=handoff.get("fit_id"),
+                            phase=handoff.get("phase"),
+                        )
+                        publish_status(
+                            state="RESUMING_FROM_CHECKPOINT",
+                            stop_code=None,
+                            sample={
+                                "fold_id": (
+                                    f"oot:cell_{int(handoff['configuration_order']):03d}"
+                                ),
+                                "stage": "isolated_cell_process_exit",
+                            },
+                            force=True,
+                        )
+                        continue
                     publish_status(state="FINALIZING", stop_code=None, force=True)
                     worker_marker = output_root / "_WORKER_SUCCESS"
                     evidence = output_root / "final_evidence_manifest.json"
