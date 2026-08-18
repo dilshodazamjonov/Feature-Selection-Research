@@ -1,0 +1,29 @@
+{
+  "schema_version": "prompt_16_sparse_resume_identity_bridge_regression_v1",
+  "status": "passed",
+  "validated_at_utc_date": "2026-08-18",
+  "command": "uv run pytest tests/test_sparse_final_model_preprocessing.py tests/test_prompt_16_final_oot.py tests/test_prompt_16_third_dataset_execution.py tests/test_prompt_16_llm_supplement.py tests/test_prompt_16_pilot_gate.py tests/test_model_utils.py tests/test_metrics.py tests/test_full_baseline_pipeline.py tests/test_data_pipeline.py -q",
+  "passed": 93,
+  "failed": 0,
+  "warnings": 107,
+  "historical_identity_bridge_passed": true,
+  "real_production_seal_walk": {
+    "status": "passed_read_only",
+    "sealed_scope_count": 46,
+    "selection_fits": 27,
+    "feature_psi_top_level": 1,
+    "feature_psi_batches": 16,
+    "unavailable_evaluation_cells": 2,
+    "oot_rows_loaded": 0,
+    "historical_authorization_counts": {
+      "33b009bd685a2df66b97e0cc16906c1b7947c8e08c4da5b846490c47c32bc739": 17,
+      "056af6b6f5fd2b8153b1d9148b27d1c8cc3cf33933ab69a14f796d4b0d24cc06": 14,
+      "5b12094f0338545b8ef77e880734c855f67d5f4f9a37a1451e09d4471e928637": 15
+    }
+  },
+  "focused_tests": {
+    "passed": 57,
+    "failed": 0
+  },
+  "notes": "The warnings are existing pandas DataFrame fragmentation performance warnings in LendingClub feature construction. Python compileall and git diff --check passed."
+}
