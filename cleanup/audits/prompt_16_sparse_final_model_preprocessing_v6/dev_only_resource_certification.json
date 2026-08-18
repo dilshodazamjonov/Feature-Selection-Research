@@ -1,0 +1,918 @@
+{
+  "schema_version": "prompt_16_sparse_final_model_resource_certification_v1",
+  "status": "validated_in_memory_csr_no_disk_fallback_required",
+  "started_at_utc": "2026-08-18T06:22:20.709425+00:00",
+  "completed_at_utc": "2026-08-18T06:23:49.375534+00:00",
+  "scientific_method_changed": false,
+  "representation_only_change": true,
+  "resource_contract_gib": {
+    "process_tree_hard_cap": 24,
+    "system_available_hard_floor": 4,
+    "system_available_soft_pause": 6,
+    "system_available_recovery": 8,
+    "disk_fallback_trigger_peak_rss": 16,
+    "certification_minimum_available": 8
+  },
+  "measurements": {
+    "peak_process_tree_rss_bytes": 1421574144,
+    "peak_process_tree_rss_gib": 1.323944091796875,
+    "minimum_system_available_ram_bytes": 24931565568,
+    "minimum_system_available_ram_gib": 23.219329833984375,
+    "ram_wait_count": 0,
+    "stop_code": null,
+    "worker_status": "completed"
+  },
+  "worker_report": {
+    "path": "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6/dev_only_certification/worker_report.json",
+    "sha256": "77078028b85fe388d298644ec74efa80fa0b7b2db90a7ad1164cf71641d0d0c6"
+  },
+  "supervisor_summary_sha256": "55bcea77d9c56e241249aab96d00ffc9df0fb12e6c747b0f33351307152170fa",
+  "resource_samples_sha256": "e13cc970988e31fc411e4ea3fd1ef18ae3ba6112f5c9f2ddab1d8d3b0e418e3b",
+  "production_tree_before": {
+    "root": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1",
+    "file_count": 171,
+    "identity_sha256": "1c1be291a75feffd336ca6d46b5b368457f39180cad98908f2830a3b320a4dff",
+    "artifacts": [
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_001/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "89ff08240dfd533086d1123be20abc3837dc4c3d712a90e1209423651077293c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_001/failure.json",
+        "byte_size": 172,
+        "sha256": "10cab0996c7ab60f3b39a4a3c565145eba8aceec429a228774fb7c5af94a1ecb"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_001/manifest.json",
+        "byte_size": 1172,
+        "sha256": "06ad2ac055b92f1ff1b2512e46f6164f5ede3b172c58e654ade8aef8aa3fa6fe"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_001/status.json",
+        "byte_size": 821,
+        "sha256": "bc42f61f921dbc4a22031354e5ac81da97721ac9c4b932bd717ba5ed4e93faa9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_002/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "4df951e5130b4ab5a8965341c58e219c9c0deaef3e01e6155fa0af952481dba2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_002/failure.json",
+        "byte_size": 172,
+        "sha256": "10cab0996c7ab60f3b39a4a3c565145eba8aceec429a228774fb7c5af94a1ecb"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_002/manifest.json",
+        "byte_size": 1172,
+        "sha256": "c59c4f62de899507a189a43b4b6ee1db28ff0f674656223d9379afce0a579311"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/evaluations/cell_002/status.json",
+        "byte_size": 828,
+        "sha256": "1b493862d444ee07b305c4d478ba4d32f70c9aeaadeb04e8a6a13d8551375ca0"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "dc73412acecbad7c4cd8ddfeb58a1c1b185c3c9b4b168f85bdf0e7a2b508c39b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/all_source_features.parquet",
+        "byte_size": 112936,
+        "sha256": "2a430ca929deb845f34275a293a4ff2db6a76493cdcc4be7236b8042dc4f89d3"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_001/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "64327734345ed8e3d3edaef288dadde2557a20f4493f47acc83bef5e7a086f5d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_001/feature_psi.parquet",
+        "byte_size": 23676,
+        "sha256": "0784587add7e77608b1e76409f17fea97fc852162830205bdb88e544f6ee5813"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_001/manifest.json",
+        "byte_size": 1092,
+        "sha256": "a762834227ec275dad8dd72562dbc06e1a652d0e9cfd9aa8a6b9b749fb29573e"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_002/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "4b09ac186ba500bfeeb49b46d6e567de8194c87dd94e24f09e5200608fddca95"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_002/feature_psi.parquet",
+        "byte_size": 23011,
+        "sha256": "3c73cf0fc5afaf317d5788acbc8e856a7b8f324334b7ebb8678eb5e0a3ba8991"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_002/manifest.json",
+        "byte_size": 1092,
+        "sha256": "7eb27670f6a5524295cfda497d9aea07920574df4d3cb600c132b3301cd06026"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_003/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "3907bb653b7af746b961eb7433814145bf5df4caf7f39e9fe62cf009e8ac723a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_003/feature_psi.parquet",
+        "byte_size": 21502,
+        "sha256": "5d0545acdd0b8129c5deea33243bbdf9c62d1b0e08a8531db6a3dd7a4f02b818"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_003/manifest.json",
+        "byte_size": 1092,
+        "sha256": "cea3981273a9c6919bdc4741b7a2dcac1b8a53c01c4801740fb7cfef4f63108b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_004/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "078fe64a55ad673735c9d30912fdf9ec13c9fecfd5b27904294b7a08e730c09d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_004/feature_psi.parquet",
+        "byte_size": 21916,
+        "sha256": "2824bcb5dfb553bd766c81a33f668aa465e4cbbb22343cd11eaf057138615213"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_004/manifest.json",
+        "byte_size": 1092,
+        "sha256": "5ed8347faa0359884ee5653cc29ee7017055ffe715b0311ceb8463257c2389e3"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_005/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "d9688e506fc9383a5e76e12c477ffb714d0b5fce2cd6d4bc4130b8c25aab1a3b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_005/feature_psi.parquet",
+        "byte_size": 21539,
+        "sha256": "02f16dcd82ea78a58ae4b5e57846d73f80ebadb08b86f3bb8db8037574807acf"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_005/manifest.json",
+        "byte_size": 1092,
+        "sha256": "df45d078dfb5b3e00119c5a87ba6870f84eb4e2ff884c3c005d669edf80dcb53"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_006/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "957dc6067cd6fb2bcf529c4bd1c48394e53e4146d63513f7aa8688d022967710"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_006/feature_psi.parquet",
+        "byte_size": 21006,
+        "sha256": "e00cd45c9367345430a43627621b35a35636abbdf77c130ce00c8b9152a7d2b9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_006/manifest.json",
+        "byte_size": 1092,
+        "sha256": "a74cd33f488690ecd01cad8315e41d1eef042e43dca79a976af2718e96157d5c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_007/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "5b118163c7463b191b66bf5e0a88129fcf7cf171994489d264e5656a467f91ef"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_007/feature_psi.parquet",
+        "byte_size": 22048,
+        "sha256": "e9a5257acc04595247c1bc7143677fa2ec4cd81aea4e91bd98dde2d1cef7ed60"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_007/manifest.json",
+        "byte_size": 1092,
+        "sha256": "75d4e9ab4bc5496e4c455dae32a2a0d46a02474cb94b48f840fc37a1a8581c16"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_008/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "10573c41714412c04394b54a39ca5bdb49d00040bd595d00eb7612c35e78106a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_008/feature_psi.parquet",
+        "byte_size": 21322,
+        "sha256": "6dc4aab0b04d0799f9bf6d6de7e7b6898f168dc8cfe105e31d6972e8d4b3ab47"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_008/manifest.json",
+        "byte_size": 1092,
+        "sha256": "80f791d5503f8abbd015cc778aa6f2709ec0f558c0a8b38e8aa85e22d977bd2c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_009/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "9c6061aeba514aacc03609899dd40ac439b4fc69d5160e3b3d9fce9411ff6686"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_009/feature_psi.parquet",
+        "byte_size": 21695,
+        "sha256": "e32f57389ffb575b81fb2ce9a6d40c5a54a58998ca891b65108a81575b2098b0"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_009/manifest.json",
+        "byte_size": 1092,
+        "sha256": "ce5377cc7e035778c714503e8c390b51b8e713328a6dc6a4b6489c4aec42f5d1"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_010/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "cda1cbb68ef6ee581a04ffabad27407da4369a123db938e14f6b45c4fc5943ac"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_010/feature_psi.parquet",
+        "byte_size": 21318,
+        "sha256": "6a837b18e1190b48f0729c3fcac0fa13492fef59bf6842ed74e8d4fbefb490f5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_010/manifest.json",
+        "byte_size": 1093,
+        "sha256": "2aa233b512435e760b3f10f842c65136fce6755e0c369ce6c53e7832adc4f5a6"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_011/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "a0903ae78fd16efe99ff48217308cd36b0737cb52ccc09cf439e8c0604ee79ec"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_011/feature_psi.parquet",
+        "byte_size": 21284,
+        "sha256": "860a7ae537fa2c6e685b5683641982cf0499261eedc19854badc0917321dc08f"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_011/manifest.json",
+        "byte_size": 1093,
+        "sha256": "477330aaea695677b4400a65fb6ba7575fa0c08af72d1bfd57feb9c37453e346"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_012/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "55125184b5ee5e288d9b7b3ee3f7db626eac0cbfa667bf91aeaf908b0215dc75"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_012/feature_psi.parquet",
+        "byte_size": 21202,
+        "sha256": "48c7143cfdaf39e38c4b2a06817f9b98ee8e8f6ec19ca252c3b0e6fe4fc49a01"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_012/manifest.json",
+        "byte_size": 1093,
+        "sha256": "2ee1723807e20dc464b3f5b85acda889affb7040541ebc8ea1b377d827b66287"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_013/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "32fdc28a2aee4fdc391ceb85f7b17034898fa1cef0077cd9e204e4586355cb19"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_013/feature_psi.parquet",
+        "byte_size": 20394,
+        "sha256": "1eb461d029b00372f1584643af8922a1c69d7acba6c9dd4429195b549e45a96f"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_013/manifest.json",
+        "byte_size": 1093,
+        "sha256": "5881fb9ba827c3ce248b219408fffed5240c029c24a2ca723b9a8be846b6de4d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_014/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "c0aff807ccd9dd61a2a5f11513880e8558e5ca4925ce68ff0cb942e9a6a1837c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_014/feature_psi.parquet",
+        "byte_size": 19839,
+        "sha256": "5f3f7f04114af535f655f6a74e103b5d33b8c5cf75ee0bcad522fb3fbda4d6e9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_014/manifest.json",
+        "byte_size": 1093,
+        "sha256": "72dea19df3c6ebb6b63e048846a078b55ef7b2cad465f4179a46558b26cc9e98"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_015/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "cb36d4973ead19f4983793bc731f541ef29f93a027665cac80c03858ff1a59e2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_015/feature_psi.parquet",
+        "byte_size": 19717,
+        "sha256": "e2830c0326f45f8d516442be87ad475578bdce31f14a73c10f107e6807d343f8"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_015/manifest.json",
+        "byte_size": 1093,
+        "sha256": "f966c33a69f3e8257e359e3c33fc07413643e7a4060e81747d922e904c090e5b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_016/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "c414e144401642082b8d1a528d938e0bc75bf78926630690e1a93f1681f327a9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_016/feature_psi.parquet",
+        "byte_size": 16173,
+        "sha256": "6bc0a9c9b87e11e1109aaeee2250f0fd5701238ec07c3876073b4d297181c351"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/batches/batch_016/manifest.json",
+        "byte_size": 1092,
+        "sha256": "7ffc63e5decd7347d78d8438386a182c13a33208ec6897dc947396d06c851fae"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/checkpoint_identity.json",
+        "byte_size": 570,
+        "sha256": "70543f998d781998b348f1bb4cca83d028af4cdea5721ab2e8055614bbf7cc1d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/feature_psi/manifest.json",
+        "byte_size": 1114,
+        "sha256": "08dfcf74a8776e95c118a9e63999d34ab887ba8b00f9c419580e12f7afbad18b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/scope_authentication.json",
+        "byte_size": 1554,
+        "sha256": "c40d1528905eb11715325a77ed1d25eb0b25c657763f42f6b73f6bd5970fccf1"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_001/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "7883f6cfd449c6d94ed53bac2d3bf8543b913c2b99c61b0404966130d0a670a8"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_001/manifest.json",
+        "byte_size": 1087,
+        "sha256": "2d22d016010b5b4431fb34017de9099817bed4e1d776a10b3b9f546d0536a535"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_001/selected_features.csv",
+        "byte_size": 108801,
+        "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_001/selection.json",
+        "byte_size": 469064,
+        "sha256": "a4624d366a136b27d90f8b653cea4cbfa57b7b1c3f0a2ef047bb1475be34efa1"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_002/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "af30b4eb06f915dc4ea69d7d002c7dd8d047ab768ca9f0d3434ca4618067c58f"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_002/manifest.json",
+        "byte_size": 1087,
+        "sha256": "0e1706518caec438e40b116e54451d681b5730c5ade7648062bd3a50c59ebbc0"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_002/selected_features.csv",
+        "byte_size": 108801,
+        "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_002/selection.json",
+        "byte_size": 469071,
+        "sha256": "3b97c16f97f7f95607f16f53182fe1dd1694c0bf0d0756d2582e16c580869b74"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_003/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "c4a7793ae776aee5b464c878fb83c4cb3f30fdd084cbf72b02e30fed77bd90c6"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_003/manifest.json",
+        "byte_size": 1085,
+        "sha256": "d4b240a45d2e913df09c287f751d922891822dee0eaa0da212acaa6f441c99dd"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_003/selected_features.csv",
+        "byte_size": 1087,
+        "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_003/selection.json",
+        "byte_size": 372174,
+        "sha256": "b354d00c0b92f1cd4482f2f8902812fbf4f2141f8edb82303dc20b06d7563566"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_004/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "ae21088afd1a95ae60258ad0b016fd8a7b4572ee1bc7975cf35b8e88f3753c0f"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_004/manifest.json",
+        "byte_size": 1085,
+        "sha256": "3e415a1f80905f5a2602f1d6e9d3e356430c77c60acb58459041b55e433e57cb"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_004/selected_features.csv",
+        "byte_size": 2165,
+        "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_004/selection.json",
+        "byte_size": 374536,
+        "sha256": "e70631b9d89ea9678ddeb32ab8057372c879dc1bfc9a2cf7fa024940a07e365a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_005/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "2f22df74cead110a3f29237c22cc45c40bc7896b8dd9e053f0ec5f30b6de259e"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_005/manifest.json",
+        "byte_size": 1084,
+        "sha256": "123df3d8eed7fe23bf35a82b1b70a164d201080903ea14c68ec7d42573a686c6"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_005/selected_features.csv",
+        "byte_size": 996,
+        "sha256": "6f18756157812d9512b14e765638d4a743d418088c8f8755b9fc3115a8a2972a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_005/selection.json",
+        "byte_size": 391517,
+        "sha256": "d1e0592b9e7bac2c3724a5932d27352a6f16c49bfcab80e12f51aa2319f2a086"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_006/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "06627688abaf40771287ba1e2d7d08c29b3ca33aec53e9828b0f3e3a425686f4"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_006/manifest.json",
+        "byte_size": 1085,
+        "sha256": "3a3ab12f7652f270d4ebc7444bf75ac95be97ffc4a17ff687a7526f3d7351038"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_006/selected_features.csv",
+        "byte_size": 2015,
+        "sha256": "9b71674258f039c22c4683e114bdff678c489cc9c533bcc6fcb4613b3236fada"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_006/selection.json",
+        "byte_size": 393761,
+        "sha256": "91b6f29fcd553842f7f7ab7bc1d1cec9ee27bae6251cd935c373fd65e8ece1bd"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_007/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "a84bb3963ce6a49e7aeb2d868f12db47557c3afee7522ddd6cc0b053c813a052"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_007/manifest.json",
+        "byte_size": 1085,
+        "sha256": "d0c5304448353ff6721930678a1ad120414401c180530e272fb1c0abbc08b53f"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_007/selected_features.csv",
+        "byte_size": 1145,
+        "sha256": "79bb812a0d7e6551cf4a414c67851a400051329a00acdb056bf05bf48e500dd9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_007/selection.json",
+        "byte_size": 125578,
+        "sha256": "28e1f82f77eb0743c841a985f66871347971a397bbca6c81db98aa08236700d5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_008/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "0a76e63a4feec0609031fd1e1496723ca8a58b56e35617573019c83170567bfd"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_008/manifest.json",
+        "byte_size": 1085,
+        "sha256": "b5e4a1ae3d069594124309b3d2a50afc930c8512359490c3f4930d566358408a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_008/selected_features.csv",
+        "byte_size": 2332,
+        "sha256": "b84b4c9e6f057baece8b6dcee353076c8fa27aad4a0a8e2d9d56ca705466222b"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_008/selection.json",
+        "byte_size": 137346,
+        "sha256": "40ed2b9e0c6110c11d8a6b7ccd575420d0ad24bc689aa1696cb19f73618fe3da"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_009/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "c31d86d4644c67106d634523eaeb98b7196271ca82b0d4ec6d414e8d6dca8a7a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_009/manifest.json",
+        "byte_size": 1080,
+        "sha256": "209f2bd8c2e9adff8cd2d25c1b8bc268f3f321ade7c680677b1959bc001529a5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_009/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_009/selection.json",
+        "byte_size": 695,
+        "sha256": "616efb9f51874f607195cf76a1d136ef4eb456532bacc1ac51f6ddd49f9ea478"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_010/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "dd9338286bd949b898b460f5e24c769c71bd021d5fe4fdb67a94824518a2d3d6"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_010/manifest.json",
+        "byte_size": 1080,
+        "sha256": "1b9e5fe98d0c5b0071c2176f43e49e31ee3c7d56675be889b96e71bb6964f291"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_010/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_010/selection.json",
+        "byte_size": 703,
+        "sha256": "47471fc5861b019052838ae49e24eb61fa1011bc918af71ad97c5576feb7c14a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_011/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "729b0d40743efec4374031f50cb4ab72214740e4669985ffa6ac8559d939fce4"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_011/manifest.json",
+        "byte_size": 1082,
+        "sha256": "82a9cee650af61da948f6269f018305be358641af35d4e9d3e5ecb16e39bfa62"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_011/selected_features.csv",
+        "byte_size": 875,
+        "sha256": "db317339e71efc512e3160f80de559caeccc7d5c78b35d974736153449411b95"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_011/selection.json",
+        "byte_size": 2663,
+        "sha256": "5a42c8b9b8c81c0820ed6de347c9e4ba4a6376d7f51d67cd7b1b2e4c0cb0461a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_012/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "6b0fea3535eca9bf9477944f958bc4482f5aaaac9c002850b8318101e31db253"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_012/manifest.json",
+        "byte_size": 1083,
+        "sha256": "797a07ff4a3c4c02d056c1fdeafa4fc1f493f1ad91bcc28b0aa9f5e2f363aa0a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_012/selected_features.csv",
+        "byte_size": 1827,
+        "sha256": "fe74a8acec2e4f04021f87a3a2a40022f7595dfcfa64dbeadbbac7cf897c1ea5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_012/selection.json",
+        "byte_size": 4773,
+        "sha256": "d95614d4eaf577b8510b3fe5609430fb7b53a679c7ba1ed80872bb41d268125c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_013/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "b79ff564186bfbf447d3c3162df16f3f17fc267e057f19432353e081bdace4a5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_013/manifest.json",
+        "byte_size": 1084,
+        "sha256": "b19c3e64bc0e8467b65addcc35f4bb3a15af0e2f689487e1571e9b5bab12823a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_013/selected_features.csv",
+        "byte_size": 850,
+        "sha256": "bb5f15abdf339f04fc29becfde6e1d6143515e15946510250615f6223e47ac48"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_013/selection.json",
+        "byte_size": 522999,
+        "sha256": "1212bbf9bce3bf6c601d817a7b53421c71becf83d6b5385a9e756e89fe0c5c8d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_014/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "df009388bb07036c55e6b617485c5d0d20f83588602723eccbe4056464775f46"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_014/manifest.json",
+        "byte_size": 1085,
+        "sha256": "1fc863d0e589eb26c97cc071faefbe1faaf050a7ca60e4920302ba5adc8579a2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_014/selected_features.csv",
+        "byte_size": 1733,
+        "sha256": "2d05c2ecbf3382ed0b73291739fd8b5f9b0fc62d78e74af7ac4d080a77c57e80"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_014/selection.json",
+        "byte_size": 524969,
+        "sha256": "a45ba6743a1d79273a67991890bc6f176971f4a38f573f011792883bc13a15ba"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_015/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "860d3a088dbce72f469263c7db45e66f7829396ac2a10285516a340e2e760502"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_015/manifest.json",
+        "byte_size": 1080,
+        "sha256": "9afcc3783d64f12f7b53183a58e62b2773a5515aa54542a0beedaf44ef118838"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_015/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_015/selection.json",
+        "byte_size": 700,
+        "sha256": "3573b0e6553715e2bd4149dba5d6f827c33fca0ae234f22fe030bebb10d525c5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_016/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "25d1e2b117a75f9cd8a2198fbe368995ce2ef6b6bd983f095ae542668da45a54"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_016/manifest.json",
+        "byte_size": 1080,
+        "sha256": "61875b195c9afc8d88503b1ecb6d20d0406a952eca92607119c38a9b642f7a7e"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_016/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_016/selection.json",
+        "byte_size": 706,
+        "sha256": "68298687cfc1ddc470c8782857906b454a1f189d0d0c1afaf3f86a6f78beae35"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_017/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "d503a1690e6dd7273fc1de8abf5afca1ae4a3a7f2e629de2e6970c518608afc7"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_017/manifest.json",
+        "byte_size": 1084,
+        "sha256": "d459d16f0a33f1d331f094767a2d9abf7ab1ada2ce204a400ff9d877009758c2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_017/selected_features.csv",
+        "byte_size": 896,
+        "sha256": "6a1b36e23ddcae1883e4ee64142ffa741948ec0116a02502821b5ec63afdaa34"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_017/selection.json",
+        "byte_size": 507183,
+        "sha256": "d716b75f8d3606863ecb4f99dad8edb0d279ea3427cd9b5f850e03eb86992c68"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_018/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "5d26d0b82877104e18e337a54c1d04701f83c03ab78a9e2aff4083e3512324d9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_018/manifest.json",
+        "byte_size": 1085,
+        "sha256": "bcc1958cdda2f4cc55f20f197d9939dad5cd4a17f643427bbc5a3d22168ff83c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_018/selected_features.csv",
+        "byte_size": 1810,
+        "sha256": "7477cc0c8065b22a963a2fa8ecbcee7a4ba321ddb5b2eea0931eb7c0beaa4870"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_018/selection.json",
+        "byte_size": 508932,
+        "sha256": "33d67030c47edccd985b4513118f9a07518905659a5494ff8808d55a37860ac9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_019/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "c32e7d62e90225c13757fe8a46ceac1cb5ab86cc668bbd6b8c3349d01ae321c2"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_019/manifest.json",
+        "byte_size": 1080,
+        "sha256": "144053c2a7693847dd8018bd41bfced81730cea1baa214297b30ae1943690f5e"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_019/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_019/selection.json",
+        "byte_size": 717,
+        "sha256": "02a570d7e6e4927a4c8204183460a0658a2d461525b4d917d6722f31c9c18552"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_020/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "9960d67204cf8f037a7cb26714ded295e4deb26800817bb4404701a4a36408b8"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_020/manifest.json",
+        "byte_size": 1080,
+        "sha256": "41b2b62d9495af8bc54c10ace1d61883b0516fd28fa09f0233c258c04e138584"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_020/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_020/selection.json",
+        "byte_size": 723,
+        "sha256": "16d7616411e7d543e976aa8de56a1b0a92b052c616d064b0b24ea35b05b6d1fa"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_021/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "2a1305f62a0b6dd143a5e3316cb64015c19b232c2a5f731d9e21673c781988d9"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_021/manifest.json",
+        "byte_size": 1085,
+        "sha256": "193c75f8dcc42890c0e8ae8a60c906de3781fc7a7941532da82b1a07980e1722"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_021/selected_features.csv",
+        "byte_size": 4967,
+        "sha256": "4d8cfc54417842ef118d16cd241b1837f4af713d23bfba76884a1880fe08f851"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_021/selection.json",
+        "byte_size": 160174,
+        "sha256": "2c6b30a8e44f295584b9e4638aec4b68131453b111c26f4fd5020e713ec5b0a0"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_022/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "6bbcd272105bfb8515f58d817171e69e97adc8372a10ee5ff38579cec5664054"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_022/manifest.json",
+        "byte_size": 1085,
+        "sha256": "0f9658ede141be777d1e115fdf925dde70091946d767ebf16cfbd0cc3cb9cdca"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_022/selected_features.csv",
+        "byte_size": 9183,
+        "sha256": "2ec144b7d1281bd9d24a3a1c3597bf62a8551e3cb2692672ea4b721e057cba52"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_022/selection.json",
+        "byte_size": 194957,
+        "sha256": "3f3c8740ce87e049d083e84369ee4ca596b5278bc212e8b46b68ba736b0e0c0e"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_023/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "b654beec7e551c7fac4f2d2bb83c0bafba71289c12b1e5590a56374fdf21c770"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_023/manifest.json",
+        "byte_size": 1086,
+        "sha256": "38418975429c332e3b865b2906508588cfc4c6f37c86bd720be13e372caf51e5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_023/selected_features.csv",
+        "byte_size": 12123,
+        "sha256": "9447834c7d422e8b1effe369a27dd478fc91dc661ed7585a7a291b4f1ac99160"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_023/selection.json",
+        "byte_size": 228718,
+        "sha256": "035b2885f9f6bebcd5c41a12e37339b38183ca8fcf7dc24dd3366d2fe990f0c5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_024/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "532196c5e54d9529b903998d9b806085a820e17bbb8f26df4a788ddba0aea8ea"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_024/manifest.json",
+        "byte_size": 1080,
+        "sha256": "5ca23f1896456c97788817325d56c74a0721ecb7f37011dc6a999fde6eb635db"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_024/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_024/selection.json",
+        "byte_size": 717,
+        "sha256": "efd42399427923b45ae6d28793b1d05552ec36f7b2282a5d24b423f9cc75bc6a"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_025/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "98c37a46560b092023cf983c675112f072b45b6db07638dff503b7424d436b06"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_025/manifest.json",
+        "byte_size": 1080,
+        "sha256": "0575254261b46d8ed23aa73cbd1e5a92bb2d225a17bb40debabdb37dbe3b0a87"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_025/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_025/selection.json",
+        "byte_size": 723,
+        "sha256": "ec9f59be501f475f21ae0cf54fed6a98b16989a2ea75f7c2c8022390dc35303c"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_026/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "0cce491e1e66b27429e2caa4e15f5a885b093943fe75fd45a54ddd1e955ec3de"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_026/manifest.json",
+        "byte_size": 1080,
+        "sha256": "2689910b6f8e827da01b9d2923466957334aeeea1872edbfdd2e702bea71754d"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_026/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_026/selection.json",
+        "byte_size": 706,
+        "sha256": "f37ed617468fc67c8214a00e4119500af8c825e8596acd87ded183f9cbd44748"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_027/_SUCCESS",
+        "byte_size": 89,
+        "sha256": "d33afbc46a0bdc672a240452e52aaa3e646f66e207d757655c9512fd07aa1647"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_027/manifest.json",
+        "byte_size": 1080,
+        "sha256": "853a1d0b513c6a7fcf8cb1303ff7d4db99aa9f6893729dd08ff3368a83101307"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_027/selected_features.csv",
+        "byte_size": 14,
+        "sha256": "6a7f6d8146415ac40360033213d987ca4c8e37b91dd7ddb8073c7bc734e34729"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_027/selection.json",
+        "byte_size": 712,
+        "sha256": "7a7b5210275eb87ce62407b69e044d7c300fe2f9475b7dd51b01aeefb08d20e5"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selector_encoding.json",
+        "byte_size": 806,
+        "sha256": "28ecddd1cf73267c7dc93c78a23733da899fa7360621d837ddfab22b6c2f5da1"
+      },
+      {
+        "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/controller_status.json",
+        "byte_size": 3225,
+        "sha256": "d20ad356d984b8522f9286212c55b25929323063a2225362ca1b17338954c830"
+      }
+    ]
+  },
+  "production_tree_after_identity_sha256": "1c1be291a75feffd336ca6d46b5b368457f39180cad98908f2830a3b320a4dff",
+  "production_cell_accounting_before": {
+    "complete": [],
+    "unavailable": [
+      1,
+      2
+    ],
+    "next_cell": 3
+  },
+  "production_cell_accounting_after": {
+    "complete": [],
+    "unavailable": [
+      1,
+      2
+    ],
+    "next_cell": 3
+  },
+  "controller_status_sha256_before": "d20ad356d984b8522f9286212c55b25929323063a2225362ca1b17338954c830",
+  "controller_status_sha256_after": "d20ad356d984b8522f9286212c55b25929323063a2225362ca1b17338954c830",
+  "production_oot_cell_executed": false,
+  "selector_rerun": false,
+  "llm_request_count": 0,
+  "locked_oot_rows_loaded": 0,
+  "locked_oot_outcomes_inspected": false,
+  "disk_backed_csr_required": false
+}
