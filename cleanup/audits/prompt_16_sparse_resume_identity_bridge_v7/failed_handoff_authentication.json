@@ -1,0 +1,19 @@
+{
+  "schema_version": "prompt_16_sparse_resume_failed_handoff_authentication_v1",
+  "status": "safe_failed_before_checkpoint_or_model_execution",
+  "failed_authorization_sha256": "551d4ea6d3491cca7824ab2b9fa183df1e3ec5f7f7ab83d845a0811141399e9b",
+  "attempt": 26,
+  "stop_code": "worker_crash",
+  "exception": "completed artifact identity mismatch: classical/feature_psi",
+  "root_cause": "run_phase_worker omitted the authorized predecessor identities when loading the top-level Feature PSI and evaluation-cell seals",
+  "production_output_inventory_changed": false,
+  "production_files_changed": [
+    "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/controller_status.json"
+  ],
+  "completed_executable_oot_cells": 0,
+  "next_cell": 3,
+  "controller_handoff_fit_id": "fit_008",
+  "selection_checkpoint_fit_id": "fit_003",
+  "execution_lock_present": false,
+  "artifact_authentication_sha256": "4acc86b9d46d14891608f1d24c6809280d809dfbdc318cb99f6242c3d8e4a665"
+}

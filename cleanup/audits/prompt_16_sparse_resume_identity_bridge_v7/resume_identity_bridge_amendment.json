@@ -1,0 +1,14 @@
+{
+  "schema_version": "prompt_16_sparse_resume_identity_bridge_amendment_v7",
+  "status": "validated_checkpoint_identity_bridge_only",
+  "predecessor_execution_authorization_sha256": "551d4ea6d3491cca7824ab2b9fa183df1e3ec5f7f7ab83d845a0811141399e9b",
+  "failure_path": "cleanup/audits/prompt_16_sparse_resume_identity_bridge_v7/failed_handoff_authentication.json",
+  "implementation_change": "route selection, Feature PSI, PSI batch, and evaluation seal reads through one strict authorized-predecessor helper",
+  "content_size_and_sha256_validation_preserved": true,
+  "checkpoint_payloads_rewritten": false,
+  "scientific_contract_changed": false,
+  "new_llm_request_authorized": false,
+  "selector_or_dev_experiment_rerun_authorized": false,
+  "production_oot_validation_authorized": false,
+  "artifact_authentication_sha256": "c378db37134ebdddc1fabc1693d7c64e22e4b9b8276435a709f279d0b71253ff"
+}
