@@ -1,0 +1,10 @@
+{
+  "schema_version": "prompt_16_authorization_supersession_v1",
+  "status": "predecessor_superseded_preserved_as_historical_evidence",
+  "superseded_authorization_path": "cleanup/audits/prompt_16_final_oot_psi_performance_amendment_v5/execution_authorization.json",
+  "superseded_authorization_sha256": "5b12094f0338545b8ef77e880734c855f67d5f4f9a37a1451e09d4471e928637",
+  "successor_authorization_path": "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6/execution_authorization.json",
+  "reason": "preprocessing_representation_only_sparse_amendment",
+  "historical_file_modified_or_deleted": false,
+  "artifact_authentication_sha256": "c706234a76fecb33e27945dfa9b29b4caa7398b04e61cd8b42efb0e970cdd212"
+}

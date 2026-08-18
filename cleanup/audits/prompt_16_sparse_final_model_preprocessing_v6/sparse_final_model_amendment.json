@@ -1,0 +1,50 @@
+{
+  "schema_version": "prompt_16_sparse_final_model_preprocessing_amendment_v6",
+  "status": "validated_representation_only_sparse_repair",
+  "authorized_by_user_at_utc_date": "2026-08-18",
+  "predecessor_execution_authorization_sha256": "5b12094f0338545b8ef77e880734c855f67d5f4f9a37a1451e09d4471e928637",
+  "trigger": {
+    "production_next_cell": 3,
+    "controller_handoff_fit_id": "fit_008",
+    "selection_checkpoint_fit_id": "fit_003",
+    "failure": "dense_one_hot_final_model_preprocessing_ram_exhaustion",
+    "promoted_executable_oot_cells": 0
+  },
+  "preserved_exactly": [
+    "all_selected_original_features_and_order",
+    "all_dev_and_oot_rows_and_order",
+    "dev_fitted_categories_missing_unknown_and_infrequent_semantics",
+    "numeric_mean_imputation_and_centered_standard_scaler",
+    "all_logistic_regression_and_catboost_parameters",
+    "full_dev_ks_threshold_rule",
+    "34_cell_registry_and_all_statistical_analysis_rules",
+    "all_authenticated_predecessor_checkpoints"
+  ],
+  "execution_only_changes": [
+    "one_hot_encoder_sparse_output_true_float32",
+    "transformed_numeric_block_to_csr_after_centered_scaling",
+    "scipy_sparse_hstack_canonical_sorted_csr",
+    "bounded_50000_row_dev_and_oot_scoring",
+    "one_new_evaluation_per_isolated_worker_process",
+    "atomic_fitted_encoder_schema_and_resource_checkpoints",
+    "restore_24_4_6_8_gib_resource_envelope"
+  ],
+  "resource_certification": {
+    "path": "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6/dev_only_resource_certification.json",
+    "sha256": "cb37f4791d15e17f5f585c7761e5cd70e81f7d0d3ca71480473f8604fdc41895",
+    "peak_process_tree_rss_bytes": 1421574144,
+    "minimum_system_available_ram_bytes": 24931565568,
+    "disk_backed_csr_required": false
+  },
+  "regression_validation": {
+    "path": "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6/regression_validation.json",
+    "sha256": "483c6e732d6dc3e61add920ac66b79ac00c1ea8de5ece94aac7f810f393eef8b",
+    "passed": 92,
+    "failed": 0
+  },
+  "scientific_contract_changed": false,
+  "new_llm_request_authorized": false,
+  "selector_or_dev_experiment_rerun_authorized": false,
+  "production_oot_validation_authorized": false,
+  "artifact_authentication_sha256": "e0399d63b47cfd023efd9840fb84b061ad5a989a2891adc716d63000a296d0b7"
+}

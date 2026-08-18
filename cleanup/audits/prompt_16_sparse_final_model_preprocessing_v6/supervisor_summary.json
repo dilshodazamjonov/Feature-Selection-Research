@@ -1,0 +1,71 @@
+{
+  "status": "completed",
+  "stop_code": null,
+  "worker_exit_code": 0,
+  "return_value": {
+    "status": "dev_only_sparse_certification_worker_complete",
+    "worker_report": "D:\\python projects\\Research\\cleanup\\audits\\prompt_16_sparse_final_model_preprocessing_v6\\dev_only_certification\\worker_report.json",
+    "locked_oot_rows_loaded": 0
+  },
+  "worker_error": null,
+  "warnings": [],
+  "peak_process_tree_rss_bytes": 1421574144,
+  "peak_process_gpu_bytes": 0,
+  "minimum_system_available_ram_bytes": 24931565568,
+  "minimum_results_free_disk_bytes": 233097326592,
+  "minimum_temp_free_disk_bytes": 233097326592,
+  "child_cleanup_confirmed": true,
+  "final_stage": "dev_certification_matrix_release",
+  "final_fold_id": "dev_only:cell_003:fit_008_handoff",
+  "primary_stop_code": null,
+  "secondary_events": [],
+  "stop_lifecycle": [
+    {
+      "state": "RUNNING",
+      "timestamp_utc": "2026-08-18T06:22:20.749178+00:00",
+      "elapsed_seconds": 0.019596199970692396,
+      "detail": "run_association=prompt16:sparse_final_model:dev_only_certification",
+      "pids": [
+        8304
+      ]
+    },
+    {
+      "state": "ARTIFACT_AND_STATE_FINALIZATION",
+      "timestamp_utc": "2026-08-18T06:23:49.199921+00:00",
+      "elapsed_seconds": 88.4697328999755,
+      "detail": "status=completed; stop_code=None",
+      "pids": []
+    }
+  ],
+  "owned_processes": [
+    {
+      "pid": 8304,
+      "parent_pid_at_discovery": 38580,
+      "create_time": 1787034140.7221239,
+      "relationship": "spawned_worker",
+      "run_association": "prompt16:sparse_final_model:dev_only_certification"
+    }
+  ],
+  "survivor_processes": [],
+  "termination_condition": null,
+  "graceful_stop_completed": null,
+  "shutdown_elapsed_seconds": null,
+  "parent_rss_before_bytes": 113479680,
+  "parent_rss_after_bytes": 113782784,
+  "system_available_ram_after_bytes": 26741370880,
+  "queue_cleanup_confirmed": true,
+  "run_association": "prompt16:sparse_final_model:dev_only_certification",
+  "emergency_ram_margin_bytes": 6442450944,
+  "ram_recovery_threshold_bytes": 8589934592,
+  "ram_check_interval_seconds": 5.0,
+  "ram_log_interval_seconds": 30.0,
+  "ram_recovery_consecutive_checks": 3,
+  "total_ram_wait_seconds": 0.0,
+  "active_computation_seconds": 88.46271549997618,
+  "ram_wait_count": 0,
+  "ram_wait_events": [],
+  "active_clock_source": "windows_query_unbiased_interrupt_time_v1",
+  "system_suspend_seconds": 0.0004338999860920012,
+  "system_suspend_excluded_from_active_time": true,
+  "supervisor_awake_elapsed_seconds": 88.46271549997618
+}

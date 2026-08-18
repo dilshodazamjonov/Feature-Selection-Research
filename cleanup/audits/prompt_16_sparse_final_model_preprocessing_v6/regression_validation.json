@@ -1,0 +1,20 @@
+{
+  "schema_version": "prompt_16_sparse_final_model_regression_validation_v1",
+  "status": "passed",
+  "validated_at_utc_date": "2026-08-18",
+  "command": "uv run pytest tests/test_sparse_final_model_preprocessing.py tests/test_prompt_16_final_oot.py tests/test_prompt_16_third_dataset_execution.py tests/test_prompt_16_llm_supplement.py tests/test_prompt_16_pilot_gate.py tests/test_model_utils.py tests/test_metrics.py tests/test_full_baseline_pipeline.py tests/test_data_pipeline.py -q",
+  "passed": 92,
+  "failed": 0,
+  "warnings": 107,
+  "dense_sparse_equivalence_passed": true,
+  "coverage": [
+    "high_cardinality_zip_frequency_boundary_missing_unknown_and_row_order_equivalence",
+    "frozen_logistic_regression_coefficients_probabilities_threshold_and_metrics_equivalence",
+    "float32_csr_reaches_liblinear_without_full_matrix_dtype_conversion",
+    "catboost_accepts_equivalent_csr",
+    "production_sparse_transform_has_no_dense_materialization_calls",
+    "24_4_6_8_resource_policy_and_isolated_cell_checkpoint_handoff",
+    "final_oot_third_dataset_llm_pilot_model_metrics_baseline_and_data_pipeline_regressions"
+  ],
+  "notes": "The 107 warnings are existing pandas DataFrame fragmentation performance warnings in LendingClub feature construction; no test failed. Ruff was not installed in the project environment, while Python compileall and git diff --check passed."
+}
