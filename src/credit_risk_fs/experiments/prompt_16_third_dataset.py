@@ -2199,6 +2199,23 @@ def run_phase_worker(
         )
     ):
         raise Prompt16ExecutionError("final OOT controls may not be used for pilot/DEV")
+
+    def load_phase_checkpoint(
+        path: Path, identity: Mapping[str, Any]
+    ) -> dict[str, Any] | None:
+        """Authenticate a seal under this run or an explicitly authorized predecessor."""
+
+        return _load_sealed(
+            path,
+            identity,
+            authorized_predecessor_authorization_sha256=(
+                authorized_predecessor_authorization_sha256
+            ),
+            authorized_predecessor_authorization_sha256s=(
+                authorized_output_predecessor_authorization_sha256s
+            ),
+        )
+
     phase_root = Path(output_root)
     if (phase_root / "_SUCCESS").is_file():
         success = _json(phase_root / "_SUCCESS")
@@ -2342,16 +2359,7 @@ def run_phase_worker(
             matrix_manifest_sha256=matrix_manifest_sha,
             execution_authorization_sha256=execution_authorization_sha256,
         )
-        sealed = _load_sealed(
-            path,
-            identity,
-            authorized_predecessor_authorization_sha256=(
-                authorized_predecessor_authorization_sha256
-            ),
-            authorized_predecessor_authorization_sha256s=(
-                authorized_output_predecessor_authorization_sha256s
-            ),
-        )
+        sealed = load_phase_checkpoint(path, identity)
         if sealed is None:
             _archive_incomplete(path, archive_root)
             if phase == "oot" and str(fit["fit_id"]) in inherited_fit_ids:
@@ -2567,16 +2575,7 @@ def run_phase_worker(
             matrix_manifest_sha256=matrix_manifest_sha,
             execution_authorization_sha256=execution_authorization_sha256,
         )
-        if _load_sealed(
-            path,
-            identity,
-            authorized_predecessor_authorization_sha256=(
-                authorized_predecessor_authorization_sha256
-            ),
-            authorized_predecessor_authorization_sha256s=(
-                authorized_output_predecessor_authorization_sha256s
-            ),
-        ) is not None:
+        if load_phase_checkpoint(path, identity) is not None:
             continue
         if numeric_train is None or selection_target is None:
             raise Prompt16ExecutionError("incomplete selector fit lacks training inputs")
@@ -2677,7 +2676,7 @@ def run_phase_worker(
             "dev_scope_sha256": canonical_sha256(scope_auth["train"]["observed"]),
             "oot_scope_sha256": canonical_sha256(scope_auth["validation"]["observed"]),
         }
-        if _load_sealed(feature_psi_path, feature_psi_identity) is None:
+        if load_phase_checkpoint(feature_psi_path, feature_psi_identity) is None:
             identity_path = feature_psi_path / "checkpoint_identity.json"
             if feature_psi_path.exists():
                 observed_feature_psi_identity = (
@@ -2722,13 +2721,7 @@ def run_phase_worker(
                         batch_predictors
                     ),
                 }
-                if _load_sealed(
-                    batch_path,
-                    batch_identity,
-                    authorized_predecessor_authorization_sha256s=(
-                        authorized_output_predecessor_authorization_sha256s
-                    ),
-                ) is None:
+                if load_phase_checkpoint(batch_path, batch_identity) is None:
                     _archive_incomplete(batch_path, archive_root)
                     batch_path.mkdir(parents=True, exist_ok=False)
                     wait_for_ram_ready(
@@ -2841,7 +2834,7 @@ def run_phase_worker(
             execution_authorization_sha256=execution_authorization_sha256,
         )
         path = evaluation_root / cell_id
-        if _load_sealed(path, identity) is not None:
+        if load_phase_checkpoint(path, identity) is not None:
             record = _json(path / "status.json")
             completed_eval_count += int(record["status"] == "complete")
             unavailable_eval_count += int(record["status"] != "complete")
