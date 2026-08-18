@@ -17,7 +17,6 @@ import json
 import math
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import time
 from typing import Any, Mapping, Sequence
@@ -30,7 +29,6 @@ from credit_risk_fs.analysis.voting_inference.paired import (
     fast_paired_stratified_bootstrap,
 )
 from credit_risk_fs.analysis.voting_inference.psi import (
-    feature_psi_record,
     score_psi_from_predictions,
     summarise_feature_psi,
 )
@@ -67,28 +65,20 @@ from credit_risk_fs.experiments.prompt_16_llm_supplement import (
     _evaluation_identity as _supplemental_dev_evaluation_identity,
     _load_recursive_sealed,
     _ranking_identity,
-    _seal_recursive_directory,
     _selection_identity as _supplemental_selection_identity,
     classical_evaluation_manifest_identity,
     classical_tree_identity,
-    load_supplemental_amendment,
     load_supplemental_authorization,
     supplemental_cells,
 )
 from credit_risk_fs.experiments.prompt_16_third_dataset import (
-    EXPECTED_PROTOCOL_FILE_SHA256,
-    EXPECTED_PROTOCOL_INTERNAL_SHA256,
     FEATURE_PSI_MAX_WORKERS,
     NON_PREDICTORS,
     Prompt16ExecutionError,
-    _archive_incomplete,
     _check_stop,
     _evaluation_identity as _classical_evaluation_identity,
-    _expected_scope,
     _fit_and_evaluate,
     _fit_identity,
-    _fit_one_selection,
-    _json,
     _load_sealed,
     _locked_alignment_summary,
     _matrix_identity,
@@ -122,6 +112,9 @@ MRMR_COMPACT_AMENDMENT_RELATIVE_ROOT = Path(
 )
 PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_oot_psi_performance_amendment_v5"
+)
+SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT = Path(
+    "cleanup/audits/prompt_16_sparse_final_model_preprocessing_v6"
 )
 RESOURCE_BLOCKER_RELATIVE_ROOT = Path(
     "cleanup/audits/prompt_16_final_amended_oot_blocker_20260816"
@@ -179,11 +172,11 @@ BOOTSTRAP_SEED = 20260721
 HOLM_ALPHA = 0.05
 MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE = 5
 MAX_ESTIMATOR_THREADS = 4
-PROCESS_TREE_RSS_HARD_CAP_GIB = 32
-SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB = 2
-SOFT_AVAILABLE_RAM_GIB = 3
-RESUME_AVAILABLE_RAM_GIB = 4
-RESUME_STABILITY_POLLS = 2
+PROCESS_TREE_RSS_HARD_CAP_GIB = 24
+SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB = 4
+SOFT_AVAILABLE_RAM_GIB = 6
+RESUME_AVAILABLE_RAM_GIB = 8
+RESUME_STABILITY_POLLS = 3
 PREDECESSOR_EXECUTION_AUTHORIZATION_SHA256 = (
     "e9e2b15aa2a0b0330a027ad0414fd225ec3a07460dac501b08fa0faac8205f2a"
 )
@@ -210,6 +203,12 @@ MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256 = (
 )
 PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY = (
     "identity_first_compact_mrmr_parallel_feature_psi_v5"
+)
+PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256 = (
+    "5b12094f0338545b8ef77e880734c855f67d5f4f9a37a1451e09d4471e928637"
+)
+SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY = (
+    "canonical_float32_csr_batched_scoring_isolated_cell_process_v6"
 )
 RESOURCE_BLOCKER_AUTHENTICATION_SHA256 = (
     "c5d60e918af91da47d0ff0ac4544b4c34e4abff2d89a340dcf9caa4fcf3fe4b6"
@@ -1612,9 +1611,14 @@ def run_supplemental_oot_worker(
     stop_event: Any = None,
     stage_queue: Any = None,
     ram_ready_event: Any = None,
+    max_new_evaluations_per_worker: int = 1,
 ) -> dict[str, Any]:
     """Run the four immutable supplemental OOT cells without an LLM request."""
 
+    if int(max_new_evaluations_per_worker) != 1:
+        raise Prompt16ExecutionError(
+            "supplemental final OOT requires one evaluation per isolated worker"
+        )
     project = Path(repository_root).resolve()
     root = Path(output_root)
     success_path = root / "_SUCCESS"
@@ -1726,6 +1730,7 @@ def run_supplemental_oot_worker(
 
     completed = 0
     unavailable = 0
+    new_evaluations_this_worker = 0
     for cell in supplemental_cells():
         _check_stop(stop_event)
         order = int(cell["configuration_order"])
@@ -1777,6 +1782,16 @@ def run_supplemental_oot_worker(
                 phase="oot",
                 frozen_threshold=None,
                 full_dev_training_ks_threshold=True,
+                stage_queue=stage_queue,
+                execution_scope=f"oot:oot:cell_{order:03d}:supplemental",
+                preprocessing_checkpoint_dir=path / "preprocessing_v1",
+                checkpoint_binding={
+                    "execution_authorization_sha256": authorization_sha256,
+                    "matrix_manifest_sha256": matrix_manifest_sha,
+                    "selection_manifest_sha256": selection_manifest_sha,
+                    "configuration_order": order,
+                    "supplemental_method": cell["method_id"],
+                },
             )
             prediction_auth = _locked_alignment_summary(
                 predictions["case_id"].tolist(), predictions["target"].tolist()
@@ -1835,6 +1850,17 @@ def run_supplemental_oot_worker(
             )
             raise
         _seal_final_directory(path, identity)
+        new_evaluations_this_worker += 1
+        if new_evaluations_this_worker >= int(max_new_evaluations_per_worker):
+            del full_dev, oot
+            gc.collect()
+            return {
+                "schema_version": SCHEMA_VERSION,
+                "status": "checkpoint_handoff",
+                "phase": "supplemental_final_oot",
+                "configuration_order": order,
+                "worker_memory_released_by_process_exit": True,
+            }
 
     if completed + unavailable != 4:
         raise Prompt16ExecutionError("supplemental OOT accounting does not cover four cells")
@@ -4452,6 +4478,399 @@ successor begins at the first incomplete unit, PSI batch 5 of 16.
     }
 
 
+def build_sparse_final_model_amendment_authorization(
+    *,
+    repository_root: str | Path,
+    implementation_commit: str,
+    regression_report_path: str | Path,
+) -> dict[str, Any]:
+    """Authorize the representation-only sparse repair at OOT cell 3."""
+
+    root = Path(repository_root).resolve()
+    repository = _assert_required_ancestry(root)
+    if repository["head"] != implementation_commit:
+        raise Prompt16ExecutionError(
+            "sparse final-model authorization must bind committed HEAD"
+        )
+    audit_root = root / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT
+    authorization_path = audit_root / "execution_authorization.json"
+    if authorization_path.exists():
+        raise Prompt16ExecutionError(
+            "sparse final-model execution authorization already exists"
+        )
+    allowed_dirty_prefix = SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT.as_posix() + "/"
+    dirty = _git(root, "status", "--porcelain=v1", "--untracked-files=all")
+    unexpected = [
+        line
+        for line in dirty.splitlines()
+        if line and not line[3:].replace("\\", "/").startswith(allowed_dirty_prefix)
+    ]
+    if unexpected:
+        raise Prompt16ExecutionError(
+            "authorization worktree has changes outside the validation audit: "
+            + unexpected[0]
+        )
+
+    predecessor_path = (
+        root
+        / PSI_PERFORMANCE_AMENDMENT_RELATIVE_ROOT
+        / "execution_authorization.json"
+    )
+    if file_sha256(predecessor_path) != PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256:
+        raise Prompt16ExecutionError("sparse amendment predecessor authorization changed")
+    predecessor = _read_json(predecessor_path)
+    predecessor_unsigned = dict(predecessor)
+    predecessor_claimed = predecessor_unsigned.pop(
+        "artifact_authentication_sha256", None
+    )
+    if predecessor_claimed != canonical_sha256(predecessor_unsigned):
+        raise Prompt16ExecutionError("sparse amendment predecessor digest changed")
+
+    validation_path = audit_root / "dev_only_resource_certification.json"
+    validation_marker = audit_root / "_VALIDATION_SUCCESS"
+    worker_report_path = audit_root / "dev_only_certification/worker_report.json"
+    if not validation_path.is_file() or not validation_marker.is_file():
+        raise Prompt16ExecutionError("DEV-only sparse certification is incomplete")
+    marker = _read_json(validation_marker)
+    if marker.get("report_sha256") != file_sha256(validation_path):
+        raise Prompt16ExecutionError("DEV-only sparse certification marker changed")
+    validation = _read_json(validation_path)
+    measurements = validation.get("measurements", {})
+    if (
+        validation.get("status")
+        != "validated_in_memory_csr_no_disk_fallback_required"
+        or int(validation.get("locked_oot_rows_loaded", -1)) != 0
+        or validation.get("locked_oot_outcomes_inspected") is not False
+        or validation.get("production_oot_cell_executed") is not False
+        or validation.get("selector_rerun") is not False
+        or int(validation.get("llm_request_count", -1)) != 0
+        or int(measurements.get("peak_process_tree_rss_bytes", 24 * 1024**3))
+        > 16 * 1024**3
+        or int(measurements.get("minimum_system_available_ram_bytes", 0))
+        < 8 * 1024**3
+    ):
+        raise Prompt16ExecutionError("DEV-only sparse resource gate changed")
+    worker_report = _read_json(worker_report_path)
+    if (
+        worker_report.get("scope", {}).get("dev_rows") != 1_221_743
+        or worker_report.get("scope", {}).get("configuration_order") != 3
+        or worker_report.get("scope", {}).get("controller_handoff_fit_id")
+        != "fit_008"
+        or worker_report.get("scope", {}).get("selection_checkpoint_fit_id")
+        != "fit_003"
+        or worker_report.get("preprocessing", {}).get("matrix_format") != "csr"
+        or worker_report.get("preprocessing", {}).get("matrix_dtype") != "float32"
+        or worker_report.get("model", {}).get("requested_parameters")
+        != {
+            "solver": "liblinear",
+            "max_iter": 1000,
+            "class_weight": "balanced",
+            "random_state": 42,
+        }
+    ):
+        raise Prompt16ExecutionError("DEV-only sparse worker evidence changed")
+    regression_path = Path(regression_report_path).resolve()
+    regression = _read_json(regression_path)
+    if (
+        regression.get("status") != "passed"
+        or int(regression.get("failed", -1)) != 0
+        or int(regression.get("passed", 0)) <= 0
+        or regression.get("dense_sparse_equivalence_passed") is not True
+    ):
+        raise Prompt16ExecutionError("sparse regression validation is incomplete")
+
+    output = root / OOT_RELATIVE_ROOT
+    controller = _read_json(output / "controller_status.json")
+    if (
+        controller.get("execution_authorization_sha256")
+        != PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+        or controller.get("expected_total") != 34
+        or controller.get("completed_cell_orders") != []
+        or controller.get("unavailable_cell_orders") != [1, 2]
+        or controller.get("failed_or_corrupt_cell_orders") != []
+        or controller.get("next_cell") != 3
+        or controller.get("final_success") is not False
+        or controller.get("stop_code") != "manual_interrupt"
+    ):
+        raise Prompt16ExecutionError("sparse amendment controller boundary changed")
+    if (output / "_SUCCESS").exists() or (output / "_WORKER_SUCCESS").exists():
+        raise Prompt16ExecutionError("sparse predecessor unexpectedly completed OOT")
+
+    selection_root = output / "classical/selection_fits"
+    fit_ids: list[str] = []
+    for order in range(1, 28):
+        fit_id = f"fit_{order:03d}"
+        path = selection_root / fit_id
+        manifest = _read_json(path / "manifest.json")
+        if _load_sealed(path, manifest["identity"]) is None:
+            raise Prompt16ExecutionError(f"selection checkpoint changed: {fit_id}")
+        fit_ids.append(fit_id)
+    feature_psi_root = output / "classical/feature_psi"
+    feature_psi_manifest = _read_json(feature_psi_root / "manifest.json")
+    if _load_sealed(feature_psi_root, feature_psi_manifest["identity"]) is None:
+        raise Prompt16ExecutionError("completed Feature PSI checkpoint changed")
+    for order in (1, 2):
+        path = output / "classical/evaluations" / f"cell_{order:03d}"
+        manifest = _read_json(path / "manifest.json")
+        if _load_sealed(path, manifest["identity"]) is None:
+            raise Prompt16ExecutionError(
+                f"explicitly unavailable OOT cell changed: {order}"
+            )
+        if _read_json(path / "status.json").get("status") != "unavailable":
+            raise Prompt16ExecutionError("inherited unavailable cell became numeric")
+    if any(
+        (output / ("classical" if order <= 30 else "supplemental") / "evaluations"
+         / f"cell_{order:03d}" / "_SUCCESS").is_file()
+        for order in range(3, 35)
+    ):
+        raise Prompt16ExecutionError("an executable OOT cell completed during validation")
+
+    cells = final_oot_cells(root / PROTOCOL_RELATIVE_PATH)
+    if (
+        len(cells) != 34
+        or [int(cell["configuration_order"]) for cell in cells] != list(range(1, 35))
+        or [
+            (cell["method_id"], cell["model"], cell["requested_feature_budget"])
+            for cell in cells[30:]
+        ]
+        != [
+            ("llm", "lr", 20),
+            ("llm", "catboost", 40),
+            ("stable_core_llm_fill", "lr", 20),
+            ("stable_core_llm_fill", "catboost", 40),
+        ]
+    ):
+        raise Prompt16ExecutionError("34-cell registry changed before sparse authorization")
+
+    partial_artifacts = [
+        _artifact(path, root)
+        for path in sorted(
+            (item for item in output.rglob("*") if item.is_file()),
+            key=lambda item: item.relative_to(output).as_posix(),
+        )
+    ]
+    output_inventory = [
+        Path(row["path"]).relative_to(OOT_RELATIVE_ROOT).as_posix()
+        for row in partial_artifacts
+    ]
+    cell_accounting = {
+        "completed_cell_orders": [],
+        "unavailable_cell_orders": [1, 2],
+        "failed_or_corrupt_cell_orders": [],
+        "completed_count": 0,
+        "unavailable_count": 2,
+        "failed_count": 0,
+        "accounted_count": 2,
+        "incomplete_count": 32,
+        "next_cell": 3,
+    }
+    implementation_paths = {
+        Path("configs/execution/prompt_16_final_oot_v1.yaml"),
+        Path("configs/execution/prompt_16_final_oot_ram_wait_v1.yaml"),
+        Path("scripts/run_prompt_16_final_oot.py"),
+        Path("scripts/validate_prompt_16_sparse_final_model.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_final_oot.py"),
+        Path("src/credit_risk_fs/experiments/prompt_16_third_dataset.py"),
+        Path("src/credit_risk_fs/models/catboost_model.py"),
+        Path("src/credit_risk_fs/models/logistic_regression.py"),
+        Path("src/credit_risk_fs/preprocessing/encoding.py"),
+        Path("tests/test_prompt_16_final_oot.py"),
+        Path("tests/test_sparse_final_model_preprocessing.py"),
+    }
+    for path in implementation_paths:
+        if not (root / path).is_file():
+            raise Prompt16ExecutionError(f"sparse implementation file missing: {path}")
+
+    amendment = {
+        "schema_version": "prompt_16_sparse_final_model_preprocessing_amendment_v6",
+        "status": "validated_representation_only_sparse_repair",
+        "authorized_by_user_at_utc_date": "2026-08-18",
+        "predecessor_execution_authorization_sha256": (
+            PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+        ),
+        "trigger": {
+            "production_next_cell": 3,
+            "controller_handoff_fit_id": "fit_008",
+            "selection_checkpoint_fit_id": "fit_003",
+            "failure": "dense_one_hot_final_model_preprocessing_ram_exhaustion",
+            "promoted_executable_oot_cells": 0,
+        },
+        "preserved_exactly": [
+            "all_selected_original_features_and_order",
+            "all_dev_and_oot_rows_and_order",
+            "dev_fitted_categories_missing_unknown_and_infrequent_semantics",
+            "numeric_mean_imputation_and_centered_standard_scaler",
+            "all_logistic_regression_and_catboost_parameters",
+            "full_dev_ks_threshold_rule",
+            "34_cell_registry_and_all_statistical_analysis_rules",
+            "all_authenticated_predecessor_checkpoints",
+        ],
+        "execution_only_changes": [
+            "one_hot_encoder_sparse_output_true_float32",
+            "transformed_numeric_block_to_csr_after_centered_scaling",
+            "scipy_sparse_hstack_canonical_sorted_csr",
+            "bounded_50000_row_dev_and_oot_scoring",
+            "one_new_evaluation_per_isolated_worker_process",
+            "atomic_fitted_encoder_schema_and_resource_checkpoints",
+            "restore_24_4_6_8_gib_resource_envelope",
+        ],
+        "resource_certification": {
+            "path": _relative(validation_path, root),
+            "sha256": file_sha256(validation_path),
+            "peak_process_tree_rss_bytes": measurements[
+                "peak_process_tree_rss_bytes"
+            ],
+            "minimum_system_available_ram_bytes": measurements[
+                "minimum_system_available_ram_bytes"
+            ],
+            "disk_backed_csr_required": False,
+        },
+        "regression_validation": {
+            "path": _relative(regression_path, root),
+            "sha256": file_sha256(regression_path),
+            "passed": regression["passed"],
+            "failed": regression["failed"],
+        },
+        "scientific_contract_changed": False,
+        "new_llm_request_authorized": False,
+        "selector_or_dev_experiment_rerun_authorized": False,
+        "production_oot_validation_authorized": False,
+    }
+    amendment_path = audit_root / "sparse_final_model_amendment.json"
+    write_json_atomic(amendment_path, _self_authenticated_payload(amendment), overwrite=False)
+    supersession_path = audit_root / "authorization_supersession.json"
+    write_json_atomic(
+        supersession_path,
+        _self_authenticated_payload(
+            {
+                "schema_version": "prompt_16_authorization_supersession_v1",
+                "status": "predecessor_superseded_preserved_as_historical_evidence",
+                "superseded_authorization_path": _relative(predecessor_path, root),
+                "superseded_authorization_sha256": (
+                    PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "successor_authorization_path": _relative(authorization_path, root),
+                "reason": "preprocessing_representation_only_sparse_amendment",
+                "historical_file_modified_or_deleted": False,
+            }
+        ),
+        overwrite=False,
+    )
+    write_text_atomic(
+        audit_root / "README.md",
+        """# Prompt 16 sparse final-model preprocessing amendment v6
+
+This amendment replaces only the final-model encoded matrix representation:
+the fitted numeric and categorical semantics are unchanged, while the numeric
+block and direct sparse one-hot block are assembled as canonical float32 CSR.
+DEV and OOT scores are produced in bounded 50,000-row batches, and each newly
+sealed OOT evaluation exits its worker process before the next cell begins.
+
+The exact 1,221,743-row cell-3 DEV fit passed under the restored 24/4/6/8 GiB
+policy without loading locked OOT. The production tree remains unchanged at
+OOT 03/34. The predecessor authorization is preserved and explicitly
+superseded by the new hash-authenticated authorization in this directory.
+""",
+        overwrite=False,
+    )
+    validation_files = [
+        _artifact(path, root)
+        for path in sorted(
+            (item for item in audit_root.rglob("*") if item.is_file()),
+            key=lambda item: item.relative_to(audit_root).as_posix(),
+        )
+        if path != authorization_path
+    ]
+    checkpoint_resume = dict(predecessor["checkpoint_resume"])
+    checkpoint_resume.update(
+        {
+            "accepted_controller_authorization_sha256": (
+                PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+            ),
+            "accepted_output_predecessor_authorization_sha256s": [
+                MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256,
+                PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256,
+            ],
+            "reauthenticated_fit_ids": fit_ids,
+            "expected_next_fit_id": None,
+            "completed_feature_psi_batches": list(range(1, 17)),
+            "expected_next_feature_psi_batch": None,
+            "expected_next_cell_order": 3,
+            "expected_controller_handoff_fit_id": "fit_008",
+            "cell_003_selection_checkpoint_fit_id": "fit_003",
+            "rewrite_predecessor_payloads": False,
+        }
+    )
+    authorization_unsigned = dict(predecessor)
+    authorization_unsigned.pop("artifact_authentication_sha256", None)
+    authorization_unsigned.update(
+        {
+            "created_at_utc": _utc_now(),
+            "implementation_commit": implementation_commit,
+            "implementation_files": [
+                _artifact(root / path, root) for path in sorted(implementation_paths)
+            ],
+            "frozen_input_files": [
+                *predecessor["frozen_input_files"],
+                _artifact(predecessor_path, root),
+            ],
+            "freeze_files": [
+                *predecessor["freeze_files"],
+                *validation_files,
+            ],
+            "memory_amendment": {
+                **predecessor["memory_amendment"],
+                "path": _relative(amendment_path, root),
+                "strategy": SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+                "final_model_matrix_format": "canonical_sorted_csr",
+                "final_model_matrix_dtype": "float32",
+                "one_hot_sparse_output": True,
+                "score_batch_size": 50_000,
+                "numeric_scaler_with_mean": True,
+                "process_tree_rss_hard_cap_gib": 24,
+                "system_available_ram_hard_floor_gib": 4,
+                "soft_available_ram_threshold_gib": 6,
+                "resume_available_ram_threshold_gib": 8,
+                "one_new_evaluation_per_worker": True,
+                "disk_backed_csr_required": False,
+                "scientific_contract_changed": False,
+            },
+            "checkpoint_resume": checkpoint_resume,
+            "predecessor_partial_state": {
+                "execution_authorization_sha256": (
+                    PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+                ),
+                "output_file_inventory": output_inventory,
+                "artifacts": partial_artifacts,
+                "migration_permitted_once": True,
+                "promoted_cell_count": 0,
+                "checkpoint_fit_ids": fit_ids,
+                "completed_feature_psi_batches": list(range(1, 17)),
+                "next_cell": 3,
+                "controller_handoff_fit_id": "fit_008",
+                "cell_accounting": cell_accounting,
+            },
+        }
+    )
+    authorization = _self_authenticated_payload(authorization_unsigned)
+    write_json_atomic(authorization_path, authorization, overwrite=False)
+    return {
+        "schema_version": "prompt_16_sparse_final_model_authorization_build_v6",
+        "status": "authorized_manual_resume_at_oot_03_of_34",
+        "implementation_commit": implementation_commit,
+        "authorization_path": str(authorization_path),
+        "authorization_sha256": file_sha256(authorization_path),
+        "next_cell": 3,
+        "controller_handoff_fit_id": "fit_008",
+        "selection_checkpoint_fit_id": "fit_003",
+        "authenticated_selection_fit_count": len(fit_ids),
+        "authenticated_feature_psi_batches": list(range(1, 17)),
+        "completed_executable_oot_cells": 0,
+        "locked_oot_work_executed_for_validation": False,
+        "new_llm_requests": 0,
+    }
+
+
 def load_final_authorization(
     path: str | Path,
     *,
@@ -4507,6 +4926,7 @@ def load_final_authorization(
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
         PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+        SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
     }:
         raise Prompt16ExecutionError("memory-bounded OOT strategy is not authorized")
     if tuple(memory_amendment.get("inherited_resource_infeasible_fit_ids", [])) != (
@@ -4522,6 +4942,9 @@ def load_final_authorization(
         raise Prompt16ExecutionError("resource-infeasible model-cell registry changed")
     predecessor = payload.get("predecessor_partial_state", {})
     expected_predecessor = (
+        PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256
+        if strategy == SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY
+        else
         MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256
         if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
         else
@@ -4540,6 +4963,7 @@ def load_final_authorization(
         RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
         MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
         PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+        SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
     }:
         checkpoint_resume = payload.get("checkpoint_resume", {})
         if checkpoint_resume.get(
@@ -4548,14 +4972,20 @@ def load_final_authorization(
             raise Prompt16ExecutionError("selector checkpoint authorization changed")
         expected_next_fit_id = (
             None
-            if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
+            if strategy in {
+                PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+                SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+            }
             else "fit_008"
         )
         if checkpoint_resume.get("expected_next_fit_id") != expected_next_fit_id:
             raise Prompt16ExecutionError("selector resume point changed")
         expected_fits = (
             [f"fit_{order:03d}" for order in range(1, 28)]
-            if strategy == PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY
+            if strategy in {
+                PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+                SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
+            }
             else sorted(
                 {
                     *(f"fit_{order:03d}" for order in range(1, 8)),
@@ -4571,6 +5001,7 @@ def load_final_authorization(
             RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
             MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
             PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+            SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
         } and (
             checkpoint_resume.get(
                 "accepted_selector_memmap_authorization_sha256"
@@ -4581,6 +5012,7 @@ def load_final_authorization(
         if strategy in {
             MRMR_COMPACT_AMENDMENT_MEMORY_STRATEGY,
             PSI_PERFORMANCE_AMENDMENT_MEMORY_STRATEGY,
+            SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
         }:
             if (
                 int(memory_amendment.get("mrmr_compact_feature_batch_size", -1))
@@ -4624,6 +5056,60 @@ def load_final_authorization(
             ):
                 raise Prompt16ExecutionError(
                     "parallel feature PSI authorization checkpoints changed"
+                )
+        if strategy == SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY:
+            validation_path = (
+                root
+                / SPARSE_FINAL_MODEL_AMENDMENT_RELATIVE_ROOT
+                / "dev_only_resource_certification.json"
+            )
+            validation = _read_json(validation_path)
+            measurements = validation.get("measurements", {})
+            if (
+                checkpoint_resume.get(
+                    "accepted_output_predecessor_authorization_sha256s"
+                )
+                != [
+                    MRMR_COMPACT_EXECUTION_AUTHORIZATION_SHA256,
+                    PSI_PERFORMANCE_EXECUTION_AUTHORIZATION_SHA256,
+                ]
+                or checkpoint_resume.get("completed_feature_psi_batches")
+                != list(range(1, 17))
+                or checkpoint_resume.get("expected_next_feature_psi_batch")
+                is not None
+                or checkpoint_resume.get("expected_next_cell_order") != 3
+                or checkpoint_resume.get("expected_controller_handoff_fit_id")
+                != "fit_008"
+                or checkpoint_resume.get("cell_003_selection_checkpoint_fit_id")
+                != "fit_003"
+                or memory_amendment.get("final_model_matrix_format")
+                != "canonical_sorted_csr"
+                or memory_amendment.get("final_model_matrix_dtype") != "float32"
+                or memory_amendment.get("one_hot_sparse_output") is not True
+                or int(memory_amendment.get("score_batch_size", -1)) != 50_000
+                or memory_amendment.get("numeric_scaler_with_mean") is not True
+                or int(memory_amendment.get("process_tree_rss_hard_cap_gib", -1))
+                != 24
+                or int(
+                    memory_amendment.get("system_available_ram_hard_floor_gib", -1)
+                )
+                != 4
+                or int(memory_amendment.get("soft_available_ram_threshold_gib", -1))
+                != 6
+                or int(memory_amendment.get("resume_available_ram_threshold_gib", -1))
+                != 8
+                or memory_amendment.get("one_new_evaluation_per_worker") is not True
+                or memory_amendment.get("disk_backed_csr_required") is not False
+                or validation.get("status")
+                != "validated_in_memory_csr_no_disk_fallback_required"
+                or int(validation.get("locked_oot_rows_loaded", -1)) != 0
+                or int(measurements.get("peak_process_tree_rss_bytes", 24 * 1024**3))
+                > 16 * 1024**3
+                or int(measurements.get("minimum_system_available_ram_bytes", 0))
+                < 8 * 1024**3
+            ):
+                raise Prompt16ExecutionError(
+                    "sparse final-model authorization checkpoints changed"
                 )
     return payload, file_sha256(candidate)
 
@@ -4705,7 +5191,14 @@ def run_final_oot_worker(
         inherited_resource_infeasible_cell_orders=(
             INHERITED_RESOURCE_INFEASIBLE_CELL_ORDERS
         ),
+        max_new_evaluations_per_worker=1,
     )
+    if classical.get("status") == "checkpoint_handoff":
+        return {
+            **classical,
+            "operation": "prompt_16_final_amended_oot_once",
+            "execution_authorization_sha256": authorization_sha,
+        }
     supplemental = run_supplemental_oot_worker(
         repository_root=str(project),
         output_root=str(output / "supplemental"),
@@ -4713,7 +5206,14 @@ def run_final_oot_worker(
         stop_event=stop_event,
         stage_queue=stage_queue,
         ram_ready_event=ram_ready_event,
+        max_new_evaluations_per_worker=1,
     )
+    if supplemental.get("status") == "checkpoint_handoff":
+        return {
+            **supplemental,
+            "operation": "prompt_16_final_amended_oot_once",
+            "execution_authorization_sha256": authorization_sha,
+        }
     analysis = run_final_oot_analysis(
         repository_root=project,
         output_root=output,

@@ -1,10 +1,12 @@
 # preprocessing/preprocessing.py
 
+import hashlib
 import numpy as np
 from pathlib import Path
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 import pandas as pd
+from scipy import sparse
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 
 
@@ -290,10 +292,12 @@ class CategoricalEncoder:
         max_cardinality: int = 7,
         missing_value: str = "Missing",
         min_frequency: int | float | None = 10,
+        sparse_output: bool = False,
     ):
         self.max_cardinality = max_cardinality
         self.missing_value = missing_value
         self.min_frequency = min_frequency
+        self.sparse_output = bool(sparse_output)
         self.cat_cols: List[str] = []
         self.ohe: Optional[OneHotEncoder] = None
 
@@ -310,7 +314,7 @@ class CategoricalEncoder:
         if self.cat_cols:
             X_cat = self._prepare_categorical_frame(X)
             self.ohe = OneHotEncoder(
-                sparse_output=False,
+                sparse_output=self.sparse_output,
                 handle_unknown="ignore",
                 min_frequency=self.min_frequency,
                 dtype=np.float32,
@@ -319,16 +323,24 @@ class CategoricalEncoder:
 
         return self
 
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame | sparse.csr_matrix:
         if self.cat_cols and self.ohe is not None:
             X_cat = self._prepare_categorical_frame(X)
             X_encoded = self.ohe.transform(X_cat)
+            if self.sparse_output:
+                encoded = sparse.csr_matrix(X_encoded, dtype=np.float32, copy=False)
+                encoded.sum_duplicates()
+                encoded.eliminate_zeros()
+                encoded.sort_indices()
+                return encoded
             return pd.DataFrame(
                 X_encoded,
                 columns=self.ohe.get_feature_names_out(self.cat_cols),
                 index=X.index
             ).astype("float32")
 
+        if self.sparse_output:
+            return sparse.csr_matrix((len(X), 0), dtype=np.float32)
         return pd.DataFrame(index=X.index)
 
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -370,3 +382,214 @@ class Preprocessor:
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self.fit(X)
         return self.transform(X)
+
+
+def _json_scalar(value: Any) -> Any:
+    """Return a JSON-safe scalar without changing fitted values."""
+
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return [_json_scalar(item) for item in value.tolist()]
+    if isinstance(value, (list, tuple)):
+        return [_json_scalar(item) for item in value]
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def canonical_csr(matrix: sparse.spmatrix) -> sparse.csr_matrix:
+    """Return a canonical, sorted CSR matrix without dense materialization."""
+
+    output = sparse.csr_matrix(matrix, copy=False)
+    output.sum_duplicates()
+    output.eliminate_zeros()
+    output.sort_indices()
+    if not output.has_canonical_format or not output.has_sorted_indices:
+        raise RuntimeError("CSR canonicalization failed")
+    return output
+
+
+def csr_audit_metadata(matrix: sparse.spmatrix) -> dict[str, Any]:
+    """Describe and hash the three CSR buffers for auditable preprocessing."""
+
+    output = canonical_csr(matrix)
+
+    def digest(values: np.ndarray) -> str:
+        contiguous = np.ascontiguousarray(values)
+        return hashlib.sha256(memoryview(contiguous).cast("B")).hexdigest()
+
+    return {
+        "format": "csr",
+        "shape": [int(output.shape[0]), int(output.shape[1])],
+        "dtype": str(output.dtype),
+        "nnz": int(output.nnz),
+        "has_sorted_indices": bool(output.has_sorted_indices),
+        "has_canonical_format": bool(output.has_canonical_format),
+        "data_dtype": str(output.data.dtype),
+        "indices_dtype": str(output.indices.dtype),
+        "indptr_dtype": str(output.indptr.dtype),
+        "estimated_csr_bytes": int(
+            output.data.nbytes + output.indices.nbytes + output.indptr.nbytes
+        ),
+        "data_sha256": digest(output.data),
+        "indices_sha256": digest(output.indices),
+        "indptr_sha256": digest(output.indptr),
+    }
+
+
+class SparsePreprocessor:
+    """Final-model preprocessing with exact legacy semantics and CSR output.
+
+    The bounded numeric block is transformed by :class:`NumericalScaler`
+    exactly as in :class:`Preprocessor`, including centered
+    ``StandardScaler`` behavior and the final float32 cast. Only that already
+    transformed block is converted to CSR. Categorical values use the same
+    missing token, frequency threshold, category ordering, infrequent bucket,
+    and unknown handling, but ``OneHotEncoder`` emits sparse output directly.
+    """
+
+    matrix_dtype = np.dtype("float32")
+
+    def __init__(
+        self,
+        num_strategy: str = "mean",
+        num_scaler: str = "standard",
+        cat_max_card: int = 7,
+        cat_missing: str = "Missing",
+        cat_min_frequency: int | float | None = 10,
+    ) -> None:
+        self.num_strategy = num_strategy
+        self.num_scaler_type = num_scaler
+        self.cat_max_card = cat_max_card
+        self.cat_missing = cat_missing
+        self.cat_min_frequency = cat_min_frequency
+        self.num_scaler = NumericalScaler(strategy=num_strategy, scaler=num_scaler)
+        self.cat_encoder = CategoricalEncoder(
+            max_cardinality=cat_max_card,
+            missing_value=cat_missing,
+            min_frequency=cat_min_frequency,
+            sparse_output=True,
+        )
+        self.input_feature_names_: list[str] | None = None
+        self.feature_names_: list[str] | None = None
+
+    def fit(self, X: pd.DataFrame):
+        if not isinstance(X, pd.DataFrame) or X.shape[1] == 0:
+            raise ValueError("SparsePreprocessor requires a non-empty DataFrame")
+        self.input_feature_names_ = [str(column) for column in X.columns]
+        if len(self.input_feature_names_) != len(set(self.input_feature_names_)):
+            raise ValueError("SparsePreprocessor requires unique feature names")
+        self.num_scaler.fit(X)
+        self.cat_encoder.fit(X)
+        categorical_names = (
+            self.cat_encoder.ohe.get_feature_names_out(
+                self.cat_encoder.cat_cols
+            ).astype(str).tolist()
+            if self.cat_encoder.ohe is not None
+            else []
+        )
+        self.feature_names_ = list(self.num_scaler.num_cols) + categorical_names
+        return self
+
+    def _validate_input(self, X: pd.DataFrame) -> None:
+        if self.input_feature_names_ is None or self.feature_names_ is None:
+            raise ValueError("SparsePreprocessor has not been fitted")
+        observed = [str(column) for column in X.columns]
+        if observed != self.input_feature_names_:
+            raise ValueError(
+                "final-model preprocessing column order mismatch: "
+                f"expected={self.input_feature_names_}, observed={observed}"
+            )
+
+    def transform(self, X: pd.DataFrame) -> sparse.csr_matrix:
+        self._validate_input(X)
+        numeric_frame = self.num_scaler.transform(X)
+        numeric = sparse.csr_matrix(
+            numeric_frame.to_numpy(dtype=np.float32, copy=False),
+            dtype=np.float32,
+            copy=False,
+        )
+        categorical = self.cat_encoder.transform(X)
+        if not sparse.isspmatrix_csr(categorical):
+            raise RuntimeError("sparse categorical encoder returned a dense matrix")
+        output = sparse.hstack((numeric, categorical), format="csr", dtype=np.float32)
+        output = canonical_csr(output)
+        if output.dtype != self.matrix_dtype:
+            raise RuntimeError(f"final-model CSR dtype changed: {output.dtype}")
+        if output.shape[1] != len(self.get_feature_names_out()):
+            raise RuntimeError("final-model CSR feature metadata length changed")
+        return output
+
+    def fit_transform(self, X: pd.DataFrame) -> sparse.csr_matrix:
+        return self.fit(X).transform(X)
+
+    def get_feature_names_out(self) -> list[str]:
+        if self.feature_names_ is None:
+            raise ValueError("SparsePreprocessor has not been fitted")
+        return list(self.feature_names_)
+
+    def schema_metadata(self) -> dict[str, Any]:
+        if self.input_feature_names_ is None or self.feature_names_ is None:
+            raise ValueError("SparsePreprocessor has not been fitted")
+        ohe = self.cat_encoder.ohe
+        categories = [] if ohe is None else [
+            [_json_scalar(value) for value in values] for values in ohe.categories_
+        ]
+        infrequent = []
+        if ohe is not None:
+            for values in ohe.infrequent_categories_:
+                infrequent.append(
+                    None
+                    if values is None
+                    else [_json_scalar(value) for value in values]
+                )
+        scaler = self.num_scaler.scaler
+        return {
+            "implementation": (
+                "credit_risk_fs.preprocessing.encoding.SparsePreprocessor"
+            ),
+            "matrix_format": "csr",
+            "matrix_dtype": str(self.matrix_dtype),
+            "input_feature_names": list(self.input_feature_names_),
+            "numeric_columns": list(self.num_scaler.num_cols),
+            "categorical_columns": list(self.cat_encoder.cat_cols),
+            "encoded_feature_names": list(self.feature_names_),
+            "numeric": {
+                "imputation_strategy": self.num_strategy,
+                "fill_values": {
+                    str(name): _json_scalar(value)
+                    for name, value in self.num_scaler.fill_values_.items()
+                },
+                "scaler": self.num_scaler_type,
+                "with_mean": (
+                    bool(scaler.with_mean)
+                    if isinstance(scaler, StandardScaler)
+                    else None
+                ),
+                "with_std": (
+                    bool(scaler.with_std)
+                    if isinstance(scaler, StandardScaler)
+                    else None
+                ),
+                "mean": (
+                    _json_scalar(scaler.mean_)
+                    if scaler is not None and hasattr(scaler, "mean_")
+                    else None
+                ),
+                "scale": (
+                    _json_scalar(scaler.scale_)
+                    if scaler is not None and hasattr(scaler, "scale_")
+                    else None
+                ),
+            },
+            "categorical": {
+                "missing_value": self.cat_missing,
+                "min_frequency": self.cat_min_frequency,
+                "handle_unknown": "ignore",
+                "sparse_output": True,
+                "dtype": "float32",
+                "categories": categories,
+                "infrequent_categories": infrequent,
+            },
+        }

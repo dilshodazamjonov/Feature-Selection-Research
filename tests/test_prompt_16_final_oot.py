@@ -35,6 +35,7 @@ from credit_risk_fs.experiments.prompt_16_final_oot import (
     RESUME_STABILITY_POLLS,
     RESOURCE_POLICY_AMENDMENT_MEMORY_STRATEGY,
     SOFT_AVAILABLE_RAM_GIB,
+    SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY,
     SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB,
     _load_final_sealed,
     _reconcile_prediction_metrics,
@@ -97,22 +98,22 @@ def test_comparison_and_holm_graph_integrity() -> None:
     assert BOOTSTRAP_MINIMUM_VALID == 1900
 
 
-def test_resource_policy_uses_high_memory_envelope_with_hard_guardrails() -> None:
+def test_resource_policy_uses_sparse_24_4_6_8_envelope() -> None:
     policy = load_ram_control_policy(
         PROJECT_ROOT,
         "configs/execution/prompt_16_final_oot_ram_wait_v1.yaml",
         total_physical_ram_bytes=32 * GIB,
     )
     assert MAX_ESTIMATOR_THREADS == 4
-    assert PROCESS_TREE_RSS_HARD_CAP_GIB == 32
-    assert SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB == 2
-    assert SOFT_AVAILABLE_RAM_GIB == 3
-    assert RESUME_AVAILABLE_RAM_GIB == 4
-    assert RESUME_STABILITY_POLLS == 2
-    assert policy.emergency_margin_bytes == 3 * GIB
-    assert policy.recovery_threshold_bytes == 4 * GIB
-    assert policy.recovery_consecutive_checks == 2
-    assert policy.opaque_stage_pause_mode == "hard_limit_only"
+    assert PROCESS_TREE_RSS_HARD_CAP_GIB == 24
+    assert SYSTEM_AVAILABLE_RAM_HARD_FLOOR_GIB == 4
+    assert SOFT_AVAILABLE_RAM_GIB == 6
+    assert RESUME_AVAILABLE_RAM_GIB == 8
+    assert RESUME_STABILITY_POLLS == 3
+    assert policy.emergency_margin_bytes == 6 * GIB
+    assert policy.recovery_threshold_bytes == 8 * GIB
+    assert policy.recovery_consecutive_checks == 3
+    assert policy.opaque_stage_pause_mode == "process_tree_suspend"
     assert policy.check_interval_seconds <= 5
     assert policy.log_interval_seconds <= 30
     assert MAX_RESOURCE_RECOVERY_RESTARTS_PER_SCOPE == 5
@@ -444,6 +445,35 @@ def test_psi_performance_amendment_uses_shared_memory_and_preserves_resume() -> 
     assert '"next_psi_batch": 5' in builder_source
     assert '"rows_sampled_or_removed": 0' in builder_source
     assert '"features_removed": 0' in builder_source
+
+
+def test_sparse_final_model_amendment_is_csr_batched_and_process_isolated() -> None:
+    import credit_risk_fs.experiments.prompt_16_final_oot as final
+    import credit_risk_fs.experiments.prompt_16_third_dataset as third
+    from credit_risk_fs.preprocessing.encoding import SparsePreprocessor
+
+    transform_source = inspect.getsource(SparsePreprocessor.transform)
+    evaluation_source = inspect.getsource(third._fit_and_evaluate)
+    phase_source = inspect.getsource(third.run_phase_worker)
+    final_worker_source = inspect.getsource(final.run_final_oot_worker)
+    controller = (PROJECT_ROOT / "scripts/run_prompt_16_final_oot.py").read_text()
+    loader_source = inspect.getsource(final.load_final_authorization)
+    assert SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY.endswith(
+        "isolated_cell_process_v6"
+    )
+    assert "sparse.hstack" in transform_source
+    assert ".toarray(" not in transform_source
+    assert ".todense(" not in transform_source
+    assert "FINAL_MODEL_SCORE_BATCH_SIZE = 50_000" in inspect.getsource(third)
+    assert "dev_matrix_release" in evaluation_source
+    assert "oot_batch_transformation" in inspect.getsource(
+        third._transform_and_score_frame_batches
+    )
+    assert "max_new_evaluations_per_worker" in phase_source
+    assert "max_new_evaluations_per_worker=1" in final_worker_source
+    assert "isolated_cell_checkpoint_handoff" in controller
+    assert "24.0" in controller and "6 * GIB" in controller and "8 * GIB" in controller
+    assert "SPARSE_FINAL_MODEL_AMENDMENT_MEMORY_STRATEGY" in loader_source
 
 
 def test_freeze_location_and_prompt14_preservation_are_explicit() -> None:

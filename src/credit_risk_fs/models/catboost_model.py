@@ -73,7 +73,12 @@ class CatBoostModel:
         eval_set : tuple, optional
             Validation set (X_val, y_val)
         """
-        self.feature_names = X.columns
+        names = getattr(X, "columns", None)
+        if names is None:
+            names = getattr(X, "feature_names", None)
+        self.feature_names = (
+            list(names) if names is not None else list(range(int(X.shape[1])))
+        )
         self.model.fit(X, y, eval_set=eval_set)
         self.fitted = True
         return self

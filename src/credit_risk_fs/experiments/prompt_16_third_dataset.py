@@ -17,8 +17,10 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
+import tempfile
 import time
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 import uuid
 
 import numpy as np
@@ -26,6 +28,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
+from scipy import sparse
 
 from credit_risk_fs.data.homecredit_model_stability_2024.adapter import (
     build_modeling_matrix,
@@ -47,8 +50,9 @@ from credit_risk_fs.experiments.atomic_io import (
 from credit_risk_fs.experiments.row_alignment import split_alignment_summary
 from credit_risk_fs.models.registry import get_model_bundle
 from credit_risk_fs.preprocessing.encoding import (
+    csr_audit_metadata,
     OriginalFeatureNumericEncoder,
-    Preprocessor,
+    SparsePreprocessor,
 )
 from credit_risk_fs.experiments.ram_control import wait_for_ram_ready
 from credit_risk_fs.selectors.base import get_selected_features
@@ -1429,6 +1433,130 @@ def _ranking_utility(y_true: Sequence[int], score: Sequence[float]) -> dict[str,
     }
 
 
+FINAL_MODEL_SCORE_BATCH_SIZE = 50_000
+
+
+def _attach_sparse_feature_names(
+    matrix: sparse.csr_matrix, feature_names: Sequence[str]
+) -> sparse.csr_matrix:
+    if matrix.shape[1] != len(feature_names):
+        raise Prompt16ExecutionError("sparse feature-name metadata length changed")
+    matrix.feature_names = list(feature_names)
+    return matrix
+
+
+def _write_joblib_atomic(path: Path, value: Any) -> dict[str, Any]:
+    """Persist a fitted preprocessing object without exposing partial bytes."""
+
+    import joblib
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise FileExistsError(f"refusing to overwrite final-model checkpoint: {path}")
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        joblib.dump(value, temporary, compress=0)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return {
+        "path": path.name,
+        "byte_size": path.stat().st_size,
+        "sha256": file_sha256(path),
+    }
+
+
+def _score_encoded_csr_batches(
+    *,
+    model: Any,
+    predict_proba: Any,
+    encoded: sparse.csr_matrix,
+    batch_size: int,
+    stage_queue: Any,
+    scope: str,
+    stage: str,
+) -> np.ndarray:
+    if not sparse.isspmatrix_csr(encoded):
+        raise Prompt16ExecutionError("final-model scoring matrix is not CSR")
+    scores = np.empty(encoded.shape[0], dtype=np.float64)
+    batch_count = (encoded.shape[0] + batch_size - 1) // batch_size
+    for batch_index, start in enumerate(range(0, encoded.shape[0], batch_size), start=1):
+        stop = min(start + batch_size, encoded.shape[0])
+        _publish_stage(
+            stage_queue,
+            stage,
+            scope,
+            operation="bounded_sparse_scoring",
+            batch_index=batch_index,
+            batch_count=batch_count,
+            batch_rows=stop - start,
+            csr_shape=[int(encoded.shape[0]), int(encoded.shape[1])],
+            csr_nnz=int(encoded.nnz),
+            estimated_csr_bytes=int(
+                encoded.data.nbytes + encoded.indices.nbytes + encoded.indptr.nbytes
+            ),
+        )
+        batch = encoded[start:stop]
+        produced = np.asarray(predict_proba(model, batch), dtype=np.float64)
+        if produced.ndim != 1 or len(produced) != stop - start:
+            raise Prompt16ExecutionError("batched sparse prediction shape changed")
+        scores[start:stop] = produced
+        del batch, produced
+    return scores
+
+
+def _transform_and_score_frame_batches(
+    *,
+    preprocessor: SparsePreprocessor,
+    frame: pd.DataFrame,
+    model: Any,
+    predict_proba: Any,
+    batch_size: int,
+    stage_queue: Any,
+    scope: str,
+) -> np.ndarray:
+    scores = np.empty(len(frame), dtype=np.float64)
+    feature_names = preprocessor.get_feature_names_out()
+    batch_count = (len(frame) + batch_size - 1) // batch_size
+    for batch_index, start in enumerate(range(0, len(frame), batch_size), start=1):
+        stop = min(start + batch_size, len(frame))
+        _publish_stage(
+            stage_queue,
+            "oot_batch_transformation",
+            scope,
+            operation="bounded_sparse_oot_transform",
+            batch_index=batch_index,
+            batch_count=batch_count,
+            batch_rows=stop - start,
+        )
+        encoded = _attach_sparse_feature_names(
+            preprocessor.transform(frame.iloc[start:stop]), feature_names
+        )
+        audit = csr_audit_metadata(encoded)
+        _publish_stage(
+            stage_queue,
+            "oot_batch_scoring",
+            scope,
+            operation="bounded_sparse_oot_scoring",
+            batch_index=batch_index,
+            batch_count=batch_count,
+            batch_rows=stop - start,
+            csr_shape=audit["shape"],
+            csr_nnz=audit["nnz"],
+            estimated_csr_bytes=audit["estimated_csr_bytes"],
+        )
+        produced = np.asarray(predict_proba(model, encoded), dtype=np.float64)
+        if produced.ndim != 1 or len(produced) != stop - start:
+            raise Prompt16ExecutionError("batched OOT prediction shape changed")
+        scores[start:stop] = produced
+        del encoded, audit, produced
+    return scores
+
+
 def _fit_and_evaluate(
     *,
     cell: Mapping[str, Any],
@@ -1440,6 +1568,11 @@ def _fit_and_evaluate(
     phase: str,
     frozen_threshold: float | None,
     full_dev_training_ks_threshold: bool = False,
+    stage_queue: Any = None,
+    execution_scope: str | None = None,
+    preprocessing_checkpoint_dir: str | Path | None = None,
+    checkpoint_binding: Mapping[str, Any] | None = None,
+    score_batch_size: int = FINAL_MODEL_SCORE_BATCH_SIZE,
 ) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any]]:
     if not selected:
         raise Prompt16ExecutionError("zero-feature natural support cannot be modeled")
@@ -1451,7 +1584,10 @@ def _fit_and_evaluate(
     y_validation = validation["target"].astype("int64")
     timings: dict[str, float] = {}
     started = time.perf_counter()
-    preprocessor = Preprocessor(
+    scope = execution_scope or f"{phase}:final_model"
+    if int(score_batch_size) <= 0:
+        raise Prompt16ExecutionError("final-model score batch size must be positive")
+    preprocessor = SparsePreprocessor(
         num_strategy="mean",
         num_scaler="standard",
         cat_max_card=7,
@@ -1459,26 +1595,105 @@ def _fit_and_evaluate(
         cat_min_frequency=10,
     )
     step = time.perf_counter()
-    encoded_train = preprocessor.fit_transform(X_train)
-    encoded_validation = preprocessor.transform(X_validation)
+    _publish_stage(
+        stage_queue,
+        "final_model_encoder_fitting",
+        scope,
+        operation="full_dev_fitted_sparse_preprocessor",
+        selected_feature_count=len(selected),
+        training_rows=len(X_train),
+    )
+    preprocessor.fit(X_train)
+    _publish_stage(
+        stage_queue,
+        "dev_numeric_transformation",
+        scope,
+        operation="centered_numeric_then_csr",
+        numeric_feature_count=len(preprocessor.num_scaler.num_cols),
+    )
+    _publish_stage(
+        stage_queue,
+        "dev_categorical_sparse_transformation",
+        scope,
+        operation="one_hot_encoder_sparse_output",
+        categorical_feature_count=len(preprocessor.cat_encoder.cat_cols),
+    )
+    encoded_train = _attach_sparse_feature_names(
+        preprocessor.transform(X_train), preprocessor.get_feature_names_out()
+    )
+    encoded_train_audit = csr_audit_metadata(encoded_train)
+    _publish_stage(
+        stage_queue,
+        "dev_csr_assembly",
+        scope,
+        operation="scipy_sparse_hstack_csr",
+        csr_shape=encoded_train_audit["shape"],
+        csr_nnz=encoded_train_audit["nnz"],
+        estimated_csr_bytes=encoded_train_audit["estimated_csr_bytes"],
+        csr_dtype=encoded_train_audit["dtype"],
+    )
     timings["preprocessing_seconds"] = time.perf_counter() - step
     model_name = str(cell["model"])
     model_kwargs = _model_settings(matrix, model_name)
     get_model, _, predict_proba, _ = get_model_bundle(model_name, model_kwargs)
     model = get_model()
+    checkpoint_artifacts: list[dict[str, Any]] = []
+    schema = preprocessor.schema_metadata()
+    schema.update(
+        {
+            "schema_version": "prompt_16_sparse_final_model_schema_v1",
+            "selected_feature_order_sha256": canonical_sha256(list(selected)),
+            "encoded_feature_order_sha256": canonical_sha256(
+                preprocessor.get_feature_names_out()
+            ),
+            "training_row_identity": _locked_alignment_summary(
+                train["case_id"].tolist(), y_train.tolist()
+            ),
+            "dev_csr": encoded_train_audit,
+            "checkpoint_binding": dict(checkpoint_binding or {}),
+        }
+    )
+    if preprocessing_checkpoint_dir is not None:
+        checkpoint_root = Path(preprocessing_checkpoint_dir)
+        checkpoint_root.mkdir(parents=True, exist_ok=False)
+        encoder_artifact = _write_joblib_atomic(
+            checkpoint_root / "fitted_encoder_v1.joblib", preprocessor
+        )
+        checkpoint_artifacts.append(encoder_artifact)
+        schema_artifact = write_json_atomic(
+            checkpoint_root / "encoded_schema_v1.json", schema, overwrite=False
+        ).to_dict()
+        checkpoint_artifacts.append(schema_artifact)
     step = time.perf_counter()
     # Held-out validation/OOT targets are never supplied to fitting or early stopping.
+    _publish_stage(
+        stage_queue,
+        "final_model_fitting",
+        scope,
+        operation="unchanged_model_fit_on_complete_dev_csr",
+        model=model_name,
+        csr_shape=encoded_train_audit["shape"],
+        csr_nnz=encoded_train_audit["nnz"],
+        estimated_csr_bytes=encoded_train_audit["estimated_csr_bytes"],
+    )
     model.fit(encoded_train, y_train, eval_set=None)
     timings["training_seconds"] = time.perf_counter() - step
     step = time.perf_counter()
-    validation_score = np.asarray(predict_proba(model, encoded_validation), dtype=float)
     if phase == "oot":
         if full_dev_training_ks_threshold:
             if frozen_threshold is not None:
                 raise Prompt16ExecutionError(
                     "full-DEV threshold rule cannot also receive a numeric threshold"
                 )
-            train_score = np.asarray(predict_proba(model, encoded_train), dtype=float)
+            train_score = _score_encoded_csr_batches(
+                model=model,
+                predict_proba=predict_proba,
+                encoded=encoded_train,
+                batch_size=int(score_batch_size),
+                stage_queue=stage_queue,
+                scope=scope,
+                stage="dev_batch_scoring",
+            )
             threshold = determine_threshold(y_train.to_numpy(), train_score)
             del train_score
         else:
@@ -1486,9 +1701,35 @@ def _fit_and_evaluate(
                 raise Prompt16ExecutionError("OOT evaluation lacks a DEV-frozen threshold")
             threshold = float(frozen_threshold)
     else:
-        train_score = np.asarray(predict_proba(model, encoded_train), dtype=float)
+        train_score = _score_encoded_csr_batches(
+            model=model,
+            predict_proba=predict_proba,
+            encoded=encoded_train,
+            batch_size=int(score_batch_size),
+            stage_queue=stage_queue,
+            scope=scope,
+            stage="dev_batch_scoring",
+        )
         threshold = determine_threshold(y_train.to_numpy(), train_score)
         del train_score
+    del encoded_train
+    pa.default_memory_pool().release_unused()
+    gc.collect()
+    _publish_stage(
+        stage_queue,
+        "dev_matrix_release",
+        scope,
+        operation="full_dev_csr_released_before_held_out_transform",
+    )
+    validation_score = _transform_and_score_frame_batches(
+        preprocessor=preprocessor,
+        frame=X_validation,
+        model=model,
+        predict_proba=predict_proba,
+        batch_size=int(score_batch_size),
+        stage_queue=stage_queue,
+        scope=scope,
+    )
     timings["prediction_seconds"] = time.perf_counter() - step
     if validation_score.ndim != 1 or len(validation_score) != len(validation):
         raise Prompt16ExecutionError("prediction shape mismatch")
@@ -1530,17 +1771,333 @@ def _fit_and_evaluate(
         ),
         "validation_or_oot_used_to_choose_threshold": False,
         "selected_original_feature_count": len(selected),
-        "encoded_feature_count": int(encoded_train.shape[1]),
+        "encoded_feature_count": len(preprocessor.get_feature_names_out()),
         "preprocessing": {
-            "implementation": "credit_risk_fs.preprocessing.encoding.Preprocessor",
+            "implementation": "credit_risk_fs.preprocessing.encoding.SparsePreprocessor",
             "fit_scope": "full_dev_only" if phase == "oot" else "dev_fold_training_only",
-            "numeric": "mean_imputation_standard_scaler_float32",
-            "categorical": "missing_token_one_hot_min_frequency_10_dense_float32",
+            "numeric": "mean_imputation_centered_standard_scaler_float32_then_csr",
+            "categorical": "missing_token_one_hot_min_frequency_10_sparse_float32",
+            "matrix_format": "canonical_sorted_csr",
+            "matrix_dtype": "float32",
+            "score_batch_size": int(score_batch_size),
+            "encoded_feature_names": preprocessor.get_feature_names_out(),
+            "dev_csr": encoded_train_audit,
+            "fitted_encoder_checkpointed": preprocessing_checkpoint_dir is not None,
+            "checkpoint_artifacts": checkpoint_artifacts,
         },
     }
-    del model, encoded_train, encoded_validation, X_train, X_validation, preprocessor
+    if preprocessing_checkpoint_dir is not None:
+        resource_record = {
+            "schema_version": "prompt_16_sparse_final_model_resource_validation_v1",
+            "production_dense_materialization_prohibited": True,
+            "production_dense_materialization_observed": False,
+            "dev_csr_released_before_oot_transform": True,
+            "oot_transform_batched": True,
+            "score_batch_size": int(score_batch_size),
+            "dev_csr": encoded_train_audit,
+            "checkpoint_binding": dict(checkpoint_binding or {}),
+        }
+        resource_artifact = write_json_atomic(
+            Path(preprocessing_checkpoint_dir) / "resource_validation_v1.json",
+            resource_record,
+            overwrite=False,
+        ).to_dict()
+        configuration["preprocessing"]["checkpoint_artifacts"].append(
+            resource_artifact
+        )
+    _publish_stage(
+        stage_queue,
+        "final_model_artifact_persistence",
+        scope,
+        operation="sparse_preprocessing_audit_complete",
+    )
+    del model, X_train, X_validation, preprocessor
     gc.collect()
     return predictions, metrics, {"timings": timings, "configuration": configuration}
+
+
+def run_sparse_final_model_dev_certification_worker(
+    *,
+    repository_root: str,
+    validation_root: str,
+    stop_event: Any = None,
+    stage_queue: Any = None,
+    ram_ready_event: Any = None,
+    **_controls: Any,
+) -> dict[str, Any]:
+    """Certify the exact cell-3 final-model fit without loading locked OOT."""
+
+    import catboost
+    import scipy
+    import sklearn
+
+    project = Path(repository_root).resolve()
+    output = Path(validation_root).resolve()
+    if output.exists():
+        raise Prompt16ExecutionError(
+            f"DEV-only certification scope already exists: {output}"
+        )
+    output.mkdir(parents=True, exist_ok=False)
+    protocol_path = (
+        project
+        / "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json"
+    )
+    contract, protocol = _protocol_payload(protocol_path)
+    matrix = protocol["approved_protocol"]["method_and_evaluation_matrix"]
+    matrix_root = (
+        project / "outputs/prompt_16_homecredit_model_stability_2024/matrix_v1"
+    )
+    matrix_manifest, matrix_metadata = _matrix_identity(matrix_root)
+    matrix_manifest_sha = file_sha256(matrix_root / "manifest.json")
+    cells = list(matrix["matrix_cells"])
+    cell = next(row for row in cells if int(row["configuration_order"]) == 3)
+    if (
+        cell.get("method_id") != "random_k"
+        or cell.get("model") != "lr"
+        or int(cell.get("requested_feature_budget")) != 20
+    ):
+        raise Prompt16ExecutionError("cell-3 frozen identity changed")
+    fits = selection_fit_registry(matrix)
+    fit = next(
+        row for row in fits if 3 in [int(value) for value in row["dependent_configuration_orders"]]
+    )
+    if fit.get("fit_id") != "fit_003":
+        raise Prompt16ExecutionError("cell-3 selection checkpoint mapping changed")
+    selection_root = (
+        project
+        / "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1"
+        / "classical/selection_fits/fit_003"
+    )
+    selection_path = selection_root / "selection.json"
+    selection_manifest_path = selection_root / "manifest.json"
+    if not (selection_root / "_SUCCESS").is_file():
+        raise Prompt16ExecutionError("cell-3 selection checkpoint is not sealed")
+    selection = _json(selection_path)
+    selected = [str(value) for value in selection.get("selected_features", [])]
+    if selection.get("status") != "complete" or len(selected) != 20:
+        raise Prompt16ExecutionError("cell-3 selected support changed")
+    if "d1__person__registaddr_zipcode_184M__last_by_num_group1" not in selected:
+        raise Prompt16ExecutionError("cell-3 high-cardinality ZIP feature changed")
+    predictors = list(matrix_metadata["predictor_columns"])
+    if not set(selected).issubset(predictors):
+        raise Prompt16ExecutionError("cell-3 selection escaped the frozen universe")
+    dev_expected = protocol["approved_protocol"]["split_and_fold_boundaries"]["dev"]
+    _publish_stage(
+        stage_queue,
+        "dev_certification_projection_loading",
+        "dev_only:cell_003:fit_008_handoff",
+        operation="full_dev_selected_projection_only",
+        locked_oot_rows_loaded=0,
+        selected_feature_count=len(selected),
+    )
+    # The certification reader applies the DEV date predicate inside Arrow's
+    # dataset scan. No OOT row or target is returned to Python, including at
+    # the DEV/OOT boundary Parquet part.
+    import pyarrow.dataset as ds
+
+    wait_for_ram_ready(
+        ram_ready_event,
+        stop_event,
+        boundary="dev_only_sparse_certification:predicate_pushdown",
+    )
+    dataset = ds.dataset(
+        [str(path) for path in _part_paths(matrix_root, matrix_manifest)],
+        format="parquet",
+    )
+    date_type = dataset.schema.field("date_decision").type
+    if pa.types.is_date(date_type):
+        lower_value: Any = date.fromisoformat(str(dev_expected["date_min"]))
+        upper_value: Any = date.fromisoformat(str(dev_expected["date_max"]))
+    elif pa.types.is_timestamp(date_type):
+        lower_value = pd.Timestamp(str(dev_expected["date_min"]))
+        upper_value = pd.Timestamp(str(dev_expected["date_max"]))
+    else:
+        lower_value = str(dev_expected["date_min"])
+        upper_value = str(dev_expected["date_max"])
+    dev_table = dataset.to_table(
+        columns=[*NON_PREDICTORS, *selected],
+        filter=(ds.field("date_decision") >= lower_value)
+        & (ds.field("date_decision") <= upper_value),
+    )
+    dev = dev_table.to_pandas(split_blocks=True, self_destruct=True)
+    del dev_table, dataset
+    pa.default_memory_pool().release_unused()
+    for name in selected:
+        if pd.api.types.is_bool_dtype(dev[name].dtype):
+            dev[name] = dev[name].astype("Float32")
+    order_index = pd.MultiIndex.from_frame(dev[["date_decision", "case_id"]])
+    if not order_index.is_monotonic_increasing:
+        dev.sort_values(
+            ["date_decision", "case_id"],
+            kind="mergesort",
+            inplace=True,
+            ignore_index=True,
+        )
+    _validate_scope_frame(
+        dev, dev_expected, "dev_only_sparse_certification:cell_003"
+    )
+    if len(dev) != 1_221_743:
+        raise Prompt16ExecutionError("full DEV certification row count changed")
+    y_dev = dev["target"].astype("int64")
+    X_dev = dev.loc[:, selected]
+    preprocessor = SparsePreprocessor(
+        num_strategy="mean",
+        num_scaler="standard",
+        cat_max_card=7,
+        cat_missing="Missing",
+        cat_min_frequency=10,
+    )
+    _publish_stage(
+        stage_queue,
+        "dev_certification_encoder_fitting",
+        "dev_only:cell_003:fit_008_handoff",
+        operation="full_dev_only",
+        locked_oot_rows_loaded=0,
+    )
+    preprocessor.fit(X_dev)
+    _publish_stage(
+        stage_queue,
+        "dev_certification_sparse_transformation",
+        "dev_only:cell_003:fit_008_handoff",
+        operation="numeric_centered_then_csr_and_sparse_one_hot",
+    )
+    encoded = _attach_sparse_feature_names(
+        preprocessor.transform(X_dev), preprocessor.get_feature_names_out()
+    )
+    csr_audit = csr_audit_metadata(encoded)
+    schema = preprocessor.schema_metadata()
+    schema.update(
+        {
+            "schema_version": "prompt_16_sparse_final_model_schema_v1",
+            "scope": "full_scale_dev_only_cell_003_fit_008_handoff",
+            "locked_oot_rows_loaded": 0,
+            "locked_oot_outcomes_inspected": False,
+            "selected_feature_order_sha256": canonical_sha256(selected),
+            "encoded_feature_order_sha256": canonical_sha256(
+                preprocessor.get_feature_names_out()
+            ),
+            "dev_csr": csr_audit,
+        }
+    )
+    encoder_artifact = _write_joblib_atomic(
+        output / "fitted_encoder_v1.joblib", preprocessor
+    )
+    schema_artifact = write_json_atomic(
+        output / "encoded_schema_v1.json", schema, overwrite=False
+    ).to_dict()
+    model_settings = _model_settings(matrix, "lr")
+    expected_model_settings = {
+        "solver": "liblinear",
+        "max_iter": 1000,
+        "class_weight": "balanced",
+        "random_state": 42,
+    }
+    if model_settings != expected_model_settings:
+        raise Prompt16ExecutionError("frozen Logistic Regression settings changed")
+    get_model, _, predict_proba, _ = get_model_bundle("lr", model_settings)
+    model = get_model()
+    _publish_stage(
+        stage_queue,
+        "dev_certification_model_fitting",
+        "dev_only:cell_003:fit_008_handoff",
+        operation="unchanged_liblinear_on_complete_dev_csr",
+        csr_shape=csr_audit["shape"],
+        csr_nnz=csr_audit["nnz"],
+        estimated_csr_bytes=csr_audit["estimated_csr_bytes"],
+    )
+    fit_started = time.perf_counter()
+    model.fit(encoded, y_dev, eval_set=None)
+    fit_seconds = time.perf_counter() - fit_started
+    score_started = time.perf_counter()
+    dev_score = _score_encoded_csr_batches(
+        model=model,
+        predict_proba=predict_proba,
+        encoded=encoded,
+        batch_size=FINAL_MODEL_SCORE_BATCH_SIZE,
+        stage_queue=stage_queue,
+        scope="dev_only:cell_003:fit_008_handoff",
+        stage="dev_certification_batch_scoring",
+    )
+    score_seconds = time.perf_counter() - score_started
+    threshold = determine_threshold(y_dev.to_numpy(), dev_score)
+
+    def array_sha256(values: Any) -> str:
+        array = np.ascontiguousarray(values)
+        return hashlib.sha256(memoryview(array).cast("B")).hexdigest()
+
+    actual_parameters = model.model.get_params()
+    report = {
+        "schema_version": "prompt_16_sparse_final_model_dev_certification_v1",
+        "status": "worker_complete_pending_supervisor_resource_gate",
+        "scope": {
+            "configuration_order": 3,
+            "controller_handoff_fit_id": "fit_008",
+            "selection_checkpoint_fit_id": "fit_003",
+            "method_id": "random_k",
+            "model": "lr",
+            "dev_rows": len(dev),
+            "selected_features": selected,
+            "locked_oot_rows_loaded": 0,
+            "locked_oot_outcomes_inspected": False,
+        },
+        "authentication": {
+            "protocol_file_sha256": contract.lock_file_sha256,
+            "protocol_internal_sha256": contract.lock_internal_sha256,
+            "matrix_manifest_sha256": matrix_manifest_sha,
+            "selection_json_sha256": file_sha256(selection_path),
+            "selection_manifest_sha256": file_sha256(selection_manifest_path),
+            "selected_feature_order_sha256": canonical_sha256(selected),
+            "dev_row_identity": _locked_alignment_summary(
+                dev["case_id"].tolist(), y_dev.tolist()
+            ),
+        },
+        "dependencies": {
+            "python": sys.version,
+            "numpy": np.__version__,
+            "pandas": pd.__version__,
+            "scipy": scipy.__version__,
+            "scikit_learn": sklearn.__version__,
+            "catboost": catboost.__version__,
+        },
+        "preprocessing": schema,
+        "model": {
+            "requested_parameters": model_settings,
+            "actual_parameters": actual_parameters,
+            "coefficient_dtype": str(model.model.coef_.dtype),
+            "coefficient_sha256": array_sha256(model.model.coef_),
+            "intercept_sha256": array_sha256(model.model.intercept_),
+            "n_iter": [int(value) for value in model.model.n_iter_.tolist()],
+        },
+        "dev_scoring": {
+            "dtype": str(dev_score.dtype),
+            "score_sha256": array_sha256(dev_score),
+            "ks_threshold": float(threshold),
+            "batch_size": FINAL_MODEL_SCORE_BATCH_SIZE,
+            "fit_seconds": fit_seconds,
+            "score_seconds": score_seconds,
+        },
+        "artifacts": [encoder_artifact, schema_artifact],
+        "disk_backed_csr_used": False,
+        "production_dense_materialization_observed": False,
+        "completed_at_utc": _utc_now(),
+    }
+    write_json_atomic(output / "worker_report.json", report, overwrite=False)
+    del encoded, dev_score, X_dev, y_dev, dev, model, preprocessor
+    pa.default_memory_pool().release_unused()
+    gc.collect()
+    _publish_stage(
+        stage_queue,
+        "dev_certification_matrix_release",
+        "dev_only:cell_003:fit_008_handoff",
+        operation="full_dev_csr_released",
+        locked_oot_rows_loaded=0,
+    )
+    write_text_atomic(output / "_WORKER_SUCCESS", "DEV_ONLY\n", overwrite=False)
+    return {
+        "status": "dev_only_sparse_certification_worker_complete",
+        "worker_report": str(output / "worker_report.json"),
+        "locked_oot_rows_loaded": 0,
+    }
 
 
 def _frozen_thresholds(path: str | Path | None) -> dict[int, float]:
@@ -1579,6 +2136,7 @@ def run_phase_worker(
     expected_resume_fit_id: str | None = None,
     inherited_resource_infeasible_fit_ids: Sequence[str] = (),
     inherited_resource_infeasible_cell_orders: Sequence[int] = (),
+    max_new_evaluations_per_worker: int | None = None,
     **_controls: Any,
 ) -> dict[str, Any]:
     """Run one exact pilot/DEV fold or the single locked OOT phase."""
@@ -1618,6 +2176,10 @@ def run_phase_worker(
         if not mrmr_checkpoint_identity_sha256:
             raise Prompt16ExecutionError(
                 "final OOT requires the authorized compact mRMR identity"
+            )
+        if max_new_evaluations_per_worker != 1:
+            raise Prompt16ExecutionError(
+                "final OOT requires exactly one new evaluation per isolated worker"
             )
     elif any(
         (
@@ -2262,13 +2824,13 @@ def run_phase_worker(
         feature_psi_manifest_sha = file_sha256(feature_psi_path / "manifest.json")
 
     thresholds = _frozen_thresholds(oot_analysis_plan)
+    new_evaluations_this_worker = 0
     for cell in cells:
         _check_stop(stop_event)
         order = int(cell["configuration_order"])
         cell_id = f"cell_{order:03d}"
         fit = fit_by_cell[order]
         fit_path = selection_root / str(fit["fit_id"])
-        selection_manifest = _json(fit_path / "manifest.json")
         selection_manifest_sha = file_sha256(fit_path / "manifest.json")
         identity = _evaluation_identity(
             phase=phase,
@@ -2335,6 +2897,19 @@ def run_phase_worker(
             )
             _seal_directory(path, identity)
             unavailable_eval_count += 1
+            new_evaluations_this_worker += 1
+            if (
+                max_new_evaluations_per_worker is not None
+                and new_evaluations_this_worker >= max_new_evaluations_per_worker
+            ):
+                return {
+                    "schema_version": SCHEMA_VERSION,
+                    "status": "checkpoint_handoff",
+                    "phase": phase,
+                    "configuration_order": order,
+                    "fit_id": fit["fit_id"],
+                    "worker_memory_released_by_process_exit": True,
+                }
             continue
         if selection.get("status") in {"failed", "resource_infeasible"} or not selected:
             status = {
@@ -2359,6 +2934,19 @@ def run_phase_worker(
             write_json_atomic(path / "failure.json", selection, overwrite=False)
             _seal_directory(path, identity)
             unavailable_eval_count += 1
+            new_evaluations_this_worker += 1
+            if (
+                max_new_evaluations_per_worker is not None
+                and new_evaluations_this_worker >= max_new_evaluations_per_worker
+            ):
+                return {
+                    "schema_version": SCHEMA_VERSION,
+                    "status": "checkpoint_handoff",
+                    "phase": phase,
+                    "configuration_order": order,
+                    "fit_id": fit["fit_id"],
+                    "worker_memory_released_by_process_exit": True,
+                }
             continue
         try:
             if phase == "oot":
@@ -2396,6 +2984,16 @@ def run_phase_worker(
                 phase=phase,
                 frozen_threshold=thresholds.get(order),
                 full_dev_training_ks_threshold=full_dev_training_ks_threshold,
+                stage_queue=stage_queue,
+                execution_scope=f"{phase}:{fold_id or 'oot'}:{cell_id}:{fit['fit_id']}",
+                preprocessing_checkpoint_dir=path / "preprocessing_v1",
+                checkpoint_binding={
+                    "execution_authorization_sha256": execution_authorization_sha256,
+                    "matrix_manifest_sha256": matrix_manifest_sha,
+                    "selection_manifest_sha256": selection_manifest_sha,
+                    "configuration_order": order,
+                    "fit_id": fit["fit_id"],
+                },
             )
             prediction_auth = _locked_alignment_summary(
                 predictions["case_id"].tolist(), predictions["target"].tolist()
@@ -2449,12 +3047,25 @@ def run_phase_worker(
             write_json_atomic(path / "failure.json", status["error"], overwrite=False)
             unavailable_eval_count += 1
         _seal_directory(path, identity)
+        new_evaluations_this_worker += 1
         if phase == "oot":
             del train, validation
             train = None
             validation = None
             pa.default_memory_pool().release_unused()
             gc.collect()
+        if (
+            max_new_evaluations_per_worker is not None
+            and new_evaluations_this_worker >= max_new_evaluations_per_worker
+        ):
+            return {
+                "schema_version": SCHEMA_VERSION,
+                "status": "checkpoint_handoff",
+                "phase": phase,
+                "configuration_order": order,
+                "fit_id": fit["fit_id"],
+                "worker_memory_released_by_process_exit": True,
+            }
 
     accounting = {
         "schema_version": SCHEMA_VERSION,
