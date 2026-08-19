@@ -1,0 +1,7 @@
+artifact_scope,status,reporting_action,authority
+legacy canonical_artifact_manifest July 4 broad migration inventory,superseded for final reporting,"Do not require its moved/mutated-path entries; use the later 65-file successor source_manifest seal, which authenticated 65/65.",D:\python projects\Research_pre_cleanup_backup_20260704\results\finalized_research\final_report_inputs\source_manifest.json
+Prompt 14 legacy/original voting manifest,historical superseded,Use the active v2 manifest pointer only; unaffected voting payloads remain byte-identical.,cleanup/audits/prompt_14_two_dataset_oot_review_v3/authentication_validation.json
+Prompt 16 pilot_v1 and dev_llm_supplement_v2,intermediate/superseded,Exclude; final DEV supplement is dev_llm_supplement_v3.,cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json
+Prompt 16 archived_incomplete_attempts,failed/interrupted archived,Exclude from numeric evidence; retain only as failure provenance.,cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json
+historical semantic/mixed voter,unavailable,Zero execution cells; unresolved provenance; never plot or tabulate as zero/negative evidence.,cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json
+Prompt 16 final amended OOT v1,canonical active sealed,"Use all 34 registered cells, including 12 explicit unavailable identities.",results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/final_evidence_manifest.json

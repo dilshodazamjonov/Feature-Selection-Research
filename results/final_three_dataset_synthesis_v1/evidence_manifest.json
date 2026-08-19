@@ -1,0 +1,2916 @@
+{
+  "authentication_checks": [
+    {
+      "check": "git_branch_main",
+      "detail": "main",
+      "status": "pass"
+    },
+    {
+      "check": "required_commit_ancestry",
+      "detail": {
+        "prompt14_complete": true,
+        "prompt14_lock": true,
+        "prompt16_controller": true
+      },
+      "status": "pass"
+    },
+    {
+      "check": "no_unrelated_worktree_changes",
+      "detail": [],
+      "status": "pass"
+    },
+    {
+      "check": "no_experimental_worker_or_controller",
+      "detail": [],
+      "status": "pass"
+    },
+    {
+      "check": "legacy_successor_source_seal_65_of_65",
+      "detail": {
+        "checked": 65,
+        "matched": 65
+      },
+      "status": "pass"
+    },
+    {
+      "check": "legacy_report_integration_authorized",
+      "detail": "REPORT INTEGRATION ALLOWED WITH REQUIRED LIMITATIONS",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_final_validation",
+      "detail": "pass",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_authentication_validation",
+      "detail": "pass",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_registered_result_rows",
+      "detail": 64,
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_registered_comparisons",
+      "detail": {
+        "evaluable": 124,
+        "rows": 124
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_dev_170_identity_gate",
+      "detail": {
+        "authenticated_evaluation_identities": 170,
+        "classical_completed_numeric_outcomes": 103,
+        "classical_evaluation_identities": 150,
+        "classical_selector_fit_records": 135,
+        "classical_visible_unavailable_outcomes": 47,
+        "completed_numeric_outcomes": 123,
+        "frozen_visible_unavailable_outcomes": 47,
+        "global_llm_truncation_states": 2,
+        "metric_reconciliations": 123,
+        "registered_evaluation_identities": 170,
+        "supplemental_completed_numeric_outcomes": 20,
+        "supplemental_internal_rf_mrmr_component_fits": 50,
+        "supplemental_stable_core_outer_fits": 10,
+        "target_free_llm_ranking_generations": 1
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_dev_metric_reconciliation",
+      "detail": {
+        "maximum_difference": 0.0,
+        "numeric": 123,
+        "registered": 170
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_success_markers",
+      "detail": "both present",
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_controller_complete",
+      "detail": {
+        "state": "DONE",
+        "status": "complete"
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_final_manifest_complete",
+      "detail": {
+        "accounted": 34,
+        "expected": 34
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_execution_authorization",
+      "detail": "9c6f635bdf6433f375fdfe02066253971a45264406cb190d76563701cd1aa955",
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_phase_manifests",
+      "detail": {
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/analysis/analysis_manifest.json": "71995278b8e49dce3be234dbf7e3906fb42f7d71c8d6c704ca1279963b497554",
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/phase_manifest.json": "9339b688a1ae31ec030c78c0689a5670ebf1a80cbe6ef000160aef028970701c",
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/phase_manifest.json": "028e383ea5769c9fe1371c9fb6d740aa9897aaace23d889264c52b92f480aa38"
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_34_evaluation_manifests",
+      "detail": {
+        "authenticated": 34,
+        "registered": 34
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_oot_34_accounting",
+      "detail": {
+        "numeric": 22,
+        "registered": 34,
+        "unavailable": 12
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_oot_metric_reconciliation",
+      "detail": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_final_llm_four_cells",
+      "detail": [
+        [
+          31,
+          "llm",
+          "lr",
+          20
+        ],
+        [
+          32,
+          "llm",
+          "catboost",
+          40
+        ],
+        [
+          33,
+          "stable_core_llm_fill",
+          "lr",
+          20
+        ],
+        [
+          34,
+          "stable_core_llm_fill",
+          "catboost",
+          40
+        ]
+      ],
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_registered_comparison_graph",
+      "detail": {
+        "completed": 22,
+        "rows": 72,
+        "unavailable": 50
+      },
+      "status": "pass"
+    }
+  ],
+  "authoritative_source_artifacts": [
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\final_report_inputs\\evidence\\feature_drift_results.csv",
+      "sha256": "52e3bff0f1a866e1cfe8c67c302b1bb256d58a6cede915da5478d0d211514e35"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\final_report_inputs\\evidence\\significance_results.csv",
+      "sha256": "056fa955b95d74b8ccaf3520ac2ea36ef48b80431edfca1b10734be828e4961c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\final_report_inputs\\tables\\table_01_dataset_and_design.csv",
+      "sha256": "defe01bfbc2472206dd18d8c3250fadc3da55ffa38db295cb9692c535d2c8d4f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_159b47a7bfa0\\features\\feature_stability_metrics.csv",
+      "sha256": "a5469ececa14962750473df070c39b64cc92533732efecd87717c9e12b934cf4"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_159b47a7bfa0\\features\\final_selected_features.csv",
+      "sha256": "0d82bf2e9b5a6e01e3eda9bc93cbdf62940fddeff2c556b49fef8c5ced5c60a6"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_159b47a7bfa0\\features\\fold_selected_features.csv",
+      "sha256": "17b721c04beb229f3d8015d241ce37f2ca4e7811633b0c98f4b53fa9bbd0ab55"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_159b47a7bfa0\\results\\cv_results.csv",
+      "sha256": "84a9bda1431031255c61f2c8101adfc519b5bb61841ed34abba134f4d5c785bd"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_159b47a7bfa0\\results\\experiment_summary.csv",
+      "sha256": "33b965876bd7f2595c8097c532cc6fdfcc8a29c38edccf2f3d8f04534f86b224"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\features\\feature_stability_metrics.csv",
+      "sha256": "4c980c6d27bd26468c618e37edb56141b0fdddbdd243a07d6ab9f6b64fd22379"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\features\\final_selected_features.csv",
+      "sha256": "a742020eb20f51fdc7d6b5a0b685b245bd1463513529f8507db7f296ec0ca3df"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\features\\fold_selected_features.csv",
+      "sha256": "3d7124df8a4f24faff891e1ef7edeaba5ba133f08ecbceabe222026984e12b42"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\results\\cv_results.csv",
+      "sha256": "51c4c1df36d327cce0e9a8d640a2063708cca39028599def914c412c15457adf"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\results\\experiment_summary.csv",
+      "sha256": "16f9adeb7b04e2542bcea79f929547ab3a0847c148c55dfffd65f7c49fe30edd"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\features\\feature_stability_metrics.csv",
+      "sha256": "a5702195844482b47021f870a2cd6241ddfd118f25ed085429abfeca0712addc"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\features\\final_selected_features.csv",
+      "sha256": "3734216744295bb3a2139f58d8cc69145dcc6d3e5a6945bf2f91d608176a4a8b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\features\\fold_selected_features.csv",
+      "sha256": "7a6fcad763e9e68cb64073ad59a8d9d3ef9d8e158d3b3984f1a3da1b5fc57de9"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\results\\cv_results.csv",
+      "sha256": "12fd35f8b993fa9be489cf1c752339341b87dad8a5e0fcd804530f70116880b9"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\results\\experiment_summary.csv",
+      "sha256": "c34573b2a112c613be39865b39273f0cea88e5fd049fcae2264e22fb1edc104f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\features\\feature_stability_metrics.csv",
+      "sha256": "e82266092775939f8bd6bf0830f42abf0750bae4824eaab3be68a64bf1a12f53"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\features\\final_selected_features.csv",
+      "sha256": "cb21e4e9e9c0268d1b174a4a13824f4115f43d568e24af0f362e30898b75cb52"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\features\\fold_selected_features.csv",
+      "sha256": "5f6aacbc8a28b4b4310a09c41b2da9c49fb9fde79686feac992d1030b266946f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\results\\cv_results.csv",
+      "sha256": "0cf348752d734c20f1870e68447e4019e2e6725049e837c579a2aedb2c757b4b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\results\\experiment_summary.csv",
+      "sha256": "08701d21d02d32e8495b280e816cbfd2e3138a6a54ccc33e27eff7d28b446fe1"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_boruta_486630bccdb9\\features\\feature_stability_metrics.csv",
+      "sha256": "2b7d3dfafd14d893cca7b26ee6643493398c5fa5c5a1c4416ae5a89ad82edc2d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_boruta_486630bccdb9\\features\\final_selected_features.csv",
+      "sha256": "a83e3a9323c37f63158a8eeceb62cacbe62e7bd4f1bb5e65a574b4ed177c816f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_boruta_486630bccdb9\\features\\fold_selected_features.csv",
+      "sha256": "5f19a15c8bd3466ff7959f78a1cff4746ab19da080afbe06e8f9a09e3fe12155"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_boruta_486630bccdb9\\results\\cv_results.csv",
+      "sha256": "3b637206bf7bc50cc53c0a9a6e78d593de6976e875ba319a979505b234f4663d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_boruta_486630bccdb9\\results\\experiment_summary.csv",
+      "sha256": "e45d1a0b875179184d3efbdd47626333520eb97512737a5e23c88e90159e3584"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_b0a57bf51d1f\\features\\feature_stability_metrics.csv",
+      "sha256": "94ae8db5114ca1689f647858756f953141b7d98e44b319c254e27300b8666eec"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_b0a57bf51d1f\\features\\final_selected_features.csv",
+      "sha256": "8b1b60ba8a46fd30d8d1dd13c4dbfd2df6e14343e9dadee545afd2fd3753515d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_b0a57bf51d1f\\features\\fold_selected_features.csv",
+      "sha256": "54605c17bec1643e86d8de7222de2219825278085ebbd4c99b61eceea6e67c6b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_b0a57bf51d1f\\results\\cv_results.csv",
+      "sha256": "b3b185cd33fa71a8cce611edaa4d1155e9f12adcb78e27e3f8a3811592fcf680"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_b0a57bf51d1f\\results\\experiment_summary.csv",
+      "sha256": "0b05a4d34ead8249b9c7d94eb75ff4c857609d3d78f3b85cbc3d90702601e1c7"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\features\\feature_stability_metrics.csv",
+      "sha256": "0ebb9db21ebe609a2e7e78965fb0b398bd73b912ab828ca60e14bbdb61756479"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\features\\final_selected_features.csv",
+      "sha256": "93e484d2a6f3b62aa3f59b4f782f39053bae498f8de23602f1ed7a98f2de5bff"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\features\\fold_selected_features.csv",
+      "sha256": "0924e5727b8744ae68064dde88d276900e8566adc207f4c5bd8f96e2174e4f32"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\results\\cv_results.csv",
+      "sha256": "1d7dc3d31c44fb97a9c0d56f84a83fa412f7284253f62ecca98623ad15cae1b0"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\results\\experiment_summary.csv",
+      "sha256": "0d5f4cb6f0a00aa4c017cfb936fafd35e4ca3e11be8a23eec2a7af92b73f140a"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_pca_26fcebfff558\\features\\feature_stability_metrics.csv",
+      "sha256": "b12fae927ab471a8ba2579a3947239bf4216d27bdee22bd4903bb3048a2fe387"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_pca_26fcebfff558\\features\\final_selected_features.csv",
+      "sha256": "4de12dd5017a90518d696f6df723bc9d66f058ef89735010b80863df75ffdc1a"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_pca_26fcebfff558\\features\\fold_selected_features.csv",
+      "sha256": "3447a2aa1e6a6f5561fb238e3435c6c20f569ead84e50b6dfc32422b9728a436"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_pca_26fcebfff558\\results\\cv_results.csv",
+      "sha256": "16d7f8193710dad1b7de308657d42e113430a8db2e60ffb5aedd517b14852fcb"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_pca_26fcebfff558\\results\\experiment_summary.csv",
+      "sha256": "2941db1e587cc147f8575de313eae353a54ad11d7ad3ac4669bf396f5ebd41bb"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_9ceedb78b89f\\features\\feature_stability_metrics.csv",
+      "sha256": "7c38d67501dc1e0935e15a0cbf9fcc461b8149739b717e0163931ab2527354ac"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_9ceedb78b89f\\features\\final_selected_features.csv",
+      "sha256": "8f944c233f34c19b9071bfb6a5cf32aedb6cac449075a82f3d8cf6d32e7a1103"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_9ceedb78b89f\\features\\fold_selected_features.csv",
+      "sha256": "c3f4acc3575ad55f6e4f7e4d9ffd10c43726c9430c8b5b2c4c9e8735485a7fb3"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_9ceedb78b89f\\results\\cv_results.csv",
+      "sha256": "03760c0a64d7b661c72b73451fb5f8891b035dd67277067465b2632f416dbe22"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_9ceedb78b89f\\results\\experiment_summary.csv",
+      "sha256": "961fde92868ec85891806423df4108a9125289feb15b3dc6b90fb66e01215acd"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\features\\feature_stability_metrics.csv",
+      "sha256": "9a499c2d118fccae0336a43dd047b41b0b95a91fcd5f36c066be55094d4fc744"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\features\\final_selected_features.csv",
+      "sha256": "f61e36a9f32e03041c63381795431187b8f15dc699a3b1c00008f1d0b4ac3e25"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\features\\fold_selected_features.csv",
+      "sha256": "4f26b58d0af154a68a9725d799a7acfd8c37b35929ec8ea77892ee6e513ff69e"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\results\\cv_results.csv",
+      "sha256": "2c523086b70e2b8bace2a9647e951c2c7611c677c99a80856a41dfc93e412578"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\results\\experiment_summary.csv",
+      "sha256": "00e65f77288b688fb34718a60c4315a39d7870ae06fc22a4894e94f26a240c8d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\features\\feature_stability_metrics.csv",
+      "sha256": "a0162f25b3139cc34f52d56a5924a280bad1ce706a6a466d6c9691a25a71781d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\features\\final_selected_features.csv",
+      "sha256": "ea38c7021503d4704d361375b9fb926ab599394ac93633c876ad798094be3250"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\features\\fold_selected_features.csv",
+      "sha256": "33680cdeb09bb620c673b1890c15d2a787e62123586ace77394a6681736ba420"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\results\\cv_results.csv",
+      "sha256": "d1af751cc2e530e561d41c5a9b3b3b92d8446e7d6ed71faf302faa0c88f50606"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\results\\experiment_summary.csv",
+      "sha256": "36865e8419ed5e20de4dafaa94ce16a38d7abe109a9dcaf4781a390bd2c36f21"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\features\\feature_stability_metrics.csv",
+      "sha256": "00431d684b5d1cbb70f62c08b93be712d2920379cc52084bffc4f355413c6f29"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\features\\final_selected_features.csv",
+      "sha256": "f00c9d66e651da4c3f3d611528bd06f5b301dc0d863e70e8665c0aa970fcc648"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\features\\fold_selected_features.csv",
+      "sha256": "722caf2516517058ff0b66ef9543dea6d1b757a41e36c0949c569322d2d489a4"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\results\\cv_results.csv",
+      "sha256": "5cebec3115fcc438f690785c1efa0e425ba15afd3b4ade074c66f95f2d9e8b6a"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\results\\experiment_summary.csv",
+      "sha256": "8081bdc05b20255070f6725c6c45a38bfe9bc3f9a54a4b8576c663fe635f2f56"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_boruta_80d39f8dcf68\\features\\feature_stability_metrics.csv",
+      "sha256": "6db96a54b89cf2eb0c00553bfe42ddf81f7b98289fae16fbc4099ded28ed9513"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_boruta_80d39f8dcf68\\features\\final_selected_features.csv",
+      "sha256": "ac5eba5edab8ae27c7ece853945daeb6a1b0bf69d02c33967feb0af0bf147dd9"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_boruta_80d39f8dcf68\\features\\fold_selected_features.csv",
+      "sha256": "438ff46d1d5a4ef2eecc776cb98e6fb4ce4077d569a61adf36346a9dc797dbcf"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_boruta_80d39f8dcf68\\results\\cv_results.csv",
+      "sha256": "0974128e2a6ac8d27f267e98db3ae45a134469caa93cc71b0634df62e1b2639b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_boruta_80d39f8dcf68\\results\\experiment_summary.csv",
+      "sha256": "ccefa918f29de3b3b417183c6bf4e300630acec514d557873f99ae58b0524c59"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_domain_rule_baseline_cfdde445ea74\\features\\feature_stability_metrics.csv",
+      "sha256": "accd4cd518862a7f612d1b1d61c4638a8cacfac0c8df4c4ea7e16e83caf829a7"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_domain_rule_baseline_cfdde445ea74\\features\\final_selected_features.csv",
+      "sha256": "29ac547e0b0a10236c440c998fba2c474f2aa71675341727fd2ad0afd0c6f818"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_domain_rule_baseline_cfdde445ea74\\features\\fold_selected_features.csv",
+      "sha256": "53382ae069183cc95f970a5996c0a33afe85cca262218e76ec7e16cac2e13177"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_domain_rule_baseline_cfdde445ea74\\results\\cv_results.csv",
+      "sha256": "b9de408515b941942ff4161a0dc6c89c49e9485dd251974766a8ebf94bfa9cda"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_domain_rule_baseline_cfdde445ea74\\results\\experiment_summary.csv",
+      "sha256": "48553a929487b1f0618a531485bc2373acaefa0d671ee332fff7bd79c6e3e124"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\features\\feature_stability_metrics.csv",
+      "sha256": "ab0934d38ce68aab3dec30db5c88b6c2e643df5cbfaf196993cba52bdb8d539d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\features\\final_selected_features.csv",
+      "sha256": "f4b44c0570df13be5f3a716a2d187a09b96a1c7da1d9dde976fbf42707ab78ee"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\features\\fold_selected_features.csv",
+      "sha256": "6f44032f19e8643c6b7000d7a0a7a1c5b40d0642b37e3073932800d4216971f6"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\results\\cv_results.csv",
+      "sha256": "b629ff16e515d9d1f2c4dde56ddb6bb0f522d16a1e70550e520015521d3106e8"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\results\\experiment_summary.csv",
+      "sha256": "1fd3615a476acd38b90527068df12d0541ab702c2900fe9e363e27bfc2cddf8d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_pca_7d168b078e9c\\features\\feature_stability_metrics.csv",
+      "sha256": "bff1d9a214fa5ac63f4a75478964eb3604b5cf76c36330c56fbaede4444eafdc"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_pca_7d168b078e9c\\features\\final_selected_features.csv",
+      "sha256": "f68842824b84f624585a0c8b2150ad62d357e4e2226d2f2d9506a2527ce9cd0b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_pca_7d168b078e9c\\features\\fold_selected_features.csv",
+      "sha256": "9959c2ac0fa79bd8ed1d67b8d163016cc5f46c961fd69ab73b119c3263323003"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_pca_7d168b078e9c\\results\\cv_results.csv",
+      "sha256": "f51b5c5f66fcfbc37c1ce3d9b52385e81001847a458303f23c2c5432a411025a"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_pca_7d168b078e9c\\results\\experiment_summary.csv",
+      "sha256": "d3f2e990e9abf5d621ba1d4357495fc2e21b74bb4d219e36d7f064dbc5740b12"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_10179060705b\\features\\feature_stability_metrics.csv",
+      "sha256": "2f6c74e64423a55f63c199ad4ad109ab550f805944f2cf8ee26c3d602a4ce0bc"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_10179060705b\\features\\final_selected_features.csv",
+      "sha256": "f205661563398ae8bff20d2381dd7c67caeb2f2c769ba54e1878deb0c3af318d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_10179060705b\\features\\fold_selected_features.csv",
+      "sha256": "3ac70e529a6b39a5f3d489c7bc315e8917b50487f8407cf601adaf505c2b4cdc"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_10179060705b\\results\\cv_results.csv",
+      "sha256": "fc89c1c82614b7cb34e709e4803b25e66893ccd7b50450ea3839d9380888a357"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_boruta\\catboost_hybrid_llm_then_boruta_10179060705b\\results\\experiment_summary.csv",
+      "sha256": "edf643851aa92559a334e8ff8912bbbfc2b5f889f1acbadff917947d9ce2fcb5"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\features\\feature_stability_metrics.csv",
+      "sha256": "1ea1e0e70ba717bb970f2cac4bb564f898cc00b27377e00c5f86fc0dbddd95bf"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\features\\final_selected_features.csv",
+      "sha256": "6fcbad7bb0841d36c533f52d8de7e0bda9710cacc1c7e379aefb415893e45860"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\features\\fold_selected_features.csv",
+      "sha256": "8f4a934eef4df7bbee09781ac5038ac0fd7dc548b9d11f846bccf0edb275cd3d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\results\\cv_results.csv",
+      "sha256": "fb3607a215338fddebeb8192792af41edd5fd2572880b9c95101262e220e0284"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\results\\experiment_summary.csv",
+      "sha256": "6da303e625164a38655b2031ae31fff2c7a5120e217833768fcc4a4a1def9b43"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\features\\feature_stability_metrics.csv",
+      "sha256": "14cbb06a3a5381cd24e787319c18d7b3dde22547d0f049071e4ac4a6525942c5"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\features\\final_selected_features.csv",
+      "sha256": "7d04dde3aa909f034bbd0deaa77c240ade9ecfc251de3111a566525acc8b98e5"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\features\\fold_selected_features.csv",
+      "sha256": "b66b5d94c03b7c3044070c0674025c484118656aa4e736c41145b9006608a4b6"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\results\\cv_results.csv",
+      "sha256": "bebb815a7cf5954da64948615087220693c40f573573b625001ae48f2035f69b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\results\\experiment_summary.csv",
+      "sha256": "f5f243ac8c23a5f6ac151f4080117ca1a0e233368c7fa8630b7f6e346719ae0d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\features\\feature_stability_metrics.csv",
+      "sha256": "661ca0f1e35a100a0eb836e464ee9984ee6a4652291bfbdac2b5353b4add4ff3"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\features\\final_selected_features.csv",
+      "sha256": "855a6d625b5f5c0d900caf77fdbdc2794c63345fe43315d4494b26e03d14b700"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\features\\fold_selected_features.csv",
+      "sha256": "a830598c97f26f55d50f55b4a17b923d1746acd1884b30a7ad0ac8a52334b680"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\results\\cv_results.csv",
+      "sha256": "37b75ab593e9716790114c1e95ccfa6ec4e6504da4b299220d89fe7fab4abad0"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\results\\experiment_summary.csv",
+      "sha256": "d40a406835978a02b98917b0a4908257f8790509471d725bd18fe84d576e908c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_boruta_effd06e32b3d\\features\\feature_stability_metrics.csv",
+      "sha256": "c17f8d3b7006e338e75dacd731e48aa4aff7266153e2f17cac8c230e81d7fdcd"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_boruta_effd06e32b3d\\features\\final_selected_features.csv",
+      "sha256": "fb239c1a2788bad3ed3530401195dab7bb7d42f108b54e64588dbaf3c6f1f44f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_boruta_effd06e32b3d\\features\\fold_selected_features.csv",
+      "sha256": "3e2dd355610b35f71af7719586a65a06333262372b3d9b33889c69aca1316e57"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_boruta_effd06e32b3d\\results\\cv_results.csv",
+      "sha256": "ece20d50b6bcc2d22c3966aea7cc0f3530ca13f408e15a30554552815473860d"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_boruta_effd06e32b3d\\results\\experiment_summary.csv",
+      "sha256": "5fefda12e986c22ef915679604456f2123bd28f8e19124bc892003eedc1b3eeb"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_9f4a8907eaf7\\features\\feature_stability_metrics.csv",
+      "sha256": "7bafa7c58610819abdf5c9c1ed35c67c48e271b5dddb7528a366d2304629e8c9"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_9f4a8907eaf7\\features\\final_selected_features.csv",
+      "sha256": "af307b66406fc05e234d6b5bd94e35b9e0da2b2c7468b085adfac499bf238ef2"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_9f4a8907eaf7\\features\\fold_selected_features.csv",
+      "sha256": "3b01267d9c7f21d4131bec20b0fe68cbe40ad87e076657d61a5dbf00c42e0422"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_9f4a8907eaf7\\results\\cv_results.csv",
+      "sha256": "87f53206d1b1986ebf7d475709bd89c9cf8aa06864868bf299cc8e95826df3ed"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_domain_rule_baseline_9f4a8907eaf7\\results\\experiment_summary.csv",
+      "sha256": "c74cd29c0de9a3d1e5b52e62350d087790d69bfc666d4a734d8d86fba179eff5"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\features\\feature_stability_metrics.csv",
+      "sha256": "57461245f0bea3a0a5c17da439dbd3540f54455d89e543353299287203efc55b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\features\\final_selected_features.csv",
+      "sha256": "0fb9fedbb09468c52f8ae998734f8e00e17796b642e76c60e24e3a6e40de204c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\features\\fold_selected_features.csv",
+      "sha256": "30b15969e8ca6a7cb914fca08fae8da3157ea2a2b1cd0dddda4b666c0990f923"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\results\\cv_results.csv",
+      "sha256": "35179b7d434fa183df852ff9c1813a698b17367e5597555b3264930df82d1321"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\results\\experiment_summary.csv",
+      "sha256": "7f183b7027a11a2de4c1939964ea6015fd27068a80e219f7b6ff06ebb0e9e372"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_pca_0e10cf48968e\\features\\feature_stability_metrics.csv",
+      "sha256": "7db134d5e426286d3db73df1c5a651702e5e1efd597348814ee5b4fdb0d203a1"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_pca_0e10cf48968e\\features\\final_selected_features.csv",
+      "sha256": "2f3ae81c7d510bc686f63402367da9b26e9bb14a7dec49023a45878476c9ba7f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_pca_0e10cf48968e\\features\\fold_selected_features.csv",
+      "sha256": "503091b134ea6ce62481fa995480041f13b1771691cd4dc0f8ca34b6ad0460ba"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_pca_0e10cf48968e\\results\\cv_results.csv",
+      "sha256": "a1617dec80e37b4f50764c9bfb23673f3f1c1e8a6bcd2a3dc229586722be689f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_pca_0e10cf48968e\\results\\experiment_summary.csv",
+      "sha256": "78bebb5e0469595586108fef608cb592bfcaaa363286b28685bcf6ff230d9cb9"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_4ecceaa878fc\\features\\feature_stability_metrics.csv",
+      "sha256": "74f6321bca3708b66800dd64c80e9e356cd3c2e910cfdd674af23e9001f9e924"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_4ecceaa878fc\\features\\final_selected_features.csv",
+      "sha256": "544de6e6931edf1ae5f51aaa3952d0a7057541a5fc36373b22549443bb2400b6"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_4ecceaa878fc\\features\\fold_selected_features.csv",
+      "sha256": "500d97985b09d3fefd780256d529c828af62e89b0a4948968cf2d590c22a494f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_4ecceaa878fc\\results\\cv_results.csv",
+      "sha256": "d3b154ad82cc6079bddbe57b75b3d3d20fce2e4ac4db3232f8969fdbb102e5c7"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_boruta\\lr_hybrid_llm_then_boruta_4ecceaa878fc\\results\\experiment_summary.csv",
+      "sha256": "e480cfe8fd2c39d4fb7cbade1c2e055181aeb34e1e8c89070343c4517bba6c79"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\features\\feature_stability_metrics.csv",
+      "sha256": "4cbedf0dad4ff2acc269af4fb499aef26f5a872f36c14b53c0f642e93174eb33"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\features\\final_selected_features.csv",
+      "sha256": "03888a404f5b129923be30a7208a9e129f631d3c778a6e746c4d560e1f16b8cf"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\features\\fold_selected_features.csv",
+      "sha256": "4d3e560dc5f01f0eb3b47577b73c76424f08137874f77523d8f4fd77d71e7c4c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\results\\cv_results.csv",
+      "sha256": "ed5e0734e86e7553a5b1cdf7f6abc8a134d25144fee3abfe382deedd51c0a1e8"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\results\\experiment_summary.csv",
+      "sha256": "ec85b2bfdb1b6db68faab16a1c8ccdc70d89271d9dc5d17c5e996512e0dbda18"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\features\\feature_stability_metrics.csv",
+      "sha256": "3f3ca740cc9f567336f1d8bf139f6ff1a8765fea8adf369f17c54d4406a5cf4c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\features\\final_selected_features.csv",
+      "sha256": "fb7dec56ce016e1e5fe1cc91f98af0ebd2811f9193a10b2041536220dc1f3291"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\features\\fold_selected_features.csv",
+      "sha256": "aa1832dcc2211c6a41c93b4cd18795a71334b41e490fcd5a619d542776b6d45c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\results\\cv_results.csv",
+      "sha256": "93b4085ad95394e834fd93b99c38a11a0564963034573fca68a7d4236670d00c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\results\\experiment_summary.csv",
+      "sha256": "5b5a911f2b6f7010d4fb8f04d372f23e62a2f2e59d066bef17e1d7a9fdc76a44"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\features\\feature_stability_metrics.csv",
+      "sha256": "bba0bad3a5f13d974363e7d767f1eaa0b213c11b527648100f6667fb28e0c4fe"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\features\\final_selected_features.csv",
+      "sha256": "8e636990fd5fe4a9d7f81ec11f8c2bac83894d33c8da32c4f32275648b24bbb5"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\features\\fold_selected_features.csv",
+      "sha256": "2d3740e7db5d03e0170271a9ff887e66f20a1f7deb3f0038dd1b043aa7926a7a"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\results\\cv_results.csv",
+      "sha256": "32eea761144ef557367308d49395ec18f7d47729393ede591af307756731bb6f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\results\\experiment_summary.csv",
+      "sha256": "2cec55137bb4499e134b71f98ef5f2f8ee081408f61bbb8e60e4137feec53630"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_boruta_a5cb18c42069\\features\\feature_stability_metrics.csv",
+      "sha256": "0b66f1031689abc40a86294cfa6da7ef8f98ca9400e407623066ae755297adfe"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_boruta_a5cb18c42069\\features\\final_selected_features.csv",
+      "sha256": "f25d582297050d2afba225c31c63ad930ca775470115b7625b0777c1392630ce"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_boruta_a5cb18c42069\\features\\fold_selected_features.csv",
+      "sha256": "8691603225676ba009d38118f07f8bae0b585b3529871b8b23f008317732a2c0"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_boruta_a5cb18c42069\\results\\cv_results.csv",
+      "sha256": "64c306244e7f24d8085b26933fe335f7333564ce52cbe1a7f9707ef11b4aab64"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_boruta_a5cb18c42069\\results\\experiment_summary.csv",
+      "sha256": "9f031a70dc565e0efae736098fd4c8ca5342da28c392e965bc4bdfac3eb03c0b"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_domain_rule_baseline_97d75bbd34ef\\features\\feature_stability_metrics.csv",
+      "sha256": "ef2d95192786a1fa51ed012bc91dabd81152bc7fc2c36413e04419ad68e7840f"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_domain_rule_baseline_97d75bbd34ef\\features\\final_selected_features.csv",
+      "sha256": "87ad3e8f1eebd1e67fdb2c59688c58d256eec8c6db92f1b769a042a71db89992"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_domain_rule_baseline_97d75bbd34ef\\features\\fold_selected_features.csv",
+      "sha256": "a38d8ccaed1b8b0f175e33c9d30c517e50a5a113dc5b2df3c3e91ff15d43a1cb"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_domain_rule_baseline_97d75bbd34ef\\results\\cv_results.csv",
+      "sha256": "f1d3d6200677c21414f77f21d6099390fab75a35c1a00265a13caab2224d7820"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_domain_rule_baseline_97d75bbd34ef\\results\\experiment_summary.csv",
+      "sha256": "784e6b1fec0c39f8be86278756e0a8fe0815191b08c30e7a39d1fed3c36e6c37"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\features\\feature_stability_metrics.csv",
+      "sha256": "35f7af4d8d415a7d3ae8c93dd3356943910ae7b0cc1e684c37d2acf69510c696"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\features\\final_selected_features.csv",
+      "sha256": "e9eadb0d06c1926a696f0a7cbe79e8687b565babb72e78d151dd0b8b1cb675a7"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\features\\fold_selected_features.csv",
+      "sha256": "64195cce511455236047a8098e898eff1a2a7a84118ecc2c963f4b450eb3a7ca"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\results\\cv_results.csv",
+      "sha256": "a7d4cdb39b9a944d2b49b8f53873c23b2adbb1069f9723f80bf0c95cdc2e283c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\results\\experiment_summary.csv",
+      "sha256": "0779d7676413879ecff1de8abf7d2ee1fea4b72b214e4109beb46cce4c3a2d55"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_pca_7247c89ceae5\\features\\feature_stability_metrics.csv",
+      "sha256": "8a7e8971b310ad3e77ac8e43e27bcc303428114349529abcbb661fd8922a136c"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_pca_7247c89ceae5\\features\\final_selected_features.csv",
+      "sha256": "c8263845a86c7f57c4c94b6505d699e12196b30bca9be3d23b866351b5786edc"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_pca_7247c89ceae5\\features\\fold_selected_features.csv",
+      "sha256": "d3dcd9cf9d1ae303c49d9dd6e04ddd1cb723d38edb1053a66948216d340d12f4"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_pca_7247c89ceae5\\results\\cv_results.csv",
+      "sha256": "f247238f51310ab96ca06356e3f1b5cbee874384564cad64113032ff1816cac7"
+    },
+    {
+      "path": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_pca_7247c89ceae5\\results\\experiment_summary.csv",
+      "sha256": "587ac6a65f59c66edaf6be1ac6f996cc517b5698715eca667ca88aa53e76c7f2"
+    },
+    {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/paired_comparisons.csv",
+      "sha256": "61f0fec03293ce43272aaec5294f9efa3f504ef8e1c4e1a129e6421577fa9756"
+    },
+    {
+      "path": "cleanup/audits/prompt_14_two_dataset_oot_review_v3/two_dataset_results_long.csv",
+      "sha256": "8cd049f3cd813848b29b6511ec109e0059c397d7fbb49f883b43d276576261e3"
+    },
+    {
+      "path": "cleanup/audits/prompt_16_final_amended_oot/complete_amended_dev_accounting.csv",
+      "sha256": "b7ae709081b07039dc5836453360c05efd341dced869020ff3ad9b43b7fb63a3"
+    },
+    {
+      "path": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+      "sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/evaluations/cell_031/metrics.json",
+      "sha256": "4a9626f1ee68b13b55bd093991e7961a3903271602da027a4eaf9f2c891f94d6"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/evaluations/cell_032/metrics.json",
+      "sha256": "89ac54b82dffb1bd5549b5e3349180ba650204fdd15f5ad556247d862aa00847"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/evaluations/cell_033/metrics.json",
+      "sha256": "dfa2970f39e8548eb8a0e8208494108bb0ed3260df6b4e823ea52977bba217c2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/evaluations/cell_034/metrics.json",
+      "sha256": "2fa506501e45ec47a22213ff72781a5d75c7324778939c369d19f43a3017f9e1"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "7502630977073f4af6b211af12de78e251478e7c9e7289106100ae90d51f6c7e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_1/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "11e27abaefbc6b557d0be5f2588948c5b9af562d98f9690c93dd7fe1a4230bef"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/evaluations/cell_031/metrics.json",
+      "sha256": "44c3af83e78a5b333a46eabedf1b20efb9e0acf172dbe8550d998cfdd5b99b89"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/evaluations/cell_032/metrics.json",
+      "sha256": "d5b82c099050f2aba8ab06afd319ff5e3762f1337687b326f0373c6a73f552d0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/evaluations/cell_033/metrics.json",
+      "sha256": "d7285ea26b8bfdf5301369f9ef7753ea3304a91cd7cdbf88a967f9b1aed52ff8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/evaluations/cell_034/metrics.json",
+      "sha256": "9be613ab761ad9874965db3edb3f511b495192d3e3726efe45800bde839aab78"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "7f13244d27944406b45a98944f46544d55168295230fa81c71845eeabc6f5c14"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_2/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "99e9575e5748b43a0d1d4f453e6c7f76990103979f3e1e914c79e3214a1e53e3"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/evaluations/cell_031/metrics.json",
+      "sha256": "4f35b47d511971754610cff9a5b900c7fd8661366938a496916fbde0e051b14a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/evaluations/cell_032/metrics.json",
+      "sha256": "32cef29c7703ad87e1604f6243e992905d48901a8a707ceda34261ec4290d6eb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/evaluations/cell_033/metrics.json",
+      "sha256": "2a08672a61eff8eaeb179e42e21f442df31bd3e1740e204abaa0def4456e3ff8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/evaluations/cell_034/metrics.json",
+      "sha256": "d1827bf362c08049e5758ab7c0b5ab42c049c929f1c0e285585b655ccd3f4c09"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "e8d594c5983345597060c8556ab96ceb31c870c903bea8fdec86792dcb0ed8fb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_3/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "990fa8d5d7e4b07c9793dbd711eb2ace30f5dfabd27bb0e76744fd737a474d21"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/evaluations/cell_031/metrics.json",
+      "sha256": "6f84050768450b219b1568d48288bd562a80d167e9d6948a5d8752805c163777"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/evaluations/cell_032/metrics.json",
+      "sha256": "70261e0064203b8babd40527aca242b476e08e660c3ca95424dc56ee65f8e3e8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/evaluations/cell_033/metrics.json",
+      "sha256": "60083e71514e8489e564a190c1b834b3ea64fcd0caabefa448f56a8ad96399d0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/evaluations/cell_034/metrics.json",
+      "sha256": "68fa7e16a1f018d7ad44ff96a4d12779d44b1adfa8101ee07cec5f30d380ae26"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "37243d557ec2deca26a7a917fe0e5e8ac8c1b459e8fa209e2fd169a1861888ba"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_4/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "a4e60b3815afe6b6d6f4ae91f9758eda86a7285314b06521a0d8c3fc3a9995ec"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/evaluations/cell_031/metrics.json",
+      "sha256": "6c7b8642fbf55452af3ac9879b4400b858b1305d9b32c4cfb140c7132312746c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/evaluations/cell_032/metrics.json",
+      "sha256": "f9fb514655e0dbd952e49e1eff4d6838c9f722b3161e6444038b6b698c46a14c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/evaluations/cell_033/metrics.json",
+      "sha256": "d58eba7dbfaafe5e0aa52792ebdf4568b7aa273ea6ed5406b205fdf7b3c4d249"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/evaluations/cell_034/metrics.json",
+      "sha256": "db6b39c633c009e132f45bca8ed6f8463351fd6dca3feeb103a9a41e21330754"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "f238cd5eb80f48f13a058a03dff167ecb91d4be30edd5efa72e8e5d3f30fab41"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_llm_supplement_v3/fold_5/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "6fb8ee4429d75120090989494d3e7176590b97ab76afe1d895ab2396495bdd44"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_003/metrics.json",
+      "sha256": "2c4c2b23f78d76f6f23e572537b4ec4a5ea752c413bc6cdf87e34986e9d063e6"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_004/metrics.json",
+      "sha256": "001719f9cbf016d970ce881fe44531ab32ad1cde22e5853987a0cfc36a0dcb8f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_005/metrics.json",
+      "sha256": "9beebd9be7ff9334530ba3c1233377e5fb5b65e1a5a8413b8b1d93a853dd9f1e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_006/metrics.json",
+      "sha256": "b2890b636dcf6c807f0ac29f186d972a921ab9f077813271e4b0eb027451827f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_007/metrics.json",
+      "sha256": "0b473b9964b20bbf87a0b80494f31f5e49dcaf7099ffa5609562582e3bc26163"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_008/metrics.json",
+      "sha256": "f6fae574e0bd36eca6663d5cf62326173f993232173c6198ab80ef19293a4274"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_009/metrics.json",
+      "sha256": "d4e2d78e88aa834a6ad2a3f798cea63257db9c9c11deabc55c6cc6af43f8a2cf"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_010/metrics.json",
+      "sha256": "e1158faa38d23f5626ce20c1d4cc3db83456085e3e4f567394a44fc73e61197f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_011/metrics.json",
+      "sha256": "e5c7298de6561ae1902c019e318763c43e2fd44429d190a88e1c5f860b2108e5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_012/metrics.json",
+      "sha256": "9e27848b70fc66d0a79f220544666326c70de04b63ab7fdd914aab73ff2fba0e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_013/metrics.json",
+      "sha256": "9360db6c06006ad81c30870218e8b94b9a6120db4b4d57eb6a163ee2b2caa78d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_014/metrics.json",
+      "sha256": "6e4651966bb4ee0b0adc8d49596d6d3415e97083ee2d091c550f8168099e6949"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_015/metrics.json",
+      "sha256": "d228c9bca1aca231a98ca4b9db15d1b472476741106d0cdb9484945066ff1c6b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_016/metrics.json",
+      "sha256": "a865d14c2b4a0864e46c6d0f01bae91abeb02a4b46cbc2008bd43cddc3513d86"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_017/metrics.json",
+      "sha256": "d5718304b8f55287648b83a9a3f3e6ce44421ad614e2b70c5f9ebd7b2f8e8a2b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_018/metrics.json",
+      "sha256": "bfd7d7b34d1dd05e8c9735fb44ff4c106d4865c50af135b252e10fe556c8b8dc"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_019/metrics.json",
+      "sha256": "a8be749e04de91974c9832c00f6af97c72bff43e9194497d76b26604fcb91e70"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_020/metrics.json",
+      "sha256": "5f38280e5f74c819ce900725456a89633ce196460906bbd44ea8f07054e98873"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_021/metrics.json",
+      "sha256": "4011956c6d14cb6d9099741caa7fe0cb50c166f6dc0d5ee18a38e2a7f438124e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_022/metrics.json",
+      "sha256": "1418a6d2949681a5279d8bba977a33840729d15b59484c299220a87b04d46f0d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_023/metrics.json",
+      "sha256": "9f0170ef7c0fa576087f3354d15fc17841e7007c98269a407e982aa8374730b9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_024/metrics.json",
+      "sha256": "91526cfc90e16f94f1491a69c290e5e34ba7d07411c035f35753efcd5a04f512"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_025/metrics.json",
+      "sha256": "594116ed0f7818aba787c6c5bef467d69633bc79fbc29e703a64ba0203a66789"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_026/metrics.json",
+      "sha256": "72accde38e61a76b659df9369aea35b40f72b006a5129a38839bb25dd7c4f994"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_027/metrics.json",
+      "sha256": "35e4c6e3e6cafb9568eeba7beaf67e7444a9cf24113963f6fc56271077e6d508"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_028/metrics.json",
+      "sha256": "0791b32840a5f1666d4ebb8dc296d7988e993b12d91039390663e6112d2c1beb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_029/metrics.json",
+      "sha256": "18747c9b14d8a4bb58f0c35bf4a6d90dbc50a072694ec84ce813d3807260e8be"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/evaluations/cell_030/metrics.json",
+      "sha256": "e94bcacf57cc6055f4446b75e631a30846e5920ba787e0b4ff3abf3dbfb3e65b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_005/selected_features.csv",
+      "sha256": "9cd9cd7356cec6dcc7dce791d43eef410730a600b68c7311f3527509fd7844c8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_006/selected_features.csv",
+      "sha256": "874ef025fd44a5f0e259ca92df118957262eda62b14f5f11e02c531b7d4d93a9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_007/selected_features.csv",
+      "sha256": "874fef112de201ef1c4cdceeee14377e0529637ef7e4525b53688afaab1f416d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_008/selected_features.csv",
+      "sha256": "a05b2de0033869d230ce7dff7b686cf4c4ac6718d82efcb5b24f9b04449628ad"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_009/selected_features.csv",
+      "sha256": "676730362ffe7993b0b869df7802f685029abb83b62e35aebcadc3193ba1ec5f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_010/selected_features.csv",
+      "sha256": "d6fc80a27ce7a457d7566f4939b119675e6ec34026509f8dd7913433d90efba4"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_011/selected_features.csv",
+      "sha256": "5d8053fe08a5aa0545e8b2c466b803f844b6c45d13a798ff76e89c0e003d7418"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_012/selected_features.csv",
+      "sha256": "deaecc34090d4bae8fa39cb4d27a644e4ebd8ab2f69307b5362378f31683ba06"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_013/selected_features.csv",
+      "sha256": "8d399615332e3c9f7c2433c6dda10b729491b6dfd088b1116942fb0bfe2f9d33"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_014/selected_features.csv",
+      "sha256": "41440edef06ca1fb446ee834c5b86b8875af3e0fbbdbc85eeda943587b664e79"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_015/selected_features.csv",
+      "sha256": "eecef34efc4f350519107f997122a2a911235147cc041d56f55637bcd749f4cd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_016/selected_features.csv",
+      "sha256": "24f12c977bb56989320be6e226653ddf7b0f8e2434c520cedbc92a4f1b4a47fe"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_017/selected_features.csv",
+      "sha256": "79178f9ac326392030ce7f1814c1419130122e824d27c9bbc5076b5c8e944d9f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_018/selected_features.csv",
+      "sha256": "a33c64a9913e418e6eda279253533d79868f0afeaf06258652d4ce6e2b813023"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_019/selected_features.csv",
+      "sha256": "1a1c20247bee2d2198dc68e2be077eac6696dba0eb7d9abea659959c930367f3"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_020/selected_features.csv",
+      "sha256": "9e0486c6b25c0153b3384299fb0049ca40adc1edc0336c854c5f4904ed69569e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_021/selected_features.csv",
+      "sha256": "298ebb7109dcd41712758a954d66c887f9405e39dec249329334891c6e55cec5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_022/selected_features.csv",
+      "sha256": "db4fac4e9235c69c1ba3fcd821ec481fbcab49151cee4dd53fbb8260c74d0f1b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_023/selected_features.csv",
+      "sha256": "8475e9134a6eb2e3f40612e5597ae4e8ce3dcf2f47c6096549bd7f5185e6619b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_024/selected_features.csv",
+      "sha256": "b2bfd720bda100cc762c9aa3920680dc3eba221e0550076015bb085ce355d633"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_025/selected_features.csv",
+      "sha256": "fd1dfedb83c97c82325e36d739fe74e021fc45e249f4d88799a5b05642353692"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_026/selected_features.csv",
+      "sha256": "50213e9875b77d09f3571df5b77e487f320d10e8a5f821ca4e4e428fa4408af7"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_1/selection_fits/fit_027/selected_features.csv",
+      "sha256": "11a2feccbe003c4329bc3c0930129a39c3c32f3574926f637b26a63e90c028a9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_003/metrics.json",
+      "sha256": "862ec1cbcc0e868bfa780066dc522db2ec536f897f835fdc2ee05673a0f75731"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_004/metrics.json",
+      "sha256": "07bde5afa64e8b95f02dae45e4f0a4a28862cecd024b6ec280ff30dc64a17b21"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_005/metrics.json",
+      "sha256": "e5bd6ab6c65edee1e3a0fd50d08b4467aef95f2146495f044f14d587a6eec085"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_006/metrics.json",
+      "sha256": "e42668b106051d605ee34555f82d56ac7a5f56d736a7c632ea0d49bfbcc9e596"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_007/metrics.json",
+      "sha256": "54c8fdf30597ede1909d36a2f21e2b1b181eeaa0c3fc3d2e053e8d58dd9178a2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_008/metrics.json",
+      "sha256": "1aa03315045a25d39e3eb415db0a399cb6d26a1178856858e76c1fc6a1633b27"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_011/metrics.json",
+      "sha256": "0cf32219e7004248345d232fd1f7f95ff41c37ef65ef30ab81a8f4823e02f8e2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_012/metrics.json",
+      "sha256": "bc8655bb2f96603063a774770bbcb8131f4585ea7d2662685a99c6942c0ad03f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_013/metrics.json",
+      "sha256": "850ea6a4350e2693ec02d06345e51c4038a2f0fdfc7c1dc4239a57906fca2478"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_014/metrics.json",
+      "sha256": "af0ad7362c76d04decb026e644ac5c63d5771a9479a08d12ea5ae14786f59350"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_015/metrics.json",
+      "sha256": "1e1f12e15e2af66d0e90aee9343ca7bf0e6fa61536a52d911d9583a5261be340"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_016/metrics.json",
+      "sha256": "240442b1035b860c169b11e9b4c2772faf0b43970ad5105da991f12b1d353390"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_017/metrics.json",
+      "sha256": "59d14750679b8536db31e20facf2e293b4be34b895494daf42816791c41caa4d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_018/metrics.json",
+      "sha256": "d1b065f62a5e15a7464148a6b6c53a43f39d2d186e5ccb5c2810c2458849d54c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_021/metrics.json",
+      "sha256": "f5c2ef586592da64c661e8c32377c51e37ee12b06d0cae8dc0db562af2cbb304"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_022/metrics.json",
+      "sha256": "9d98b6e2a3882d19373fac432cc0ef8a7bad70013191c6c04ab964bd6053a91b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_023/metrics.json",
+      "sha256": "fba5cb70f054c4de235ae8500d8d26ca1576dd40d10ce7fec0640ad1c8b6cbde"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_024/metrics.json",
+      "sha256": "af5b3b771bc2a40858d80778a308dd28c701978fe797570b7f85151ee679ea23"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_025/metrics.json",
+      "sha256": "7ace0c6fa5352805186fbb2dbb08c844c2901963ca01a6a7d0175e737c522157"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_026/metrics.json",
+      "sha256": "c83d97cd57b38037c5a7b40642e63c18c0ef96de4e8621cb023bd581caf8c1f0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_027/metrics.json",
+      "sha256": "589a05d5dd6ddadb27dffd2f4e0735f526e1098090b3146d87e7bfdb1c5c5ddb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_028/metrics.json",
+      "sha256": "9efb9133040401775619ac605e1a490f4ddb3206562c97cf29605d654433a4f0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_029/metrics.json",
+      "sha256": "d7d1b73c1f13bd7b5b3de3e3257a3069ac980070b53301a6560b95ea05fd8654"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/evaluations/cell_030/metrics.json",
+      "sha256": "14a4fe4a75fa36e1e69959aae280247fb4fa4fa0665e8f00555600505cd8108c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_005/selected_features.csv",
+      "sha256": "e3bed897b130e52e43141cfc60e323ea32b67784170157bbe53851934498f360"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_006/selected_features.csv",
+      "sha256": "0e68e7257321dc2cd5e40a724777790161e27228619e83163a93709728bf442b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_007/selected_features.csv",
+      "sha256": "4de2ef8d1af6612d2c7349df58d3f23f41d502dd7c53fcc05797dc988b0b3bef"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_008/selected_features.csv",
+      "sha256": "3db63d2095cc3c8dcf046e97dd57eb8a505814f102cd4b7899870ca418f62a10"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_011/selected_features.csv",
+      "sha256": "a441384880f1c7160cf8332ae438a8873ada618fd7ad943d9d732f6d533569cf"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_012/selected_features.csv",
+      "sha256": "91aa10d430369be2bcae6aec26aa66bda603cabe4b377ccb6a3234660d67446d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_013/selected_features.csv",
+      "sha256": "96dba6f03ab69c28b4f711bc49d5012cfcb8049c0fbb011fb36f48443b810cdc"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_014/selected_features.csv",
+      "sha256": "9d729ebeb68a5bf9d9e01579174cf58eb5d946dfea569646cb70c96196c838ce"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_015/selected_features.csv",
+      "sha256": "9e2cf8566c8a9dd327a1e20b54329e61b574a95d9ccd659c453afacd5c50acd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_016/selected_features.csv",
+      "sha256": "ea2cc60ffd483a8deca35d6fef3e0a9469ebe26782e85b0cfe2e9e99f397abeb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_017/selected_features.csv",
+      "sha256": "d9b6c976b59a851d10f0a361776c45d69325bea1654086592556efe2851b28e1"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_018/selected_features.csv",
+      "sha256": "6223d3cddfcd318b854e4b3e3121c6cd7a5c639cd3c399a3fafcf84e471c59fb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_021/selected_features.csv",
+      "sha256": "a40355519fb8ccfe822174ac75b217673cacefe33ebe00383c251c0e954afb0f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_022/selected_features.csv",
+      "sha256": "ad4200c45008705264104aa96c5089a3e471db344d284a32de4014dc3f9cbca7"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_023/selected_features.csv",
+      "sha256": "c5d49e9fb2650c57f275692a39272002e24bb612f5aa72ef3a86c3ba19b6ca5c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_024/selected_features.csv",
+      "sha256": "7484ff118ba2c6d8e9dede35d300c5c97ada03062712fbbda74f8b42e7416b3a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_025/selected_features.csv",
+      "sha256": "7e830726375306465bf4dd0220d1c7e131a0afbf04e33fd0658cd0795652ac0a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_026/selected_features.csv",
+      "sha256": "ed0308aae9061f87a85a0a5410ee1894a52464b28b43984180512fab99daa3b1"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_2/selection_fits/fit_027/selected_features.csv",
+      "sha256": "a2f156d815d4eb80235face1b7d83d409824c27b5ff8c589530f1ae27a93df49"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_004/metrics.json",
+      "sha256": "ac83bf736c89d96bc4f8b894428a2d4a154b2f64343fe43e290085041f23574b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_005/metrics.json",
+      "sha256": "ae28d25ee797cf71fb89df3523d1588e860ad453428b9ce7fb376e018c44ca64"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_006/metrics.json",
+      "sha256": "9dbfe24e4b287b9835718f209569764741e21659f5154d592651f339810e363b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_007/metrics.json",
+      "sha256": "5e3f8723c3adde9646986433a16de60243efaf30035d85ebe03f9f3ac71ac432"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_008/metrics.json",
+      "sha256": "602b5eab183ca11614ebccecfed48b74330880c47debee05dfc71753f5544c52"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_011/metrics.json",
+      "sha256": "c55048a5401cd42ecdf807414cba68deeb149db5c8c3f6210ead20cd32ed280c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_012/metrics.json",
+      "sha256": "df8c55b05ee9286d5d879badf68205b8a5bf7fee4a0306cd63f9bfc6262bf610"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_013/metrics.json",
+      "sha256": "ffb06d7a7eba6a585c8b83ad31e6ba40b9f4273ee962c5841e9df0de58a9be61"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_014/metrics.json",
+      "sha256": "fef57c2b9920143a118d008d483d3b78e7dc61e640925f76fb95fec7c27bad42"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_015/metrics.json",
+      "sha256": "14a61a69ea95600227dc2d6511aca47af58a27c5f5b70095138a49f1a65f86fc"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_016/metrics.json",
+      "sha256": "2385ffa38fafeb74c588e1cf12350d7a92d5ab1589a70711a359997bd544c3e9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_017/metrics.json",
+      "sha256": "65c2f452de349cee074d1c45d9ecf7ee1065ed96942fec3e5848dacc4ec1f80e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_018/metrics.json",
+      "sha256": "7a279e0b1f552fc0b80b75dd62bd01e6134812681215041d64c1e09dcd05d695"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_021/metrics.json",
+      "sha256": "77e4b148eacb1080271d17c1b54f277dea29e670894ed2938c6f5a8abb3d6582"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_022/metrics.json",
+      "sha256": "df9e65808a9f173bb91a6433ae7ed3cec1b435b7d1361515a2f0a0a51555a1ab"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_023/metrics.json",
+      "sha256": "64085a411aa80c5b9381d5247212203ecc9c1a5bb743bc0da8134023b7d3dbbe"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_024/metrics.json",
+      "sha256": "b07c1e2de893f4390dc423b3f98047a8fcc2a0afde511f490d442375d2db03eb"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_025/metrics.json",
+      "sha256": "48a55697d4dbd55e3e6a27f3d9e8dd78f8110c0aeccb1ec3f3029914bb6e7769"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_026/metrics.json",
+      "sha256": "db30e3f9fe221323060f0eea83324b3dc79a26ab7aea0679da35845e0d8b8e9d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_027/metrics.json",
+      "sha256": "4ea1d3637ad05a1f8cd9d6d082e45981d5a840abb775f261c8784cd354a3666f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_028/metrics.json",
+      "sha256": "af79e741f2505f5e79e981c393ce67ffe8038b5432add626a4615f6166f8e16b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_029/metrics.json",
+      "sha256": "0eb8ed6e7ccfa2a03e8775e6b075f9ffeb4d14d55121fcf9fad07fa31b7bc8f9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/evaluations/cell_030/metrics.json",
+      "sha256": "3e59b3d414074956c2592df390f7529678bc851f81c0b801c7c0426be6c0d1f5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_005/selected_features.csv",
+      "sha256": "1dbc0a30d5576f9a5df135e83e1edfdbe3f46b53275a02c2bc23dddd4acc750f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_006/selected_features.csv",
+      "sha256": "a20644fccc326baa89f26de6fd0171f2965e99f0e0385bd42bdcc4166f21f9ee"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_007/selected_features.csv",
+      "sha256": "645b6863fec62e31b17fafcf141c58c4969254d98fd45a175d3d01d1e49b50c8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_008/selected_features.csv",
+      "sha256": "9168ebff164eb434338fad978d3a9370c8275efc9cbce23ee2e2b0f03dbdf730"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_011/selected_features.csv",
+      "sha256": "7da9f11ae77a8e6b0c3c0edbbab9b6acfa559e2e04ab8cc41e14afba794de3f6"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_012/selected_features.csv",
+      "sha256": "12c19d99d8266e098d55a65a791ea4f39538033e9d93c242f7170383ceae9ba1"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_013/selected_features.csv",
+      "sha256": "3a496c9b09e78457a76ad6a79693674f3e4ec0d175defd096cf0210f1f6fa404"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_014/selected_features.csv",
+      "sha256": "322ebc4b54d6673b11420c4cf8df4007ab5bf4259c7e1ff6d99c7377ce4cec09"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_015/selected_features.csv",
+      "sha256": "e0f82704db40aa5d6984f269e86bb624ad4dcda867e22537fd4b67cf272605df"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_016/selected_features.csv",
+      "sha256": "45503778a2687351bb9149f94f83a3cd630e728f555aeda5a367005386b66b64"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_017/selected_features.csv",
+      "sha256": "56ea3ec586c596939f3bc5adfcc2dba7f318516bb3e1ce3d61ba1cea64abf919"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_018/selected_features.csv",
+      "sha256": "ed61d9f7d5843965ba11c2d1437cf2b0869b80fa1852447c22bb7aa1ffb843b9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_021/selected_features.csv",
+      "sha256": "b0d3fce38f5b5936cfe6129e203298a15ce04c875c9dd8eafb3a6143a622315f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_022/selected_features.csv",
+      "sha256": "0fbe6e8c3a8734d40482da4a334e201dcab1b82554a96d4ca78ebefa8467aab9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_023/selected_features.csv",
+      "sha256": "c8f4d4162e4767a05af92f3219ded8e198a44d49115a31ef8a21508fdcd97fb0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_024/selected_features.csv",
+      "sha256": "80624f1afbd77272ab5ab6509dd2b3e2cc3466c6087da2a85b1582bf486be9ee"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_025/selected_features.csv",
+      "sha256": "68ca052c44b4626a7811abb602b1c79babddfe4d21bf626b251099d3200a886c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_026/selected_features.csv",
+      "sha256": "6eb56b664f02c09de7da30e1353aa1bc4cfb719521a5be3a37acb232b4baf35a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_3/selection_fits/fit_027/selected_features.csv",
+      "sha256": "311104a81e400dd351ce740e02f902dbab345ae7a612239627296d39d270b5ca"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_005/metrics.json",
+      "sha256": "21caf934f3d8cc389855d0c1d6a6ef04e6e6f7bfa581d55000b589920e9cdede"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_006/metrics.json",
+      "sha256": "1f38f5bacaaba31ebb27b8f1b649d9cb2f803f39d901a912e9c128ad8765022c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_007/metrics.json",
+      "sha256": "91814b5d52a1d9bf6160e8dac20e247bfe2e7c899b5682874abdd132b18b3668"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_008/metrics.json",
+      "sha256": "ecd1cc7539da48abfb0fc715b3292e3666f32ad056ac924225ad83f2fe152b72"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_011/metrics.json",
+      "sha256": "6903d0c10552863f4ed1d95df989a1eac5bfcf620977f61fe174b2ce3df2565a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_012/metrics.json",
+      "sha256": "30a328829c710b1b07b06b6548c6c6c0aede37b83adf46da29da399d9d1646ae"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_013/metrics.json",
+      "sha256": "0dddf73b21c3c01494d6debb76cc5af1cf97e1217750f638481b0934fec7bd63"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_014/metrics.json",
+      "sha256": "9f14c5687a83bda7465e22b5e1ab6bc108738653a0014277ee1d06dfee029c20"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_021/metrics.json",
+      "sha256": "627f61f09308da978f5c4ea82d75820e69fb9f0f35db45085f3876aa53c2d8da"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_022/metrics.json",
+      "sha256": "0dd274eae136d842476cfa9ca34dd78ce82c7d123677e467c7cf27bbcffdcb71"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_023/metrics.json",
+      "sha256": "61a2996acb80a4fa0239332ed74567d0f8cf0ac70826e755a9683040ee156d83"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_024/metrics.json",
+      "sha256": "fcf85f3eb6850eacbd682242ea728a735879277f9e0cc1855d7d0af0d278a7f2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_025/metrics.json",
+      "sha256": "7e5dd818adde8047636a0ca001bf2fb0308940a26c6ec004ba0d5949314e4bc4"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/evaluations/cell_026/metrics.json",
+      "sha256": "0ead6cfd7e3ecf45657f04cc90753872b26d3219102f04755bfb12492d6b7ccf"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_005/selected_features.csv",
+      "sha256": "639ed28104b2b2bce69f11f6e82416f0e87f9fe3aa77ed276409a5f485fdc0c3"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_006/selected_features.csv",
+      "sha256": "d5b41082e53ecf717c2754740b7a74ee1e952f29d03eb5734e2fb3c05b3e8b20"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_007/selected_features.csv",
+      "sha256": "034147637253325206b2d813b5d88bae780466bd86f9f75d9d2e5f8a00bd5bb9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_008/selected_features.csv",
+      "sha256": "ffd3c97c4ec3b3032da865971bd576e1423f84d357f9deaf4d6fb390ce2da960"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_011/selected_features.csv",
+      "sha256": "14d37cafae61dc655e16e6815320c0bfb48e91104208e452a282d4aa605cb2bd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_012/selected_features.csv",
+      "sha256": "b3471b77ef20409630fca3d2dc5375dc3600b899d55b66d7709b13e305efced5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_013/selected_features.csv",
+      "sha256": "9d80f9910cff4479aea62965532487c6812f3a96e24b36cb662ef313454bd9f2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_014/selected_features.csv",
+      "sha256": "9bdceb234d9cb0a1c0e41e42780f487869a6e5e5693587387269a35370f11cc2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_021/selected_features.csv",
+      "sha256": "e0693420879e267c6fcf13a77b811153ba164787b094a68f97e3dbd7c76ddc19"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_022/selected_features.csv",
+      "sha256": "3130d4c061e785567a7bb3f329d7ad729881939c205bfb354ae1999d12c6d582"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_4/selection_fits/fit_023/selected_features.csv",
+      "sha256": "3fb9ebca9bcac5d69581d53656e61d35f5c658a5ac7230e2fc39c751d4e3c828"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_005/metrics.json",
+      "sha256": "5195e3a7d2b3bd8a0e0464a16227d58088dfb4596ff8a25c49980c1345793b91"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_006/metrics.json",
+      "sha256": "fafb0ebf8aa4b287a1642759eea7721cdae35f4289e96ddaf7a48c2ede6456e4"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_007/metrics.json",
+      "sha256": "8bf4453ba5307263170e0debfc451ddf30c7e53a002d97e00179f69208100055"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_008/metrics.json",
+      "sha256": "fc3846f8828c46be303721df48c81752fbc847f5bd4d089a8b77fc61e7995182"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_011/metrics.json",
+      "sha256": "e64bc10d574492d9bcceb02c99a6b8fc5a57464c6016af90db0d9e95e7692774"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_012/metrics.json",
+      "sha256": "a6e9bd800de54ffb1b437cf8ec744f735eee08239ec6d4e1ec63c4948d5fe737"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_013/metrics.json",
+      "sha256": "38e6ea6f93adcd412448d0c8b84c0a89eeb43dc1081f4cac6bdc90d612a1ce08"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_014/metrics.json",
+      "sha256": "59b4c21a0be825b14ee43dc786792022b87da10365795c4aedf403e68d00129f"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_017/metrics.json",
+      "sha256": "8ecd7a531ccccccdff30562d400b53a68d134c9d4a150b010b092e81aae225f0"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_018/metrics.json",
+      "sha256": "101085018bf094ec4c0f4d13d9ca59c7b39eb275799e4e91494671806b19c78c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_021/metrics.json",
+      "sha256": "00b53dd09ccc1e51d6268b103513093d5c7859c17703588f03b03a335b08ae38"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_022/metrics.json",
+      "sha256": "760b5092a6b29176d12f1702c8022eb9a8e13e0e3acb01c37452571301d725b8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_024/metrics.json",
+      "sha256": "b471bb4af35aa92175cd96b9262bcd6817b703b01f5f0579b414dfd238f0e68a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/evaluations/cell_026/metrics.json",
+      "sha256": "6b291d5303f0b1e199bb29878e90d3c26d96e9360d586cdfcd0b491ae38ef443"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_005/selected_features.csv",
+      "sha256": "028da0a5124f75d33b804b1f0e1b0ab5362ac8e94a221bd2fd3aa33ce7958ecc"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_006/selected_features.csv",
+      "sha256": "2b50c4ea63d953068d8068102748d366784edd81e61acc51e51090120ee403b6"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_007/selected_features.csv",
+      "sha256": "fc2ee696c74f90d9d0d88de8fccbbe4ca9796455b7a6a142fae8a1165d2f183c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_008/selected_features.csv",
+      "sha256": "072cb67b1e15ce808c5f3b49a7ccd08e8be21d5b3d0dda462b954ffa58a8608b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_011/selected_features.csv",
+      "sha256": "575ccb3202644c15be49e957c69cf56ec31e5be09dfe5b7510bfbf549a31105e"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_012/selected_features.csv",
+      "sha256": "0643d55f447bd9611d40bf6d769306b2c7367794ae62be3f2329205863282cc2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_013/selected_features.csv",
+      "sha256": "ed1a05023eb873829708ac1eff6f906cacef032806e35c7f55f984a78e9ee206"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_014/selected_features.csv",
+      "sha256": "056ff340225d0019f3385cc8b5c9ae17e8b6a708fe3e709006903d93b9754158"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_017/selected_features.csv",
+      "sha256": "e7e4077a97cec1ee53e06a71fe0e22f05c8e8843f99d2a98a3ff74f52ff07c20"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_018/selected_features.csv",
+      "sha256": "83c0df0b593f584f99a9d80866ce5a00e3ce1c894fbfeaaa33fd20e3ef7537e5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_021/selected_features.csv",
+      "sha256": "432a3dfe385416c9349185de78c7f9fca409b2df67c7c65ac69d0833a69612b8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_022/selected_features.csv",
+      "sha256": "f66e407c7b10e484d4246e89ba0f988b7a78fb80c0d2d975e72af7a94ee601f9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/dev_v1/fold_5/selection_fits/fit_023/selected_features.csv",
+      "sha256": "0595aac77452640da129ce0d49db44338b26304a283c28ee11ee177f2c2e843a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/analysis/oot_metrics.csv",
+      "sha256": "5f6416673aeda91fba83e06c711850fbba1833a857982019b7f014f626c41f15"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/analysis/paired_inference_holm_materiality.csv",
+      "sha256": "930cc9a7833a1742010f9a823c946e0b2a7f33e810cef07195ed62ce51559239"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/analysis/selected_feature_psi_summary.csv",
+      "sha256": "ff6535dd6f1734242ad2d8c31e5848a22945c78ad4d93d417785948c89314bc9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/phase_manifest.json",
+      "sha256": "9339b688a1ae31ec030c78c0689a5670ebf1a80cbe6ef000160aef028970701c"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_001/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_002/selected_features.csv",
+      "sha256": "63574567bbfe13c1ad0bda371efda07ada1ab276d1a589df0f61dd70b8d9a75d"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_003/selected_features.csv",
+      "sha256": "7849d53d11ebe8888977814fb439f785014d157573329dd64f1eeb71e001bbd2"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_004/selected_features.csv",
+      "sha256": "8df0c5ae73f40d17d30743ee9d923c40b0fa51fafe7b9e668f7b7436fb96dbfd"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_005/selected_features.csv",
+      "sha256": "6f18756157812d9512b14e765638d4a743d418088c8f8755b9fc3115a8a2972a"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_006/selected_features.csv",
+      "sha256": "9b71674258f039c22c4683e114bdff678c489cc9c533bcc6fcb4613b3236fada"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_007/selected_features.csv",
+      "sha256": "79bb812a0d7e6551cf4a414c67851a400051329a00acdb056bf05bf48e500dd9"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_008/selected_features.csv",
+      "sha256": "b84b4c9e6f057baece8b6dcee353076c8fa27aad4a0a8e2d9d56ca705466222b"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_011/selected_features.csv",
+      "sha256": "db317339e71efc512e3160f80de559caeccc7d5c78b35d974736153449411b95"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_012/selected_features.csv",
+      "sha256": "fe74a8acec2e4f04021f87a3a2a40022f7595dfcfa64dbeadbbac7cf897c1ea5"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_013/selected_features.csv",
+      "sha256": "bb5f15abdf339f04fc29becfde6e1d6143515e15946510250615f6223e47ac48"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_014/selected_features.csv",
+      "sha256": "2d05c2ecbf3382ed0b73291739fd8b5f9b0fc62d78e74af7ac4d080a77c57e80"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_017/selected_features.csv",
+      "sha256": "6a1b36e23ddcae1883e4ee64142ffa741948ec0116a02502821b5ec63afdaa34"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_018/selected_features.csv",
+      "sha256": "7477cc0c8065b22a963a2fa8ecbcee7a4ba321ddb5b2eea0931eb7c0beaa4870"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_021/selected_features.csv",
+      "sha256": "4d8cfc54417842ef118d16cd241b1837f4af713d23bfba76884a1880fe08f851"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_022/selected_features.csv",
+      "sha256": "2ec144b7d1281bd9d24a3a1c3597bf62a8551e3cb2692672ea4b721e057cba52"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/selection_fits/fit_023/selected_features.csv",
+      "sha256": "9447834c7d422e8b1effe369a27dd478fc91dc661ed7585a7a291b4f1ac99160"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/controller_status.json",
+      "sha256": "b32b0c40d8a1573a563322708c09836579ada5719da2cd9f163dce90d442efc8"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/selection_fits/llm_catboost/selected_features.csv",
+      "sha256": "a0b607fb153e483d5162fe44b93f069cde5fe8fa07d84601a55017461bae4d85"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/selection_fits/llm_lr/selected_features.csv",
+      "sha256": "97174f95b46abe946b89231d2746491be65bbcc4c0da6e5b9dde1e0de66596df"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/selection_fits/stable_core_llm_fill_catboost/selected_features.csv",
+      "sha256": "b74632b49ac14cbe727a0611a4194a7d2591f19d263affbafe5abf6d4e2cee33"
+    },
+    {
+      "path": "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/selection_fits/stable_core_llm_fill_lr/selected_features.csv",
+      "sha256": "230eca1fc48d7ee7bd3a7bbedb8025004f9ca21010dc42872eca666fae3985bb"
+    }
+  ],
+  "determinism": "fixed ordering, seeds, plot style, PDF metadata, CSV float format, and LF newlines",
+  "figure_records": [
+    {
+      "figure_number": 1,
+      "interpretation": "Performance varies by dataset and model; unavailable cells remain grey crosses.",
+      "limitation": "Point estimates do not establish superiority.",
+      "metric_definition": "ROC-AUC",
+      "population": "66 primary-cohort registered cells across three locked OOT populations: 54 numeric, 12 unavailable",
+      "source_table": "tables/oot_metrics.csv",
+      "stem": "fig_01_oot_performance_by_dataset_method_model",
+      "title": "Locked OOT ROC-AUC by registered cell",
+      "uncertainty": "Intervals absent unless registered in the comparison table"
+    },
+    {
+      "figure_number": 2,
+      "interpretation": "Temporal change is identity-specific.",
+      "limitation": "DEV folds are not independent datasets.",
+      "metric_definition": "ROC-AUC",
+      "population": "124 identities with numeric DEV means; locked OOT populations n=120,053, 293,105, and 304,916",
+      "source_table": "tables/dev_oot_generalization.csv",
+      "stem": "fig_02_dev_vs_oot_performance",
+      "title": "DEV mean versus locked OOT ROC-AUC",
+      "uncertainty": "DEV fold SD is tabulated, not used as OOT uncertainty"
+    },
+    {
+      "figure_number": 3,
+      "interpretation": "Both improvement and deterioration occur.",
+      "limitation": "Missing cells are NA, not zero.",
+      "metric_definition": "Absolute AUC difference",
+      "population": "114 valid DEV/OOT identity contrasts",
+      "source_table": "tables/dev_oot_generalization.csv",
+      "stem": "fig_03_dev_to_oot_delta_heatmap",
+      "title": "Locked OOT minus DEV mean AUC",
+      "uncertainty": "None; descriptive"
+    },
+    {
+      "figure_number": 4,
+      "interpretation": "KS is method- and dataset-dependent.",
+      "limitation": "Maximum KS is threshold-free in value; operational metrics use the frozen threshold.",
+      "metric_definition": "Maximum TPR−FPR",
+      "population": "66 primary registered OOT cells (54 numeric)",
+      "source_table": "tables/oot_metrics.csv",
+      "stem": "fig_04_oot_ks_by_method",
+      "title": "Locked OOT maximum KS",
+      "uncertainty": "None; frozen decision thresholds are in the companion table"
+    },
+    {
+      "figure_number": 5,
+      "interpretation": "Effects include positive, negative, and inconclusive evidence.",
+      "limitation": "Original two-dataset rows are low-power fold diagnostics, not OOT inference.",
+      "metric_definition": "Comparator minus reference AUC",
+      "population": "12 registered matching-reference comparisons",
+      "source_table": "tables/statistical_comparisons.csv",
+      "stem": "fig_05_llm_vs_classical_effect_forest",
+      "title": "LLM-assisted effect versus matching mRMR",
+      "uncertainty": "95% paired bootstrap intervals only where registered; Holm marker"
+    },
+    {
+      "figure_number": 6,
+      "interpretation": "Non-significance is common and is not equivalence.",
+      "limitation": "NA is unavailable, never p=1 or zero effect.",
+      "metric_definition": "−log10 Holm-adjusted p",
+      "population": "22 registered/visible LLM-related comparisons",
+      "source_table": "tables/statistical_comparisons.csv",
+      "stem": "fig_06_adjusted_significance_heatmap",
+      "title": "Holm-adjusted significance",
+      "uncertainty": "Holm within frozen families"
+    },
+    {
+      "figure_number": 7,
+      "interpretation": "Score drift differs by method.",
+      "limitation": "0.10/0.25 bands are not drawn because their role differs across cohorts.",
+      "metric_definition": "PSI",
+      "population": "54 cells with authenticated DEV OOF and OOT score PSI",
+      "source_table": "tables/oot_metrics.csv",
+      "stem": "fig_07_score_psi",
+      "title": "DEV-referenced OOT score PSI",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 8,
+      "interpretation": "Predictor drift need not align with AUC change.",
+      "limitation": "Feature universes differ; compare within dataset.",
+      "metric_definition": "Mean and maximum PSI",
+      "population": "40 method/model selected-feature summaries",
+      "source_table": "tables/feature_psi.csv",
+      "stem": "fig_08_selected_feature_psi",
+      "title": "Type-aware selected-feature PSI",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 9,
+      "interpretation": "Stable selection is distinct from predictive performance.",
+      "limitation": "Only available fold sets enter each summary.",
+      "metric_definition": "Mean pairwise Jaccard",
+      "population": "58 method/model summaries with authenticated fold selection sets",
+      "source_table": "tables/selection_stability.csv",
+      "stem": "fig_09_selection_stability",
+      "title": "Fold selection stability",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 10,
+      "interpretation": "LLM/classical overlap is dataset-specific.",
+      "limitation": "No cross-universe feature-name comparison.",
+      "metric_definition": "Jaccard overlap",
+      "population": "456 within-dataset/model pairwise final-selection records; figure shows the protocol-fixed LR subset",
+      "source_table": "tables/method_overlap.csv",
+      "stem": "fig_10_method_overlap",
+      "title": "Within-dataset method overlap",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 11,
+      "interpretation": "LLM/hybrid resource cost is not uniform.",
+      "limitation": "Per-cell RAM is unavailable for some cohorts; crosses are NA.",
+      "metric_definition": "Minutes and GiB",
+      "population": "461 authenticated DEV/OOT/controller resource records",
+      "source_table": "tables/resource_metrics.csv",
+      "stem": "fig_11_runtime_and_peak_ram",
+      "title": "Runtime and peak RAM",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 12,
+      "interpretation": "Trade-offs, not a universal winner, are visible.",
+      "limitation": "No inferential Pareto-superiority claim.",
+      "metric_definition": "ROC-AUC versus minutes",
+      "population": "94 numeric OOT cells with runtime",
+      "source_table": "tables/oot_metrics.csv",
+      "stem": "fig_12_performance_resource_tradeoff",
+      "title": "Performance versus runtime",
+      "uncertainty": "Descriptive"
+    },
+    {
+      "figure_number": 13,
+      "interpretation": "Directions are not universally consistent.",
+      "limitation": "Third benchmark shares Home Credit lineage.",
+      "metric_definition": "AUC delta",
+      "population": "12 registered LLM/stable-core versus matching mRMR identities (12 numeric)",
+      "source_table": "tables/cross_dataset_synthesis.csv",
+      "stem": "fig_13_llm_incremental_value",
+      "title": "LLM incremental AUC",
+      "uncertainty": "Third-dataset paired bootstrap where registered"
+    },
+    {
+      "figure_number": 14,
+      "interpretation": "Rank ordering changes by dataset/model.",
+      "limitation": "Ranks omit methods without common coverage and are descriptive.",
+      "metric_definition": "Within-dataset AUC rank",
+      "population": "Up to 18 common method/dataset/model identities: mRMR, LLM, and stable-core",
+      "source_table": "tables/oot_metrics.csv",
+      "stem": "fig_14_cross_dataset_rank_consistency",
+      "title": "Cross-dataset common-method ranks",
+      "uncertainty": "None"
+    },
+    {
+      "figure_number": 15,
+      "interpretation": "Curve shape supports the tabulated AUC evidence.",
+      "limitation": "Subset fixed by method role, not observed performance.",
+      "metric_definition": "TPR versus FPR",
+      "population": "18 saved-prediction curves over locked OOT populations n=120,053, 293,105, and 304,916",
+      "source_table": "tables/prediction_reconciliation.csv",
+      "stem": "fig_15_oot_roc_curves",
+      "title": "Protocol-fixed OOT ROC curves",
+      "uncertainty": "None"
+    },
+    {
+      "figure_number": 16,
+      "interpretation": "Calibration patterns complement log loss/Brier.",
+      "limitation": "Curves are descriptive and bin-dependent.",
+      "metric_definition": "Observed versus predicted event rate",
+      "population": "Same 18 saved-prediction curves; ten quantile bins per curve",
+      "source_table": "tables/prediction_reconciliation.csv",
+      "stem": "fig_16_oot_calibration_curves",
+      "title": "Protocol-fixed OOT calibration",
+      "uncertainty": "None"
+    },
+    {
+      "figure_number": 17,
+      "interpretation": "Methods differ in score spread and location.",
+      "limitation": "Density shape is not a performance test.",
+      "metric_definition": "Score density",
+      "population": "Same 18 saved-prediction curves across three locked OOT populations",
+      "source_table": "tables/prediction_reconciliation.csv",
+      "stem": "fig_17_oot_score_distributions",
+      "title": "Protocol-fixed OOT score distributions",
+      "uncertainty": "None"
+    }
+  ],
+  "hash_algorithm": "sha256",
+  "legacy_successor_seal": {
+    "matched_count": 65,
+    "records": [
+      {
+        "expected": "eef7665398228a80f7367c9258220c5fbe1038f3f54094244f354d54e2d4fb03",
+        "match": true,
+        "observed": "eef7665398228a80f7367c9258220c5fbe1038f3f54094244f354d54e2d4fb03",
+        "path": "data/homecredit/metadata/columns_description.csv",
+        "resolved": "data/homecredit/metadata/columns_description.csv"
+      },
+      {
+        "expected": "4cc461c06a872d8e87c38c2407b5f5bb320fba4b7ca39c22520a87a0f6642f38",
+        "match": true,
+        "observed": "4cc461c06a872d8e87c38c2407b5f5bb320fba4b7ca39c22520a87a0f6642f38",
+        "path": "results/final_research_package_v2/claims_and_evidence.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\claims_and_evidence.csv"
+      },
+      {
+        "expected": "ca1ad94a6c04adc6c1e9df2e92ea0a55d7058bd5700c5741bf3fb2cd2e91c616",
+        "match": true,
+        "observed": "ca1ad94a6c04adc6c1e9df2e92ea0a55d7058bd5700c5741bf3fb2cd2e91c616",
+        "path": "results/final_research_package_v2/directional_embedding_diagnostics.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\directional_embedding_diagnostics.csv"
+      },
+      {
+        "expected": "65efe79faabe126acdfa8733e3dfbb26629238ea2075cc42a8ab08b3eea017fd",
+        "match": true,
+        "observed": "65efe79faabe126acdfa8733e3dfbb26629238ea2075cc42a8ab08b3eea017fd",
+        "path": "results/final_research_package_v2/figures/figure_3_forward_homecredit_to_lendingclub_umap.png",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\figures\\figure_3_forward_homecredit_to_lendingclub_umap.png"
+      },
+      {
+        "expected": "50eb7481a870c2945c80b1adb64ebb2e2e6f25a1df07d595f69e1eda8090526a",
+        "match": true,
+        "observed": "50eb7481a870c2945c80b1adb64ebb2e2e6f25a1df07d595f69e1eda8090526a",
+        "path": "results/final_research_package_v2/figures/figure_4_reverse_lendingclub_to_homecredit_umap.png",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\figures\\figure_4_reverse_lendingclub_to_homecredit_umap.png"
+      },
+      {
+        "expected": "b36947ec1a5d67e58117ae04f23a32bd15036087a0a1f1c9dcfe1de066ea6218",
+        "match": true,
+        "observed": "b36947ec1a5d67e58117ae04f23a32bd15036087a0a1f1c9dcfe1de066ea6218",
+        "path": "results/final_research_package_v2/final_package_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\final_package_manifest.json"
+      },
+      {
+        "expected": "83a119cd5afa4ae450b62fa8af1672ebf1dd9569cf92431d319923062501799b",
+        "match": true,
+        "observed": "83a119cd5afa4ae450b62fa8af1672ebf1dd9569cf92431d319923062501799b",
+        "path": "results/final_research_package_v2/final_results_tables.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\final_results_tables.csv"
+      },
+      {
+        "expected": "813f50f4980604ceb469cd0e62e9c85211038f56915030bbbc927a9f6ffb7dc1",
+        "match": true,
+        "observed": "813f50f4980604ceb469cd0e62e9c85211038f56915030bbbc927a9f6ffb7dc1",
+        "path": "results/final_research_package_v2/task1_incremental_comparison.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\final_research_package_v2\\task1_incremental_comparison.csv"
+      },
+      {
+        "expected": "3656860614e6dc408ac532c8b61c808f26f1df202782e7a3b9dc8204036a28a9",
+        "match": true,
+        "observed": "3656860614e6dc408ac532c8b61c808f26f1df202782e7a3b9dc8204036a28a9",
+        "path": "results/finalized_research/README.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\README.md"
+      },
+      {
+        "expected": "b35a199389fc22027a133bdbef3f0bdd7053bfe1d428036b395da34f1b04df7f",
+        "match": true,
+        "observed": "b35a199389fc22027a133bdbef3f0bdd7053bfe1d428036b395da34f1b04df7f",
+        "path": "results/finalized_research/STATUS.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\STATUS.md"
+      },
+      {
+        "expected": "60ba4e77eb4c5c22c3edf09dc72c285b335097170f991bc6055997e6d702b05e",
+        "match": true,
+        "observed": "60ba4e77eb4c5c22c3edf09dc72c285b335097170f991bc6055997e6d702b05e",
+        "path": "results/finalized_research/audit/current/remaining_tasks_audit.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\audit\\current\\remaining_tasks_audit.json"
+      },
+      {
+        "expected": "212d38799979ca5f74824119207a002c87b25a831fdac73437ab961e42cca33c",
+        "match": true,
+        "observed": "212d38799979ca5f74824119207a002c87b25a831fdac73437ab961e42cca33c",
+        "path": "results/finalized_research/audit/current/remaining_tasks_audit.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\audit\\current\\remaining_tasks_audit.md"
+      },
+      {
+        "expected": "2b57cd75a7b6a45252a7e1fd380d824ff13db60e3f3dcb899903da4f69de4975",
+        "match": true,
+        "observed": "2b57cd75a7b6a45252a7e1fd380d824ff13db60e3f3dcb899903da4f69de4975",
+        "path": "results/finalized_research/canonical_artifact_inventory.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\canonical_artifact_inventory.csv"
+      },
+      {
+        "expected": "93b4f195a4c78bcc8c223b69e3bee61c595daa8de85a947523577939374d0bd4",
+        "match": true,
+        "observed": "93b4f195a4c78bcc8c223b69e3bee61c595daa8de85a947523577939374d0bd4",
+        "path": "results/finalized_research/canonical_artifact_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\canonical_artifact_manifest.json"
+      },
+      {
+        "expected": "f354b21dc617ebe1ff5fcc127522b38079a833b03b952e64b366648d33c7cee7",
+        "match": true,
+        "observed": "f354b21dc617ebe1ff5fcc127522b38079a833b03b952e64b366648d33c7cee7",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/feature_drift_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\feature_drift_manifest.json"
+      },
+      {
+        "expected": "ac6543e749e169c59529ab48a5de59b9e828b83770c749b78c5703cf9f46f743",
+        "match": true,
+        "observed": "ac6543e749e169c59529ab48a5de59b9e828b83770c749b78c5703cf9f46f743",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/feature_drift_summary.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\feature_drift_summary.md"
+      },
+      {
+        "expected": "4d9205ccad1c51869f9f752b8f0f6548fae00ee9adf55031bdd678480a67ecb4",
+        "match": true,
+        "observed": "4d9205ccad1c51869f9f752b8f0f6548fae00ee9adf55031bdd678480a67ecb4",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/figures/feature_psi_distribution_by_pipeline.png",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\figures\\feature_psi_distribution_by_pipeline.png"
+      },
+      {
+        "expected": "230a57f918ad2b0a96003d7a128341ab50e2fb94579721f0d03d57e0aa39d802",
+        "match": true,
+        "observed": "230a57f918ad2b0a96003d7a128341ab50e2fb94579721f0d03d57e0aa39d802",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/hybrid_drift_decomposition.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\hybrid_drift_decomposition.csv"
+      },
+      {
+        "expected": "52e3bff0f1a866e1cfe8c67c302b1bb256d58a6cede915da5478d0d211514e35",
+        "match": true,
+        "observed": "52e3bff0f1a866e1cfe8c67c302b1bb256d58a6cede915da5478d0d211514e35",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/pipeline_psi_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\pipeline_psi_summary.csv"
+      },
+      {
+        "expected": "470afe52cdd9d4e27fed1f475045d8c6add37e1f005a6e0bea924270299e00d4",
+        "match": true,
+        "observed": "470afe52cdd9d4e27fed1f475045d8c6add37e1f005a6e0bea924270299e00d4",
+        "path": "results/finalized_research/pending_analyses/feature_level_drift/top_drifting_features.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\feature_level_drift\\top_drifting_features.csv"
+      },
+      {
+        "expected": "3cf63c5c2490091a2f7cd785c4724ce2a0207e7e9f504c537e7a6ae4c5503217",
+        "match": true,
+        "observed": "3cf63c5c2490091a2f7cd785c4724ce2a0207e7e9f504c537e7a6ae4c5503217",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/figures/runtime_and_cost_comparison.png",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\figures\\runtime_and_cost_comparison.png"
+      },
+      {
+        "expected": "42969e1b625c337f916ee433b0d5e19ecfa7ea4440fa2e62abfd717a9a2cf446",
+        "match": true,
+        "observed": "42969e1b625c337f916ee433b0d5e19ecfa7ea4440fa2e62abfd717a9a2cf446",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/llm_cost_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\llm_cost_manifest.json"
+      },
+      {
+        "expected": "435c726cd89251c4b9a227925dd883c5e8a53f36dee06bb2eec237410d790fbb",
+        "match": true,
+        "observed": "435c726cd89251c4b9a227925dd883c5e8a53f36dee06bb2eec237410d790fbb",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/llm_cost_scalability_summary.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\llm_cost_scalability_summary.md"
+      },
+      {
+        "expected": "776993e0ec6b7f4e0a3b3b16c6651509f7352556d12d1759629f05d32f91d1c3",
+        "match": true,
+        "observed": "776993e0ec6b7f4e0a3b3b16c6651509f7352556d12d1759629f05d32f91d1c3",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/llm_usage_audit.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\llm_usage_audit.csv"
+      },
+      {
+        "expected": "bf696e79d11c3a4f22681acd703a11a85931543502f764f26fd18db13670ad7d",
+        "match": true,
+        "observed": "bf696e79d11c3a4f22681acd703a11a85931543502f764f26fd18db13670ad7d",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/runtime_comparison.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\runtime_comparison.csv"
+      },
+      {
+        "expected": "df69a809e06cc8957401692fcbd87983f43b34bb943504cf8f2ad43fee210e75",
+        "match": true,
+        "observed": "df69a809e06cc8957401692fcbd87983f43b34bb943504cf8f2ad43fee210e75",
+        "path": "results/finalized_research/pending_analyses/llm_cost_scalability/scalability_scenarios.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\llm_cost_scalability\\scalability_scenarios.csv"
+      },
+      {
+        "expected": "1eb4dcf4b76241241369d9c57610cbb870e105ac6c9b8afeae47514480b7ec05",
+        "match": true,
+        "observed": "1eb4dcf4b76241241369d9c57610cbb870e105ac6c9b8afeae47514480b7ec05",
+        "path": "results/finalized_research/pending_analyses/significance_tests/figures/paired_auc_difference_forest.png",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\significance_tests\\figures\\paired_auc_difference_forest.png"
+      },
+      {
+        "expected": "056fa955b95d74b8ccaf3520ac2ea36ef48b80431edfca1b10734be828e4961c",
+        "match": true,
+        "observed": "056fa955b95d74b8ccaf3520ac2ea36ef48b80431edfca1b10734be828e4961c",
+        "path": "results/finalized_research/pending_analyses/significance_tests/paired_significance_results.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\significance_tests\\paired_significance_results.csv"
+      },
+      {
+        "expected": "1c342afde97f18c43d09ab8b91de05bf05eeb6cdb9a40cbace1a54928e7dfefa",
+        "match": true,
+        "observed": "1c342afde97f18c43d09ab8b91de05bf05eeb6cdb9a40cbace1a54928e7dfefa",
+        "path": "results/finalized_research/pending_analyses/significance_tests/significance_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\significance_tests\\significance_manifest.json"
+      },
+      {
+        "expected": "7c0b2cd5427ff563833384b0ffdd266aba32e1e1a8d9fc67aaa044c01afc0bc7",
+        "match": true,
+        "observed": "7c0b2cd5427ff563833384b0ffdd266aba32e1e1a8d9fc67aaa044c01afc0bc7",
+        "path": "results/finalized_research/pending_analyses/significance_tests/significance_summary.md",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\finalized_research\\pending_analyses\\significance_tests\\significance_summary.md"
+      },
+      {
+        "expected": "16f9adeb7b04e2542bcea79f929547ab3a0847c148c55dfffd65f7c49fe30edd",
+        "match": true,
+        "observed": "16f9adeb7b04e2542bcea79f929547ab3a0847c148c55dfffd65f7c49fe30edd",
+        "path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "6847841d2d767966c22b00bea7d8d7da9a566237f3b341a13cb6e8395f7b8fce",
+        "match": true,
+        "observed": "6847841d2d767966c22b00bea7d8d7da9a566237f3b341a13cb6e8395f7b8fce",
+        "path": "results/homecredit/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_87fbcccf4952/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_87fbcccf4952\\run_manifest.json"
+      },
+      {
+        "expected": "c34573b2a112c613be39865b39273f0cea88e5fd049fcae2264e22fb1edc104f",
+        "match": true,
+        "observed": "c34573b2a112c613be39865b39273f0cea88e5fd049fcae2264e22fb1edc104f",
+        "path": "results/homecredit/catboost/hybrid_stable_core_llm_fill/catboost_hybrid_stable_core_llm_fill_8993eae5a4f7/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "4570ce77e635335b3550fe63c09fdbcbda6829ac0ff9f13c5b5a904d50cd05f6",
+        "match": true,
+        "observed": "4570ce77e635335b3550fe63c09fdbcbda6829ac0ff9f13c5b5a904d50cd05f6",
+        "path": "results/homecredit/catboost/hybrid_stable_core_llm_fill/catboost_hybrid_stable_core_llm_fill_8993eae5a4f7/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8993eae5a4f7\\run_manifest.json"
+      },
+      {
+        "expected": "08701d21d02d32e8495b280e816cbfd2e3138a6a54ccc33e27eff7d28b446fe1",
+        "match": true,
+        "observed": "08701d21d02d32e8495b280e816cbfd2e3138a6a54ccc33e27eff7d28b446fe1",
+        "path": "results/homecredit/catboost/llm/catboost_llm_llm_d54c966a1d6e/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "dc14cc34629f5045a96a43b8a50d31fbd532d05c1c7fbda5b6a53ce50d58943f",
+        "match": true,
+        "observed": "dc14cc34629f5045a96a43b8a50d31fbd532d05c1c7fbda5b6a53ce50d58943f",
+        "path": "results/homecredit/catboost/llm/catboost_llm_llm_d54c966a1d6e/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\llm\\catboost_llm_llm_d54c966a1d6e\\run_manifest.json"
+      },
+      {
+        "expected": "0d5f4cb6f0a00aa4c017cfb936fafd35e4ca3e11be8a23eec2a7af92b73f140a",
+        "match": true,
+        "observed": "0d5f4cb6f0a00aa4c017cfb936fafd35e4ca3e11be8a23eec2a7af92b73f140a",
+        "path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "52f9a988fda24b7b57299206b73697c79edabc453caa969ad695c9f5835ebeaa",
+        "match": true,
+        "observed": "52f9a988fda24b7b57299206b73697c79edabc453caa969ad695c9f5835ebeaa",
+        "path": "results/homecredit/catboost/statistical/catboost_statistical_mrmr_3858b721e537/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\catboost\\statistical\\catboost_statistical_mrmr_3858b721e537\\run_manifest.json"
+      },
+      {
+        "expected": "00e65f77288b688fb34718a60c4315a39d7870ae06fc22a4894e94f26a240c8d",
+        "match": true,
+        "observed": "00e65f77288b688fb34718a60c4315a39d7870ae06fc22a4894e94f26a240c8d",
+        "path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "1e94e05192ed6ef7e8642ff6e564c811754331da198f56df0a333eb4a4d9859b",
+        "match": true,
+        "observed": "1e94e05192ed6ef7e8642ff6e564c811754331da198f56df0a333eb4a4d9859b",
+        "path": "results/homecredit/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_f69e1a0cffc2/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_f69e1a0cffc2\\run_manifest.json"
+      },
+      {
+        "expected": "36865e8419ed5e20de4dafaa94ce16a38d7abe109a9dcaf4781a390bd2c36f21",
+        "match": true,
+        "observed": "36865e8419ed5e20de4dafaa94ce16a38d7abe109a9dcaf4781a390bd2c36f21",
+        "path": "results/homecredit/lr/hybrid_stable_core_llm_fill/lr_hybrid_stable_core_llm_fill_1ddd0142e614/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "6c1b673a7b7cd5aa44db6ddb645bbbeba8b5ca855f2c3b587cc1d986c00abee8",
+        "match": true,
+        "observed": "6c1b673a7b7cd5aa44db6ddb645bbbeba8b5ca855f2c3b587cc1d986c00abee8",
+        "path": "results/homecredit/lr/hybrid_stable_core_llm_fill/lr_hybrid_stable_core_llm_fill_1ddd0142e614/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_1ddd0142e614\\run_manifest.json"
+      },
+      {
+        "expected": "8081bdc05b20255070f6725c6c45a38bfe9bc3f9a54a4b8576c663fe635f2f56",
+        "match": true,
+        "observed": "8081bdc05b20255070f6725c6c45a38bfe9bc3f9a54a4b8576c663fe635f2f56",
+        "path": "results/homecredit/lr/llm/lr_llm_llm_66fabfd650a1/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "e7def52ed566035eb441595ba51bee101bcbca122ca1b6e6415ef04d5f950540",
+        "match": true,
+        "observed": "e7def52ed566035eb441595ba51bee101bcbca122ca1b6e6415ef04d5f950540",
+        "path": "results/homecredit/lr/llm/lr_llm_llm_66fabfd650a1/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\llm\\lr_llm_llm_66fabfd650a1\\run_manifest.json"
+      },
+      {
+        "expected": "55c6614a990d3cbbc0430fbd78184857943f7fb3202954b2ad17365b0ae3be91",
+        "match": true,
+        "observed": "55c6614a990d3cbbc0430fbd78184857943f7fb3202954b2ad17365b0ae3be91",
+        "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/data_split_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\data_split_manifest.json"
+      },
+      {
+        "expected": "1fd3615a476acd38b90527068df12d0541ab702c2900fe9e363e27bfc2cddf8d",
+        "match": true,
+        "observed": "1fd3615a476acd38b90527068df12d0541ab702c2900fe9e363e27bfc2cddf8d",
+        "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "0d3a744ee69af89b8f51987462060783c16dc42ff11b7be6a08da943ad55efab",
+        "match": true,
+        "observed": "0d3a744ee69af89b8f51987462060783c16dc42ff11b7be6a08da943ad55efab",
+        "path": "results/homecredit/lr/statistical/lr_statistical_mrmr_53a793cb32fe/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\homecredit\\lr\\statistical\\lr_statistical_mrmr_53a793cb32fe\\run_manifest.json"
+      },
+      {
+        "expected": "6da303e625164a38655b2031ae31fff2c7a5120e217833768fcc4a4a1def9b43",
+        "match": true,
+        "observed": "6da303e625164a38655b2031ae31fff2c7a5120e217833768fcc4a4a1def9b43",
+        "path": "results/lendingclub_v2/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_59865aa71763/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "d86d5ef8787c95655ca4586dceb7e07c47c0e324eaf3e8c926f093e3d18db702",
+        "match": true,
+        "observed": "d86d5ef8787c95655ca4586dceb7e07c47c0e324eaf3e8c926f093e3d18db702",
+        "path": "results/lendingclub_v2/catboost/hybrid_mrmr/catboost_hybrid_llm_then_mrmr_59865aa71763/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_mrmr\\catboost_hybrid_llm_then_mrmr_59865aa71763\\run_manifest.json"
+      },
+      {
+        "expected": "f5f243ac8c23a5f6ac151f4080117ca1a0e233368c7fa8630b7f6e346719ae0d",
+        "match": true,
+        "observed": "f5f243ac8c23a5f6ac151f4080117ca1a0e233368c7fa8630b7f6e346719ae0d",
+        "path": "results/lendingclub_v2/catboost/hybrid_stable_core_llm_fill/catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "5fd5833a4a5de6d73f2ae76e77ff54d92f06166082f315c0a7eef0b958b9bedc",
+        "match": true,
+        "observed": "5fd5833a4a5de6d73f2ae76e77ff54d92f06166082f315c0a7eef0b958b9bedc",
+        "path": "results/lendingclub_v2/catboost/hybrid_stable_core_llm_fill/catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\hybrid_stable_core_llm_fill\\catboost_hybrid_stable_core_llm_fill_8da7f3b51c4a\\run_manifest.json"
+      },
+      {
+        "expected": "d40a406835978a02b98917b0a4908257f8790509471d725bd18fe84d576e908c",
+        "match": true,
+        "observed": "d40a406835978a02b98917b0a4908257f8790509471d725bd18fe84d576e908c",
+        "path": "results/lendingclub_v2/catboost/llm/catboost_llm_llm_e6489647a93c/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "a6e54d809d43c11d0326446307c8c503a701319fcd2c9713bcb0937d9e06ebd0",
+        "match": true,
+        "observed": "a6e54d809d43c11d0326446307c8c503a701319fcd2c9713bcb0937d9e06ebd0",
+        "path": "results/lendingclub_v2/catboost/llm/catboost_llm_llm_e6489647a93c/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\llm\\catboost_llm_llm_e6489647a93c\\run_manifest.json"
+      },
+      {
+        "expected": "7f183b7027a11a2de4c1939964ea6015fd27068a80e219f7b6ff06ebb0e9e372",
+        "match": true,
+        "observed": "7f183b7027a11a2de4c1939964ea6015fd27068a80e219f7b6ff06ebb0e9e372",
+        "path": "results/lendingclub_v2/catboost/statistical/catboost_statistical_mrmr_94a6a14a53a4/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "1f8830957a0cc542ee7aa5fbb72a0562aba8bc98dcf2a26fb0e66fb5acf1fb10",
+        "match": true,
+        "observed": "1f8830957a0cc542ee7aa5fbb72a0562aba8bc98dcf2a26fb0e66fb5acf1fb10",
+        "path": "results/lendingclub_v2/catboost/statistical/catboost_statistical_mrmr_94a6a14a53a4/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\catboost\\statistical\\catboost_statistical_mrmr_94a6a14a53a4\\run_manifest.json"
+      },
+      {
+        "expected": "ec85b2bfdb1b6db68faab16a1c8ccdc70d89271d9dc5d17c5e996512e0dbda18",
+        "match": true,
+        "observed": "ec85b2bfdb1b6db68faab16a1c8ccdc70d89271d9dc5d17c5e996512e0dbda18",
+        "path": "results/lendingclub_v2/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_45d98f9ad95c/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "3589c5bd4e6af29e38744fd920e40ab16c25e9faa8027c09d066a4dd139d6723",
+        "match": true,
+        "observed": "3589c5bd4e6af29e38744fd920e40ab16c25e9faa8027c09d066a4dd139d6723",
+        "path": "results/lendingclub_v2/lr/hybrid_mrmr/lr_hybrid_llm_then_mrmr_45d98f9ad95c/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_mrmr\\lr_hybrid_llm_then_mrmr_45d98f9ad95c\\run_manifest.json"
+      },
+      {
+        "expected": "5b5a911f2b6f7010d4fb8f04d372f23e62a2f2e59d066bef17e1d7a9fdc76a44",
+        "match": true,
+        "observed": "5b5a911f2b6f7010d4fb8f04d372f23e62a2f2e59d066bef17e1d7a9fdc76a44",
+        "path": "results/lendingclub_v2/lr/hybrid_stable_core_llm_fill/lr_hybrid_stable_core_llm_fill_497f694ad76d/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "4d7ca5f0087cd41ae5f76a01e205cbc44aebae2703d61bb97030e1144b53eed6",
+        "match": true,
+        "observed": "4d7ca5f0087cd41ae5f76a01e205cbc44aebae2703d61bb97030e1144b53eed6",
+        "path": "results/lendingclub_v2/lr/hybrid_stable_core_llm_fill/lr_hybrid_stable_core_llm_fill_497f694ad76d/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\hybrid_stable_core_llm_fill\\lr_hybrid_stable_core_llm_fill_497f694ad76d\\run_manifest.json"
+      },
+      {
+        "expected": "2cec55137bb4499e134b71f98ef5f2f8ee081408f61bbb8e60e4137feec53630",
+        "match": true,
+        "observed": "2cec55137bb4499e134b71f98ef5f2f8ee081408f61bbb8e60e4137feec53630",
+        "path": "results/lendingclub_v2/lr/llm/lr_llm_llm_bb103e2ac012/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "327e54f16730da67610ba1522e44cdd24d31bc1a6a9f8d18b8a5f953749f1106",
+        "match": true,
+        "observed": "327e54f16730da67610ba1522e44cdd24d31bc1a6a9f8d18b8a5f953749f1106",
+        "path": "results/lendingclub_v2/lr/llm/lr_llm_llm_bb103e2ac012/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\llm\\lr_llm_llm_bb103e2ac012\\run_manifest.json"
+      },
+      {
+        "expected": "61a087e693dc6c6fcaed4063c78eff21add8ac9d9324f5fa2cd5f6a9d0d45cbc",
+        "match": true,
+        "observed": "61a087e693dc6c6fcaed4063c78eff21add8ac9d9324f5fa2cd5f6a9d0d45cbc",
+        "path": "results/lendingclub_v2/lr/statistical/lr_statistical_mrmr_c30cd6aff377/data_split_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\data_split_manifest.json"
+      },
+      {
+        "expected": "0779d7676413879ecff1de8abf7d2ee1fea4b72b214e4109beb46cce4c3a2d55",
+        "match": true,
+        "observed": "0779d7676413879ecff1de8abf7d2ee1fea4b72b214e4109beb46cce4c3a2d55",
+        "path": "results/lendingclub_v2/lr/statistical/lr_statistical_mrmr_c30cd6aff377/results/experiment_summary.csv",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\results\\experiment_summary.csv"
+      },
+      {
+        "expected": "1f2f3b3ebfa41f5484c44660fa5e80808e1a094d584d15b6e41b8d14e27b36de",
+        "match": true,
+        "observed": "1f2f3b3ebfa41f5484c44660fa5e80808e1a094d584d15b6e41b8d14e27b36de",
+        "path": "results/lendingclub_v2/lr/statistical/lr_statistical_mrmr_c30cd6aff377/run_manifest.json",
+        "resolved": "D:\\python projects\\Research_pre_cleanup_backup_20260704\\results\\lendingclub_v2\\lr\\statistical\\lr_statistical_mrmr_c30cd6aff377\\run_manifest.json"
+      },
+      {
+        "expected": "83828ea9f56080a454895722943eea9c7ffa5b8c8aec3ccd783c5f5afd06d4b9",
+        "match": true,
+        "observed": "83828ea9f56080a454895722943eea9c7ffa5b8c8aec3ccd783c5f5afd06d4b9",
+        "path": "src/credit_risk_fs/preprocessing/labeling.py",
+        "resolved": "src/credit_risk_fs/preprocessing/labeling.py"
+      }
+    ],
+    "source_count": 65
+  },
+  "output_files": [
+    {
+      "byte_size": 26667,
+      "path": "01_EXPERIMENT_OVERVIEW.md",
+      "sha256": "80bd4880e4a74c19afa590e9eeb2da1819f95f9eabe3a70be15114b2cedb2848"
+    },
+    {
+      "byte_size": 182636,
+      "path": "02_COMPLETE_METRICS_AND_FIGURES.md",
+      "sha256": "d47b4e73756178c9093f03593f76666e56396f8f2f81fb6edb13280cc2ab6b02"
+    },
+    {
+      "byte_size": 142587,
+      "path": "build_final_three_dataset_synthesis.py",
+      "sha256": "32b1f6f7cf702ac19e9d2e5fcc4579e3902eff00b5606b6370988ef861e899bc"
+    },
+    {
+      "byte_size": 26657,
+      "path": "figures/fig_01_oot_performance_by_dataset_method_model.pdf",
+      "sha256": "69d038927843e338ec8cd5e4b338db982292dc51abbf1eae23cf80e6e4691cd9"
+    },
+    {
+      "byte_size": 418518,
+      "path": "figures/fig_01_oot_performance_by_dataset_method_model.png",
+      "sha256": "a62c555c05db7e60ad7c1ef49d2455e8a81ca4f367896fde66401ff640997bb6"
+    },
+    {
+      "byte_size": 30199,
+      "path": "figures/fig_02_dev_vs_oot_performance.pdf",
+      "sha256": "7a12770cacaed48418840a1e732e592ab17a2963c10455035476ba31b952734d"
+    },
+    {
+      "byte_size": 460833,
+      "path": "figures/fig_02_dev_vs_oot_performance.png",
+      "sha256": "9c4b918697f397e1777e6495276787f52f95a536661a86998c7beedb07d7b71c"
+    },
+    {
+      "byte_size": 48912,
+      "path": "figures/fig_03_dev_to_oot_delta_heatmap.pdf",
+      "sha256": "2ac5c703725e71eedff40932a48086cb91f4ff84dab6d913ee1b38a6a93c49aa"
+    },
+    {
+      "byte_size": 494516,
+      "path": "figures/fig_03_dev_to_oot_delta_heatmap.png",
+      "sha256": "0bca8125a2f872054b75619ccda8edfeb24b4554c07aff0a2305de7918388147"
+    },
+    {
+      "byte_size": 26876,
+      "path": "figures/fig_04_oot_ks_by_method.pdf",
+      "sha256": "0b607f39868784988f8652f093d11fe3885acfa04d4ba775c25648c3013a3096"
+    },
+    {
+      "byte_size": 404307,
+      "path": "figures/fig_04_oot_ks_by_method.png",
+      "sha256": "b0e29a7a092ba26dcbb48f572d9b4958ea32a2e165d0795dcd61a450d434ea7e"
+    },
+    {
+      "byte_size": 15606,
+      "path": "figures/fig_05_llm_vs_classical_effect_forest.pdf",
+      "sha256": "0894ed4c49ed1f7e31335e0b2dc8adca8cd4dca0b33e7451906dd20723f54410"
+    },
+    {
+      "byte_size": 240974,
+      "path": "figures/fig_05_llm_vs_classical_effect_forest.png",
+      "sha256": "395a3e97dac5ce6f71c7090133e77b2101e5c89d7d4d4271d85d366981480069"
+    },
+    {
+      "byte_size": 24752,
+      "path": "figures/fig_06_adjusted_significance_heatmap.pdf",
+      "sha256": "aee4643a2bb0cf8dc189eea7af88098bf5b0b79136735153c6e9a4b0de9c969c"
+    },
+    {
+      "byte_size": 308785,
+      "path": "figures/fig_06_adjusted_significance_heatmap.png",
+      "sha256": "f497bcf4e52e08e3c6948213173d047d8e960d52815e6781a3dfedbb4bbdf2f9"
+    },
+    {
+      "byte_size": 27138,
+      "path": "figures/fig_07_score_psi.pdf",
+      "sha256": "aba9cf319b79bc356df4da19e24d66391e10dd65063be68d9c6c8962d4b1d406"
+    },
+    {
+      "byte_size": 400928,
+      "path": "figures/fig_07_score_psi.png",
+      "sha256": "0eec6edd44659fa9f62f6f63abad0e0a17fbdacc36d990914991b5e8370fb7b3"
+    },
+    {
+      "byte_size": 25575,
+      "path": "figures/fig_08_selected_feature_psi.pdf",
+      "sha256": "bf33da2e07a85228f204a544fd9f651b3d513eab6c6b00f2ff3cb3b40ca43a14"
+    },
+    {
+      "byte_size": 585726,
+      "path": "figures/fig_08_selected_feature_psi.png",
+      "sha256": "8a5028ae331ddb38afa937bb0dd0e32a625063a9f3f7c620d4b6b03fddfe0f39"
+    },
+    {
+      "byte_size": 27789,
+      "path": "figures/fig_09_selection_stability.pdf",
+      "sha256": "0f0dd27ceda7fd344ae4ef9d6d01f41bbc153ccdc8006f90bbfbc294debab886"
+    },
+    {
+      "byte_size": 678054,
+      "path": "figures/fig_09_selection_stability.png",
+      "sha256": "03dbc6fd86ccffb71837e0d2cbef68bee963e6ef024bcfa7b4ff0779a935f324"
+    },
+    {
+      "byte_size": 27788,
+      "path": "figures/fig_10_method_overlap.pdf",
+      "sha256": "f3a66ffbcd8bf4d2c59fafa8a7c39dab593c09bd08372db2480142e0810930b5"
+    },
+    {
+      "byte_size": 244200,
+      "path": "figures/fig_10_method_overlap.png",
+      "sha256": "5f44de0e31b30f24214d8754269ee54c1e250c71154b29932c7ab5922eb5a959"
+    },
+    {
+      "byte_size": 52240,
+      "path": "figures/fig_11_runtime_and_peak_ram.pdf",
+      "sha256": "b0f01756ec3eaa08713f9e5e8bd32e1c97a3af427fc4d9e1262991aa02e141b7"
+    },
+    {
+      "byte_size": 1317260,
+      "path": "figures/fig_11_runtime_and_peak_ram.png",
+      "sha256": "2a62a5bbe6e46d5d81cf1aaadc8ceebbcc9c3c2c065b5644a916d7b864f55304"
+    },
+    {
+      "byte_size": 26354,
+      "path": "figures/fig_12_performance_resource_tradeoff.pdf",
+      "sha256": "384bf39d3e14b3874a618e6c115c5db553fdc3e0c000513a4f47dad0f98a0b58"
+    },
+    {
+      "byte_size": 229724,
+      "path": "figures/fig_12_performance_resource_tradeoff.png",
+      "sha256": "c257ebbb33a111fcb37e67822210fd924050ba27dab36937457f8216830760dc"
+    },
+    {
+      "byte_size": 16179,
+      "path": "figures/fig_13_llm_incremental_value.pdf",
+      "sha256": "8a4e9e22ab1621994d51457ea8e1de4f87bd403870d211122b449abf36f67988"
+    },
+    {
+      "byte_size": 240694,
+      "path": "figures/fig_13_llm_incremental_value.png",
+      "sha256": "007b2d90635e9b601cbba3edd0c1c3cb69b272af653b175b24c026de28444961"
+    },
+    {
+      "byte_size": 17721,
+      "path": "figures/fig_14_cross_dataset_rank_consistency.pdf",
+      "sha256": "7d401ae2b65a8c199fd2e3496a9f9b05d1a85e56d568945f39a11778e0eaf578"
+    },
+    {
+      "byte_size": 351526,
+      "path": "figures/fig_14_cross_dataset_rank_consistency.png",
+      "sha256": "379988fa668a899084eaaf26398edad69f0fa6c3cfc5b7c3af156533dd76ed08"
+    },
+    {
+      "byte_size": 287952,
+      "path": "figures/fig_15_oot_roc_curves.pdf",
+      "sha256": "7ef14d26c1009990849cd936be2bc540d675c48d3b968cd5078325001fba2f5d"
+    },
+    {
+      "byte_size": 515422,
+      "path": "figures/fig_15_oot_roc_curves.png",
+      "sha256": "6190a59d557d9dda40c3de3eda98c17555a201cf493a9fa99dcc052681a507e5"
+    },
+    {
+      "byte_size": 29952,
+      "path": "figures/fig_16_oot_calibration_curves.pdf",
+      "sha256": "6ec1120bae1f920e2a175e925832aefc7af1399f4884cee2fb9add50cac9f612"
+    },
+    {
+      "byte_size": 425657,
+      "path": "figures/fig_16_oot_calibration_curves.png",
+      "sha256": "9532431ccae3de3fb4cca289a1602aa655af23de1f9ad453158194106391d07a"
+    },
+    {
+      "byte_size": 25738,
+      "path": "figures/fig_17_oot_score_distributions.pdf",
+      "sha256": "dd4e9f37b8504b709406fb2c13775a779fafebe80855f287ef186e0f52c9bc6a"
+    },
+    {
+      "byte_size": 286369,
+      "path": "figures/fig_17_oot_score_distributions.png",
+      "sha256": "b0b8cba09d4d390722c83190b439e74c38522fc62675f050736c4afa62377e05"
+    },
+    {
+      "byte_size": 1553,
+      "path": "tables/artifact_status_register.csv",
+      "sha256": "54329ce400a69178e664ddafc8db2785ae0aa78435071c98f128fc58796db2c5"
+    },
+    {
+      "byte_size": 4299,
+      "path": "tables/cross_dataset_synthesis.csv",
+      "sha256": "9cadbf2bfaa02b02b48ca25f854f4e9e6f229804acb069da92d25920629b190c"
+    },
+    {
+      "byte_size": 3548,
+      "path": "tables/dataset_overview.csv",
+      "sha256": "6d2394897a5d2d7d621e018acc1038c11a5d364b183ab4416d8300bcff7f7e4a"
+    },
+    {
+      "byte_size": 198698,
+      "path": "tables/dev_fold_metrics.csv",
+      "sha256": "fbd33fb9361d1ea6f60f976c8e340299b12feef0ca6f9b01c2cc246b6df4a408"
+    },
+    {
+      "byte_size": 55644,
+      "path": "tables/dev_oot_generalization.csv",
+      "sha256": "901ea7dc1581eeca741902391c068c79140954670d7f7ad9589d26384d893142"
+    },
+    {
+      "byte_size": 77517,
+      "path": "tables/dev_summary.csv",
+      "sha256": "d24f04f46bd24b78ba29507f50580563cac61f9c51ef3445a052c9f40b233154"
+    },
+    {
+      "byte_size": 1682,
+      "path": "tables/experimental_accounting.csv",
+      "sha256": "6336301651489c98468d7584e4e85657a351c796a86a666295b969b8f392a3ef"
+    },
+    {
+      "byte_size": 35208,
+      "path": "tables/feature_family_distribution.csv",
+      "sha256": "60c2bbc0b4efcc8e0878174dc2a07d3578d81036929cc8443392c34b9a319bb4"
+    },
+    {
+      "byte_size": 18035,
+      "path": "tables/feature_psi.csv",
+      "sha256": "c0ca6ae7760d82be9775d40b060addff1048e1746f727b94c9738ce28e013206"
+    },
+    {
+      "byte_size": 930229,
+      "path": "tables/feature_selection_frequency.csv",
+      "sha256": "44abe5dd227ce8412e91714206f512a2f0da3c04e44c1024a980d828e1ad6dd6"
+    },
+    {
+      "byte_size": 2453301,
+      "path": "tables/feature_selections.csv",
+      "sha256": "0036c27b624c16948e84af181bb5d4e3ef39a05358acfb3a3f38f0120bfb75f5"
+    },
+    {
+      "byte_size": 9406635,
+      "path": "tables/feature_selections_by_fold.csv",
+      "sha256": "402d0f18092dbb4819d3d0c34283938caa798956c91590d4f74e05ae233f1254"
+    },
+    {
+      "byte_size": 5220,
+      "path": "tables/figure_inventory.csv",
+      "sha256": "18c144c379176bdbc8f6a784a7f6bbc3fe10db5f6a139b53d30fc695c5a3e741"
+    },
+    {
+      "byte_size": 14244,
+      "path": "tables/llm_resource_costs.csv",
+      "sha256": "6ca34c91b528b934058e59b39f2e95d289d86b2796c9328ccc39565f9faa3bbf"
+    },
+    {
+      "byte_size": 56666,
+      "path": "tables/method_overlap.csv",
+      "sha256": "6a66a3a8f0e95eb394a528b00bedab1d64094edc6dbe5e0f3e613ed8a15451c1"
+    },
+    {
+      "byte_size": 8370,
+      "path": "tables/method_registry.csv",
+      "sha256": "784b6a2ea41ae6926f07517bc2bc46ed22c3c12a3929526ce118099fa90b5116"
+    },
+    {
+      "byte_size": 6843,
+      "path": "tables/metric_dictionary.csv",
+      "sha256": "09332c3fe2ddfa892ab6204d6082026752a9b2761dfa3389a0802850a148ca40"
+    },
+    {
+      "byte_size": 1112,
+      "path": "tables/model_settings.csv",
+      "sha256": "f5606431294635281bd8723b5be0ef0dc6201a19441f71b3f3f90ddd5ce2271d"
+    },
+    {
+      "byte_size": 2568321,
+      "path": "tables/normalized_results_long.csv",
+      "sha256": "1d040229c59066f295cd9d3d36ccf343c907618698cfc957674dbfb5f5db2811"
+    },
+    {
+      "byte_size": 74496,
+      "path": "tables/oot_metrics.csv",
+      "sha256": "dd92b9493e804e342f7a368dd3a88990ed22bf0292089452a430d0da3c854fde"
+    },
+    {
+      "byte_size": 28138,
+      "path": "tables/prediction_reconciliation.csv",
+      "sha256": "18ce61b9d928ce60ff4262d05f0c7bf78568931f9559b5e532deff0b42735a0e"
+    },
+    {
+      "byte_size": 160400,
+      "path": "tables/resource_metrics.csv",
+      "sha256": "19968fcc24675880db7651fca21ba863b472f19a9af0e67aa0a82d144e91364e"
+    },
+    {
+      "byte_size": 16258,
+      "path": "tables/selection_stability.csv",
+      "sha256": "400c56eabd8b5e326107d48c18c4cb986921c6cf3898878aba0a9ad0dd23d4c8"
+    },
+    {
+      "byte_size": 99790,
+      "path": "tables/statistical_comparisons.csv",
+      "sha256": "dccab6163f7c216d6ea2821f2725b60c089a998b63cede4466319d8ad6e64320"
+    },
+    {
+      "byte_size": 16957,
+      "path": "validation_audit.json",
+      "sha256": "b877955e8e49424d5d6c10dc8b5e738a126e55a204a741e1db75ca97c8e8aede"
+    }
+  ],
+  "pre_synthesis_head": "3f5d0d992a95a6e2abc930346021a63c9f8f7da4",
+  "reported_number_mapping": [
+    {
+      "report": "01_EXPERIMENT_OVERVIEW.md",
+      "section": "Dataset overview",
+      "table": "tables/dataset_overview.csv"
+    },
+    {
+      "report": "01_EXPERIMENT_OVERVIEW.md",
+      "section": "Methods/accounting",
+      "table": "tables/method_registry.csv; tables/experimental_accounting.csv"
+    },
+    {
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md",
+      "section": "DEV",
+      "table": "tables/dev_fold_metrics.csv; tables/dev_summary.csv"
+    },
+    {
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md",
+      "section": "OOT/generalization",
+      "table": "tables/oot_metrics.csv; tables/dev_oot_generalization.csv"
+    },
+    {
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md",
+      "section": "Statistics/synthesis",
+      "table": "tables/statistical_comparisons.csv; tables/cross_dataset_synthesis.csv"
+    },
+    {
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md",
+      "section": "Features/resources",
+      "table": "tables/feature_selections.csv; tables/feature_selections_by_fold.csv; tables/feature_family_distribution.csv; tables/feature_selection_frequency.csv; tables/selection_stability.csv; tables/method_overlap.csv; tables/feature_psi.csv; tables/resource_metrics.csv; tables/llm_resource_costs.csv"
+    }
+  ],
+  "repository_branch": "main",
+  "schema_version": "final_three_dataset_synthesis_evidence_manifest_v1",
+  "self_hash_rule": "evidence_manifest.json is excluded from output_files to avoid recursive self-hashing",
+  "status": "complete_authenticated_reporting_only"
+}
