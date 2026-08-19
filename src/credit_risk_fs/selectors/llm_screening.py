@@ -340,10 +340,10 @@ Keep the response compact. Do not include per-feature explanations unless absolu
         expected_response_model: str,
     ) -> dict[str, Any]:
         if not isinstance(data, dict):
-            raise ValueError("LLM response must be a JSON object")
+            raise TypeError("LLM response must be a JSON object")
         raw_selected = data.get("selected_features")
         if not isinstance(raw_selected, list):
-            raise ValueError("LLM response did not return selected_features as a list")
+            raise TypeError("LLM response did not return selected_features as a list")
         if len(raw_selected) != self.ranking_budget:
             raise ValueError(
                 "LLM response selected_features count mismatch: "
@@ -993,7 +993,10 @@ Keep the response compact. Do not include per-feature explanations unless absolu
             selector_name=self.__class__.__name__,
         )
 
-    def fit_transform(self, X: pd.DataFrame, y: pd.Series = None):
+    def fit_transform(self, X: pd.DataFrame, y: pd.Series | None = None):
+        if y is None:
+            raise ValueError(f"Expected parameter for y, got {y}")
+        
         return self.fit(X, y).transform(X)
 
 
