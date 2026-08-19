@@ -1,0 +1,608 @@
+{
+  "authentication_records": [
+    {
+      "check": "git_branch_main",
+      "detail": "main",
+      "status": "pass"
+    },
+    {
+      "check": "required_commit_ancestry",
+      "detail": {
+        "prompt14_complete": true,
+        "prompt14_lock": true,
+        "prompt16_controller": true
+      },
+      "status": "pass"
+    },
+    {
+      "check": "no_unrelated_worktree_changes",
+      "detail": [],
+      "status": "pass"
+    },
+    {
+      "check": "no_experimental_worker_or_controller",
+      "detail": [],
+      "status": "pass"
+    },
+    {
+      "check": "legacy_successor_source_seal_65_of_65",
+      "detail": {
+        "checked": 65,
+        "matched": 65
+      },
+      "status": "pass"
+    },
+    {
+      "check": "legacy_report_integration_authorized",
+      "detail": "REPORT INTEGRATION ALLOWED WITH REQUIRED LIMITATIONS",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_final_validation",
+      "detail": "pass",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_authentication_validation",
+      "detail": "pass",
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_registered_result_rows",
+      "detail": 64,
+      "status": "pass"
+    },
+    {
+      "check": "prompt14_registered_comparisons",
+      "detail": {
+        "evaluable": 124,
+        "rows": 124
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_dev_170_identity_gate",
+      "detail": {
+        "authenticated_evaluation_identities": 170,
+        "classical_completed_numeric_outcomes": 103,
+        "classical_evaluation_identities": 150,
+        "classical_selector_fit_records": 135,
+        "classical_visible_unavailable_outcomes": 47,
+        "completed_numeric_outcomes": 123,
+        "frozen_visible_unavailable_outcomes": 47,
+        "global_llm_truncation_states": 2,
+        "metric_reconciliations": 123,
+        "registered_evaluation_identities": 170,
+        "supplemental_completed_numeric_outcomes": 20,
+        "supplemental_internal_rf_mrmr_component_fits": 50,
+        "supplemental_stable_core_outer_fits": 10,
+        "target_free_llm_ranking_generations": 1
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_dev_metric_reconciliation",
+      "detail": {
+        "maximum_difference": 0.0,
+        "numeric": 123,
+        "registered": 170
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_success_markers",
+      "detail": "both present",
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_controller_complete",
+      "detail": {
+        "state": "DONE",
+        "status": "complete"
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_final_manifest_complete",
+      "detail": {
+        "accounted": 34,
+        "expected": 34
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_execution_authorization",
+      "detail": "9c6f635bdf6433f375fdfe02066253971a45264406cb190d76563701cd1aa955",
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_phase_manifests",
+      "detail": {
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/analysis/analysis_manifest.json": "71995278b8e49dce3be234dbf7e3906fb42f7d71c8d6c704ca1279963b497554",
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/classical/phase_manifest.json": "9339b688a1ae31ec030c78c0689a5670ebf1a80cbe6ef000160aef028970701c",
+        "results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/supplemental/phase_manifest.json": "028e383ea5769c9fe1371c9fb6d740aa9897aaace23d889264c52b92f480aa38"
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_34_evaluation_manifests",
+      "detail": {
+        "authenticated": 34,
+        "registered": 34
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_oot_34_accounting",
+      "detail": {
+        "numeric": 22,
+        "registered": 34,
+        "unavailable": 12
+      },
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_oot_metric_reconciliation",
+      "detail": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_final_llm_four_cells",
+      "detail": [
+        [
+          31,
+          "llm",
+          "lr",
+          20
+        ],
+        [
+          32,
+          "llm",
+          "catboost",
+          40
+        ],
+        [
+          33,
+          "stable_core_llm_fill",
+          "lr",
+          20
+        ],
+        [
+          34,
+          "stable_core_llm_fill",
+          "catboost",
+          40
+        ]
+      ],
+      "status": "pass"
+    },
+    {
+      "check": "prompt16_registered_comparison_graph",
+      "detail": {
+        "completed": 22,
+        "rows": 72,
+        "unavailable": 50
+      },
+      "status": "pass"
+    }
+  ],
+  "checks": {
+    "authentication_checks_passed": true,
+    "every_figure_has_png_and_pdf": true,
+    "exact_primary_markdown_files": true,
+    "figure_pdf_count": 17,
+    "figure_png_count": 17,
+    "legacy_successor_hashes_65_of_65": true,
+    "markdown_link_count": 77,
+    "markdown_links_all_exist": true,
+    "no_experiment_model_fit_selector_fit_oot_or_llm_request_executed": true,
+    "no_model_selector_llm_or_evaluation_import": true,
+    "prediction_reconciliation_count": 54,
+    "prediction_reconciliations_passed": true,
+    "reporting_script_double_rebuild_hashes_identical": true,
+    "reporting_script_regression_contract": "validated by two consecutive rebuilds with identical manifest-tracked output hashes before commit",
+    "third_dev_denominator": {
+      "numeric": 123,
+      "registered": 170,
+      "unavailable": 47
+    },
+    "third_oot_denominator": {
+      "numeric": 22,
+      "registered": 34,
+      "unavailable": 12
+    },
+    "unavailable_oot_values_not_zero_filled": true
+  },
+  "link_records": [
+    {
+      "exists": true,
+      "link": "tables/cross_dataset_synthesis.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dataset_overview.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/method_registry.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/model_settings.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/experimental_accounting.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "evidence_manifest.json",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "validation_audit.json",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/artifact_status_register.csv",
+      "report": "01_EXPERIMENT_OVERVIEW.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/metric_dictionary.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dev_fold_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dev_summary.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dev_oot_generalization.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/statistical_comparisons.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/cross_dataset_synthesis.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_selections.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_selections_by_fold.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_family_distribution.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_selection_frequency.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/selection_stability.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/method_overlap.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_psi.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/resource_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/llm_resource_costs.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/llm_resource_costs.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/prediction_reconciliation.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_01_oot_performance_by_dataset_method_model.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_01_oot_performance_by_dataset_method_model.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_02_dev_vs_oot_performance.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_02_dev_vs_oot_performance.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dev_oot_generalization.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_03_dev_to_oot_delta_heatmap.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_03_dev_to_oot_delta_heatmap.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/dev_oot_generalization.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_04_oot_ks_by_method.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_04_oot_ks_by_method.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_05_llm_vs_classical_effect_forest.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_05_llm_vs_classical_effect_forest.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/statistical_comparisons.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_06_adjusted_significance_heatmap.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_06_adjusted_significance_heatmap.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/statistical_comparisons.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_07_score_psi.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_07_score_psi.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_08_selected_feature_psi.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_08_selected_feature_psi.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/feature_psi.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_09_selection_stability.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_09_selection_stability.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/selection_stability.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_10_method_overlap.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_10_method_overlap.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/method_overlap.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_11_runtime_and_peak_ram.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_11_runtime_and_peak_ram.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/resource_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_12_performance_resource_tradeoff.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_12_performance_resource_tradeoff.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_13_llm_incremental_value.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_13_llm_incremental_value.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/cross_dataset_synthesis.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_14_cross_dataset_rank_consistency.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_14_cross_dataset_rank_consistency.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/oot_metrics.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_15_oot_roc_curves.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_15_oot_roc_curves.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/prediction_reconciliation.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_16_oot_calibration_curves.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_16_oot_calibration_curves.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/prediction_reconciliation.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_17_oot_score_distributions.png",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "figures/fig_17_oot_score_distributions.pdf",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    },
+    {
+      "exists": true,
+      "link": "tables/prediction_reconciliation.csv",
+      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
+    }
+  ],
+  "note": "Metric reconciliation reads saved predictions and performs deterministic metric arithmetic only; it does not fit or evaluate a model on raw data.",
+  "prohibited_workload_executed": false,
+  "schema_version": "final_three_dataset_synthesis_validation_v1",
+  "scope": "read-only evidence authentication, saved-prediction reconciliation, normalization, reporting, visualization",
+  "status": "pass"
+}
