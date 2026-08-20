@@ -44,6 +44,13 @@ ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = Path(__file__).resolve().parent
 TABLES = PACKAGE / "tables"
 FIGURES = PACKAGE / "figures"
+ROOT_PLOTS = ROOT / "plots"
+ROOT_REPORT = ROOT / "FINALIZED_METRICS_AND_WINNER_CURVES.md"
+UPDATED_RESULTS_INPUT = PACKAGE / "inputs/workbook1_supplied_results.csv"
+UPDATED_RESULTS_WORKBOOK_SHA256 = "2369ae8241ba9d1fe486d3c6193e35973ed74f495630996fc4d5189270bd247a"
+UPDATED_RESULTS_INPUT_SHA256 = "c10225268d92cb1b794d9288e4f7bf99ac53340f734bf186a1cd3b101487f6f3"
+CONVERSATION_OVERRIDES_INPUT = PACKAGE / "inputs/finalized_score_overrides.csv"
+CONVERSATION_OVERRIDES_INPUT_SHA256 = "f25802302ff559e52707e96ba924b7b361378ce257dc0892625747f768127ad5"
 LEGACY_ROOT = Path(r"D:\python projects\Research_pre_cleanup_backup_20260704")
 P14 = ROOT / "cleanup/audits/prompt_14_two_dataset_oot_review_v3"
 P16 = ROOT / "results/prompt_16_homecredit_model_stability_2024"
@@ -74,7 +81,7 @@ METHOD_ORDER = [
 METHOD_LABEL = {
     "full_features": "Full features", "random_k": "Random K",
     "domain_rule_baseline": "Domain rules", "iv_woe": "IV/WOE",
-    "mrmr": "mRMR (legacy)", "mrmr_mutual_information": "mRMR (MI)",
+    "mrmr": "mRMR", "mrmr_mutual_information": "mRMR (MI)",
     "lasso_l1_logistic": "L1 logistic", "legacy_rf_relevance_corr": "RF relevance/corr.",
     "catboost_shap": "CatBoost SHAP", "boruta": "Boruta (legacy)",
     "boruta_random_forest": "Boruta RF", "rfe_catboost": "RFE CatBoost",
@@ -97,6 +104,31 @@ PALETTE = {
     "llm_then_mrmr": "#CC79A7", "llm_then_boruta": "#56B4E9",
     "stable_core_llm_fill": "#009E73", "cross_dataset_rank_voting_v1": "#D55E00",
     "semantic_mixed_voter": "#777777",
+}
+FAMILY_PALETTE = {"LLM-assisted": "#0072B2", "classical": "#D55E00", "mixed/tied": "#777777"}
+METRIC_LABEL = {
+    "auc": "ROC-AUC", "gini": "Gini", "ks": "KS", "precision": "Precision",
+    "recall": "Recall", "f1": "F1", "accuracy": "Accuracy", "log_loss": "Log loss",
+    "brier": "Brier score", "lift_at_10": "Lift at 10%", "bad_rate_capture_at_10": "Bad-rate capture at 10%",
+    "score_psi": "Score PSI", "feature_psi_mean": "Feature PSI mean",
+    "feature_psi_median": "Feature PSI median", "feature_psi_max": "Feature PSI max",
+}
+
+UPDATED_METHOD_IDS = {
+    "Boruta (legacy)": "boruta",
+    "Boruta RF": "boruta_random_forest",
+    "CatBoost SHAP": "catboost_shap",
+    "Domain rules": "domain_rule_baseline",
+    "IV then Boruta": "iv_then_boruta",
+    "LLM": "llm",
+    "LLM -> MRMR": "llm_then_mrmr",
+    "LLM then Boruta": "llm_then_boruta",
+    "LLM then mRMR": "llm_then_mrmr",
+    "mRMR (MI)": "mrmr_mutual_information",
+    "PCA": "pca",
+    "Random K": "random_k",
+    "RFE CatBoost": "rfe_catboost",
+    "Stable core + LLM fill": "stable_core_llm_fill",
 }
 
 mpl.rcParams.update({
@@ -168,7 +200,15 @@ def authenticate() -> tuple[dict[str, Any], list[dict[str, Any]]]:
         ancestry[name] = result.returncode == 0
     record("required_commit_ancestry", all(ancestry.values()), ancestry)
     status_lines = [x for x in git("status", "--porcelain").splitlines() if x]
-    unrelated = [x for x in status_lines if "results/final_three_dataset_synthesis_v1" not in x.replace("\\", "/")]
+    allowed_worktree_scopes = (
+        "results/final_three_dataset_synthesis_v1",
+        "FINALIZED_METRICS_AND_WINNER_CURVES.md",
+        "plots/",
+    )
+    unrelated = [
+        x for x in status_lines
+        if not any(scope in x.replace("\\", "/") for scope in allowed_worktree_scopes)
+    ]
     record("no_unrelated_worktree_changes", not unrelated, unrelated)
 
     active_workers = []
@@ -958,6 +998,8 @@ def metric_dictionary() -> pd.DataFrame:
 def artifact_status_register() -> pd.DataFrame:
     revocation = P16_AUDIT / "preservation_deviation_and_revocation_register.json"
     return pd.DataFrame([
+        {"artifact_scope": "Finalized scorecard overrides", "status": "highest-priority point-estimate authority", "reporting_action": "Apply all six finalized values; derive Gini as 2×AUC−1 for the two LR AUC cases.", "authority": rel(CONVERSATION_OVERRIDES_INPUT)},
+        {"artifact_scope": "Workbook1 aggregate metric base", "status": "base point-estimate authority", "reporting_action": "Resolve direction-aware winners, then apply the finalized overlay; do not infer row-level curves, confidence intervals, runtime, or selection membership.", "authority": rel(UPDATED_RESULTS_INPUT)},
         {"artifact_scope": "legacy canonical_artifact_manifest July 4 broad migration inventory", "status": "superseded for final reporting", "reporting_action": "Do not require its moved/mutated-path entries; use the later 65-file successor source_manifest seal, which authenticated 65/65.", "authority": rel(LEGACY_INPUTS / "source_manifest.json")},
         {"artifact_scope": "Prompt 14 legacy/original voting manifest", "status": "historical superseded", "reporting_action": "Use the active v2 manifest pointer only; unaffected voting payloads remain byte-identical.", "authority": rel(P14 / "authentication_validation.json")},
         {"artifact_scope": "Prompt 16 pilot_v1 and dev_llm_supplement_v2", "status": "intermediate/superseded", "reporting_action": "Exclude; final DEV supplement is dev_llm_supplement_v3.", "authority": rel(revocation)},
@@ -967,15 +1009,331 @@ def artifact_status_register() -> pd.DataFrame:
     ])
 
 
+def parse_updated_method(value: str, fallback_model: str | None = None) -> tuple[str, str, str]:
+    """Normalize workbook display labels without inventing a more specific winner."""
+    labels: list[str] = []
+    method_ids: list[str] = []
+    models: list[str] = []
+    for raw_part in str(value).split(";"):
+        part = raw_part.strip()
+        model_match = re.search(r"\s*\((lr|catboost)\)\s*$", part, flags=re.IGNORECASE)
+        model = model_match.group(1).lower() if model_match else fallback_model
+        label = part[:model_match.start()].strip() if model_match else part
+        if model and model not in models:
+            models.append(model)
+        if label not in labels:
+            labels.append(label)
+        method_id = UPDATED_METHOD_IDS.get(label)
+        check(method_id is not None, f"Unknown method label in supplied update: {label!r}")
+        if method_id not in method_ids:
+            method_ids.append(method_id)
+    method_id = method_ids[0] if len(method_ids) == 1 else ";".join(method_ids)
+    display_label = METHOD_LABEL.get(method_id, method_id) if len(method_ids) == 1 else "; ".join(METHOD_LABEL.get(x, x) for x in method_ids)
+    return display_label, method_id, ";".join(models) if models else "unspecified"
+
+
+def load_updated_metric_leaders(overrides: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load the aggregate scorecard, resolve comparisons, and apply finalized values."""
+    check(UPDATED_RESULTS_INPUT.is_file(), f"Missing supplied-results snapshot: {UPDATED_RESULTS_INPUT}")
+    check(sha256(UPDATED_RESULTS_INPUT) == UPDATED_RESULTS_INPUT_SHA256, "Supplied-results snapshot hash mismatch")
+    supplied = pd.read_csv(UPDATED_RESULTS_INPUT)
+    required = {"datasetname", "score_type", "higher_or_lower_better", "best_fs_method", "Class", "LLM_score", "score"}
+    check(set(supplied.columns) == required, f"Unexpected supplied-results columns: {list(supplied.columns)}")
+    check(len(supplied) == 45, f"Expected 45 supplied metric rows, found {len(supplied)}")
+    check(set(supplied.datasetname) == set(DATASET_ORDER), "Supplied-results dataset set is incomplete")
+    check((supplied.groupby("datasetname").size() == 15).all(), "Each dataset must have 15 supplied metrics")
+    check(set(supplied.higher_or_lower_better) == {"higher", "lower"}, "Unknown metric direction")
+    check(pd.to_numeric(supplied.score, errors="coerce").notna().all(), "Every supplied best-FS score must be numeric")
+
+    rows: list[dict[str, Any]] = []
+    snapshot_hash = sha256(UPDATED_RESULTS_INPUT)
+    for source_row in supplied.itertuples(index=False):
+        best_label, best_method_id, best_model = parse_updated_method(source_row.best_fs_method)
+        llm_score = pd.to_numeric(pd.Series([source_row.LLM_score]), errors="coerce").iloc[0]
+        best_score = float(source_row.score)
+        has_comparison = pd.notna(llm_score)
+        llm_wins = bool(
+            has_comparison
+            and ((source_row.higher_or_lower_better == "higher" and float(llm_score) > best_score)
+                 or (source_row.higher_or_lower_better == "lower" and float(llm_score) < best_score))
+        )
+        if llm_wins:
+            check(pd.notna(source_row.Class) and str(source_row.Class).strip().lower() != "correct", f"Missing LLM method for {source_row.datasetname}/{source_row.score_type}")
+            winner_label, winner_method_id, winner_model = parse_updated_method(str(source_row.Class), fallback_model=best_model.split(";")[0])
+            winner_score = float(llm_score)
+            winner_source = "LLM_score"
+            comparison_outcome = "LLM_score wins by metric direction"
+        else:
+            winner_label, winner_method_id, winner_model = best_label, best_method_id, best_model
+            winner_score = best_score
+            winner_source = "score"
+            comparison_outcome = "best_fs_method retained" if has_comparison else "only supplied winner"
+        finalized = overrides[
+            (overrides.dataset == source_row.datasetname)
+            & (overrides.metric == source_row.score_type)
+            & (overrides.metric != "auc")
+        ]
+        check(len(finalized) <= 1, f"Multiple finalized values for {source_row.datasetname}/{source_row.score_type}")
+        source_artifact = rel(UPDATED_RESULTS_INPUT)
+        source_hash = snapshot_hash
+        evidence_scope = "finalized aggregate point estimate; not independently recomputed from row-level predictions"
+        if len(finalized):
+            final = finalized.iloc[0]
+            winner_label = final["method"]
+            winner_method_id = final["method_id"]
+            winner_model = final["model"]
+            winner_score = float(final["value"])
+            winner_source = "finalized_score"
+            comparison_outcome = "finalized scorecard value"
+            source_artifact = final["source_artifact"]
+            source_hash = final["source_sha256"]
+
+        winner_ids = winner_method_id.split(";")
+        winner_families = {"LLM-assisted" if ("llm" in x or x == "stable_core_llm_fill") else "classical" for x in winner_ids}
+        family = next(iter(winner_families)) if len(winner_families) == 1 else "mixed/tied"
+        rows.append({
+            "dataset": source_row.datasetname,
+            "dataset_label": DATASET_LABEL[source_row.datasetname],
+            "metric": source_row.score_type,
+            "direction": source_row.higher_or_lower_better,
+            "supplied_best_fs_method": source_row.best_fs_method,
+            "supplied_best_fs_score": best_score,
+            "supplied_llm_method": None if pd.isna(source_row.Class) else source_row.Class,
+            "supplied_llm_score": None if pd.isna(llm_score) else float(llm_score),
+            "resolved_method": winner_label,
+            "resolved_method_id": winner_method_id,
+            "resolved_model": winner_model,
+            "resolved_method_family": family,
+            "resolved_score": winner_score,
+            "resolved_score_source": winner_source,
+            "comparison_outcome": comparison_outcome,
+            "source_artifact": source_artifact,
+            "source_sha256": source_hash,
+            "source_workbook_sha256": UPDATED_RESULTS_WORKBOOK_SHA256,
+            "evidence_scope": evidence_scope,
+        })
+    leaders = pd.DataFrame(rows)
+    metric_order = list(supplied.score_type.drop_duplicates())
+    leaders["dataset"] = pd.Categorical(leaders.dataset, DATASET_ORDER, ordered=True)
+    leaders["metric"] = pd.Categorical(leaders.metric, metric_order, ordered=True)
+    leaders = leaders.sort_values(["dataset", "metric"]).reset_index(drop=True)
+    leaders["dataset"] = leaders.dataset.astype(str)
+    leaders["metric"] = leaders.metric.astype(str)
+
+    for dataset in DATASET_ORDER:
+        auc = leaders[(leaders.dataset == dataset) & (leaders.metric == "auc")].iloc[0]
+        gini = leaders[(leaders.dataset == dataset) & (leaders.metric == "gini")].iloc[0]
+        check(auc.resolved_method_id == gini.resolved_method_id and auc.resolved_model == gini.resolved_model, f"AUC/Gini winner mismatch for {dataset}")
+        check(abs(float(gini.resolved_score) - (2 * float(auc.resolved_score) - 1)) <= 1e-12, f"AUC/Gini arithmetic mismatch for {dataset}")
+    return supplied, leaders
+
+
+def load_finalized_metric_overrides() -> pd.DataFrame:
+    check(CONVERSATION_OVERRIDES_INPUT.is_file(), f"Missing finalized-score snapshot: {CONVERSATION_OVERRIDES_INPUT}")
+    check(sha256(CONVERSATION_OVERRIDES_INPUT) == CONVERSATION_OVERRIDES_INPUT_SHA256, "Finalized-score snapshot hash mismatch")
+    overrides = pd.read_csv(CONVERSATION_OVERRIDES_INPUT)
+    expected_columns = {"dataset", "model", "metric", "method_id", "method", "value", "authority", "scope_note"}
+    check(set(overrides.columns) == expected_columns, f"Unexpected override columns: {list(overrides.columns)}")
+    expected_keys = {
+        ("homecredit", "lr", "auc"),
+        ("lendingclub_v2", "lr", "auc"),
+        ("lendingclub_v2", "catboost", "accuracy"),
+        ("lendingclub_v2", "catboost", "brier"),
+        ("homecredit", "catboost", "log_loss"),
+        ("homecredit", "catboost", "brier"),
+    }
+    check(len(overrides) == 6 and set(zip(overrides.dataset, overrides.model, overrides.metric)) == expected_keys, "Unexpected finalized-score set")
+    values = pd.to_numeric(overrides.value, errors="coerce")
+    check(values.notna().all(), "Finalized scores must be numeric")
+    check(values[overrides.metric == "auc"].between(.5, 1).all(), "AUC outside [0.5, 1]")
+    check(values[overrides.metric.isin(["accuracy", "brier"])].between(0, 1).all(), "Accuracy/Brier outside [0, 1]")
+    check((values[overrides.metric == "log_loss"] >= 0).all(), "Log loss must be non-negative")
+    check(overrides.method_id.isin(METHOD_LABEL).all(), "Unknown override method ID")
+    overrides["source_artifact"] = rel(CONVERSATION_OVERRIDES_INPUT)
+    overrides["source_sha256"] = sha256(CONVERSATION_OVERRIDES_INPUT)
+    return overrides
+
+
+def build_updated_six_case_auc_gini(oot: pd.DataFrame, leaders: pd.DataFrame, overrides: pd.DataFrame) -> pd.DataFrame:
+    """Resolve the best feature-selection method for each of 3 datasets x 2 models."""
+    eligible = oot[(oot.status == "completed") & (oot.method_id != "full_features") & oot.auc.notna()].copy()
+    eligible["auc"] = pd.to_numeric(eligible.auc, errors="coerce")
+    eligible = eligible.sort_values(["dataset", "model", "auc"], ascending=[True, True, False])
+    sealed_best = eligible.drop_duplicates(["dataset", "model"], keep="first")
+    rows: list[dict[str, Any]] = []
+    for dataset in DATASET_ORDER:
+        updated_auc = leaders[(leaders.dataset == dataset) & (leaders.metric == "auc")].iloc[0]
+        updated_gini = leaders[(leaders.dataset == dataset) & (leaders.metric == "gini")].iloc[0]
+        for model in MODEL_ORDER:
+            historical = sealed_best[(sealed_best.dataset == dataset) & (sealed_best.model == model)].iloc[0]
+            use_update = updated_auc.resolved_model == model and float(updated_auc.resolved_score) > float(historical.auc)
+            if use_update:
+                method_id = updated_auc.resolved_method_id
+                method = updated_auc.resolved_method
+                auc = float(updated_auc.resolved_score)
+                gini = float(updated_gini.resolved_score)
+                evidence_source = "Workbook1 aggregate update"
+            else:
+                method_id = historical.method_id
+                method = METHOD_LABEL.get(method_id, method_id)
+                auc = float(historical.auc)
+                gini = float(historical.gini)
+                evidence_source = "historical sealed OOT registry"
+            correction = overrides[
+                (overrides.dataset == dataset)
+                & (overrides.model == model)
+                & (overrides.metric == "auc")
+            ]
+            if len(correction):
+                correction_row = correction.iloc[0]
+                method_id = correction_row.method_id
+                method = correction_row.method
+                auc = float(correction_row.value)
+                gini = 2 * auc - 1
+                evidence_source = correction_row.authority
+            rows.append({
+                "case_id": f"{dataset}__{model}",
+                "dataset": dataset,
+                "dataset_label": DATASET_LABEL[dataset],
+                "model": model,
+                "model_label": MODEL_LABEL[model],
+                "method_id": method_id,
+                "method": method,
+                "method_family": "LLM-assisted" if ("llm" in method_id or method_id == "stable_core_llm_fill") else "classical",
+                "auc": auc,
+                "gini": gini,
+                "evidence_source": evidence_source,
+                "evidence_scope": "feature-selection methods only; full_features excluded",
+            })
+    result = pd.DataFrame(rows)
+    check(len(result) == 6 and not result[["auc", "gini"]].isna().any().any(), "Six-case AUC/Gini table is incomplete")
+    check(np.allclose(result.gini, 2 * result.auc - 1, rtol=0, atol=1e-12), "Six-case Gini must equal 2*AUC-1")
+    return result
+
+
+def build_auc_revision_timeline(oot: pd.DataFrame, leaders: pd.DataFrame, overrides: pd.DataFrame) -> pd.DataFrame:
+    """Build a discrete evidence-revision sequence; this is not calendar-time model performance."""
+    eligible = oot[(oot.status == "completed") & (oot.method_id != "full_features") & oot.auc.notna()].copy()
+    eligible["auc"] = pd.to_numeric(eligible.auc, errors="coerce")
+    sealed_best = (eligible.sort_values(["dataset", "model", "auc"], ascending=[True, True, False])
+                   .drop_duplicates(["dataset", "model"], keep="first"))
+    rows: list[dict[str, Any]] = []
+    for dataset in DATASET_ORDER:
+        workbook_auc = leaders[(leaders.dataset == dataset) & (leaders.metric == "auc")].iloc[0]
+        for model in MODEL_ORDER:
+            sealed = sealed_best[(sealed_best.dataset == dataset) & (sealed_best.model == model)].iloc[0]
+            auc = float(sealed.auc)
+            method_id = sealed.method_id
+            stages = [(1, "Sealed source", auc, method_id, "historical sealed feature-selection leader")]
+            if workbook_auc.resolved_model == model and float(workbook_auc.resolved_score) > auc:
+                auc = float(workbook_auc.resolved_score)
+                method_id = workbook_auc.resolved_method_id
+                workbook_note = "Workbook1 changed this case"
+            else:
+                workbook_note = "carried forward; workbook supplied no better case-specific AUC"
+            stages.append((2, "Workbook update", auc, method_id, workbook_note))
+            correction = overrides[
+                (overrides.dataset == dataset)
+                & (overrides.model == model)
+                & (overrides.metric == "auc")
+            ]
+            if len(correction):
+                correction_row = correction.iloc[0]
+                auc = float(correction_row.value)
+                method_id = correction_row.method_id
+                correction_note = correction_row.scope_note
+            else:
+                correction_note = "carried forward; no later finalized AUC change for this case"
+            stages.append((3, "Finalized scorecard", auc, method_id, correction_note))
+            for stage_order, stage, stage_auc, stage_method_id, note in stages:
+                rows.append({
+                    "case_id": f"{dataset}__{model}", "dataset": dataset, "dataset_label": DATASET_LABEL[dataset],
+                    "model": model, "model_label": MODEL_LABEL[model], "revision_stage_order": stage_order,
+                    "revision_stage": stage, "method_id": stage_method_id, "method": METHOD_LABEL.get(stage_method_id, stage_method_id),
+                    "auc": stage_auc, "gini": 2 * stage_auc - 1, "changed_from_prior_stage": False,
+                    "note": note, "timeline_scope": "evidence revision sequence; not calendar-time model performance",
+                })
+    timeline = pd.DataFrame(rows).sort_values(["case_id", "revision_stage_order"]).reset_index(drop=True)
+    timeline["changed_from_prior_stage"] = timeline.groupby("case_id")["auc"].diff().fillna(0).abs() > 1e-15
+    check(len(timeline) == 18, "AUC revision timeline must contain 6 cases x 3 stages")
+    check(np.allclose(timeline.gini, 2 * timeline.auc - 1, rtol=0, atol=1e-12), "Timeline Gini identity failed")
+    return timeline
+
+
+def build_updated_method_summary(six_case: pd.DataFrame) -> pd.DataFrame:
+    summary = (six_case.groupby(["method_id", "method", "method_family"], as_index=False)
+               .agg(case_wins=("case_id", "count"), dataset_count=("dataset", "nunique"),
+                    models=("model_label", lambda x: "; ".join(sorted(set(x)))),
+                    cases=("case_id", "; ".join), mean_auc=("auc", "mean"), min_auc=("auc", "min"),
+                    max_auc=("auc", "max"), mean_gini=("gini", "mean"), min_gini=("gini", "min"),
+                    max_gini=("gini", "max")))
+    return summary.sort_values(["case_wins", "mean_auc", "method"], ascending=[False, False, True]).reset_index(drop=True)
+
+
+def build_cross_metric_family_summary(leaders: pd.DataFrame) -> pd.DataFrame:
+    summary = (leaders.groupby(["dataset", "dataset_label", "resolved_method_family"], as_index=False)
+               .size().rename(columns={"size": "metric_winner_count"}))
+    summary["dataset_metric_total"] = summary.groupby("dataset")["metric_winner_count"].transform("sum")
+    summary["metric_winner_share"] = summary.metric_winner_count / summary.dataset_metric_total
+    check((summary.groupby("dataset").metric_winner_count.sum() == 15).all(), "Cross-metric winner counts must sum to 15 per dataset")
+    return summary.sort_values(["dataset", "resolved_method_family"]).reset_index(drop=True)
+
+
+def build_historical_curve_evidence(
+    reconciliation: pd.DataFrame,
+    curves: dict[tuple[str, str, str], tuple[np.ndarray, np.ndarray]],
+    six_case: pd.DataFrame,
+) -> pd.DataFrame:
+    """Register the exact historical prediction evidence used by the curve figures."""
+    rows: list[dict[str, Any]] = []
+    for (dataset, model, method_id), (target, score) in sorted(curves.items()):
+        accepted = six_case[(six_case.dataset == dataset) & (six_case.model == model)].iloc[0]
+        source = reconciliation[
+            (reconciliation.dataset == dataset)
+            & (reconciliation.model == model)
+            & (reconciliation.method_id == method_id)
+        ].iloc[0]
+        curve_auc = float(roc_auc_score(target, score))
+        rows.append({
+            "dataset": dataset,
+            "dataset_label": DATASET_LABEL[dataset],
+            "model": model,
+            "model_label": MODEL_LABEL[model],
+            "curve_method_id": method_id,
+            "curve_method": METHOD_LABEL[method_id],
+            "prediction_rows": len(target),
+            "event_count": int(np.sum(target)),
+            "event_rate": float(np.mean(target)),
+            "historical_curve_auc": curve_auc,
+            "historical_curve_brier": float(brier_score_loss(target, score)),
+            "accepted_winner_method_id": accepted.method_id,
+            "accepted_winner_method": accepted.method,
+            "accepted_auc": float(accepted.auc),
+            "accepted_gini": float(accepted.gini),
+            "curve_is_accepted_winner_method": method_id == accepted.method_id,
+            "curve_auc_matches_accepted_auc": bool(method_id == accepted.method_id and abs(curve_auc - float(accepted.auc)) <= TOLERANCE),
+            "prediction_path": source.prediction_path,
+            "prediction_sha256": source.prediction_sha256,
+            "evidence_scope": "authenticated historical locked-OOT predictions; not the later aggregate score update",
+            "priority_rule": "accepted AUC/Gini remains authoritative for score reporting",
+        })
+    result = pd.DataFrame(rows)
+    check(len(result) == 18, "Historical curve evidence must contain three methods for each of six dataset-model cases")
+    check(result.prediction_rows.gt(0).all(), "Historical curve evidence contains an empty prediction set")
+    return result
+
+
 def ordered_methods(values: Iterable[str]) -> list[str]:
     unique = list(dict.fromkeys(str(x) for x in values if pd.notna(x)))
     return sorted(unique, key=lambda x: (METHOD_ORDER.index(x) if x in METHOD_ORDER else 999, x))
 
 
-def save_figure(fig: plt.Figure, stem: str) -> None:
+def save_figure(fig: plt.Figure, stem: str, extra_png: Path | None = None) -> None:
     fig.tight_layout()
     fig.savefig(FIGURES / f"{stem}.png", dpi=300, bbox_inches="tight", metadata={"Software": "matplotlib; deterministic sealed-evidence report"})
-    fig.savefig(FIGURES / f"{stem}.pdf", bbox_inches="tight", metadata={"Creator": "sealed-evidence report", "CreationDate": None, "ModDate": None})
+    if extra_png is not None:
+        extra_png.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(extra_png, dpi=300, bbox_inches="tight", metadata={"Software": "matplotlib; finalized scorecard reference figure"})
     plt.close(fig)
 
 
@@ -1297,43 +1655,377 @@ def prediction_figures(curves: dict[tuple[str, str, str], tuple[np.ndarray, np.n
     save_figure(fig, "fig_17_oot_score_distributions")
 
 
-def generate_figures(oot: pd.DataFrame, generalization: pd.DataFrame, stats: pd.DataFrame, feature_psi: pd.DataFrame, stability: pd.DataFrame, overlap: pd.DataFrame, resources: pd.DataFrame, cross: pd.DataFrame, curves: dict[tuple[str, str, str], tuple[np.ndarray, np.ndarray]]) -> pd.DataFrame:
-    primary = oot[oot.evidence_cohort.isin(["canonical_llm_matrix_v2", "prompt16_final_amended"])]
-    figure_01(oot)
-    figure_02(generalization)
-    figure_03(generalization)
-    horizontal_metric_figure(primary, "ks", "Figure 4. Locked OOT KS by method", "Locked OOT maximum KS", "fig_04_oot_ks_by_method")
-    figure_05(stats)
-    figure_06(stats)
-    horizontal_metric_figure(primary, "score_psi", "Figure 7. DEV-referenced locked OOT score PSI", "Score PSI", "fig_07_score_psi")
-    figure_08(feature_psi)
-    figure_09(stability)
-    figure_10(overlap)
-    figure_11(resources)
-    figure_12(oot)
-    figure_13(cross)
-    figure_14(oot)
-    prediction_figures(curves)
-    records = [
-        (1, "fig_01_oot_performance_by_dataset_method_model", "Locked OOT ROC-AUC by registered cell", "tables/oot_metrics.csv", f"{len(primary)} primary-cohort registered cells across three locked OOT populations: {int((primary.status == 'completed').sum())} numeric, {int((primary.status != 'completed').sum())} unavailable", "ROC-AUC", "Intervals absent unless registered in the comparison table", "Performance varies by dataset and model; unavailable cells remain grey crosses.", "Point estimates do not establish superiority."),
-        (2, "fig_02_dev_vs_oot_performance", "DEV mean versus locked OOT ROC-AUC", "tables/dev_oot_generalization.csv", f"{int(generalization.dev_auc_mean.notna().sum())} identities with numeric DEV means; locked OOT populations n=120,053, 293,105, and 304,916", "ROC-AUC", "DEV fold SD is tabulated, not used as OOT uncertainty", "Temporal change is identity-specific.", "DEV folds are not independent datasets."),
-        (3, "fig_03_dev_to_oot_delta_heatmap", "Locked OOT minus DEV mean AUC", "tables/dev_oot_generalization.csv", f"{int(generalization.oot_minus_dev_auc.notna().sum())} valid DEV/OOT identity contrasts", "Absolute AUC difference", "None; descriptive", "Both improvement and deterioration occur.", "Missing cells are NA, not zero."),
-        (4, "fig_04_oot_ks_by_method", "Locked OOT maximum KS", "tables/oot_metrics.csv", f"{len(primary)} primary registered OOT cells ({int((primary.status == 'completed').sum())} numeric)", "Maximum TPR−FPR", "None; frozen decision thresholds are in the companion table", "KS is method- and dataset-dependent.", "Maximum KS is threshold-free in value; operational metrics use the frozen threshold."),
-        (5, "fig_05_llm_vs_classical_effect_forest", "LLM-assisted effect versus matching mRMR", "tables/statistical_comparisons.csv", f"{len(stats[(stats.comparator_method_id.isin(['llm','stable_core_llm_fill'])) & (stats.reference_method_id.isin(['mrmr','mrmr_mutual_information']))])} registered matching-reference comparisons", "Comparator minus reference AUC", "95% paired bootstrap intervals only where registered; Holm marker", "Effects include positive, negative, and inconclusive evidence.", "Original two-dataset rows are low-power fold diagnostics, not OOT inference."),
-        (6, "fig_06_adjusted_significance_heatmap", "Holm-adjusted significance", "tables/statistical_comparisons.csv", f"{int(stats.comparator_method_id.isin(['llm','stable_core_llm_fill','llm_then_mrmr']).sum())} registered/visible LLM-related comparisons", "−log10 Holm-adjusted p", "Holm within frozen families", "Non-significance is common and is not equivalence.", "NA is unavailable, never p=1 or zero effect."),
-        (7, "fig_07_score_psi", "DEV-referenced OOT score PSI", "tables/oot_metrics.csv", f"{int(primary.score_psi.notna().sum())} cells with authenticated DEV OOF and OOT score PSI", "PSI", "Descriptive", "Score drift differs by method.", "0.10/0.25 bands are not drawn because their role differs across cohorts."),
-        (8, "fig_08_selected_feature_psi", "Type-aware selected-feature PSI", "tables/feature_psi.csv", f"{int(feature_psi.type_aware_mean.notna().sum())} method/model selected-feature summaries", "Mean and maximum PSI", "Descriptive", "Predictor drift need not align with AUC change.", "Feature universes differ; compare within dataset."),
-        (9, "fig_09_selection_stability", "Fold selection stability", "tables/selection_stability.csv", f"{int(stability.mean_pairwise_jaccard.notna().sum())} method/model summaries with authenticated fold selection sets", "Mean pairwise Jaccard", "Descriptive", "Stable selection is distinct from predictive performance.", "Only available fold sets enter each summary."),
-        (10, "fig_10_method_overlap", "Within-dataset method overlap", "tables/method_overlap.csv", f"{len(overlap)} within-dataset/model pairwise final-selection records; figure shows the protocol-fixed LR subset", "Jaccard overlap", "Descriptive", "LLM/classical overlap is dataset-specific.", "No cross-universe feature-name comparison."),
-        (11, "fig_11_runtime_and_peak_ram", "Runtime and peak RAM", "tables/resource_metrics.csv", f"{len(resources)} authenticated DEV/OOT/controller resource records", "Minutes and GiB", "Descriptive", "LLM/hybrid resource cost is not uniform.", "Per-cell RAM is unavailable for some cohorts; crosses are NA."),
-        (12, "fig_12_performance_resource_tradeoff", "Performance versus runtime", "tables/oot_metrics.csv", f"{int(((oot.status == 'completed') & oot.runtime_seconds.notna()).sum())} numeric OOT cells with runtime", "ROC-AUC versus minutes", "Descriptive", "Trade-offs, not a universal winner, are visible.", "No inferential Pareto-superiority claim."),
-        (13, "fig_13_llm_incremental_value", "LLM incremental AUC", "tables/cross_dataset_synthesis.csv", f"{len(cross)} registered LLM/stable-core versus matching mRMR identities ({int((cross.status == 'completed').sum())} numeric)", "AUC delta", "Third-dataset paired bootstrap where registered", "Directions are not universally consistent.", "Third benchmark shares Home Credit lineage."),
-        (14, "fig_14_cross_dataset_rank_consistency", "Cross-dataset common-method ranks", "tables/oot_metrics.csv", "Up to 18 common method/dataset/model identities: mRMR, LLM, and stable-core", "Within-dataset AUC rank", "None", "Rank ordering changes by dataset/model.", "Ranks omit methods without common coverage and are descriptive."),
-        (15, "fig_15_oot_roc_curves", "Protocol-fixed OOT ROC curves", "tables/prediction_reconciliation.csv", f"{len(curves)} saved-prediction curves over locked OOT populations n=120,053, 293,105, and 304,916", "TPR versus FPR", "None", "Curve shape supports the tabulated AUC evidence.", "Subset fixed by method role, not observed performance."),
-        (16, "fig_16_oot_calibration_curves", "Protocol-fixed OOT calibration", "tables/prediction_reconciliation.csv", f"Same {len(curves)} saved-prediction curves; ten quantile bins per curve", "Observed versus predicted event rate", "None", "Calibration patterns complement log loss/Brier.", "Curves are descriptive and bin-dependent."),
-        (17, "fig_17_oot_score_distributions", "Protocol-fixed OOT score distributions", "tables/prediction_reconciliation.csv", f"Same {len(curves)} saved-prediction curves across three locked OOT populations", "Score density", "None", "Methods differ in score spread and location.", "Density shape is not a performance test."),
+def figure_01_updated(six_case: pd.DataFrame) -> None:
+    data = six_case.copy()
+    data["case_label"] = data.dataset_label + " | " + data.model_label
+    data["order"] = data.dataset.map({d: i for i, d in enumerate(DATASET_ORDER)}) * 2 + data.model.map({m: i for i, m in enumerate(MODEL_ORDER)})
+    data = data.sort_values("order", ascending=False).reset_index(drop=True)
+    y = np.arange(len(data))
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6.5), sharey=True)
+    for ax, metric, label in zip(axes, ["auc", "gini"], ["ROC-AUC", "Gini (2×AUC−1)"]):
+        values = data[metric].astype(float).to_numpy()
+        colors = [PALETTE.get(x, "#555555") for x in data.method_id]
+        ax.barh(y, values, color=colors, edgecolor="white", height=.68)
+        ax.set_xlim(0, 1)
+        ax.set_xlabel(label)
+        ax.set_yticks(y, data.case_label)
+        ax.grid(axis="y", visible=False)
+        for yi, (value, method) in enumerate(zip(values, data.method)):
+            ax.text(min(value + .012, .985), yi, f"{value:.6f}\n{method}", va="center", fontsize=7)
+    axes[0].set_title("Best feature-selection AUC")
+    axes[1].set_title("Corresponding Gini")
+    fig.suptitle("Figure 1. Updated winner in each dataset × model case", y=1.01, fontsize=13)
+    save_figure(fig, "fig_01_oot_performance_by_dataset_method_model")
+
+
+def updated_single_metric_figure(leaders: pd.DataFrame, metric: str, title: str, xlabel: str, stem: str) -> None:
+    data = leaders[leaders.metric == metric].copy()
+    data["order"] = data.dataset.map({d: i for i, d in enumerate(DATASET_ORDER)})
+    data = data.sort_values("order", ascending=False).reset_index(drop=True)
+    labels = data.dataset_label + " | " + data.resolved_method + " | " + data.resolved_model.map(lambda x: x.replace(";", ", "))
+    values = data.resolved_score.astype(float).to_numpy()
+    colors = [PALETTE.get(x, "#555555") for x in data.resolved_method_id]
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    ax.barh(np.arange(len(data)), values, color=colors, edgecolor="white", height=.62)
+    ax.set_xlim(left=0)
+    ax.set_yticks(np.arange(len(data)), labels)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    ax.grid(axis="y", visible=False)
+    for yi, value in enumerate(values):
+        ax.text(value + max(values.max() * .012, 1e-8), yi, f"{value:.7g}", va="center", fontsize=8)
+    save_figure(fig, stem)
+
+
+def figure_08_updated(leaders: pd.DataFrame) -> None:
+    metrics = ["feature_psi_mean", "feature_psi_median", "feature_psi_max"]
+    titles = ["Mean feature PSI", "Median feature PSI", "Maximum feature PSI"]
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5.3), sharey=False)
+    for ax, metric, title in zip(axes, metrics, titles):
+        data = leaders[leaders.metric == metric].copy()
+        data["order"] = data.dataset.map({d: i for i, d in enumerate(DATASET_ORDER)})
+        data = data.sort_values("order", ascending=False).reset_index(drop=True)
+        labels = data.dataset_label + "\n" + data.resolved_method + " | " + data.resolved_model.map(lambda x: x.replace(";", ", "))
+        values = data.resolved_score.astype(float).to_numpy()
+        colors = [PALETTE.get(x, "#555555") for x in data.resolved_method_id]
+        ax.barh(np.arange(len(data)), values, color=colors, edgecolor="white", height=.62)
+        ax.set_xlim(left=0)
+        ax.set_yticks(np.arange(len(data)), labels, fontsize=7)
+        ax.set_title(title)
+        ax.set_xlabel("PSI (lower is better)")
+        ax.grid(axis="y", visible=False)
+        offset = max(values.max() * .015, 1e-6)
+        for yi, value in enumerate(values):
+            ax.text(value + offset, yi, f"{value:.7g}", va="center", fontsize=8)
+    fig.suptitle("Figure 8. Updated selected-feature PSI winners", y=1.01, fontsize=13)
+    save_figure(fig, "fig_08_selected_feature_psi")
+
+
+def figure_13_updated(six_case: pd.DataFrame) -> None:
+    data = six_case[six_case.model == "catboost"].copy()
+    data["order"] = data.dataset.map({d: i for i, d in enumerate(DATASET_ORDER)})
+    data = data.sort_values("order", ascending=False).reset_index(drop=True)
+    labels = data.dataset_label + " | " + data.method
+    y = np.arange(len(data))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 4.8), sharey=True)
+    for ax, metric, xlabel in zip(axes, ["auc", "gini"], ["ROC-AUC", "Gini (2×AUC−1)"]):
+        values = data[metric].astype(float).to_numpy()
+        colors = [PALETTE.get(x, "#555555") for x in data.method_id]
+        ax.barh(y, values, color=colors, edgecolor="white", height=.62)
+        ax.set_xlim(0, 1)
+        ax.set_yticks(y, labels)
+        ax.set_xlabel(xlabel)
+        ax.grid(axis="y", visible=False)
+        for yi, value in enumerate(values):
+            ax.text(value + .012, yi, f"{value:.6f}", va="center", fontsize=8)
+    axes[0].set_title("Updated CatBoost AUC")
+    axes[1].set_title("Updated CatBoost Gini")
+    fig.suptitle("Figure 13. Workbook-supplied CatBoost AUC and Gini winners", y=1.01, fontsize=13)
+    save_figure(fig, "fig_13_llm_incremental_value")
+
+
+def figure_14_updated(method_summary: pd.DataFrame) -> None:
+    data = method_summary.sort_values(["case_wins", "mean_auc"], ascending=[True, True]).reset_index(drop=True)
+    values = data.case_wins.astype(int).to_numpy()
+    colors = [PALETTE.get(x, "#555555") for x in data.method_id]
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.barh(np.arange(len(data)), values, color=colors, edgecolor="white", height=.65)
+    ax.set_xlim(0, 6)
+    ax.set_xticks(range(7))
+    ax.set_yticks(np.arange(len(data)), data.method)
+    ax.set_xlabel("Number of dataset × model cases won (out of 6)")
+    ax.set_title("Figure 14. Updated cross-case feature-selection winner count")
+    ax.grid(axis="y", visible=False)
+    for yi, value in enumerate(values):
+        ax.text(value + .08, yi, str(value), va="center", fontsize=9)
+    save_figure(fig, "fig_14_cross_dataset_rank_consistency")
+
+
+def figure_02_revision_timeline(timeline: pd.DataFrame) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.8), sharey=True)
+    stages = timeline[["revision_stage_order", "revision_stage"]].drop_duplicates().sort_values("revision_stage_order")
+    for ax, model in zip(axes, MODEL_ORDER):
+        frame = timeline[timeline.model == model]
+        for dataset in DATASET_ORDER:
+            line = frame[frame.dataset == dataset].sort_values("revision_stage_order")
+            changed = bool(line.changed_from_prior_stage.any())
+            color = FAMILY_PALETTE["LLM-assisted"] if changed else "#777777"
+            ax.plot(line.revision_stage_order, line.auc, marker="o" if model == "lr" else "s", linewidth=1.8,
+                    color=color, markerfacecolor="white", markeredgewidth=1.4)
+            end = line.iloc[-1]
+            ax.text(3.05, end.auc, f"{end.dataset_label} | {end.method}  {end.auc:.6f}", va="center", fontsize=7, color="#222222")
+        ax.set_xticks(stages.revision_stage_order, stages.revision_stage, rotation=15, ha="right")
+        ax.set_xlim(.85, 4.05)
+        ax.set_ylim(.68, .90)
+        ax.set_title(MODEL_LABEL[model])
+        ax.set_ylabel("ROC-AUC (focused scale)")
+        ax.grid(axis="x", visible=False)
+    fig.suptitle("Figure 2. AUC evidence-revision timeline (not calendar-time performance)", y=1.01, fontsize=13)
+    save_figure(fig, "fig_02_auc_evidence_revision_timeline")
+
+
+def figure_03_winner_matrix(leaders: pd.DataFrame) -> None:
+    family_code = {"classical": 0, "mixed/tied": 1, "LLM-assisted": 2}
+    family_colors = ["#F6D7C8", "#E5E5E5", "#C7E6F4"]
+    metric_order = list(METRIC_LABEL)
+    matrix = leaders.pivot(index="metric", columns="dataset", values="resolved_method_family").reindex(index=metric_order, columns=DATASET_ORDER)
+    methods = leaders.pivot(index="metric", columns="dataset", values="resolved_method").reindex(index=metric_order, columns=DATASET_ORDER)
+    models = leaders.pivot(index="metric", columns="dataset", values="resolved_model").reindex(index=metric_order, columns=DATASET_ORDER)
+    values = matrix.apply(lambda col: col.map(family_code)).to_numpy(dtype=float)
+    fig, ax = plt.subplots(figsize=(11, 10))
+    ax.imshow(values, cmap=mpl.colors.ListedColormap(family_colors), vmin=-.5, vmax=2.5, aspect="auto")
+    ax.set_xticks(np.arange(len(DATASET_ORDER)), [DATASET_LABEL[x] for x in DATASET_ORDER])
+    ax.set_yticks(np.arange(len(metric_order)), [METRIC_LABEL[x] for x in metric_order])
+    for yi, metric in enumerate(metric_order):
+        for xi, dataset in enumerate(DATASET_ORDER):
+            method = str(methods.loc[metric, dataset]).replace("Stable core + LLM fill", "Core + LLM fill")
+            if len(method) > 26:
+                method = method[:24] + "…"
+            model = str(models.loc[metric, dataset]).replace("catboost", "CB").replace("lr", "LR").replace(";", ",")
+            ax.text(xi, yi, f"{method}\n{model}", ha="center", va="center", fontsize=6.2, color="#222222")
+    legend = [mpl.patches.Patch(facecolor=family_colors[family_code[x]], edgecolor="#777777", label=x) for x in ["LLM-assisted", "classical", "mixed/tied"]]
+    ax.legend(handles=legend, loc="lower center", bbox_to_anchor=(.5, 1.015), ncol=3, frameon=False)
+    ax.set_title("Figure 3. Workbook-only winner matrix for all supplied metrics", pad=38)
+    ax.grid(False)
+    save_figure(fig, "fig_03_metric_winner_matrix")
+
+
+def metric_panel_figure(leaders: pd.DataFrame, metrics: list[str], figure_number: int, title: str, stem: str, rows: int, cols: int, extra_png: Path | None = None) -> None:
+    fig, axes = plt.subplots(rows, cols, figsize=(15, 4.8 * rows), squeeze=False)
+    for ax, metric in zip(axes.flat, metrics):
+        data = leaders[leaders.metric == metric].copy()
+        data["order"] = data.dataset.map({d: i for i, d in enumerate(DATASET_ORDER)})
+        data = data.sort_values("order", ascending=False).reset_index(drop=True)
+        values = data.resolved_score.astype(float).to_numpy()
+        labels = data.dataset_label
+        colors = [FAMILY_PALETTE[x] for x in data.resolved_method_family]
+        ax.barh(np.arange(len(data)), values, color=colors, edgecolor="#333333", linewidth=.4, height=.64)
+        ax.set_xlim(left=0)
+        ax.set_yticks(np.arange(len(data)), labels)
+        ax.set_xlabel(METRIC_LABEL[metric] + (" (lower is better)" if metric in {"log_loss", "brier"} else ""))
+        ax.set_title(METRIC_LABEL[metric])
+        ax.grid(axis="y", visible=False)
+        offset = max(values.max() * .012, 1e-7)
+        for yi, r in enumerate(data.itertuples(index=False)):
+            ax.text(r.resolved_score + offset, yi, f"{r.resolved_score:.6g} | {r.resolved_method} ({r.resolved_model.replace(';', ', ')})", va="center", fontsize=7)
+    for ax in list(axes.flat)[len(metrics):]:
+        ax.axis("off")
+    fig.suptitle(f"Figure {figure_number}. {title}", y=1.01, fontsize=13)
+    save_figure(fig, stem, extra_png)
+
+
+def figure_11_family_mix(family_summary: pd.DataFrame) -> None:
+    families = ["LLM-assisted", "classical", "mixed/tied"]
+    pivot = family_summary.pivot(index="dataset", columns="resolved_method_family", values="metric_winner_count").fillna(0).reindex(index=DATASET_ORDER, columns=families, fill_value=0)
+    fig, ax = plt.subplots(figsize=(11, 5))
+    left = np.zeros(len(pivot))
+    y = np.arange(len(pivot))
+    for family in families:
+        values = pivot[family].to_numpy(dtype=float)
+        ax.barh(y, values, left=left, color=FAMILY_PALETTE[family], edgecolor="white", height=.65, label=family)
+        for yi, (start, value) in enumerate(zip(left, values)):
+            if value:
+                ax.text(start + value / 2, yi, f"{int(value)}", ha="center", va="center", fontsize=8,
+                        color="white" if family != "mixed/tied" else "#222222")
+        left += values
+    ax.set_xlim(0, 15)
+    ax.set_xticks(range(0, 16, 3))
+    ax.set_yticks(y, [DATASET_LABEL[x] for x in pivot.index])
+    ax.set_xlabel("Number of metric winners (15 metrics per dataset)")
+    ax.set_title("Figure 11. Workbook-only cross-metric winner-family mix", pad=38)
+    ax.legend(loc="lower center", bbox_to_anchor=(.5, 1.015), ncol=3, frameon=False)
+    ax.grid(axis="y", visible=False)
+    save_figure(fig, "fig_11_cross_metric_family_mix")
+
+
+def historical_curve_methods(dataset: str) -> list[str]:
+    return [
+        "mrmr_mutual_information" if dataset == "homecredit_model_stability_2024" else "mrmr",
+        "llm",
+        "stable_core_llm_fill",
     ]
-    return pd.DataFrame(records, columns=["figure_number", "stem", "title", "source_table", "population", "metric_definition", "uncertainty", "interpretation", "limitation"])
+
+
+def accepted_scorecard_annotation(ax: plt.Axes, accepted: pd.Series) -> None:
+    ax.text(
+        .025,
+        .965,
+        f"Accepted scorecard\n{accepted.method} | AUC {accepted.auc:.3f} | Gini {accepted.gini:.3f}",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=6.3,
+        color="#222222",
+        bbox={"boxstyle": "round,pad=.28", "facecolor": "white", "edgecolor": "#777777", "alpha": .94},
+        zorder=10,
+    )
+
+
+def auc_matched_reference_profile(auc: float, point_count: int = 4001) -> tuple[np.ndarray, np.ndarray, float]:
+    """Return a monotone reference profile whose trapezoidal area equals ``auc``."""
+    check(.5 < auc < 1.0, f"AUC reference profile requires 0.5 < AUC < 1, received {auc}")
+    fpr = np.linspace(0.0, 1.0, point_count)
+    low, high = 1e-6, 1.0
+    for _ in range(80):
+        exponent = (low + high) / 2.0
+        candidate = np.power(fpr, exponent)
+        area = float(np.trapezoid(candidate, fpr))
+        if area > auc:
+            low = exponent
+        else:
+            high = exponent
+    exponent = (low + high) / 2.0
+    tpr = np.power(fpr, exponent)
+    area = float(np.trapezoid(tpr, fpr))
+    check(abs(area - auc) <= 1e-12, f"AUC-matched profile failed: expected {auc}, observed {area}")
+    return fpr, tpr, area
+
+
+def figure_16_historical_roc(
+    curves: dict[tuple[str, str, str], tuple[np.ndarray, np.ndarray]],
+    six_case: pd.DataFrame,
+) -> None:
+    del curves  # Finalized row-level predictions were not supplied; archived curves are intentionally excluded.
+    fig, axes = panel_axes(height=7.2)
+    for column, dataset in enumerate(DATASET_ORDER):
+        for row, model in enumerate(MODEL_ORDER):
+            ax = axes[row, column]
+            accepted = six_case[(six_case.dataset == dataset) & (six_case.model == model)].iloc[0]
+            fpr, tpr, plotted_auc = auc_matched_reference_profile(float(accepted.auc))
+            ax.plot(
+                fpr,
+                tpr,
+                color=PALETTE.get(accepted.method_id, "#0072B2"),
+                linewidth=2.3,
+                label=f"{accepted.method} | AUC {plotted_auc:.6f}",
+            )
+            ax.fill_between(fpr, fpr, tpr, color=PALETTE.get(accepted.method_id, "#0072B2"), alpha=.10)
+            ax.plot([0, 1], [0, 1], "--", color="#555555", linewidth=.9, label="Chance")
+            ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+            ax.set_xlabel("False-positive rate"); ax.set_ylabel("True-positive rate")
+            ax.set_title(f"{DATASET_LABEL[dataset]} — {MODEL_LABEL[model]}")
+            ax.legend(loc="lower right", fontsize=6.4, frameon=True, framealpha=.95)
+            ax.set_aspect("equal", adjustable="box")
+    fig.suptitle("Figure 16. Finalized winner-only ROC reference profiles", y=1.015, fontsize=13)
+    fig.text(.5, .005, "Six winners only. Each monotone reference profile is constructed so its trapezoidal AUC equals the finalized table AUC; it is not an empirical ROC estimate.", ha="center", fontsize=7.3, color="#444444")
+    save_figure(fig, "fig_16_winner_roc_curves", ROOT_PLOTS / "winner_roc_curves.png")
+
+
+def _matching_final_metric(leaders: pd.DataFrame, accepted: pd.Series, metric: str) -> float | None:
+    match = leaders[(leaders.dataset == accepted.dataset) & (leaders.metric == metric)]
+    if len(match) != 1:
+        return None
+    row = match.iloc[0]
+    if row.resolved_model != accepted.model or row.resolved_method_id != accepted.method_id:
+        return None
+    return float(row.resolved_score)
+
+
+def figure_17_historical_calibration(
+    curves: dict[tuple[str, str, str], tuple[np.ndarray, np.ndarray]],
+    six_case: pd.DataFrame,
+    leaders: pd.DataFrame,
+) -> None:
+    del curves  # Aggregate metrics cannot identify reliability-curve coordinates.
+    fig, axes = panel_axes(height=7.2)
+    for column, dataset in enumerate(DATASET_ORDER):
+        for row, model in enumerate(MODEL_ORDER):
+            ax = axes[row, column]
+            accepted = six_case[(six_case.dataset == dataset) & (six_case.model == model)].iloc[0]
+            brier = _matching_final_metric(leaders, accepted, "brier")
+            natural_log_loss = _matching_final_metric(leaders, accepted, "log_loss")
+            ax.plot([0, 1], [0, 1], "--", color="#555555", linewidth=1.0, label="Ideal calibration reference")
+            if brier is None or natural_log_loss is None:
+                status = "Calibration curve not identified\nNo finalized Brier/log-loss pair\nat this dataset × model × method grain"
+                face = "#EEF3F8"
+            elif natural_log_loss + 1e-12 < 2.0 * brier:
+                status = (
+                    f"No matching probability curve exists\nBrier {brier:.5f} | log loss {natural_log_loss:.5f}\n"
+                    f"Required: log loss ≥ {2.0 * brier:.5f}"
+                )
+                face = "#FCE8E6"
+            else:
+                status = (
+                    f"Aggregate pair is feasible\nBrier {brier:.5f} | log loss {natural_log_loss:.5f}\n"
+                    "Bin coordinates still require row-level probabilities"
+                )
+                face = "#E8F2EC"
+            ax.text(.5, .56, f"{accepted.method}\nAUC {accepted.auc:.6f}\n\n{status}", transform=ax.transAxes, ha="center", va="center", fontsize=7.2, bbox={"boxstyle": "round,pad=.45", "facecolor": face, "edgecolor": "#777777", "alpha": .96})
+            ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+            ax.set_xlabel("Mean predicted probability"); ax.set_ylabel("Observed event rate")
+            ax.set_title(f"{DATASET_LABEL[dataset]} — {MODEL_LABEL[model]}")
+            ax.legend(loc="lower right", fontsize=6.0, frameon=True, framealpha=.95)
+            ax.set_aspect("equal", adjustable="box")
+    fig.suptitle("Figure 17. Finalized winner-only calibration feasibility", y=1.015, fontsize=13)
+    fig.text(.5, .005, "Reliability curves are not reconstructed from aggregate AUC/Brier/log-loss values. Panels show exactly why a score-matched curve is available or blocked.", ha="center", fontsize=7.3, color="#444444")
+    save_figure(fig, "fig_17_winner_calibration_curves", ROOT_PLOTS / "winner_calibration_curves.png")
+
+
+def generate_figures(oot: pd.DataFrame, generalization: pd.DataFrame, stats: pd.DataFrame, feature_psi: pd.DataFrame, stability: pd.DataFrame, overlap: pd.DataFrame, resources: pd.DataFrame, cross: pd.DataFrame, curves: dict[tuple[str, str, str], tuple[np.ndarray, np.ndarray]], leaders: pd.DataFrame, six_case: pd.DataFrame, method_summary: pd.DataFrame, timeline: pd.DataFrame, family_summary: pd.DataFrame) -> pd.DataFrame:
+    primary = oot[oot.evidence_cohort.isin(["canonical_llm_matrix_v2", "prompt16_final_amended"])]
+    figure_01_updated(six_case)
+    figure_02_revision_timeline(timeline)
+    figure_03_winner_matrix(leaders)
+    updated_single_metric_figure(leaders, "ks", "Figure 4. Updated KS winner by dataset", "KS (higher is better)", "fig_04_oot_ks_by_method")
+    metric_panel_figure(leaders, ["precision", "recall", "f1", "accuracy"], 5, "Threshold-dependent winner metrics", "fig_05_threshold_metric_winners", 2, 2, ROOT_PLOTS / "threshold_metric_winners.png")
+    metric_panel_figure(leaders, ["log_loss", "brier"], 6, "Aggregate calibration-error winner metrics", "fig_06_calibration_error_metrics", 1, 2, ROOT_PLOTS / "calibration_error_metrics.png")
+    updated_single_metric_figure(leaders, "score_psi", "Figure 7. Updated score-PSI winner by dataset", "Score PSI (lower is better)", "fig_07_score_psi")
+    figure_08_updated(leaders)
+    figure_11_family_mix(family_summary)
+    figure_13_updated(six_case)
+    figure_14_updated(method_summary)
+    metric_panel_figure(leaders, ["lift_at_10", "bad_rate_capture_at_10"], 15, "Top-decile business metric winners", "fig_15_top_decile_business_metrics", 1, 2)
+    figure_16_historical_roc(curves, six_case)
+    figure_17_historical_calibration(curves, six_case, leaders)
+    current_stems = {
+        "fig_01_oot_performance_by_dataset_method_model", "fig_02_auc_evidence_revision_timeline",
+        "fig_03_metric_winner_matrix", "fig_04_oot_ks_by_method", "fig_05_threshold_metric_winners",
+        "fig_06_calibration_error_metrics", "fig_07_score_psi", "fig_08_selected_feature_psi",
+        "fig_11_cross_metric_family_mix", "fig_13_llm_incremental_value",
+        "fig_14_cross_dataset_rank_consistency", "fig_15_top_decile_business_metrics",
+        "fig_16_winner_roc_curves", "fig_17_winner_calibration_curves",
+    }
+    check(FIGURES.resolve().parent == PACKAGE.resolve(), "Figure cleanup target escaped the synthesis package")
+    for old_figure in FIGURES.glob("fig_*.*"):
+        if old_figure.suffix.lower() == ".pdf" or old_figure.stem not in current_stems:
+            old_figure.unlink()
+    records = [
+        (1, "fig_01_oot_performance_by_dataset_method_model", "Updated winner in each dataset × model case", "tables/updated_six_case_auc_gini.csv", "Six feature-selection cases: three datasets × two models; full_features excluded", "ROC-AUC and Gini", "No intervals supplied", "LLM-assisted methods lead four cases; mRMR and IV then Boruta lead one each.", "Aggregate winners were supplied and were not independently recomputed from row-level predictions.", "current_update"),
+        (2, "fig_02_auc_evidence_revision_timeline", "AUC evidence-revision timeline", "tables/updated_auc_revision_timeline.csv", "Six dataset × model cases across three discrete evidence revisions", "ROC-AUC on a focused 0.68–0.90 scale", "No intervals supplied", "The latest correction moves Home Credit LR to mRMR at 0.77 and LendingClub LR to LLM at 0.74.", "This is a source-revision sequence, not calendar-time model performance; only three revision anchors exist.", "current_update"),
+        (3, "fig_03_metric_winner_matrix", "Workbook-only winner matrix for all supplied metrics", "tables/updated_metric_leaders.csv", "All 45 workbook-supplied metric winners", "Winner method and model, with method-family background", "None", "The matrix exposes cross-metric consistency and exceptions without comparing unlike metric magnitudes.", "This workbook-only aggregate view does not supersede the later LR AUC/Gini corrections shown in Figures 1 and 2.", "current_update"),
+        (4, "fig_04_oot_ks_by_method", "Updated KS winner by dataset", "tables/updated_metric_leaders.csv", "Three finalized aggregate dataset winners", "KS; higher is better", "None supplied", "The LLM comparison wins all three KS rows by the stated direction rule.", "Aggregate winners only; no row-level KS curves or uncertainty were supplied.", "current_update"),
+        (5, "fig_05_threshold_metric_winners", "Threshold-dependent winner metrics", "tables/updated_metric_leaders.csv", "Twelve dataset × metric winners across precision, recall, F1, and accuracy", "Threshold-dependent classification metrics; higher is better", "None supplied", "Winner identities differ by metric, which prevents one-method approval from being inferred from AUC alone.", "Threshold definitions and row-level confusion matrices were not supplied with the update.", "current_update"),
+        (6, "fig_06_calibration_error_metrics", "Aggregate calibration-error winner metrics", "tables/updated_metric_leaders.csv", "Six dataset × metric winners across log loss and Brier", "Log loss and Brier score; lower is better", "None supplied", "The supplied LLM comparison wins both error metrics in all three datasets.", "These are aggregate error metrics, not calibration curves; updated probability-level predictions were not supplied.", "current_update"),
+        (7, "fig_07_score_psi", "Updated score-PSI winner by dataset", "tables/updated_metric_leaders.csv", "Three finalized aggregate dataset winners", "Score PSI; lower is better", "None supplied", "Home Credit uses LLM then Boruta, Stability 2024 uses LLM then mRMR, and LendingClub retains Random K because 0.0005986 is lower than the supplied LLM value 0.0345.", "Aggregate winners only; PSI was not independently recomputed here.", "current_update"),
+        (8, "fig_08_selected_feature_psi", "Updated selected-feature PSI winners", "tables/updated_metric_leaders.csv", "Nine finalized aggregate dataset × feature-PSI-statistic winners", "Mean, median, and maximum feature PSI; lower is better", "None supplied", "The chart preserves ties and retains non-LLM winners whenever the supplied LLM comparison is worse.", "Feature-level PSI values and bin-level diagnostics were not supplied.", "current_update"),
+        (11, "fig_11_cross_metric_family_mix", "Workbook-only cross-metric winner-family mix", "tables/updated_cross_metric_family_summary.csv", "Fifteen workbook-supplied metric winners per dataset", "Count of aggregate metric wins by method family", "None", "LLM-assisted and classical methods each dominate different parts of the metric scorecard; mixed/tied cells remain explicit.", "Counts treat each metric equally, do not weight metrics by business importance, and do not supersede the later LR AUC/Gini corrections.", "current_update"),
+        (13, "fig_13_llm_incremental_value", "Workbook-supplied CatBoost AUC and Gini winners", "tables/updated_six_case_auc_gini.csv", "Three CatBoost dataset cases", "ROC-AUC and Gini", "No intervals supplied", "Plain LLM leads Home Credit; LLM then mRMR leads Stability 2024 and LendingClub v2.", "Aggregate point estimates; no new inferential comparison is claimed.", "current_update"),
+        (14, "fig_14_cross_dataset_rank_consistency", "Updated cross-case feature-selection winner count", "tables/updated_cross_case_method_summary.csv", "Six dataset × model cases", "Number of cases won", "None", "LLM and LLM then mRMR each win two cases; mRMR and IV then Boruta each win one.", "Counts summarize leaders and do not imply statistical superiority.", "current_update"),
+        (15, "fig_15_top_decile_business_metrics", "Top-decile business metric winners", "tables/updated_metric_leaders.csv", "Six dataset × metric winners across lift and bad-rate capture at 10%", "Lift and bad-rate capture at the highest-risk decile; higher is better", "None supplied", "The same winner leads lift and capture within each dataset, as expected from the shared top-decile ranking cutoff.", "Aggregate winners only; no gain/lift curves or decile-level rows were supplied.", "current_update"),
+        (16, "fig_16_winner_roc_curves", "Finalized winner-only ROC reference profiles", "tables/updated_six_case_auc_gini.csv", "Exactly six finalized feature-selection winners: three datasets × two models", "False-positive rate versus true-positive rate; each monotone reference profile has trapezoidal area equal to the finalized table AUC", "No intervals supplied", "Every panel contains one winner and the displayed AUC exactly matches the finalized six-case table.", "Profiles are deterministic AUC-matched references, not empirical ROC estimates; row-level finalized predictions were not supplied.", "current_update"),
+        (17, "fig_17_winner_calibration_curves", "Finalized winner-only calibration feasibility", "tables/updated_six_case_auc_gini.csv", "Exactly six finalized AUC winners, with matching-method Brier/log-loss values drawn from the resolved 45-metric scorecard where available", "Calibration feasibility under log loss ≥ 2 × Brier; reliability coordinates require row-level probabilities", "No intervals supplied", "Each panel contains only the finalized AUC winner and states whether a matching calibration curve is mathematically feasible and identifiable.", "Aggregate AUC/Brier/log-loss values do not determine calibration-bin coordinates; inconsistent pairs are not plotted as if valid.", "current_update"),
+    ]
+    return pd.DataFrame(records, columns=["figure_number", "stem", "title", "source_table", "population", "metric_definition", "uncertainty", "interpretation", "limitation", "evidence_status"])
 
 
 def fmt(value: Any, digits: int = 4) -> str:
@@ -1361,11 +2053,7 @@ def source_note(table_name: str, detail: str) -> str:
     return f"Source: [`tables/{table_name}`](tables/{table_name}). {detail}"
 
 
-def write_overview_report(auth: dict[str, Any], datasets: pd.DataFrame, methods: pd.DataFrame, models: pd.DataFrame, accounting: pd.DataFrame, cross: pd.DataFrame, artifacts: pd.DataFrame, table_count: int, figure_count: int) -> None:
-    numeric_cross = cross[cross.status == "completed"]
-    positive = int((numeric_cross.oot_auc_delta > 0).sum())
-    negative = int((numeric_cross.oot_auc_delta < 0).sum())
-    significant = int(numeric_cross.holm_significant.sum())
+def write_overview_report(auth: dict[str, Any], datasets: pd.DataFrame, methods: pd.DataFrame, models: pd.DataFrame, accounting: pd.DataFrame, cross: pd.DataFrame, artifacts: pd.DataFrame, table_count: int, figure_count: int, leaders: pd.DataFrame, six_case: pd.DataFrame, method_summary: pd.DataFrame) -> None:
     third = datasets[datasets.dataset == "homecredit_model_stability_2024"].iloc[0]
     controller = auth["controller"]
     peak = controller.get("peak_process_tree_rss_bytes", controller.get("resource_summary", {}).get("peak_process_tree_rss_bytes", 35072520192))
@@ -1378,17 +2066,33 @@ def write_overview_report(auth: dict[str, Any], datasets: pd.DataFrame, methods:
     dataset_view = datasets[["canonical_name", "canonical_alias", "dev_period", "dev_rows", "dev_events", "dev_event_rate", "oot_period", "oot_rows", "oot_events", "oot_event_rate", "initial_feature_count", "eligible_feature_count", "cv_folds"]].copy()
     dataset_view.columns = ["dataset", "alias", "DEV period", "DEV n", "DEV events", "DEV rate", "OOT period", "OOT n", "OOT events", "OOT rate", "initial p", "eligible p", "folds"]
     method_view = methods[["method_id", "method_name", "method_family", "supervision", "k_rule", "fit_scope", "llm_request_required", "authenticated_numeric_dev_evaluations", "numeric_oot_cells_or_cached_states", "homecredit_availability", "lendingclub_v2_availability", "third_dataset_availability", "provenance_or_limitation"]]
+    six_view = six_case[["dataset_label", "model_label", "method", "auc", "gini", "auc_change_vs_previous_sealed_best", "evidence_source"]].copy()
+    six_view.columns = ["dataset", "model", "current best FS method", "AUC", "Gini", "AUC change vs previous sealed FS best", "source"]
+    method_summary_view = method_summary[["method", "method_family", "case_wins", "dataset_count", "models", "mean_auc", "min_auc", "mean_gini", "min_gini"]].copy()
+    llm_comparisons = leaders[leaders.supplied_llm_score.notna()]
+    llm_comparison_wins = int((llm_comparisons.resolved_score_source == "LLM_score").sum())
+    retained_fs_wins = len(llm_comparisons) - llm_comparison_wins
     text = f"""# Final Three-Dataset Experiment Synthesis: Experimental Overview
 
 ## Executive summary
 
-The research asks when LLM-assisted semantic feature selection helps or hurts credit-scoring models relative to classical selection under temporal DEV and locked OOT evaluation. Three authenticated benchmarks matter because a direction seen once may reflect a particular feature universe, time regime, model, or shared data lineage rather than a general method property. The third benchmark is a robustness study, but it shares Home Credit lineage with the first benchmark and is not fully independent institutional evidence.
+**Current-results authority.** The finalized aggregate scorecard is the authority for updated point-estimate winners. Its 45-row workbook base is preserved at [`inputs/workbook1_supplied_results.csv`](inputs/workbook1_supplied_results.csv), the finalized overlay is preserved separately, and the direction-aware resolution is in [`tables/updated_metric_leaders.csv`](tables/updated_metric_leaders.csv). The previous sealed DEV/OOT registries remain historical provenance; they must not override the finalized scores below.
 
-Experimentation is formally closed. This package performs authentication, metric reconciliation, normalization, plotting, and reporting only; it executed no feature selection, model fitting, threshold search, DEV/OOT workload, sensitivity analysis, or LLM/API request. The sealed evidence includes the original two-dataset classical/LLM matrix, a separately labelled Prompt 14 classical extension, and the final amended third-dataset matrix with `llm` and `stable_core_llm_fill`. The historical semantic/mixed voter remains unavailable because its provenance could not be authenticated; unavailability is not zero or negative performance evidence.
+Across the six unique dataset × model feature-selection cases, **IV then Boruta leads all three Logistic Regression cases**, while the LLM family leads all three CatBoost cases: **LLM** on Home Credit and **LLM then mRMR** on Stability 2024 and LendingClub v2. No single exact method wins all six cases. Full-features baselines are excluded from this feature-selection comparison.
 
-Across the {len(numeric_cross)} available LLM-versus-matching-mRMR OOT contrasts, {positive} point estimates are positive and {negative} are negative. {significant} have authenticated Holm-significant paired OOT support in the contrast table; original two-dataset inferential rows are five-fold diagnostics and do not replace OOT inference. The pattern is therefore dataset- and model-dependent, with negative, neutral/inconclusive, and positive results retained. Non-significance is never treated as equivalence. Work can now move to paper writing, methodological review, and submission preparation without reopening experiments.
+The workbook contains {len(llm_comparisons)} explicit LLM-versus-current-best comparisons. Applying the stated higher/lower direction strictly, the LLM value wins {llm_comparison_wins} and the existing best-FS value remains the winner in {retained_fs_wins}. This matters for LendingClub drift: Random K remains best on score PSI, and Domain rules/tied classical-or-LLM rows remain best on feature PSI because the supplied LLM values are larger and lower is better.
 
-{source_note('cross_dataset_synthesis.csv', 'All counts in this paragraph are computed from authenticated matching-reference rows.')}
+{markdown_table(six_view, digits=6)}
+
+{source_note('updated_six_case_auc_gini.csv', 'One row per unique dataset × model case. Gini is checked against 2×AUC−1. The three LR rows come from the historical sealed OOT registry because the workbook supplies updated AUC/Gini winners for CatBoost only.')}
+
+### Methods recurring across the six cases
+
+{markdown_table(method_summary_view, digits=6)}
+
+{source_note('updated_cross_case_method_summary.csv', 'Case wins describe point-estimate leaders, not statistical superiority.')}
+
+Experimentation was not reopened. This reporting update performs deterministic table resolution and plotting only; it executed no feature selection, model fitting, threshold search, DEV/OOT workload, sensitivity analysis, or LLM/API request. Because the workbook supplies aggregate results rather than row-level predictions or fold outputs, no new score-aligned confidence interval, significance test, ROC/calibration curve, runtime, or feature-membership claim is made. Authenticated historical ROC and calibration diagnostics remain explicitly separated from the later aggregate score updates.
 
 ## Dataset overview
 
@@ -1400,17 +2104,17 @@ The original Home Credit task uses `TARGET=1` for payment difficulties and `TARG
 
 The third-dataset adapter deterministically left-joins the base table with depth-0/depth-1 families and excludes depth-2; it adds no domain feature engineering. Its 90%-missing filter removed 891 of 1,959 predictors only from the LLM supplement's ranking universe, leaving 1,068 eligible predictors. It was not retrospectively applied to the already frozen classical methods. The final selector-encoding manifest authenticates 1,730 numeric and 229 categorical original predictors. Equivalent single authenticated type-count summaries were not exposed for the first two final matrices and remain unavailable rather than inferred.
 
-## Feature-selection methods
+## Historical sealed feature-selection method registry
 
 {markdown_table(method_view, digits=3)}
 
-{source_note('method_registry.csv', 'Method IDs come from the sealed run matrices and final 34-cell registry, not filenames or display-name inference.')}
+{source_note('method_registry.csv', 'This registry documents the pre-update sealed experiment. Workbook-only aggregate methods are normalized separately in updated_metric_leaders.csv and are not presented as authenticated row-level runs.')}
 
 `LLMSelector` applies an authenticated target-free semantic ranking and deterministic model-specific truncation (K=20 for Logistic Regression, K=40 for CatBoost). On the third benchmark, one accepted ranking generation produced two cached truncation states; OOT reused them with zero ranking regeneration and zero LLM request. The provider record also contains an earlier invalid attempt rejected because it named an unknown feature; the accepted response had no unknown or duplicate features.
 
 `StableCoreLLMFillSelector` is deliberately mixed: its RF/mRMR statistical components fit only on each fold's training data (and on full DEV before OOT), while the remaining positions are filled from the frozen target-free LLM order. Third-dataset accounting authenticates 10 outer stable-core DEV fits and 50 internal RF/mRMR component fits, plus 2 full-DEV outer refits and 10 internal full-DEV components. This is not a purely target-free selector.
 
-The historical semantic/mixed voter has zero authenticated execution cells and unresolved historical provenance. It is carried as `unavailable`, never scored as zero and never used in ranks.
+The historical semantic/mixed voter has zero authenticated execution cells and unresolved historical provenance. It is carried as `unavailable`, never scored as zero and never used in ranks. The current aggregate update adds point estimates for `LLM then mRMR` where shown in the workbook, but it does not add row-level prediction or selection-membership evidence to this historical registry.
 
 ## Models and preprocessing
 
@@ -1422,7 +2126,9 @@ Both models use seed 42 and at most four estimator threads on CPU. Missing value
 
 For each fold the decision threshold is selected from that fold's training scores by maximum KS. Final OOT thresholds are selected from full-DEV training scores and then held fixed; OOT targets or scores never choose a threshold. Fold-only fitting, temporal gaps, immutable registries, target/prediction identity hashes, and full-DEV-only refits enforce leakage controls.
 
-## Evaluation protocol
+## Evaluation protocol and update boundary
+
+The protocol below describes the historical sealed evidence. The current workbook update is a separate aggregate layer: its values are copied exactly, compared by the supplied direction, and not claimed to have passed the historical row-level reconciliation gates.
 
 DEV uses five expanding-window temporal folds with one time-group gap. Locked OOT evaluation uses the later frozen population. Supervised selectors refit on full DEV before OOT; the target-free LLM ranking is cached. Prediction files and metrics are SHA-256 authenticated, and this builder independently recomputes registered classification metrics from 32 original-matrix and 22 third-dataset numeric OOT prediction files at tolerance {TOLERANCE:.0e}. The Prompt 14 extension separately seals a 448-row metric-recomputation audit with no failures.
 
@@ -1430,7 +2136,7 @@ Score PSI compares authenticated DEV out-of-fold scores with OOT. Selected-featu
 
 Atomic checkpoints, SHA-bound selection/evaluation manifests, immutable completed cells, archived interrupted attempts, exact-identity resume, and a one-cell/one-fold CPU policy support reproducibility. No new comparison or materiality threshold was added in synthesis.
 
-## Experimental accounting
+## Historical sealed experimental accounting
 
 {markdown_table(accounting, digits=3)}
 
@@ -1460,7 +2166,7 @@ The July 4 broad migration inventory is historical and path-sensitive. The later
 
 ## Scope alignment and limitations
 
-The study can describe whether authenticated LLM-assisted selectors increased or decreased predictive point estimates relative to registered classical references, whether registered inference supports those named comparisons, and how performance co-varies descriptively with drift, selection stability, and resource use. It cannot establish universal method superiority, causal effects of semantics, business value, or equivalence from a non-significant result.
+The current layer can describe the supplied aggregate winners and the six-case AUC/Gini pattern. The historical sealed layer can separately describe registered comparisons, drift, selection stability, and resource use. These layers cannot be mixed to claim new significance, universal method superiority, causal effects of semantics, business value, or equivalence from a non-significant result.
 
 The three feature universes and target constructions differ, so direct feature-name overlap is only valid within a dataset. The third benchmark shares organizational/data lineage with Home Credit and is not a fully independent institution. Results depend on the frozen provider/model (`gpt-4.1-mini-2025-04-14` for the third ranking), prompts, preprocessing, models, budgets, and temporal windows. Third-dataset token counts and monetary cost are not authenticated and remain unavailable. Resource-infeasible cells remain in denominators and may limit comparisons. Per-cell RAM is unavailable for portions of the evidence; controller-level peak RAM does not identify a cell-specific peak.
 
@@ -1482,10 +2188,9 @@ def write_metrics_report(metrics: pd.DataFrame, dev: pd.DataFrame, dev_summary: 
 
 ![Figure {r.figure_number}: {r.title}](figures/{r.stem}.png)
 
-[Vector PDF](figures/{r.stem}.pdf)
-
 Caption: Population—{r.population}. Metric—{r.metric_definition}. Uncertainty—{r.uncertainty}. Interpretation—{r.interpretation} Limitation—{r.limitation} Source—[`{r.source_table}`]({r.source_table}).
 """)
+    figure_text = "\n".join(figure_blocks)
     text = f"""# Final Three-Dataset Experiment Synthesis: Complete Metrics and Figures
 
 This report is the quantitative paper-writing reference. DEV and OOT are kept separate; folds are not independent datasets; every unavailable value is NA with an explicit status/reason; and the Prompt 14 classical extension remains a distinct cohort. Exact machine-readable values, including all registered metrics not displayed in compact Markdown, are in the linked CSV tables.
@@ -1566,9 +2271,381 @@ Before examining curves, the conditional prediction subset was fixed to the regi
 
 ## Publication figures
 
-{"\n".join(figure_blocks)}
+{figure_text}
 """
     (PACKAGE / "02_COMPLETE_METRICS_AND_FIGURES.md").write_text(text, encoding="utf-8", newline="\n")
+
+
+def write_overview_report_current(auth: dict[str, Any], datasets: pd.DataFrame, artifacts: pd.DataFrame, table_count: int, figures: pd.DataFrame, leaders: pd.DataFrame, six_case: pd.DataFrame, method_summary: pd.DataFrame) -> None:
+    six_view = six_case[["dataset_label", "model_label", "method", "method_family", "auc", "gini", "evidence_source"]].copy()
+    six_view.columns = ["dataset", "model", "best feature-selection method", "family", "AUC", "Gini", "score source"]
+    method_view = method_summary[["method", "method_family", "case_wins", "dataset_count", "models", "mean_auc", "min_auc", "max_auc", "mean_gini", "min_gini", "max_gini"]].copy()
+    dataset_view = datasets[["canonical_name", "dev_period", "dev_rows", "dev_event_rate", "oot_period", "oot_rows", "oot_event_rate", "eligible_feature_count"]].copy()
+    dataset_view.columns = ["dataset", "DEV period", "DEV n", "DEV event rate", "OOT period", "OOT n", "OOT event rate", "eligible features"]
+    compared = leaders[leaders.supplied_llm_score.notna()]
+    direction_wins = int((compared.comparison_outcome == "LLM_score wins by metric direction").sum())
+    retained = int((compared.comparison_outcome == "best_fs_method retained").sum())
+    finalized_rows = int((leaders.resolved_score_source == "finalized_score").sum())
+    workbook_path = "inputs/workbook1_supplied_results.csv"
+    override_path = "tables/finalized_score_overrides.csv"
+    current_figures = ", ".join(str(x) for x in figures.figure_number.tolist())
+    text = f"""# Final Three-Dataset Experiment Synthesis: Updated Experimental Overview
+
+## Result authority
+
+The finalized scorecard combines the 45-row workbook base with the controlling values in [`{override_path}`]({override_path}). Home Credit LR uses pure mRMR at AUC 0.77; LendingClub LR uses LLM at AUC 0.74; LendingClub accuracy is 0.84 and Brier is 0.0623; Home Credit log loss is 0.29394 and Brier is 0.69732. Gini is derived consistently as `2 × AUC − 1`. The exact workbook base is [`{workbook_path}`]({workbook_path}), its SHA-256 is `{UPDATED_RESULTS_INPUT_SHA256}`, and the source workbook SHA-256 is `{UPDATED_RESULTS_WORKBOOK_SHA256}`.
+
+The workbook base contains {len(compared)} explicit LLM comparisons. Before the finalized overlay, strict `higher`/`lower` resolution gives {direction_wins} LLM-column wins and {retained} retained best-FS rows. The finalized overlay replaces {finalized_rows} workbook metric rows. No value is promoted merely because it is in the `LLM_score` column.
+
+## Six unique dataset × model cases
+
+`full_features` is excluded: these are feature-selection-method leaders. The base scorecard controls the CatBoost AUC cases; the finalized LR values control Home Credit LR and LendingClub LR; Stability 2024 LR remains the strongest non-full-feature sealed row. Gini is validated row by row as `2 × AUC − 1`.
+
+{markdown_table(six_view, digits=6)}
+
+{source_note('updated_six_case_auc_gini.csv', 'This is the compact reviewer table for all six unique dataset/model cases.')}
+
+## Which methods generalize across the six cases?
+
+No single exact method wins all six. The **LLM family wins four cases**: plain LLM wins Home Credit CatBoost and LendingClub LR, while LLM then mRMR wins LendingClub CatBoost and Stability 2024 CatBoost. Pure mRMR wins Home Credit LR, and IV then Boruta wins Stability 2024 LR.
+
+{markdown_table(method_view, digits=6)}
+
+{source_note('updated_cross_case_method_summary.csv', 'Win counts summarize point-estimate leaders, not statistical superiority.')}
+
+## Dataset scope
+
+{markdown_table(dataset_view, digits=4)}
+
+The third benchmark shares Home Credit lineage with the first and is not a fully independent institutional replication. Dataset targets, feature universes, prevalence, and temporal windows differ, so absolute scores are compared only within their stated dataset/model case.
+
+## What this update does and does not establish
+
+The current sources are aggregate scorecards. They support exact point-estimate tables, a discrete evidence-revision timeline, a winner matrix, and the metric panels in Figures {current_figures}. They do not supply row-level finalized predictions or repeated calendar-time score slices. Therefore Figure 2 is explicitly a **revision timeline**, not performance through calendar time, and Figure 6 shows current aggregate log-loss/Brier summaries. Figure 16 uses winner-only AUC-matched reference profiles; Figure 17 shows winner-only calibration feasibility without fabricating probability-level evidence.
+
+The machine-readable resolution is [`tables/updated_metric_leaders.csv`](tables/updated_metric_leaders.csv). For each metric it preserves the supplied best-FS method and score, optional LLM comparator and score, improvement direction, resolved winner, winning column, and comparison outcome.
+
+## Reproducibility
+
+- Repository branch/head at build: `main` / `{auth['head']}`.
+- Workbook snapshot rows: 45 (15 metrics × 3 datasets).
+- Finalized score overrides: 6 values, including 2 LR AUC cases.
+- Current reviewer figures: {len(figures)} PNG files and 0 PDF files.
+- Generated tables: {table_count}.
+- [`evidence_manifest.json`](evidence_manifest.json) records hashes; [`validation_audit.json`](validation_audit.json) records validation gates.
+"""
+    (PACKAGE / "01_EXPERIMENT_OVERVIEW.md").write_text(text, encoding="utf-8", newline="\n")
+
+
+def write_metrics_report_current(leaders: pd.DataFrame, six_case: pd.DataFrame, method_summary: pd.DataFrame, figures: pd.DataFrame, overrides: pd.DataFrame, timeline: pd.DataFrame, family_summary: pd.DataFrame) -> None:
+    six_view = six_case[["dataset_label", "model_label", "method", "method_family", "auc", "gini", "evidence_source"]].copy()
+    six_view.columns = ["dataset", "model", "best FS method", "family", "AUC", "Gini", "source"]
+    method_view = method_summary[["method", "method_family", "case_wins", "dataset_count", "models", "cases", "mean_auc", "min_auc", "max_auc", "mean_gini", "min_gini", "max_gini"]].copy()
+    leader_view = leaders[["dataset_label", "metric", "direction", "supplied_best_fs_method", "supplied_best_fs_score", "supplied_llm_method", "supplied_llm_score", "resolved_method", "resolved_model", "resolved_score", "resolved_score_source", "comparison_outcome"]].copy()
+    leader_view.columns = ["dataset", "metric", "direction", "best FS method", "best FS score", "LLM comparison method", "LLM score", "resolved winner", "model", "resolved score", "winning column", "resolution"]
+    override_view = overrides[overrides.metric == "auc"][["dataset", "model", "method", "value", "authority", "scope_note"]].copy()
+    override_view["dataset"] = override_view.dataset.map(DATASET_LABEL)
+    override_view["model"] = override_view.model.map(MODEL_LABEL)
+    override_view["derived_gini"] = 2 * override_view.value - 1
+    override_view.columns = ["dataset", "model", "method", "AUC", "authority", "scope", "derived Gini"]
+    finalized_metric_view = overrides[overrides.metric != "auc"][["dataset", "model", "metric", "method", "value", "authority"]].copy()
+    finalized_metric_view["dataset"] = finalized_metric_view.dataset.map(DATASET_LABEL)
+    finalized_metric_view["model"] = finalized_metric_view.model.map(MODEL_LABEL)
+    finalized_metric_view.columns = ["dataset", "model", "metric", "method", "finalized value", "authority"]
+    family_view = family_summary[["dataset_label", "resolved_method_family", "metric_winner_count", "dataset_metric_total", "metric_winner_share"]].copy()
+    family_view.columns = ["dataset", "winner family", "metric wins", "metrics", "share"]
+    figure_blocks = []
+    for r in figures.itertuples(index=False):
+        figure_blocks.append(f"""### Figure {r.figure_number}. {r.title}
+
+**How to read it.** {r.interpretation}
+
+**Evidence boundary.** {r.limitation}
+
+![Figure {r.figure_number}: {r.title}](figures/{r.stem}.png)
+
+Caption: Population—{r.population}. Metric—{r.metric_definition}. Uncertainty—{r.uncertainty}. Interpretation—{r.interpretation} Limitation—{r.limitation} Source—[`{r.source_table}`]({r.source_table}).
+""")
+    figure_text = "\n".join(figure_blocks)
+    text = f"""# Final Three-Dataset Experiment Synthesis: Updated Metrics and Figures
+
+## Technical summary
+
+This is the primary machine- and reviewer-facing metrics file. The finalized scorecard controls every reported point estimate. Home Credit LR is **mRMR AUC 0.77 / Gini 0.54**; LendingClub LR is **LLM AUC 0.74 / Gini 0.48**. LendingClub accuracy is **0.84** and Brier is **0.0623**. Home Credit log loss is **0.29394** and Brier is **0.69732**. The LLM family leads four of the six dataset × model AUC cases. Conflicting legacy plots remain excluded.
+
+The expanded PNG-only figure set covers every finalized metric family. Figure 2 shows how accepted AUC values changed across evidence revisions; it is not calendar-time performance. Figure 6 presents finalized aggregate log loss and Brier values. Figure 16 contains exactly the six AUC winners and uses AUC-matched reference profiles. Figure 17 contains only the same six winners and shows calibration feasibility without inventing row-level probabilities.
+
+## Finalized AUC values applied after the workbook base
+
+{markdown_table(override_view, digits=6)}
+
+{source_note('finalized_score_overrides.csv', 'The AUC rows are model-specific. Gini is derived, not independently supplied.')}
+
+## Other finalized metric changes
+
+{markdown_table(finalized_metric_view, digits=6)}
+
+{source_note('finalized_score_overrides.csv', 'These values replace their workbook-base counterparts in the resolved scorecard and figures.')}
+
+## AUC and Gini across all six unique cases
+
+{markdown_table(six_view, digits=6)}
+
+{source_note('updated_six_case_auc_gini.csv', 'Feature-selection methods only; full_features excluded. Gini is checked as 2×AUC−1.')}
+
+## Methods with cross-case coverage
+
+{markdown_table(method_view, digits=6)}
+
+{source_note('updated_cross_case_method_summary.csv', 'There is no one exact six-case winner. The LLM family covers four cases; pure mRMR and IV then Boruta cover one case each.')}
+
+### Base-scorecard cross-metric family coverage
+
+{markdown_table(family_view, digits=4)}
+
+{source_note('updated_cross_metric_family_summary.csv', 'Counts cover the 15 resolved metrics per dataset and retain mixed/tied winners explicitly. The LR AUC/Gini case table remains model-specific.')}
+
+## Complete finalized scorecard: all 45 metric winners
+
+The resolution rule is strict: use `LLM_score` only when it beats `score` in the supplied direction; otherwise retain `best_fs_method`. Blank LLM cells are not inferred.
+
+{markdown_table(leader_view, digits=7)}
+
+{source_note('updated_metric_leaders.csv', 'The workbook base is preserved in inputs/workbook1_supplied_results.csv; finalized replacements are applied in the resolved columns.')}
+
+## Advanced updated figures
+
+{figure_text}
+
+## Submission boundary
+
+These are finalized aggregate point estimates. The update does not contain repeated calendar-time measurements, row-level finalized predictions, or folds needed for new score-aligned confidence intervals, significance tests, empirical ROC curves, or empirical reliability curves. Figure 16 therefore uses disclosed AUC-matched reference profiles rather than historical curves with conflicting AUCs. Figure 17 does not invent calibration points: it records whether each winner has enough internally consistent aggregate evidence for a matching probability-level curve. Home Credit (`log loss 0.29394`, `Brier 0.69732`) and Stability (`0.2300`, `0.1200`) violate `log loss ≥ 2 × Brier`, so no probability predictions can reproduce each pair on the same binary rows.
+"""
+    (PACKAGE / "02_COMPLETE_METRICS_AND_FIGURES.md").write_text(text, encoding="utf-8", newline="\n")
+
+
+def write_root_finalized_report(
+    datasets: pd.DataFrame,
+    leaders: pd.DataFrame,
+    six_case: pd.DataFrame,
+    method_summary: pd.DataFrame,
+    overrides: pd.DataFrame,
+) -> None:
+    six_view = six_case[["dataset_label", "model_label", "method", "method_family", "auc", "gini"]].copy()
+    six_view.columns = ["dataset", "model", "winning FS method", "family", "AUC", "Gini"]
+    override_view = overrides[["dataset", "model", "metric", "method", "value", "authority"]].copy()
+    override_view["dataset"] = override_view.dataset.map(DATASET_LABEL)
+    override_view["model"] = override_view.model.map(MODEL_LABEL)
+    override_view.columns = ["dataset", "model", "metric", "method", "finalized value", "authority"]
+    leader_view = leaders[["dataset_label", "metric", "direction", "resolved_method", "resolved_model", "resolved_score", "comparison_outcome"]].copy()
+    leader_view.columns = ["dataset", "metric", "direction", "winning method", "model", "finalized score", "resolution"]
+    method_view = method_summary[["method", "method_family", "case_wins", "dataset_count", "models", "mean_auc", "min_auc", "max_auc", "mean_gini"]].copy()
+    method_view.columns = ["method", "family", "AUC case wins", "datasets", "models", "mean AUC", "minimum AUC", "maximum AUC", "mean Gini"]
+
+    consistency_rows: list[dict[str, Any]] = []
+    for dataset in DATASET_ORDER:
+        dataset_row = datasets[datasets.dataset == dataset].iloc[0]
+        prevalence = float(dataset_row.oot_event_rate)
+        brier_row = leaders[(leaders.dataset == dataset) & (leaders.metric == "brier")].iloc[0]
+        log_row = leaders[(leaders.dataset == dataset) & (leaders.metric == "log_loss")].iloc[0]
+        accuracy_row = leaders[(leaders.dataset == dataset) & (leaders.metric == "accuracy")].iloc[0]
+        brier = float(brier_row.resolved_score)
+        natural_log_loss = float(log_row.resolved_score)
+        same_probability_winner = bool(
+            brier_row.resolved_method_id == log_row.resolved_method_id
+            and brier_row.resolved_model == log_row.resolved_model
+        )
+        log_brier_pass = natural_log_loss + 1e-12 >= 2.0 * brier
+        accuracy_same = bool(
+            accuracy_row.resolved_method_id == brier_row.resolved_method_id
+            and accuracy_row.resolved_model == brier_row.resolved_model
+            and accuracy_row.resolved_method_id == log_row.resolved_method_id
+            and accuracy_row.resolved_model == log_row.resolved_model
+        )
+        if not same_probability_winner:
+            pair_status = "not comparable: Brier and log-loss winners differ"
+        elif log_brier_pass:
+            pair_status = "passes necessary log-loss/Brier bound"
+        else:
+            pair_status = "fails: no common binary probability predictions can reproduce both"
+        consistency_rows.append({
+            "dataset": DATASET_LABEL[dataset],
+            "Brier winner": f"{brier_row.resolved_method} ({brier_row.resolved_model})",
+            "Brier": brier,
+            "log-loss winner": f"{log_row.resolved_method} ({log_row.resolved_model})",
+            "log loss": natural_log_loss,
+            "2 × Brier": 2.0 * brier,
+            "pair result": pair_status,
+            "constant Brier baseline": prevalence * (1.0 - prevalence),
+            "constant log-loss baseline": -(prevalence * math.log(prevalence) + (1.0 - prevalence) * math.log(1.0 - prevalence)),
+            "accuracy winner": f"{accuracy_row.resolved_method} ({accuracy_row.resolved_model})",
+            "accuracy": float(accuracy_row.resolved_score),
+            "accuracy-bound comparison": "applicable" if accuracy_same else "not applicable: different winning method",
+        })
+    consistency_view = pd.DataFrame(consistency_rows)
+
+    text = f"""# Finalized Credit-Risk Feature-Selection Metrics and Winner Curves
+
+## Technical summary
+
+- The finalized six-case AUC leaders are fixed at the values below. Gini is derived exactly as `2 × AUC − 1`.
+- LendingClub accuracy is **0.840000** and its Brier winner is **0.062300**. Home Credit log loss is **0.293940** and its Brier winner is **0.697320**.
+- The ROC image contains exactly six winner profiles—one for each dataset × model case—and every plotted trapezoidal area equals the reported AUC.
+- AUC does not identify calibration. Finalized row-level probabilities were not provided, so empirical reliability-bin coordinates cannot be reconstructed. Home Credit and Stability also contain same-method log-loss/Brier pairs that violate the necessary bound `log loss ≥ 2 × Brier`; those pairs cannot be produced by one binary probability vector.
+
+## The six finalized AUC winners
+
+{markdown_table(six_view, digits=6)}
+
+The plot contains one line per panel and no losing method. The smooth line is a disclosed AUC-matched reference profile, not an empirical threshold trace.
+
+![Finalized winner-only ROC profiles](plots/winner_roc_curves.png)
+
+## Finalized score changes
+
+{markdown_table(override_view, digits=6)}
+
+These values are the controlling point estimates throughout this report. The older workbook values remain only as the preserved base snapshot in `results/final_three_dataset_synthesis_v1/inputs/workbook1_supplied_results.csv`.
+
+The threshold-metric figure includes finalized LendingClub accuracy `0.84` alongside the other threshold-dependent winners.
+
+![Finalized threshold-dependent metric winners](plots/threshold_metric_winners.png)
+
+The calibration-error figure includes LendingClub Brier `0.0623`, Home Credit log loss `0.29394`, and Home Credit Brier `0.69732`.
+
+![Finalized log-loss and Brier winners](plots/calibration_error_metrics.png)
+
+## Methods that win across the six AUC cases
+
+{markdown_table(method_view, digits=6)}
+
+LLM-assisted methods win four cases. Plain LLM wins Home Credit CatBoost and LendingClub Logistic Regression; LLM then mRMR wins LendingClub CatBoost and Stability CatBoost. Pure mRMR wins Home Credit Logistic Regression, and IV then Boruta wins Stability Logistic Regression.
+
+## Complete finalized 45-metric scorecard
+
+{markdown_table(leader_view, digits=7)}
+
+The base comparison rule is direction-aware: use the LLM comparison only when it improves on the current score under the metric's `higher` or `lower` direction. Finalized replacements then control the affected rows.
+
+## Winner-only calibration evidence
+
+The six panels contain only the finalized AUC winners. A diagonal ideal-calibration reference is shown, but no empirical winner curve is invented from aggregate metrics. Each panel states whether matching Brier/log-loss evidence exists, whether it passes the necessary inequality, and whether row-level probabilities are still required.
+
+![Finalized winner-only calibration feasibility](plots/winner_calibration_curves.png)
+
+### Probability-metric consistency checks
+
+{markdown_table(consistency_view, digits=6)}
+
+The accuracy bounds below apply only when accuracy, Brier, and log loss come from the same probability vector and accuracy uses threshold 0.5. The current per-metric winners differ, so cross-winner accuracy comparisons are not mathematical validation tests.
+
+## Metric computation methodology
+
+### ROC-AUC and Gini
+
+ROC points are `(FPR(t), TPR(t))` over score thresholds `t`, where `FPR = FP/(FP+TN)` and `TPR = TP/(TP+FN)`. Empirical ROC-AUC is the area under that curve and is equivalent to the probability that a randomly selected event receives a higher score than a randomly selected non-event, with standard tie handling.
+
+For the finalized six-panel ROC image, row-level finalized predictions were unavailable. Each reference profile uses `TPR = FPR^α`; `α` is solved deterministically so numerical trapezoidal integration equals the finalized table AUC to `1e-12`. Therefore:
+
+```text
+ROC curve AUC = reported table AUC
+Gini = 2 × AUC − 1
+```
+
+The reference shape supports score-consistent presentation only. It does not recover thresholds, empirical uncertainty, or the original score distribution.
+
+### KS and the frozen decision threshold
+
+```text
+KS = max_t(TPR(t) − FPR(t))
+```
+
+Historical evaluation selected a KS-maximizing threshold on fitting-partition scores. For final OOT evaluation, the threshold was selected on full-DEV training scores and then held fixed; OOT targets did not select the threshold. Finalized aggregate threshold metrics do not include the row-level confusion matrices needed for independent reproduction.
+
+### Accuracy, precision, recall and F1
+
+At a fixed threshold, `TP`, `FP`, `TN`, and `FN` are computed from the binary prediction. Then:
+
+```text
+Accuracy  = (TP + TN) / (TP + TN + FP + FN)
+Precision = TP / (TP + FP)
+Recall    = TP / (TP + FN)
+F1        = 2 × precision × recall / (precision + recall)
+```
+
+Undefined precision or recall divisions are handled as zero in the historical implementation. The finalized aggregate update does not provide confusion-matrix counts.
+
+### Log loss, Brier score and calibration
+
+For binary outcomes `y_i ∈ {{0,1}}` and predicted event probabilities `p_i`:
+
+```text
+Log loss = −mean(y_i × ln(p_i) + (1 − y_i) × ln(1 − p_i))
+Brier    = mean((y_i − p_i)^2)
+```
+
+Reliability curves group probabilities into bins and plot mean predicted probability against observed event rate. The historical implementation uses ten quantile bins. Aggregate AUC, Brier and log loss do not uniquely determine those bin coordinates.
+
+Necessary per-prediction checks include:
+
+```text
+Log loss ≥ 2 × Brier              # natural logarithm
+Accuracy ≥ 1 − 4 × Brier          # threshold = 0.5
+Accuracy ≥ 1 − log_loss / ln(2)   # threshold = 0.5
+```
+
+The accuracy inequalities require the same rows, probabilities and method for all metrics. The log-loss/Brier bound does not depend on a classification threshold.
+
+### Score PSI
+
+Score PSI compares the DEV out-of-fold probability distribution with locked OOT probabilities. The implemented procedure is:
+
+1. Validate that all reference and comparison scores are finite probabilities in `[0,1]`.
+2. Fit ten candidate quantile bins on DEV OOF scores only.
+3. Collapse duplicate quantile edges; force the outer bounds to `0` and `1`.
+4. Apply those frozen edges unchanged to OOT scores.
+5. Compute DEV and OOT proportions for every effective bin.
+6. Add smoothing epsilon `1e-6` to each proportion and use the natural logarithm.
+
+```text
+PSI = Σ_i ((OOT_i + ε) − (DEV_i + ε)) × ln((OOT_i + ε) / (DEV_i + ε))
+ε = 1e−6
+```
+
+Lower PSI means less distribution shift. The inherited `0.10` and `0.25` bands are monitoring descriptors, not hypothesis-test thresholds. Finalized PSI scores are aggregate values and are not independently recomputed here because the finalized probability vectors and frozen bin evidence were not provided.
+
+### Selected-feature PSI
+
+Numeric features use DEV-derived quantile edges with infinite outer bounds and an explicit missing-value state. Duplicate numeric edges collapse. Categorical features use DEV levels, an explicit missing state, and a single unseen-OOT state. Both use epsilon `1e-6` and the same natural-log PSI contribution formula. Mean, median and maximum feature PSI summarize the selected original features; lower is better.
+
+### Lift and bad-rate capture at 10%
+
+Sort cases from highest to lowest predicted event risk and select the top 10% of rows:
+
+```text
+capture@10 = events in top decile / all events
+lift@10    = event rate in top decile / overall event rate
+Lift@10 ≈ capture@10 / 0.10
+```
+
+The approximation becomes exact when the selected population is exactly 10% and the denominator conventions are identical.
+
+## Limitations and robustness status
+
+- The finalized scores are accepted as the reporting point estimates, but no finalized row-level predictions or fold results were provided for independent recomputation.
+- The winner-only ROC shapes are deterministic AUC-matched references. They must not be described as empirical ROC curves or used to select an operating threshold.
+- A genuine calibration curve cannot be reconstructed from aggregate metrics. Home Credit and Stability additionally fail the necessary same-prediction log-loss/Brier inequality, so no calibration curve can reproduce all those finalized values simultaneously.
+- No new confidence intervals, DeLong tests, bootstrap intervals or significance claims are created from the finalized aggregate update.
+
+## Recommended next evidence step
+
+Preserve one finalized prediction file per winning dataset × model case with target, predicted probability, immutable row identifier, evaluation scope and model/method identity. That single evidence layer would allow empirical ROC curves, calibration bins, Brier/log-loss reconciliation, frozen-threshold confusion matrices and exact independent verification without changing the finalized score table.
+
+## Further evidence needed
+
+Home Credit Brier `0.69732` remains the finalized reported value. Reconciliation requires either the row-level probability file that produced it or an explicit statement that it and natural-log loss `0.29394` use different populations, probability definitions, or evaluation scopes; they cannot describe one common binary probability vector as currently defined.
+"""
+    ROOT_REPORT.write_text(text, encoding="utf-8", newline="\n")
 
 
 def validate_links() -> list[dict[str, Any]]:
@@ -1586,7 +2663,7 @@ def validate_links() -> list[dict[str, Any]]:
 
 
 def write_manifest(auth: dict[str, Any], figures: pd.DataFrame, table_paths: list[Path], checks: list[dict[str, Any]]) -> None:
-    output_files = sorted([p for p in PACKAGE.rglob("*") if p.is_file() and p.name != "evidence_manifest.json"])
+    output_files = sorted([p for p in PACKAGE.rglob("*") if p.is_file() and p.name != "evidence_manifest.json" and "__pycache__" not in p.parts])
     sources = {}
     for table in table_paths:
         try:
@@ -1603,19 +2680,20 @@ def write_manifest(auth: dict[str, Any], figures: pd.DataFrame, table_paths: lis
                     sources[str(artifact)] = str(digest)
     manifest = {
         "schema_version": "final_three_dataset_synthesis_evidence_manifest_v1",
-        "status": "complete_authenticated_reporting_only",
+        "status": "complete_finalized_aggregate_reporting_with_winner_only_curve_diagnostics",
         "repository_branch": auth["branch"], "pre_synthesis_head": auth["head"],
-        "hash_algorithm": "sha256", "determinism": "fixed ordering, seeds, plot style, PDF metadata, CSV float format, and LF newlines",
+        "hash_algorithm": "sha256", "determinism": "fixed ordering, seeds, plot style, PNG metadata, CSV float format, and LF newlines",
         "authentication_checks": checks,
         "authoritative_source_artifacts": [{"path": k, "sha256": v} for k, v in sorted(sources.items())],
         "legacy_successor_seal": {"source_count": len(auth["source_results"]), "matched_count": sum(x["match"] for x in auth["source_results"]), "records": auth["source_results"]},
         "reported_number_mapping": [
-            {"report": "01_EXPERIMENT_OVERVIEW.md", "section": "Dataset overview", "table": "tables/dataset_overview.csv"},
-            {"report": "01_EXPERIMENT_OVERVIEW.md", "section": "Methods/accounting", "table": "tables/method_registry.csv; tables/experimental_accounting.csv"},
-            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "DEV", "table": "tables/dev_fold_metrics.csv; tables/dev_summary.csv"},
-            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "OOT/generalization", "table": "tables/oot_metrics.csv; tables/dev_oot_generalization.csv"},
-            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Statistics/synthesis", "table": "tables/statistical_comparisons.csv; tables/cross_dataset_synthesis.csv"},
-            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Features/resources", "table": "tables/feature_selections.csv; tables/feature_selections_by_fold.csv; tables/feature_family_distribution.csv; tables/feature_selection_frequency.csv; tables/selection_stability.csv; tables/method_overlap.csv; tables/feature_psi.csv; tables/resource_metrics.csv; tables/llm_resource_costs.csv"},
+            {"report": "01_EXPERIMENT_OVERVIEW.md", "section": "Six unique dataset × model cases", "table": "tables/updated_six_case_auc_gini.csv"},
+            {"report": "01_EXPERIMENT_OVERVIEW.md", "section": "Methods recurring across the six cases", "table": "tables/updated_cross_case_method_summary.csv"},
+            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "AUC and Gini across all six unique cases", "table": "tables/updated_six_case_auc_gini.csv"},
+            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Complete finalized scorecard", "table": "tables/updated_metric_leaders.csv; tables/base_metric_scorecard.csv"},
+            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Finalized score changes", "table": "tables/finalized_score_overrides.csv; tables/updated_auc_revision_timeline.csv"},
+            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Workbook-only cross-metric family coverage", "table": "tables/updated_cross_metric_family_summary.csv"},
+            {"report": "02_COMPLETE_METRICS_AND_FIGURES.md", "section": "Historical ROC and calibration diagnostics", "table": "tables/historical_curve_evidence.csv"},
         ],
         "figure_records": figures.to_dict("records"),
         "output_files": [{"path": p.relative_to(PACKAGE).as_posix(), "byte_size": p.stat().st_size, "sha256": sha256(p)} for p in output_files],
@@ -1627,6 +2705,12 @@ def write_manifest(auth: dict[str, Any], figures: pd.DataFrame, table_paths: lis
 def main() -> None:
     TABLES.mkdir(exist_ok=True)
     FIGURES.mkdir(exist_ok=True)
+    ROOT_PLOTS.mkdir(exist_ok=True)
+    check(ROOT_PLOTS.resolve().parent == ROOT.resolve(), "Root plot target escaped repository root")
+    for stem in ("winner_roc_curves", "winner_calibration_curves", "threshold_metric_winners", "calibration_error_metrics"):
+        pdf = ROOT_PLOTS / f"{stem}.pdf"
+        if pdf.is_file():
+            pdf.unlink()
     auth, checks = authenticate()
     reconciliation, curves = reconcile_predictions()
     datasets = build_dataset_overview()
@@ -1634,6 +2718,13 @@ def main() -> None:
     dev = load_dev_rows()
     dev_summary = summarize_dev(dev)
     oot = load_oot_rows(datasets)
+    finalized_overrides = load_finalized_metric_overrides()
+    supplied_scorecard, updated_leaders = load_updated_metric_leaders(finalized_overrides)
+    updated_six_case = build_updated_six_case_auc_gini(oot, updated_leaders, finalized_overrides)
+    updated_method_summary = build_updated_method_summary(updated_six_case)
+    updated_auc_timeline = build_auc_revision_timeline(oot, updated_leaders, finalized_overrides)
+    updated_family_summary = build_cross_metric_family_summary(updated_leaders)
+    historical_curve_evidence = build_historical_curve_evidence(reconciliation, curves, updated_six_case)
     methods = build_method_registry(dev, oot)
     accounting = build_accounting(auth, dev, oot)
     stats = build_statistics()
@@ -1652,27 +2743,30 @@ def main() -> None:
     artifacts = artifact_status_register()
 
     tables = {
-        "dataset_overview.csv": datasets, "method_registry.csv": methods,
-        "model_settings.csv": models, "experimental_accounting.csv": accounting,
-        "metric_dictionary.csv": metrics, "dev_fold_metrics.csv": dev,
-        "dev_summary.csv": dev_summary, "oot_metrics.csv": oot,
-        "dev_oot_generalization.csv": generalization,
-        "statistical_comparisons.csv": stats, "feature_selections.csv": selected,
-        "feature_selections_by_fold.csv": fold_selected,
-        "feature_family_distribution.csv": family_distribution,
-        "feature_selection_frequency.csv": frequency,
-        "selection_stability.csv": stability, "method_overlap.csv": overlap,
-        "feature_psi.csv": feature_psi, "resource_metrics.csv": resources,
-        "llm_resource_costs.csv": llm_costs, "cross_dataset_synthesis.csv": cross,
-        "normalized_results_long.csv": normalized,
-        "prediction_reconciliation.csv": reconciliation,
+        "dataset_overview.csv": datasets,
+        "model_settings.csv": models,
+        "metric_dictionary.csv": metrics,
         "artifact_status_register.csv": artifacts,
+        "base_metric_scorecard.csv": supplied_scorecard,
+        "finalized_score_overrides.csv": finalized_overrides,
+        "updated_metric_leaders.csv": updated_leaders,
+        "updated_six_case_auc_gini.csv": updated_six_case,
+        "updated_cross_case_method_summary.csv": updated_method_summary,
+        "updated_auc_revision_timeline.csv": updated_auc_timeline,
+        "updated_cross_metric_family_summary.csv": updated_family_summary,
+        "historical_curve_evidence.csv": historical_curve_evidence,
     }
     table_paths = [write_csv(frame, name) for name, frame in tables.items()]
-    figures = generate_figures(oot, generalization, stats, feature_psi, stability, overlap, resources, cross, curves)
+    figures = generate_figures(oot, generalization, stats, feature_psi, stability, overlap, resources, cross, curves, updated_leaders, updated_six_case, updated_method_summary, updated_auc_timeline, updated_family_summary)
     table_paths.append(write_csv(figures, "figure_inventory.csv"))
-    write_overview_report(auth, datasets, methods, models, accounting, cross, artifacts, len(table_paths), len(figures))
-    write_metrics_report(metrics, dev, dev_summary, oot, generalization, stats, cross, selected, fold_selected, family_distribution, frequency, stability, overlap, feature_psi, resources, llm_costs, figures, reconciliation)
+    current_table_names = set(tables) | {"figure_inventory.csv"}
+    check(TABLES.resolve().parent == PACKAGE.resolve(), "Table cleanup target escaped the synthesis package")
+    for old_table in TABLES.glob("*.csv"):
+        if old_table.name not in current_table_names:
+            old_table.unlink()
+    write_overview_report_current(auth, datasets, artifacts, len(table_paths), figures, updated_leaders, updated_six_case, updated_method_summary)
+    write_metrics_report_current(updated_leaders, updated_six_case, updated_method_summary, figures, finalized_overrides, updated_auc_timeline, updated_family_summary)
+    write_root_finalized_report(datasets, updated_leaders, updated_six_case, updated_method_summary, finalized_overrides)
 
     links = validate_links()
     pngs = sorted(FIGURES.glob("*.png")); pdfs = sorted(FIGURES.glob("*.pdf"))
@@ -1686,7 +2780,19 @@ def main() -> None:
         "markdown_link_count": len(links), "markdown_links_all_exist": all(x["exists"] for x in links),
         "exact_primary_markdown_files": markdowns == ["01_EXPERIMENT_OVERVIEW.md", "02_COMPLETE_METRICS_AND_FIGURES.md"],
         "figure_png_count": len(pngs), "figure_pdf_count": len(pdfs),
-        "every_figure_has_png_and_pdf": {p.stem for p in pngs} == {p.stem for p in pdfs} and len(pngs) == len(figures),
+        "every_figure_has_png": {p.stem for p in pngs} == set(figures.stem) and len(pngs) == len(figures),
+        "no_figure_pdfs": len(pdfs) == 0,
+        "supplied_scorecard_45_rows": len(supplied_scorecard) == 45,
+        "updated_leader_45_rows": len(updated_leaders) == 45,
+        "updated_six_case_complete": bool(len(updated_six_case) == 6 and updated_six_case[["auc", "gini"]].notna().all().all()),
+        "updated_six_case_gini_identity": bool(np.allclose(updated_six_case.gini, 2 * updated_six_case.auc - 1, rtol=0, atol=1e-12)),
+        "finalized_metric_override_count": len(finalized_overrides) == 6,
+        "updated_auc_timeline_complete": len(updated_auc_timeline) == 18,
+        "figure_inventory_scope_complete": set(figures.evidence_status) == {"current_update"} and len(figures) == 14,
+        "historical_curve_evidence_complete": len(historical_curve_evidence) == 18,
+        "root_finalized_report_exists": ROOT_REPORT.is_file(),
+        "root_requested_pngs_exist": all((ROOT_PLOTS / f"{stem}.png").is_file() for stem in ("winner_roc_curves", "winner_calibration_curves", "threshold_metric_winners", "calibration_error_metrics")),
+        "root_winner_pdf_count_zero": not any(ROOT_PLOTS.glob("*.pdf")),
         "unavailable_oot_values_not_zero_filled": bool(oot.loc[oot.status != "completed", ["auc", "gini", "ks"]].isna().all().all()),
         "third_dev_denominator": {"registered": len(dev[dev.evidence_cohort == "prompt16_final_amended"]), "numeric": int(((dev.evidence_cohort == "prompt16_final_amended") & (dev.status == "completed")).sum()), "unavailable": int(((dev.evidence_cohort == "prompt16_final_amended") & (dev.status != "completed")).sum())},
         "third_oot_denominator": {"registered": len(oot[oot.evidence_cohort == "prompt16_final_amended"]), "numeric": int(((oot.evidence_cohort == "prompt16_final_amended") & (oot.status == "completed")).sum()), "unavailable": int(((oot.evidence_cohort == "prompt16_final_amended") & (oot.status != "completed")).sum())},

@@ -1,129 +1,60 @@
-# Final Three-Dataset Experiment Synthesis: Experimental Overview
+# Final Three-Dataset Experiment Synthesis: Updated Experimental Overview
 
-## Executive summary
+## Result authority
 
-The research asks when LLM-assisted semantic feature selection helps or hurts credit-scoring models relative to classical selection under temporal DEV and locked OOT evaluation. Three authenticated benchmarks matter because a direction seen once may reflect a particular feature universe, time regime, model, or shared data lineage rather than a general method property. The third benchmark is a robustness study, but it shares Home Credit lineage with the first benchmark and is not fully independent institutional evidence.
+The finalized scorecard combines the 45-row workbook base with the controlling values in [`tables/finalized_score_overrides.csv`](tables/finalized_score_overrides.csv). Home Credit LR uses pure mRMR at AUC 0.77; LendingClub LR uses LLM at AUC 0.74; LendingClub accuracy is 0.84 and Brier is 0.0623; Home Credit log loss is 0.29394 and Brier is 0.69732. Gini is derived consistently as `2 × AUC − 1`. The exact workbook base is [`inputs/workbook1_supplied_results.csv`](inputs/workbook1_supplied_results.csv), its SHA-256 is `c10225268d92cb1b794d9288e4f7bf99ac53340f734bf186a1cd3b101487f6f3`, and the source workbook SHA-256 is `2369ae8241ba9d1fe486d3c6193e35973ed74f495630996fc4d5189270bd247a`.
 
-Experimentation is formally closed. This package performs authentication, metric reconciliation, normalization, plotting, and reporting only; it executed no feature selection, model fitting, threshold search, DEV/OOT workload, sensitivity analysis, or LLM/API request. The sealed evidence includes the original two-dataset classical/LLM matrix, a separately labelled Prompt 14 classical extension, and the final amended third-dataset matrix with `llm` and `stable_core_llm_fill`. The historical semantic/mixed voter remains unavailable because its provenance could not be authenticated; unavailability is not zero or negative performance evidence.
+The workbook base contains 17 explicit LLM comparisons. Before the finalized overlay, strict `higher`/`lower` resolution gives 10 LLM-column wins and 4 retained best-FS rows. The finalized overlay replaces 4 workbook metric rows. No value is promoted merely because it is in the `LLM_score` column.
 
-Across the 12 available LLM-versus-matching-mRMR OOT contrasts, 6 point estimates are positive and 6 are negative. 4 have authenticated Holm-significant paired OOT support in the contrast table; original two-dataset inferential rows are five-fold diagnostics and do not replace OOT inference. The pattern is therefore dataset- and model-dependent, with negative, neutral/inconclusive, and positive results retained. Non-significance is never treated as equivalence. Work can now move to paper writing, methodological review, and submission preparation without reopening experiments.
+## Six unique dataset × model cases
 
-Source: [`tables/cross_dataset_synthesis.csv`](tables/cross_dataset_synthesis.csv). All counts in this paragraph are computed from authenticated matching-reference rows.
+`full_features` is excluded: these are feature-selection-method leaders. The base scorecard controls the CatBoost AUC cases; the finalized LR values control Home Credit LR and LendingClub LR; Stability 2024 LR remains the strongest non-full-feature sealed row. Gini is validated row by row as `2 × AUC − 1`.
 
-## Dataset overview
+| dataset | model | best feature-selection method | family | AUC | Gini | score source |
+| --- | --- | --- | --- | --- | --- | --- |
+| Home Credit | Logistic Regression | mRMR | classical | 0.770000 | 0.540000 | finalized scorecard 2026-08-21 |
+| Home Credit | CatBoost | LLM | LLM-assisted | 0.793450 | 0.586900 | Workbook1 aggregate update |
+| LendingClub v2 | Logistic Regression | LLM | LLM-assisted | 0.740000 | 0.480000 | finalized scorecard 2026-08-21 |
+| LendingClub v2 | CatBoost | LLM then mRMR | LLM-assisted | 0.770664 | 0.541328 | Workbook1 aggregate update |
+| Home Credit Stability 2024 | Logistic Regression | IV then Boruta | classical | 0.802956 | 0.605912 | historical sealed OOT registry |
+| Home Credit Stability 2024 | CatBoost | LLM then mRMR | LLM-assisted | 0.869088 | 0.738177 | Workbook1 aggregate update |
 
-| dataset | alias | DEV period | DEV n | DEV events | DEV rate | OOT period | OOT n | OOT events | OOT rate | initial p | eligible p | folds |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Home Credit canonical temporal split | homecredit@68b2bae09659 | recent_decision day -600 through -241 | 99,092 | 7,859 | 0.0793 | recent_decision day -240 through -1 | 120,053 | 10,688 | 0.0890 | 529 | 391 | 5 |
-| LendingClub v2 canonical temporal split | lendingclub_v2@1fe27122baaf | recent_decision day -1795 through -1096 | 598,649 | 116,966 | 0.1954 | recent_decision day -1065 through -730 | 293,105 | 68,252 | 0.2329 | 675 | 161 | 5 |
-| Home Credit - Credit Risk Model Stability 2024 | homecredit_model_stability_2024 | 2019-01-01 through 2020-02-25 | 1,221,743 | 39,645 | 0.0324 | 2020-02-26 through 2020-10-05 | 304,916 | 8,349 | 0.0274 | 1,959 | 1,068 | 5 |
+Source: [`tables/updated_six_case_auc_gini.csv`](tables/updated_six_case_auc_gini.csv). This is the compact reviewer table for all six unique dataset/model cases.
 
-Source: [`tables/dataset_overview.csv`](tables/dataset_overview.csv). Event rates are events divided by the authenticated partition count. The first two benchmarks have authenticated day-proxy periods rather than calendar dates.
+## Which methods generalize across the six cases?
 
-The original Home Credit task uses `TARGET=1` for payment difficulties and `TARGET=0` otherwise. LendingClub v2 uses final bad/default statuses (Charged Off, Default, and policy-status Charged Off) versus final good status. The third benchmark uses the frozen binary target in `train_base`, contains 1,221,743 DEV rows (39,645 events) and 304,916 OOT rows (8,349 events), and preserves whole dates in five expanding-window folds with a one-date-group gap.
+No single exact method wins all six. The **LLM family wins four cases**: plain LLM wins Home Credit CatBoost and LendingClub LR, while LLM then mRMR wins LendingClub CatBoost and Stability 2024 CatBoost. Pure mRMR wins Home Credit LR, and IV then Boruta wins Stability 2024 LR.
 
-The third-dataset adapter deterministically left-joins the base table with depth-0/depth-1 families and excludes depth-2; it adds no domain feature engineering. Its 90%-missing filter removed 891 of 1,959 predictors only from the LLM supplement's ranking universe, leaving 1,068 eligible predictors. It was not retrospectively applied to the already frozen classical methods. The final selector-encoding manifest authenticates 1,730 numeric and 229 categorical original predictors. Equivalent single authenticated type-count summaries were not exposed for the first two final matrices and remain unavailable rather than inferred.
+| method | method_family | case_wins | dataset_count | models | mean_auc | min_auc | max_auc | mean_gini | min_gini | max_gini |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LLM then mRMR | LLM-assisted | 2 | 2 | CatBoost | 0.819876 | 0.770664 | 0.869088 | 0.639752 | 0.541328 | 0.738177 |
+| LLM | LLM-assisted | 2 | 2 | CatBoost; Logistic Regression | 0.766725 | 0.740000 | 0.793450 | 0.533450 | 0.480000 | 0.586900 |
+| IV then Boruta | classical | 1 | 1 | Logistic Regression | 0.802956 | 0.802956 | 0.802956 | 0.605912 | 0.605912 | 0.605912 |
+| mRMR | classical | 1 | 1 | Logistic Regression | 0.770000 | 0.770000 | 0.770000 | 0.540000 | 0.540000 | 0.540000 |
 
-## Feature-selection methods
+Source: [`tables/updated_cross_case_method_summary.csv`](tables/updated_cross_case_method_summary.csv). Win counts summarize point-estimate leaders, not statistical superiority.
 
-| method_id | method_name | method_family | supervision | k_rule | fit_scope | llm_request_required | authenticated_numeric_dev_evaluations | numeric_oot_cells_or_cached_states | homecredit_availability | lendingclub_v2_availability | third_dataset_availability | provenance_or_limitation |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| full_features | Full features | baseline | target-free ranking | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 0 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| random_k | Random K | baseline | target-free ranking | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 5 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| domain_rule_baseline | Domain rules | baseline | target-free ranking | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| iv_woe | IV/WOE | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 10 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| mrmr | mRMR (legacy) | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| mrmr_mutual_information | mRMR (MI) | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 10 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| lasso_l1_logistic | L1 logistic | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 2 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| legacy_rf_relevance_corr | RF relevance/corr. | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 10 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| catboost_shap | CatBoost SHAP | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 10 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| boruta | Boruta (legacy) | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| boruta_random_forest | Boruta RF | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 6 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| rfe_catboost | RFE CatBoost | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 8 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| pca | PCA | classical | target-free ranking | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| statistical_normalized_average_rank | Statistical rank ensemble | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 2 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| iv_then_boruta | IV then Boruta | classical hybrid | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 28 | 18 | numeric 6/6 | numeric 6/6 | numeric 6/6 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| boruta_then_mrmr_mutual_information | Boruta then mRMR | classical hybrid | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 6 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| boruta_then_rfe_catboost | Boruta then RFE | classical hybrid | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 6 | 4 | numeric 2/2 | numeric 2/2 | unavailable 0/2 | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
-| llm | LLM | LLM | target-free ranking | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | global/cached target-free ranking | yes | 30 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Authenticated target-free semantic ranking; global K=20/K=40 truncation. Third benchmark reused the frozen ranking for OOT. |
-| llm_then_mrmr | LLM then mRMR | LLM hybrid | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | yes | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Original two-dataset LLM-screened supervised hybrid; absent from the final third-benchmark extension. |
-| llm_then_boruta | LLM then Boruta | LLM hybrid | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | yes | 20 | 4 | numeric 2/2 | numeric 2/2 | not registered | Original two-dataset LLM-screened supervised hybrid; absent from the final third-benchmark extension. |
-| stable_core_llm_fill | Stable core + LLM fill | LLM hybrid | mixed target-free/supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | globally cached ranking plus fold-training-only components | yes | 30 | 6 | numeric 2/2 | numeric 2/2 | numeric 2/2 | Fold-training-only RF/mRMR statistical core, filled from the authenticated target-free LLM ranking; no OOT target access. |
-| semantic_mixed_voter | Historical semantic/mixed voter | unavailable | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 0 | 0 | not registered | not registered | unavailable; unresolved provenance | Historical identity retained as unavailable: unresolved provenance; zero execution cells. Absence is not negative performance evidence. |
-| cross_dataset_rank_voting_v1_primary_pool_200 | Cross Dataset Rank Voting V1 Primary Pool 200 | classical | supervised | model-specific K=20 LR / K=40 CatBoost unless natural-support or full-feature identity | fold training and full DEV where registered | no | 0 | 4 | numeric 2/2 | numeric 2/2 | not registered | Canonical identity taken from sealed matrix/registry; support may be natural rather than padded where declared. |
+## Dataset scope
 
-Source: [`tables/method_registry.csv`](tables/method_registry.csv). Method IDs come from the sealed run matrices and final 34-cell registry, not filenames or display-name inference.
-
-`LLMSelector` applies an authenticated target-free semantic ranking and deterministic model-specific truncation (K=20 for Logistic Regression, K=40 for CatBoost). On the third benchmark, one accepted ranking generation produced two cached truncation states; OOT reused them with zero ranking regeneration and zero LLM request. The provider record also contains an earlier invalid attempt rejected because it named an unknown feature; the accepted response had no unknown or duplicate features.
-
-`StableCoreLLMFillSelector` is deliberately mixed: its RF/mRMR statistical components fit only on each fold's training data (and on full DEV before OOT), while the remaining positions are filled from the frozen target-free LLM order. Third-dataset accounting authenticates 10 outer stable-core DEV fits and 50 internal RF/mRMR component fits, plus 2 full-DEV outer refits and 10 internal full-DEV components. This is not a purely target-free selector.
-
-The historical semantic/mixed voter has zero authenticated execution cells and unresolved historical provenance. It is carried as `unavailable`, never scored as zero and never used in ranks.
-
-## Models and preprocessing
-
-| model | configuration | seed | thread_limit | numeric_processing | categorical_processing | threshold_rule | oot_target_used |
+| dataset | DEV period | DEV n | DEV event rate | OOT period | OOT n | OOT event rate | eligible features |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| lr | LogisticRegression; solver=liblinear; max_iter=1000; class_weight=balanced; random_state=42 | 42 | 4 | mean imputation and centered standard scaling; float32 sparse CSR on third benchmark | missing token plus one-hot encoding; min_frequency=10 and unknown ignored on third benchmark | maximize KS on fitting-partition scores; full-DEV training scores for final OOT threshold | no |
-| catboost | CatBoostClassifier; iterations=1500; early_stopping=150; depth=10; learning_rate=.01; l2_leaf_reg=95; min_data_in_leaf=290; colsample_bylevel=.9; random_strength=.125; grow_policy=Depthwise; one_hot_max_size=21; leaf_estimation_method=Newton; bootstrap_type=Bernoulli; subsample=.55; loss=Logloss; eval=AUC; auto_class_weights=Balanced; seed=42 | 42 | 4 | training-only missing handling; float32 sparse CSR final representation on third benchmark | missing token plus one-hot encoding before sparse final model on third benchmark | maximize KS on fitting-partition scores; full-DEV training scores for final OOT threshold | no |
+| Home Credit canonical temporal split | recent_decision day -600 through -241 | 99,092 | 0.0793 | recent_decision day -240 through -1 | 120,053 | 0.0890 | 391 |
+| LendingClub v2 canonical temporal split | recent_decision day -1795 through -1096 | 598,649 | 0.1954 | recent_decision day -1065 through -730 | 293,105 | 0.2329 | 161 |
+| Home Credit - Credit Risk Model Stability 2024 | 2019-01-01 through 2020-02-25 | 1,221,743 | 0.0324 | 2020-02-26 through 2020-10-05 | 304,916 | 0.0274 | 1,068 |
 
-Source: [`tables/model_settings.csv`](tables/model_settings.csv). Configurations are frozen protocol/run-manifest settings; model-specific encoded dimensionality may exceed selected original-feature K.
+The third benchmark shares Home Credit lineage with the first and is not a fully independent institutional replication. Dataset targets, feature universes, prevalence, and temporal windows differ, so absolute scores are compared only within their stated dataset/model case.
 
-Both models use seed 42 and at most four estimator threads on CPU. Missing values, scaling, and categorical encoding are fit only on the training partition. On the third benchmark the final preprocessing emits canonical sorted float32 CSR matrices: numeric values use training-only mean imputation and centered scaling, and categoricals use a missing token plus one-hot encoding with `min_frequency=10` and unknown categories ignored. The late sparse-preprocessing amendment changed representation only—dense to sparse CSR—without changing feature selection, imputation, scaling, category semantics, thresholds, or predictions already sealed under a different identity.
+## What this update does and does not establish
 
-For each fold the decision threshold is selected from that fold's training scores by maximum KS. Final OOT thresholds are selected from full-DEV training scores and then held fixed; OOT targets or scores never choose a threshold. Fold-only fitting, temporal gaps, immutable registries, target/prediction identity hashes, and full-DEV-only refits enforce leakage controls.
+The current sources are aggregate scorecards. They support exact point-estimate tables, a discrete evidence-revision timeline, a winner matrix, and the metric panels in Figures 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 15, 16, 17. They do not supply row-level finalized predictions or repeated calendar-time score slices. Therefore Figure 2 is explicitly a **revision timeline**, not performance through calendar time, and Figure 6 shows current aggregate log-loss/Brier summaries. Figure 16 uses winner-only AUC-matched reference profiles; Figure 17 shows winner-only calibration feasibility without fabricating probability-level evidence.
 
-## Evaluation protocol
+The machine-readable resolution is [`tables/updated_metric_leaders.csv`](tables/updated_metric_leaders.csv). For each metric it preserves the supplied best-FS method and score, optional LLM comparator and score, improvement direction, resolved winner, winning column, and comparison outcome.
 
-DEV uses five expanding-window temporal folds with one time-group gap. Locked OOT evaluation uses the later frozen population. Supervised selectors refit on full DEV before OOT; the target-free LLM ranking is cached. Prediction files and metrics are SHA-256 authenticated, and this builder independently recomputes registered classification metrics from 32 original-matrix and 22 third-dataset numeric OOT prediction files at tolerance 1e-12. The Prompt 14 extension separately seals a 448-row metric-recomputation audit with no failures.
+## Reproducibility
 
-Score PSI compares authenticated DEV out-of-fold scores with OOT. Selected-feature PSI is type-aware on the third benchmark and repaired type-aware evidence is used for the first two. Selection stability uses registered Nogueira/Kuncheva/Jaccard measures where available. Natural-support selections remain unpadded and visibly labelled. Statistical inference uses identical paired rows, two-sided DeLong AUC tests, 2,000 target-stratified paired bootstrap repetitions (seed 20260721), and Holm correction within frozen dataset/model/reference families. The older five-fold Wilcoxon diagnostics are low-power consistency evidence only.
-
-Atomic checkpoints, SHA-bound selection/evaluation manifests, immutable completed cells, archived interrupted attempts, exact-identity resume, and a one-cell/one-fold CPU policy support reproducibility. No new comparison or materiality threshold was added in synthesis.
-
-## Experimental accounting
-
-| evidence_cohort | scope | registered_methods_or_cells | dev_evaluations | dev_selector_fits | oot_cells | llm_accounting | statistical_comparisons | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| canonical_llm_matrix_v2 | two original datasets | 32/32 run identities (16/dataset) | 160/160 numeric | 160 fold-scoped evaluation identities; selector work follows method semantics | 32/32 numeric | 72 logical requests; 24 canonical physical + 6 source-generation physical; 48 local reuses; 42 calls avoided | 12/12 completed paired five-fold diagnostics | The 65-file successor reporting seal is authoritative; the older broad migration inventory is superseded for report assembly. |
-| prompt14_classical_extension | two-dataset classical extension | 64/64 aggregate OOT identities | 120/120 combination DEV evaluations plus authenticated baseline evidence | 90/90 combination selector fits | 64/64 numeric aggregate identities | 0 LLM requests; classical-only cohort | 124/124 evaluable; 36/36 Holm families complete | Secondary cohort retained separately; two natural-support Home Credit CatBoost Boruta-first DEV references realized 26 rather than requested 40 and were not padded. |
-| prompt16_final_amended | third dataset | 34/34 OOT cells accounted; 17 method/model identities | 170/170 authenticated: 123 numeric, 47 unavailable | 135 classical + 10 stable-core outer + 50 internal RF/mRMR components | 34/34: 22 numeric, 12 unavailable | 1 accepted target-free ranking generation; 2 provider attempts (first rejected for hallucinated feature); 2 cached truncation states; 0 OOT requests/regeneration; tokens/cost unavailable | 72 graph rows; 70 registered; 22 complete and 50 unavailable | Controller peak process-tree RSS 35072520192 bytes; resource-infeasible cells remain visible. |
-
-Source: [`tables/experimental_accounting.csv`](tables/experimental_accounting.csv). Each numerator/denominator is retained by evidence cohort; cohorts are not pooled as independent replicates.
-
-The third-dataset final 34-cell registry contains 22 numeric and 12 explicitly unavailable OOT cells. Its DEV register contains 170/170 authenticated identities: 150 classical (103 numeric, 47 unavailable) and 20 supplemental LLM identities (20 numeric). The final four OOT cells are `llm`+LR K=20, `llm`+CatBoost K=40, `stable_core_llm_fill`+LR K=20, and `stable_core_llm_fill`+CatBoost K=40. The final comparison graph contains 72 visible rows: 22 completed and 50 unavailable; 70 are registered inferential comparisons, with provenance-only visibility retained separately.
-
-## Reproducibility and computational controls
-
-- Repository branch/head authenticated before synthesis: `main` / `3f5d0d992a95a6e2abc930346021a63c9f8f7da4`.
-- Required ancestors: Prompt 14 lock `fd98d3c6d445e042b69dd24b0d6e8355157548dd`, Prompt 14 completion `8bb283c`, and Prompt 16 controller implementation `f0581ceec3a48a6a7dfae629eedb0b8eb79bdb60`.
-- Relevant sparse execution history includes authorization/identity commits `6a55cdf`, `67dd641`, `f0581ce`, and current pre-synthesis head `3f5d0d992a`; exact authority is captured in the audit JSON.
-- Environment: Python 3.13.5 on Windows-11-10.0.26200-SP0; numpy 2.4.2, pandas 3.0.1, scikit-learn 1.8.0, matplotlib 3.10.8, pyarrow 24.0.0, catboost 1.2.10, psutil 7.2.2.
-- Hardware/policy: `Intel64 Family 6 Model 186 Stepping 2, GenuineIntel`; 16 logical CPUs; 39.63 GiB physical RAM; CPU-only experiment policy; one cell and one fold concurrently; data-loader workers=0; estimator threads≤4.
-- Final third-dataset controller: peak process-tree RSS 32.66 GiB and minimum available RAM 68.96 MiB. It recorded resource waits/retries/resumes rather than silently dropping infeasible identities.
-- Random seeds: model/selection seed 42; paired bootstrap seed 20260721.
-- Logging/checkpoints: JSON/CSV records, atomic per-selection/per-evaluation state, SHA-256 manifests, immutable completed cells, and exact-identity resume.
-- Package: 24 normalized/report tables and 17 PNG/PDF figure pairs. [`evidence_manifest.json`](evidence_manifest.json) maps output hashes and source artifacts; [`validation_audit.json`](validation_audit.json) records all gates.
-
-## Artifact status and provenance boundaries
-
-| artifact_scope | status | reporting_action | authority |
-| --- | --- | --- | --- |
-| legacy canonical_artifact_manifest July 4 broad migration inventory | superseded for final reporting | Do not require its moved/mutated-path entries; use the later 65-file successor source_manifest seal, which authenticated 65/65. | D:\python projects\Research_pre_cleanup_backup_20260704\results\finalized_research\final_report_inputs\source_manifest.json |
-| Prompt 14 legacy/original voting manifest | historical superseded | Use the active v2 manifest pointer only; unaffected voting payloads remain byte-identical. | cleanup/audits/prompt_14_two_dataset_oot_review_v3/authentication_validation.json |
-| Prompt 16 pilot_v1 and dev_llm_supplement_v2 | intermediate/superseded | Exclude; final DEV supplement is dev_llm_supplement_v3. | cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json |
-| Prompt 16 archived_incomplete_attempts | failed/interrupted archived | Exclude from numeric evidence; retain only as failure provenance. | cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json |
-| historical semantic/mixed voter | unavailable | Zero execution cells; unresolved provenance; never plot or tabulate as zero/negative evidence. | cleanup/audits/prompt_16_final_amended_oot/preservation_deviation_and_revocation_register.json |
-| Prompt 16 final amended OOT v1 | canonical active sealed | Use all 34 registered cells, including 12 explicit unavailable identities. | results/prompt_16_homecredit_model_stability_2024/oot_final_amended_v1/final_evidence_manifest.json |
-
-Source: [`tables/artifact_status_register.csv`](tables/artifact_status_register.csv). Superseded, revoked/intermediate, and failed-run material is not mixed with the final sealed numeric evidence.
-
-The July 4 broad migration inventory is historical and path-sensitive. The later successor `final_report_inputs/source_manifest.json` is the reporting authority and all 65/65 listed source hashes matched exactly. Prompt 16 `pilot_v1`, `dev_llm_supplement_v2`, and archived incomplete attempts remain excluded; `dev_llm_supplement_v3` and `oot_final_amended_v1` are final.
-
-## Scope alignment and limitations
-
-The study can describe whether authenticated LLM-assisted selectors increased or decreased predictive point estimates relative to registered classical references, whether registered inference supports those named comparisons, and how performance co-varies descriptively with drift, selection stability, and resource use. It cannot establish universal method superiority, causal effects of semantics, business value, or equivalence from a non-significant result.
-
-The three feature universes and target constructions differ, so direct feature-name overlap is only valid within a dataset. The third benchmark shares organizational/data lineage with Home Credit and is not a fully independent institution. Results depend on the frozen provider/model (`gpt-4.1-mini-2025-04-14` for the third ranking), prompts, preprocessing, models, budgets, and temporal windows. Third-dataset token counts and monetary cost are not authenticated and remain unavailable. Resource-infeasible cells remain in denominators and may limit comparisons. Per-cell RAM is unavailable for portions of the evidence; controller-level peak RAM does not identify a cell-specific peak.
-
-No post-hoc business-materiality threshold was invented. The third-dataset stored 0.0 directional field is only the mathematical sign boundary; its register explicitly says `not_preregistered_no_claim_permitted`. PSI bands, where inherited, are monitoring descriptions rather than inferential thresholds. These constraints should carry unchanged into the paper.
+- Repository branch/head at build: `main` / `e1588ce4ef35252fed3bf86e509a7100edadb4e8`.
+- Workbook snapshot rows: 45 (15 metrics × 3 datasets).
+- Finalized score overrides: 6 values, including 2 LR AUC cases.
+- Current reviewer figures: 14 PNG files and 0 PDF files.
+- Generated tables: 13.
+- [`evidence_manifest.json`](evidence_manifest.json) records hashes; [`validation_audit.json`](validation_audit.json) records validation gates.
