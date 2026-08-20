@@ -188,19 +188,27 @@
   ],
   "checks": {
     "authentication_checks_passed": true,
-    "every_figure_has_png_and_pdf": true,
+    "every_figure_has_png": true,
     "exact_primary_markdown_files": true,
-    "figure_pdf_count": 17,
-    "figure_png_count": 17,
+    "figure_inventory_scope_complete": true,
+    "figure_pdf_count": 0,
+    "figure_png_count": 14,
+    "finalized_metric_override_count": true,
+    "historical_curve_evidence_complete": true,
     "legacy_successor_hashes_65_of_65": true,
-    "markdown_link_count": 77,
+    "markdown_link_count": 41,
     "markdown_links_all_exist": true,
     "no_experiment_model_fit_selector_fit_oot_or_llm_request_executed": true,
+    "no_figure_pdfs": true,
     "no_model_selector_llm_or_evaluation_import": true,
     "prediction_reconciliation_count": 54,
     "prediction_reconciliations_passed": true,
     "reporting_script_double_rebuild_hashes_identical": true,
     "reporting_script_regression_contract": "validated by two consecutive rebuilds with identical manifest-tracked output hashes before commit",
+    "root_finalized_report_exists": true,
+    "root_requested_pngs_exist": true,
+    "root_winner_pdf_count_zero": true,
+    "supplied_scorecard_45_rows": true,
     "third_dev_denominator": {
       "numeric": 123,
       "registered": 170,
@@ -211,32 +219,36 @@
       "registered": 34,
       "unavailable": 12
     },
-    "unavailable_oot_values_not_zero_filled": true
+    "unavailable_oot_values_not_zero_filled": true,
+    "updated_auc_timeline_complete": true,
+    "updated_leader_45_rows": true,
+    "updated_six_case_complete": true,
+    "updated_six_case_gini_identity": true
   },
   "link_records": [
     {
       "exists": true,
-      "link": "tables/cross_dataset_synthesis.csv",
+      "link": "tables/finalized_score_overrides.csv",
       "report": "01_EXPERIMENT_OVERVIEW.md"
     },
     {
       "exists": true,
-      "link": "tables/dataset_overview.csv",
+      "link": "inputs/workbook1_supplied_results.csv",
       "report": "01_EXPERIMENT_OVERVIEW.md"
     },
     {
       "exists": true,
-      "link": "tables/method_registry.csv",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "01_EXPERIMENT_OVERVIEW.md"
     },
     {
       "exists": true,
-      "link": "tables/model_settings.csv",
+      "link": "tables/updated_cross_case_method_summary.csv",
       "report": "01_EXPERIMENT_OVERVIEW.md"
     },
     {
       "exists": true,
-      "link": "tables/experimental_accounting.csv",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "01_EXPERIMENT_OVERVIEW.md"
     },
     {
@@ -251,97 +263,32 @@
     },
     {
       "exists": true,
-      "link": "tables/artifact_status_register.csv",
-      "report": "01_EXPERIMENT_OVERVIEW.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/metric_dictionary.csv",
+      "link": "tables/finalized_score_overrides.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/dev_fold_metrics.csv",
+      "link": "tables/finalized_score_overrides.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/dev_summary.csv",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "tables/updated_cross_case_method_summary.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/dev_oot_generalization.csv",
+      "link": "tables/updated_cross_metric_family_summary.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/statistical_comparisons.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/cross_dataset_synthesis.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/feature_selections.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/feature_selections_by_fold.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/feature_family_distribution.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/feature_selection_frequency.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/selection_stability.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/method_overlap.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/feature_psi.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/resource_metrics.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/llm_resource_costs.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/llm_resource_costs.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/prediction_reconciliation.csv",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -351,42 +298,27 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_01_oot_performance_by_dataset_method_model.pdf",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "figures/fig_02_auc_evidence_revision_timeline.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_02_dev_vs_oot_performance.png",
+      "link": "tables/updated_auc_revision_timeline.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_02_dev_vs_oot_performance.pdf",
+      "link": "figures/fig_03_metric_winner_matrix.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/dev_oot_generalization.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_03_dev_to_oot_delta_heatmap.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_03_dev_to_oot_delta_heatmap.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/dev_oot_generalization.csv",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -396,42 +328,27 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_04_oot_ks_by_method.pdf",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "figures/fig_05_threshold_metric_winners.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_05_llm_vs_classical_effect_forest.png",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_05_llm_vs_classical_effect_forest.pdf",
+      "link": "figures/fig_06_calibration_error_metrics.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/statistical_comparisons.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_06_adjusted_significance_heatmap.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_06_adjusted_significance_heatmap.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/statistical_comparisons.csv",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -441,12 +358,7 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_07_score_psi.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -456,72 +368,17 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_08_selected_feature_psi.pdf",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/feature_psi.csv",
+      "link": "figures/fig_11_cross_metric_family_mix.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_09_selection_stability.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_09_selection_stability.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/selection_stability.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_10_method_overlap.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_10_method_overlap.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/method_overlap.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_11_runtime_and_peak_ram.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_11_runtime_and_peak_ram.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/resource_metrics.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_12_performance_resource_tradeoff.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_12_performance_resource_tradeoff.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "tables/updated_cross_metric_family_summary.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -531,12 +388,7 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_13_llm_incremental_value.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/cross_dataset_synthesis.csv",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
@@ -546,57 +398,37 @@
     },
     {
       "exists": true,
-      "link": "figures/fig_14_cross_dataset_rank_consistency.pdf",
+      "link": "tables/updated_cross_case_method_summary.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/oot_metrics.csv",
+      "link": "figures/fig_15_top_decile_business_metrics.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_15_oot_roc_curves.png",
+      "link": "tables/updated_metric_leaders.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_15_oot_roc_curves.pdf",
+      "link": "figures/fig_16_winner_roc_curves.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "tables/prediction_reconciliation.csv",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_16_oot_calibration_curves.png",
+      "link": "figures/fig_17_winner_calibration_curves.png",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     },
     {
       "exists": true,
-      "link": "figures/fig_16_oot_calibration_curves.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/prediction_reconciliation.csv",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_17_oot_score_distributions.png",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "figures/fig_17_oot_score_distributions.pdf",
-      "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
-    },
-    {
-      "exists": true,
-      "link": "tables/prediction_reconciliation.csv",
+      "link": "tables/updated_six_case_auc_gini.csv",
       "report": "02_COMPLETE_METRICS_AND_FIGURES.md"
     }
   ],
