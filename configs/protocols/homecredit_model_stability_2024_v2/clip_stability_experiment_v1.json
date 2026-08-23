@@ -1,0 +1,340 @@
+{
+  "schema_version": "clip_stability_experiment_v1",
+  "experiment_id": "prompt16_clip_stability_v1",
+  "status": "FROZEN",
+  "repository_root": ".",
+  "prompt1_package": {
+    "path": "outputs/prompt_16_homecredit_model_stability_2024/clip_preparation_v1",
+    "sha256_manifest_path": "manifests/sha256_manifest.csv",
+    "sha256_manifest_sha256": "249e2a75a1f82a956e1d50588764d9bdf62b3903543e8f7e398c4b76ebb524eb",
+    "validation_report_path": "validation/validation_report.json",
+    "required_status": "PASS",
+    "feature_universe_count": 1959,
+    "feature_universe_hash": "882e958aacfb0076ed7291ea8eee86e87b4d1b2d91ed8ad1d9ac7c896eb2681a",
+    "required_artifacts": [
+      "methodology_lock.json",
+      "metadata/feature_universe.csv",
+      "metadata/feature_semantics.csv",
+      "text/feature_text.csv",
+      "text/text_embeddings.parquet",
+      "text/text_embedding_manifest.json",
+      "pairing/identity_equivalence.csv",
+      "pairing/representation_split.csv",
+      "statistics/statistical_descriptors_raw.csv",
+      "statistics/statistical_descriptors_raw.parquet",
+      "statistics/stability_source_stat_preprocessor.json",
+      "statistics/statistical_descriptors_stability_source_scaled.csv",
+      "anchor/stability_source_anchor.csv",
+      "anchor/stability_source_anchor_manifest.json",
+      "pairs/stability_source_pairs.parquet",
+      "pairs/stability_source_pairs_manifest.json",
+      "manifests/data_provenance.json",
+      "manifests/sha256_manifest.csv",
+      "validation/validation_report.json",
+      "validation/VALIDATION_REPORT.md"
+    ]
+  },
+  "directions": [
+    {
+      "id": "stability_to_stability",
+      "label": "Stability->Stability",
+      "source_dataset": "homecredit_model_stability_2024",
+      "target_dataset": "homecredit_model_stability_2024",
+      "ranking_path": "rankings/stability_to_stability.csv",
+      "scoring_rule": "procrustes_consensus_then_consensus_source_anchor_similarity"
+    },
+    {
+      "id": "homecredit_to_stability",
+      "label": "HomeCredit->Stability",
+      "source_dataset": "homecredit",
+      "target_dataset": "homecredit_model_stability_2024",
+      "ranking_path": "rankings/homecredit_to_stability.csv",
+      "scoring_rule": "procrustes_consensus_then_frozen_homecredit_consensus_anchor_similarity"
+    },
+    {
+      "id": "lendingclub_to_stability",
+      "label": "LendingClub->Stability",
+      "source_dataset": "lendingclub_v2",
+      "target_dataset": "homecredit_model_stability_2024",
+      "ranking_path": "rankings/lendingclub_to_stability.csv",
+      "scoring_rule": "arithmetic_mean_of_five_frozen_seed_anchor_similarities"
+    }
+  ],
+  "forbidden_directions": [
+    "Stability->HomeCredit",
+    "Stability->LendingClub",
+    "HomeCredit->LendingClub downstream AUC",
+    "LendingClub->LendingClub downstream AUC"
+  ],
+  "representation_contract": {
+    "pairing_policy_version": "identity_equivalence_v2",
+    "text": {
+      "template": "feature_text_v1",
+      "model": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "main",
+      "dimension": 384,
+      "normalization": "L2",
+      "frozen": true
+    },
+    "statistics": {
+      "schema": "compact_target_free_v2",
+      "dimension": 13,
+      "field_order": [
+        "missing_rate",
+        "unique_ratio",
+        "concentration_share",
+        "signed_log_mean",
+        "log_standard_deviation",
+        "clipped_skewness",
+        "normalized_entropy",
+        "is_numeric",
+        "is_categorical",
+        "is_binary",
+        "numeric_stats_valid",
+        "skewness_valid",
+        "entropy_valid"
+      ]
+    },
+    "architecture": {
+      "text_input_dim": 384,
+      "statistical_input_dim": 13,
+      "text_hidden_dim": 64,
+      "statistical_hidden_dim": 16,
+      "shared_embedding_dim": 32,
+      "dropout": 0.05,
+      "activation": "gelu",
+      "initial_temperature": 0.07,
+      "trainable_temperature": false,
+      "min_temperature": 0.02,
+      "max_temperature": 0.5,
+      "expected_parameter_count": 27488
+    },
+    "loss": "0.5*(CrossEntropy(T@S.T/temperature,identity)+CrossEntropy((T@S.T/temperature).T,identity))"
+  },
+  "training": {
+    "seeds": [11, 22, 33, 44, 55],
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "batch_size": 64,
+    "max_epochs": 80,
+    "skip_batches_smaller_than": 2,
+    "gradient_clip_norm": 1.0,
+    "early_stopping_patience": 15,
+    "minimum_improvement": 0.0001,
+    "checkpoint_selection": "minimum_source_validation_loss_per_seed",
+    "diagnostics_not_selection": ["MRR", "Recall@1", "Recall@5", "Recall@10"],
+    "scheduler": null,
+    "deterministic_algorithms": true,
+    "device_policy": "cpu",
+    "batch_log_interval": 5,
+    "collapse_thresholds": {
+      "variance_min": 0.000001,
+      "unique_min_fraction": 0.25,
+      "mean_pairwise_cosine_max": 0.98,
+      "pairwise_cosine_std_min": 0.0001,
+      "norm_tolerance": 0.0001
+    }
+  },
+  "consensus": {
+    "required_seeds": [11, 22, 33, 44, 55],
+    "reference_seed": 11,
+    "alignment": "orthogonal_procrustes_svd",
+    "rule": "l2_normalize_each_seed; align seeds 22/33/44/55 to seed 11; average; l2_normalize",
+    "dimension": 32,
+    "tie_breaking": ["clip_score_desc", "feature_name_asc"]
+  },
+  "historical_sources": {
+    "homecredit": {
+      "root": "D:/python projects/Research_pre_cleanup_backup_20260704/results/corrected_homecredit_clip",
+      "dataset": "homecredit",
+      "generation": "corrected_identity_equivalence_v2",
+      "training_manifest": "training/training_manifest.json",
+      "negative_policy_manifest": "contrastive_data/negative_policy_manifest.json",
+      "tensor_schema": "contrastive_data/contrastive_tensor_schema.json",
+      "checkpoint_path_template": "training/seeds/seed_{seed}/best_checkpoint.pt",
+      "checkpoint_manifest_template": "training/seeds/seed_{seed}/checkpoint_manifest.json",
+      "checkpoint_hashes": {
+        "11": "163794df541fd0ffa2c5f7d54e5a995c1a8c7cc04aa3234858f9c0fd6db9eb8a",
+        "22": "37aa0fb7cf49f79607b4e0ebd7dd67ecaca4af61f74f23b796e5f12a79c83feb",
+        "33": "ecc516f9a5542779859078ae29e1502e9497ee1624f8dd53dbde81f59d3f4e19",
+        "44": "a4dcad12cd1360c4e4c51a8cb87aa34d1b99163b725ab6d2b51402adeb740401",
+        "55": "920a52d22ab32cfed0986db19f8b5e91207c841a7d95f5241be2ccb871d0448b"
+      },
+      "preprocessor_path": "D:/python projects/Research_pre_cleanup_backup_20260704/results/clip_v2/statistical_view/statistical_preprocessor.json",
+      "preprocessor_file_sha256": "caf0a9dc4e84e5246453ab4095886e5206b0b24a6c41bc0976a2071f2a298e8a",
+      "preprocessor_identity": "98265cde0bc0271a339ee7a1fe6bbb816f58953c45c482a567c7162ec50131c9",
+      "preprocessor_policy": "median_iqr_first_7_clip_minus8_plus8_last_6_unchanged",
+      "anchor_path": "stable_core/stable_core_anchor_vector.npy",
+      "anchor_file_sha256": "4581ad1a65d9fb697e553a61fef26297014b4412782fad1c9cbd0129954467fc",
+      "anchor_manifest": "stable_core/anchor_manifest.json",
+      "anchor_manifest_file_sha256": "f1bde0c9e8f28d65c01c600fecb9f0cfe713fa9e6cecc34d11a9f7ce02527d8e",
+      "anchor_identity": "495471ca5a198f4f377d07a303dfc09a16ea528bfaa2b72ea1cd73fe7780c8df",
+      "anchor_member_count": 23,
+      "text_manifest_path": "D:/python projects/Research_pre_cleanup_backup_20260704/results/clip/text_baseline/embedding_cache_manifest.json",
+      "text_manifest_sha256": "f6d1a4ef53daabd05f6721f27db394903e8d2b11e11c8b899d884f595dd794f4"
+    },
+    "lendingclub": {
+      "root": "D:/python projects/Research_pre_cleanup_backup_20260704/results/corrected_lendingclub_to_homecredit_transfer",
+      "dataset": "lendingclub_v2",
+      "generation": "corrected_identity_equivalence_v2",
+      "training_stage_manifest": "manifests/train_stage_manifest.json",
+      "projection_manifest": "reverse_projection/reverse_projection_manifest.json",
+      "data_manifest": "pairing/data_manifest.json",
+      "negative_policy_manifest": "pairing/negative_policy_manifest.json",
+      "checkpoint_path_template": "training/seeds/seed_{seed}/best_checkpoint.pt",
+      "checkpoint_manifest_template": "training/seeds/seed_{seed}/checkpoint_manifest.json",
+      "checkpoint_hashes": {
+        "11": "1b17c0272b72757675a15152639772b4a77d47348923f66f56b50321f6984d1b",
+        "22": "a7cef93c01fa22694855aee1e5501b80404324624d107774532d15b123077a3e",
+        "33": "1adf078f57c28e3d65ed9f61b9c914e9172099eeec99f5ce4cfb8afd4f941243",
+        "44": "d4a4a5e57db1f0e6c42efdbaf2642be3e1a00351e95cdd09b725ea35f0c9877c",
+        "55": "0cdbe2ee27a4a7d27f18c1c67054213b0f456360aa6c2c8af61fa0336323ae8f"
+      },
+      "preprocessor_path": "training/statistical_preprocessor/statistical_preprocessor.joblib",
+      "preprocessor_file_sha256": "297867a675373f675bf9a742ba047e2828daef36757c67be36052fce4adb341e",
+      "preprocessor_json": "training/statistical_preprocessor/statistical_preprocessor.json",
+      "preprocessor_json_sha256": "9b5212b1546735e40b8f8d49a10134f47abc4fb39cdfd2fdc99ef7142b8732bc",
+      "preprocessor_identity": "693133fd3cd2f8bae7144f328664b90d0124a5cb691ff2c4d517961ef3dbe350",
+      "preprocessor_policy": "median_imputation_standard_scaling_all_13_no_clipping",
+      "source_anchor_manifest": "source_anchor/source_anchor_manifest.json",
+      "source_anchor_manifest_sha256": "75ca93c129b04a8fc4073454cb497caf1f6bb78151e2653b75e71085b7dc7c2c",
+      "seed_anchor_path_template": "source_anchor/seed_{seed}_anchor.npy",
+      "seed_anchor_manifest_template": "source_anchor/seed_{seed}_anchor_manifest.json",
+      "anchor_hashes": {
+        "11": "28b12c8412b975e6c8c5d560baf653d9f2518edc3fac86bfc03188530ea1ca88",
+        "22": "f4151a2a9060cea85f89963b3413c09a191fda1ae57dbe33ac83960ea1c4386c",
+        "33": "7241ab6408779e0532a62f859dcc91380b0d61021bc8376accc1fee6f819b805",
+        "44": "fa63c02cbaaddfd05e563689bbfcbc9edf8b84916842f5afb18e8be955422f84",
+        "55": "57d860df8ac4516b2efe7a786b6527115b0ee2b85d642c166a27b690dfbd76cd"
+      },
+      "anchor_member_count": 23,
+      "text_manifest_path": "D:/python projects/Research_pre_cleanup_backup_20260704/results/clip/text_baseline/embedding_cache_manifest.json",
+      "text_manifest_sha256": "f6d1a4ef53daabd05f6721f27db394903e8d2b11e11c8b899d884f595dd794f4"
+    }
+  },
+  "downstream": {
+    "matrix_root": "outputs/prompt_16_homecredit_model_stability_2024/matrix_v1",
+    "matrix_manifest_sha256": "b5dc28de931e39a5a554c6ca2ff639e6af2705c106ecf1b0f077e5caafa02690",
+    "matrix_metadata_sha256": "c5dec05fa362b0a4fd77c23cf79fc093c338a98bf20899bc50b31d9bf1aa49dc",
+    "protocol_lock": "configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json",
+    "protocol_lock_sha256": "e4b9f9f13286f15db0887c9dead09eb7e13f7912af786f2f2bc9c53d126b1860",
+    "time_column": "date_decision",
+    "case_id_column": "case_id",
+    "target_column": "target",
+    "dev_end_exclusive": "2020-02-26",
+    "oot_start_inclusive": "2020-02-26",
+    "dev_rows": 1221743,
+    "oot_rows": 304916,
+    "n_splits": 5,
+    "gap_unique_dates": 1,
+    "splitter": "credit_risk_fs.models._cv_utils.GroupedTimeSeriesSplit",
+    "mrmr": {
+      "implementation": "credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector",
+      "algorithm_name": "rf_relevance_correlation_redundancy",
+      "method": "mrmr",
+      "n_estimators": 128,
+      "redundancy": "mean_absolute_pearson_correlation",
+      "redundancy_floor": 0.05,
+      "random_state": 42,
+      "n_jobs": 4
+    },
+    "cells": {
+      "lr": {"candidate_pool_size": 60, "final_k": 20},
+      "catboost": {"candidate_pool_size": 100, "final_k": 40}
+    },
+    "selection_encoder": "credit_risk_fs.preprocessing.encoding.OriginalFeatureNumericEncoder",
+    "model_preprocessor": {
+      "implementation": "credit_risk_fs.preprocessing.encoding.SparsePreprocessor",
+      "numeric_imputation": "mean_training_only_fallback_0",
+      "numeric_scaler": "StandardScaler",
+      "categorical_missing": "Missing",
+      "categorical_handle_unknown": "ignore",
+      "categorical_min_frequency": 10,
+      "output": "float32_csr"
+    },
+    "models": {
+      "lr": {
+        "solver": "liblinear",
+        "max_iter": 1000,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "C": 1.0,
+        "tol": 0.0001,
+        "fit_intercept": true
+      },
+      "catboost": {
+        "iterations": 1500,
+        "depth": 10,
+        "grow_policy": "Depthwise",
+        "learning_rate": 0.01,
+        "l2_leaf_reg": 95,
+        "min_data_in_leaf": 290,
+        "rsm": 0.9,
+        "random_strength": 0.125,
+        "bootstrap_type": "Bernoulli",
+        "subsample": 0.55,
+        "leaf_estimation_method": "Newton",
+        "loss_function": "Logloss",
+        "eval_metric": "AUC",
+        "auto_class_weights": "Balanced",
+        "random_seed": 42,
+        "thread_count": 4,
+        "allow_writing_files": false,
+        "verbose": 100
+      }
+    },
+    "threshold_contract": "maximize_KS_on_training_predictions_only",
+    "oot_gate": {
+      "required": true,
+      "manifest": "manifests/pre_oot_freeze_manifest.json",
+      "final_models_fitted_before_gate": true,
+      "oot_final_evaluation_only": true
+    },
+    "score_batch_size": 50000,
+    "long_operation_heartbeat_seconds": 30
+  },
+  "logging": {
+    "stdout_progress_required": true,
+    "structured_jsonl_fields": [
+      "timestamp",
+      "stage",
+      "direction",
+      "seed",
+      "epoch",
+      "batch",
+      "fold",
+      "event",
+      "metrics",
+      "elapsed_seconds"
+    ],
+    "clip_batch_cadence": "first_every_5th_final",
+    "long_operation_heartbeat_seconds": 30,
+    "long_operations": [
+      "large_matrix_reads",
+      "rf_relevance",
+      "correlation_redundancy",
+      "catboost_fit",
+      "oot_prediction",
+      "large_file_hashing"
+    ]
+  },
+  "outputs": {
+    "artifact_root": "outputs/prompt_16_homecredit_model_stability_2024/clip_experiment_v1",
+    "result_root": "results/prompt_16_homecredit_model_stability_2024/clip_experiment_v1",
+    "run_log": "logs/run.log",
+    "progress_jsonl": "logs/progress.jsonl",
+    "final_report": "FINAL_CLIP_STABILITY_REPORT.md"
+  },
+  "resume": {
+    "complete_status": "COMPLETE",
+    "reuse_only_when_config_inputs_outputs_hash_match": true,
+    "archive_incomplete_seed_directories": true,
+    "incompatible_output_action": "FAIL"
+  },
+  "optional_paired_bootstrap": {
+    "enabled": false,
+    "seed": 20260721,
+    "may_not_affect_selection_or_training": true
+  }
+}
