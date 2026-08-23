@@ -5,7 +5,8 @@ import math
 from pathlib import Path
 import random
 import subprocess
-from typing import Any
+import time
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
@@ -50,7 +51,13 @@ def train_seed(
     output_dir: Path,
     config_snapshot_text: str,
     smoke_test: bool = False,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
+    direction: str | None = None,
+    batch_log_interval: int = 5,
 ) -> SeedTrainingResult:
+    started = time.perf_counter()
+    if batch_log_interval <= 0:
+        raise ValueError("batch_log_interval must be positive")
     _set_seed(seed, deterministic=config.deterministic)
     device = resolve_device(config.device_policy)
     model = SemanticStatisticalContrastiveEncoder(config.model).to(device)
@@ -59,12 +66,45 @@ def train_seed(
 
     train_text, train_stat = tensors_for_pairs(data.train_pairs, data.training_text, data.training_stat)
     val_text, val_stat = tensors_for_pairs(data.validation_pairs, data.training_text, data.training_stat)
+    expected_shapes = {
+        "train_text": (len(data.train_pairs), config.model.text_input_dim),
+        "train_statistical": (
+            len(data.train_pairs),
+            config.model.statistical_input_dim,
+        ),
+        "validation_text": (
+            len(data.validation_pairs),
+            config.model.text_input_dim,
+        ),
+        "validation_statistical": (
+            len(data.validation_pairs),
+            config.model.statistical_input_dim,
+        ),
+    }
+    observed_shapes = {
+        "train_text": tuple(train_text.shape),
+        "train_statistical": tuple(train_stat.shape),
+        "validation_text": tuple(val_text.shape),
+        "validation_statistical": tuple(val_stat.shape),
+    }
+    if observed_shapes != expected_shapes:
+        raise RuntimeError(
+            "CLIP tensor adapter shape mismatch before training: "
+            f"expected={expected_shapes}, observed={observed_shapes}"
+        )
+    if not all(
+        torch.isfinite(values).all().item()
+        for values in (train_text, train_stat, val_text, val_stat)
+    ):
+        raise RuntimeError("CLIP input tensors contain NaN/Inf before training")
     train_text = train_text.to(device)
     train_stat = train_stat.to(device)
     val_text = val_text.to(device)
     val_stat = val_stat.to(device)
     train_mask = false_negative_mask(data.train_pairs, data.negative_exclusions).to(device)
-    val_mask = false_negative_mask(data.validation_pairs, None).to(device)
+    val_mask = false_negative_mask(
+        data.validation_pairs, data.negative_exclusions
+    ).to(device)
 
     seed_dir = output_dir / "seeds" / f"seed_{seed}"
     seed_dir.mkdir(parents=True, exist_ok=True)
@@ -80,6 +120,15 @@ def train_seed(
     final_epoch = 0
     total_steps = 0
     max_epochs = 1 if smoke_test else config.max_epochs
+    _progress(
+        progress_callback,
+        event="seed_start",
+        stage="clip_training",
+        direction=direction,
+        seed=seed,
+        max_epochs=max_epochs,
+        elapsed_seconds=0.0,
+    )
 
     for epoch in range(1, max_epochs + 1):
         model.train()
@@ -88,7 +137,10 @@ def train_seed(
         batch_losses = []
         grad_norms = []
         masked_counts = []
-        for start in range(0, len(order), config.batch_size):
+        batch_count = math.ceil(len(order) / config.batch_size)
+        for batch_index, start in enumerate(
+            range(0, len(order), config.batch_size), start=1
+        ):
             indexes = order[start : start + config.batch_size]
             if len(indexes) < 2:
                 continue
@@ -111,6 +163,23 @@ def train_seed(
             grad_norms.append(float(grad_norm))
             masked_counts.append(int(output.masked_negative_count))
             total_steps += 1
+            if (
+                batch_index == 1
+                or batch_index % batch_log_interval == 0
+                or batch_index == batch_count
+            ):
+                _progress(
+                    progress_callback,
+                    event="train_batch",
+                    stage="clip_training",
+                    direction=direction,
+                    seed=seed,
+                    epoch=epoch,
+                    batch=batch_index,
+                    batch_count=batch_count,
+                    metrics={"loss": batch_losses[-1]},
+                    elapsed_seconds=time.perf_counter() - started,
+                )
             if smoke_test and total_steps >= config.smoke_test_steps:
                 break
         final_epoch = epoch
@@ -178,11 +247,73 @@ def train_seed(
                     "statistical_view_limitation": _statistical_limitation(config, data),
                 },
             )
+            _progress(
+                progress_callback,
+                event="new_best_checkpoint",
+                stage="clip_training",
+                direction=direction,
+                seed=seed,
+                epoch=epoch,
+                metrics={
+                    "validation_loss": best_value,
+                    "mrr": best_mrr,
+                    "checkpoint_sha256": best_manifest["checkpoint_sha256"],
+                },
+                elapsed_seconds=time.perf_counter() - started,
+            )
         else:
             no_improve += 1
+        _progress(
+            progress_callback,
+            event="epoch_end",
+            stage="clip_training",
+            direction=direction,
+            seed=seed,
+            epoch=epoch,
+            metrics={
+                "train_loss": row["training_loss"],
+                "validation_loss": val_loss,
+                "mrr": float(val_metrics["mean_reciprocal_rank"]),
+                "recall_at_1": float(
+                    (
+                        val_metrics["text_to_statistical_recall_at_1"]
+                        + val_metrics["statistical_to_text_recall_at_1"]
+                    )
+                    / 2.0
+                ),
+                "recall_at_5": float(
+                    (
+                        val_metrics["text_to_statistical_recall_at_5"]
+                        + val_metrics["statistical_to_text_recall_at_5"]
+                    )
+                    / 2.0
+                ),
+                "recall_at_10": float(
+                    (
+                        val_metrics["text_to_statistical_recall_at_10"]
+                        + val_metrics["statistical_to_text_recall_at_10"]
+                    )
+                    / 2.0
+                ),
+                "best_validation_loss": best_value,
+                "patience": no_improve,
+                "patience_limit": config.early_stopping_patience,
+            },
+            elapsed_seconds=time.perf_counter() - started,
+        )
         if smoke_test and total_steps >= config.smoke_test_steps:
             break
         if no_improve >= config.early_stopping_patience:
+            _progress(
+                progress_callback,
+                event="early_stop",
+                stage="clip_training",
+                direction=direction,
+                seed=seed,
+                epoch=epoch,
+                metrics={"best_validation_loss": best_value},
+                elapsed_seconds=time.perf_counter() - started,
+            )
             break
 
     if best_manifest is None:
@@ -191,7 +322,9 @@ def train_seed(
     epoch_metrics_path = seed_dir / "epoch_metrics.csv"
     epoch_frame.to_csv(epoch_metrics_path, index=False)
     representation_metrics_path = seed_dir / "representation_metrics.json"
-    _, _, rep_metrics = evaluate_model(
+    checkpoint_payload = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint_payload["model_state_dict"])
+    best_train_metrics, best_val_metrics, rep_metrics = evaluate_model(
         model=model,
         train_text=train_text,
         train_stat=train_stat,
@@ -201,7 +334,17 @@ def train_seed(
         val_mask=val_mask,
         thresholds=config.collapse_thresholds,
     )
-    write_json(representation_metrics_path, rep_metrics)
+    write_json(
+        representation_metrics_path,
+        {
+            **rep_metrics,
+            "checkpoint_epoch": int(best_epoch),
+            "checkpoint_sha256": str(best_manifest["checkpoint_sha256"]),
+            "train_retrieval": best_train_metrics,
+            "validation_retrieval": best_val_metrics,
+            "collapse_diagnostics": rep_metrics,
+        },
+    )
     training_log_path = seed_dir / "training_log.json"
     write_json(
         training_log_path,
@@ -219,6 +362,43 @@ def train_seed(
             "external_dataset_used_for_model_selection": False,
             "statistical_view_scope": config.statistical_view_scope,
         },
+    )
+    _progress(
+        progress_callback,
+        event="seed_end",
+        stage="clip_training",
+        direction=direction,
+        seed=seed,
+        epoch=final_epoch,
+        metrics={
+            "best_epoch": best_epoch,
+            "stop_epoch": final_epoch,
+            "best_validation_loss": best_value,
+            "mrr": float(best_val_metrics["mean_reciprocal_rank"]),
+            "recall_at_1": float(
+                (
+                    best_val_metrics["text_to_statistical_recall_at_1"]
+                    + best_val_metrics["statistical_to_text_recall_at_1"]
+                )
+                / 2.0
+            ),
+            "recall_at_5": float(
+                (
+                    best_val_metrics["text_to_statistical_recall_at_5"]
+                    + best_val_metrics["statistical_to_text_recall_at_5"]
+                )
+                / 2.0
+            ),
+            "recall_at_10": float(
+                (
+                    best_val_metrics["text_to_statistical_recall_at_10"]
+                    + best_val_metrics["statistical_to_text_recall_at_10"]
+                )
+                / 2.0
+            ),
+            "checkpoint_sha256": str(best_manifest["checkpoint_sha256"]),
+        },
+        elapsed_seconds=time.perf_counter() - started,
     )
     return SeedTrainingResult(
         seed=seed,
@@ -305,3 +485,11 @@ def _statistical_limitation(config: ClipTrainingConfig, data: TrainingDataBundle
     if data.statistical_dim == 1 and config.statistical_view_scope == "missingness_only":
         return "architectural proof of concept: aligns feature semantics primarily with DEV missingness behavior"
     return "approved multi-dimensional statistical view"
+
+
+def _progress(
+    callback: Callable[[dict[str, Any]], None] | None,
+    **event: Any,
+) -> None:
+    if callback is not None:
+        callback(event)
