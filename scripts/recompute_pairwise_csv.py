@@ -1,8 +1,4 @@
-"""Recompute pairwise HO AUC inference from authenticated row-level scores.
-
-The input comparison rows are preserved, one provenance column named ``score``
-is appended, and every metric that depends on the paired scores is recomputed.
-"""
+"""Recompute only pairwise CI bounds and raw p-values from row-level scores."""
 
 from __future__ import annotations
 
@@ -16,7 +12,7 @@ from sklearn.metrics import roc_auc_score
 
 ROOT = Path(r"D:\python projects\Research")
 BACKUP = Path(r"D:\python projects\Research_pre_cleanup_backup_20260704")
-INPUT = Path(r"C:\Users\DILSHOD\Downloads\Telegram Desktop\pairwise (2).csv")
+INPUT = ROOT / "pairwise.csv"
 OUTPUT = ROOT / "pairwise.csv"
 SEED = 20260721
 REPETITIONS = 2_000
@@ -274,6 +270,7 @@ def main() -> None:
         "ci95_high",
         "p_value",
         "n_ho",
+        "score",
     }
     if required_columns - set(original_columns):
         raise ValueError("input pairwise CSV schema is incomplete")
@@ -327,16 +324,9 @@ def main() -> None:
             }
         result = inference_cache[cache_key]
         updated = dict(row)
-        updated["auc_A"] = f"{result['auc_a']:.6f}"
-        updated["auc_B"] = f"{result['auc_b']:.6f}"
-        updated["delta_auc_A_minus_B"] = f"{result['delta']:+.6f}"
         updated["ci95_low"] = f"{result['ci_low']:+.6f}"
         updated["ci95_high"] = f"{result['ci_high']:+.6f}"
         updated["p_value"] = f"{result['p_value']:.12g}"
-        updated["n_ho"] = str(result["n_ho"])
-        updated["score"] = (
-            f"A={_display_path(source_a)}; B={_display_path(source_b)}"
-        )
         output_rows.append(updated)
         print(
             f"row {row_number:02d}: n={result['n_ho']}; "
@@ -346,7 +336,15 @@ def main() -> None:
             flush=True,
         )
 
-    output = pd.DataFrame(output_rows, columns=[*original_columns, "score"])
+    output = pd.DataFrame(output_rows, columns=original_columns)
+    inference_columns = {"ci95_low", "ci95_high", "p_value"}
+    protected_columns = [column for column in original_columns if column not in inference_columns]
+    pd.testing.assert_frame_equal(
+        output[protected_columns],
+        comparisons[protected_columns],
+        check_dtype=True,
+        check_exact=True,
+    )
     output.to_csv(OUTPUT, index=False, lineterminator="\n")
     print(f"wrote {OUTPUT} with {len(output)} rows and {len(output.columns)} columns")
 
