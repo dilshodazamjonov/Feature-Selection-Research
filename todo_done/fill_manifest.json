@@ -1,0 +1,1567 @@
+{
+  "generated_at_utc": "2026-09-20T14:49:25Z",
+  "elapsed_seconds": 11780.655908346176,
+  "settings": {
+    "todo_dir": "todo",
+    "output_dir": "todo_done",
+    "work_dir": "outputs/todo_fill",
+    "datasets": "homecredit,lendingclub_v2,homecredit_model_stability_2024",
+    "steps": "copy,01,06,09,17",
+    "tier": 3,
+    "b6": "auto",
+    "b6_candidates": "cache",
+    "third_matrix": "auto",
+    "third_refits": "skip",
+    "retry_skipped": false,
+    "dry_run": false,
+    "repo_root": "/home/khaled/projects/credit-research/Feature-Selection-Research",
+    "python": "3.13.15",
+    "cwd": "/home/khaled/projects/credit-research/Feature-Selection-Research",
+    "llm_cache_inventory": [
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_057e6ab90ebb87ace03cb4226ab3a984d13305b56a69441008ad68fdf8b2e52c.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 76,
+        "n_ranked": 65,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "60c6f1d56ebb",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_a1ac9fe7ca1d7210e2951b803e8ce80723f0111fce748fb286add0738a308dda.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 161,
+        "n_ranked": 93,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "8f0b3f6f951f",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_afe89682060385178e0f5ba9f64c56ad823d2a7a58c499092441606ded3a2e2a.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "d61842f3e733",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_cb9a8c1c1031b867519a7ea5dd4539ac1674ecf3670a5c51993052c1f5d38e81.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 161,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "8f0b3f6f951f",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_e5d202b7c56711b2242337cb448440fda84267a4cfb1586e30bdd2b5dd36c942.json",
+        "dataset": "homecredit",
+        "partition": "full_dev",
+        "n_candidates": 391,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "3bee8e9a22ce",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_ebe19deb711b960b1a39fbcd27491f7f8756f8a2ce271c61b7b06e0fe493577f.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 161,
+        "n_ranked": 52,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "8f0b3f6f951f",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_fa2689a62347dfdb4bb99b1a35e54f7b64bd9da0fc2722dac2aa3223f22ad802.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 161,
+        "n_ranked": 88,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "8f0b3f6f951f",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/final_dev_final_dev_fc624aca05f397c3741cd7378cfc7d010330885f69b48eb44fba648dc000d7b3.json",
+        "dataset": "lendingclub_v2",
+        "partition": "full_dev",
+        "n_candidates": 76,
+        "n_ranked": 59,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "60c6f1d56ebb",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_0ff5116316577a1bf93c5f572f60ac552d9bd865bf84eccf989b81f105c87d50.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "2b401334ff49",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_11598578eae123d8354bfd6bac82f9c76c5b1c2cf930a6bac5b4b17c19ae8f67.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 155,
+        "n_ranked": 56,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "6dbaaa3967d5",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_1f3827af3589be3b9f6d77baf0adb729de573a9e92f1c66f9afc366fd790863c.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 74,
+        "n_ranked": 65,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "0c87499fff40",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_4afa271fed36faf4a4daae246e8ceb6f96d315b60b692db379203589aaa387b6.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 74,
+        "n_ranked": 46,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "0c87499fff40",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_67ef1fffc2d8153da142d8388589cb7230c8f3d8fa4628929a8d190cb0d95312.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "6dbaaa3967d5",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_8b2be439d57382b1c96a3af3769a4d8d867e99066d97ca33e20d89e40f707df1.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "6dbaaa3967d5",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_9ed3dfb452721078f47049b1514c60dbd6ea81654f987bd67fd5c5951447fc8d.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "6dbaaa3967d5",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_dce42c464cbd0a42986075faf5c093993ced6019609b5a5fbfaff39bdf92905c.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold1",
+        "n_candidates": 155,
+        "n_ranked": 87,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "e6dd91708c24",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_1_e666ee4d582cbf39da021ad7a6337f3fda8a96bd2cd015c9a74365a993ea9c23.json",
+        "dataset": "homecredit",
+        "partition": "fold1",
+        "n_candidates": 374,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "49f3c7773d49",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_63b5951d76f85bd0cabac3e2fe93128cb405e7b3724e011aa4cbb2c8fcaa73f5.json",
+        "dataset": "homecredit",
+        "partition": "fold2",
+        "n_candidates": 369,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "dffd502dcdf4",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_75c38e3576186f7d5e33c001e06998243b4b2e0d375efe904122658766d76ddb.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "da58928761b0",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_8513a6a71dc54ea9da07f9058432ea1839a1efaf05f43c895877581ceb1921ff.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 154,
+        "n_ranked": 100,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "6b54a8372179",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_8da6d9053082f29ce6ea93a7b8dcde9e80de244781aca1dd2a8d8b0b86bdb7f4.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 74,
+        "n_ranked": 47,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "3a22e5ebb4fa",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_b48a7fd125fd3acdbb44149fdfdcb175413196a45d512de163e4991901d7b1e2.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 154,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f4a2ccde6cab",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_b97a0779d3b697ed9983544ffbd86cc3767b78379f233e90a20bfae74c39a4d4.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 74,
+        "n_ranked": 58,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "3a22e5ebb4fa",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_ea84238c2c6f5a30d37b240386105c4595420606f3d31a2845c61c304e48cffa.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 154,
+        "n_ranked": 97,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f4a2ccde6cab",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_ed6d977582541cfd4c2440c8cd303bd82928f888f1fc6fae978c4dfc0f0ec0c5.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 154,
+        "n_ranked": 100,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f4a2ccde6cab",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_2_ffcce9048734d4c663a2191cbffd9076de6ef7ec6a4d4c42c6adeee95c0b347e.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold2",
+        "n_candidates": 154,
+        "n_ranked": 100,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f4a2ccde6cab",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_25591bec356eda0f8f9a8ed9384cfd8a8998e0fc41d341c0db9ad5949481c333.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "e8ade7ca452e",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_5ce426538484284666547168232f5ee542191dd1dd1570ab70426c33994071d3.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 74,
+        "n_ranked": 53,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "699d6cddd30b",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_5ea0b685c2383ce7ab3254ce41b2b40be1dc87d88df91fbc1927e19cb2ff78eb.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "e8ade7ca452e",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_6c2e703369ee44813c4e1a0cbeff9f63d716c08205f4524b939c5368f5883201.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "e8ade7ca452e",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_9953431ed798b4e074ee77931a795eb7daca6f624ebdc11961ee88814586afb1.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 155,
+        "n_ranked": 91,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "e8ade7ca452e",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_ab3d5b0458c7cc942971d899107ce203421949bf8c7f35a843f29f5b15dbd5c4.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 155,
+        "n_ranked": 100,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "797509a1e3f2",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_e45b6ef502b8fae10ecf225f971b5bad42785fc92ee2bda6ed24e6f373146f49.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "71584e62a6e0",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_fc0907faa7793f19bbe4fa5e71327259a89a6f34700d2837bcc45a1b4507c3fc.json",
+        "dataset": "homecredit",
+        "partition": "fold3",
+        "n_candidates": 365,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "18c5bcb27da6",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_3_fe268437dc05469ab4b6694e3f2a18c2cfe1ac5f472de2d1b6d39a9e0e8e4311.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold3",
+        "n_candidates": 74,
+        "n_ranked": 61,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "699d6cddd30b",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_07c31b2bf14a63edcf097171aec6d278cc0246cefc3e6100f746aceaffa2cfd5.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 157,
+        "n_ranked": 91,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "c6af1cb6860d",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_5d4fca1fb303a029aa6c724ae3898074d60f3016bc158cd17b429d4a4fc68335.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 75,
+        "n_ranked": 54,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "2a47630ed85c",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_7dfc8f584a968aba4b36f8867b35dbfea4757b96c3d6b241526b38d985217e75.json",
+        "dataset": "homecredit",
+        "partition": "fold4",
+        "n_candidates": 374,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "7d6a56f45981",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_7ea8846665ef8727e85ea7b83defff9bbf316073c400acc527beefa48c009b1d.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 157,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "c6af1cb6860d",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_ad0bbf17bfae7f3d59b833e7a6e27777c28e77d1383826487bd00cef96daee07.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 157,
+        "n_ranked": 57,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "c6af1cb6860d",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_ae4a0427a6930e95aa64ffd9fe579adae2094256b0c44ce8a1c68680b41deba2.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 157,
+        "n_ranked": 65,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "c6af1cb6860d",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_be9bf25ac7145d6b7f701abe666b9d6473695fe43fd0cf95daf06bcb3344fdba.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "a79c8c39b81c",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_4_cbb6ee40fbe7b16c9cbbfe9c0ef1ef57ddc86143f08f98f5ba8e4997160b58de.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold4",
+        "n_candidates": 75,
+        "n_ranked": 52,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "2a47630ed85c",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_18310d7754e9600c7e99dbb7f4175feae13c4704f9f12eb64ce7ea673199e407.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 243,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "01c673d60e12",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_31e1871735f876498d6657a5d58da38d1271bb4aa41e48aee8bee5424750a45f.json",
+        "dataset": "homecredit",
+        "partition": "fold5",
+        "n_candidates": 372,
+        "n_ranked": 100,
+        "feature_budget": null,
+        "config_hash": "677c30b1d207",
+        "prompt_hash": "1b674332f0ff",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_7c778d5f27bdc7354129d099a81f2a23efc6e3e0c2f13a74539edc7a72338a6b.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 160,
+        "n_ranked": 100,
+        "feature_budget": 100,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f3cdf1b4c3fc",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_9a8233b01cf0ed2e054a4b2337a90194811ac7d0fcc7b1291c0132c8173bd365.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 160,
+        "n_ranked": 71,
+        "feature_budget": 60,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f3cdf1b4c3fc",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_9b846292a9bee8b9e0d252dc6d2375e9f24109d3d1b1462d097ec77ce44cb533.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 76,
+        "n_ranked": 56,
+        "feature_budget": null,
+        "config_hash": "428c9545712e",
+        "prompt_hash": "54e43fe24b52",
+        "canonical": false
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_9e67d90441125f6c6167b057463c2d7e9c8008f5ce8577ed1a0c2e35fe2f84c7.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 160,
+        "n_ranked": 100,
+        "feature_budget": 40,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f3cdf1b4c3fc",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_e99124836c5b6823d1b45372f386791fd722ef81635ebabb173fa954a1f44899.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 160,
+        "n_ranked": 100,
+        "feature_budget": 20,
+        "config_hash": "f6f9c7720cea",
+        "prompt_hash": "f3cdf1b4c3fc",
+        "canonical": true
+      },
+      {
+        "file": "artifacts/llm_cache/fold_fold_5_f7bb093661cbad761c2649ac55a953def03ff4eccd97d693ef320d2db02501c6.json",
+        "dataset": "lendingclub_v2",
+        "partition": "fold5",
+        "n_candidates": 76,
+        "n_ranked": 71,
+        "feature_budget": null,
+        "config_hash": "default",
+        "prompt_hash": "54e43fe24b52",
+        "canonical": false
+      }
+    ]
+  },
+  "csv_summary": {
+    "15_cohort.csv": {
+      "filled": 2,
+      "total": 6,
+      "status": "copied verbatim (computationally expensive; not recomputed)"
+    },
+    "16_l1.csv": {
+      "filled": 12,
+      "total": 12,
+      "status": "copied verbatim (computationally expensive; not recomputed)"
+    },
+    "21_brier.csv": {
+      "filled": 0,
+      "total": 84,
+      "status": "copied verbatim (computationally expensive; not recomputed)"
+    },
+    "08_boruta.csv": {
+      "filled": 0,
+      "total": 108,
+      "status": "excluded (--steps)"
+    },
+    "10_stability.csv": {
+      "filled": 0,
+      "total": 82,
+      "status": "excluded (--steps)"
+    },
+    "11_subsets.csv": {
+      "filled": 0,
+      "total": 360,
+      "status": "excluded (--steps)"
+    },
+    "12_overlap.csv": {
+      "filled": 0,
+      "total": 4,
+      "status": "excluded (--steps)"
+    },
+    "09_psi.csv": {
+      "filled": 32,
+      "total": 48,
+      "status": "partial"
+    },
+    "06_leakage.csv": {
+      "filled": 15,
+      "total": 15,
+      "status": "complete"
+    },
+    "17_mrmr.csv": {
+      "filled": 2,
+      "total": 2,
+      "status": "complete"
+    },
+    "01_obfuscation.csv": {
+      "filled": 24,
+      "total": 24,
+      "status": "complete"
+    }
+  },
+  "cells": [
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "Stable core + LLM fill",
+        "K": "20"
+      },
+      "field": "psi_mean",
+      "value": 0.012513069190483122,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "Stable core + LLM fill",
+        "K": "20"
+      },
+      "field": "psi_median",
+      "value": 0.005286364347764518,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "Stable core + LLM fill",
+        "K": "20"
+      },
+      "field": "psi_max",
+      "value": 0.07743842492305147,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "Stable core + LLM fill",
+        "K": "20"
+      },
+      "field": "psi_max_feature",
+      "value": "PREV_INTEREST_ESTIMATE_VAR",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "mRMR",
+        "K": "20"
+      },
+      "field": "psi_mean",
+      "value": 0.013277745052032493,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "mRMR",
+        "K": "20"
+      },
+      "field": "psi_median",
+      "value": 0.005742572864605201,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "mRMR",
+        "K": "20"
+      },
+      "field": "psi_max",
+      "value": 0.07743842492305147,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "lr",
+        "selector": "mRMR",
+        "K": "20"
+      },
+      "field": "psi_max_feature",
+      "value": "PREV_INTEREST_ESTIMATE_VAR",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 20,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "Pure LLM",
+        "K": "40"
+      },
+      "field": "psi_mean",
+      "value": 0.004453557292171045,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 35,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "Pure LLM",
+        "K": "40"
+      },
+      "field": "psi_median",
+      "value": 0.003536814562117664,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 35,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "Pure LLM",
+        "K": "40"
+      },
+      "field": "psi_max",
+      "value": 0.02072835469453902,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 35,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "Pure LLM",
+        "K": "40"
+      },
+      "field": "psi_max_feature",
+      "value": "EXT_SOURCE_3",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 35,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "RFE CatBoost",
+        "K": "40"
+      },
+      "field": "psi_mean",
+      "value": 0.02945559787693989,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 37,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "RFE CatBoost",
+        "K": "40"
+      },
+      "field": "psi_median",
+      "value": 0.005805153186743228,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 37,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "RFE CatBoost",
+        "K": "40"
+      },
+      "field": "psi_max",
+      "value": 0.32542301208090574,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 37,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit",
+        "backbone": "catboost",
+        "selector": "RFE CatBoost",
+        "K": "40"
+      },
+      "field": "psi_max_feature",
+      "value": "PREV_DAYS_LAST_DUE_1ST_VERSION_MAX",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 37,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "Pure LLM",
+        "K": "20"
+      },
+      "field": "psi_mean",
+      "value": 0.012525558208844875,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 15,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "Pure LLM",
+        "K": "20"
+      },
+      "field": "psi_median",
+      "value": 0.008727977145191943,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 15,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "Pure LLM",
+        "K": "20"
+      },
+      "field": "psi_max",
+      "value": 0.035697213344752815,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 15,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "Pure LLM",
+        "K": "20"
+      },
+      "field": "psi_max_feature",
+      "value": "revol_util",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the cached full-DEV subset",
+      "n_features": 15,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "IV then Boruta",
+        "K": "20"
+      },
+      "field": "psi_mean",
+      "value": 0.008158881008685285,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "IV then Boruta",
+        "K": "20"
+      },
+      "field": "psi_median",
+      "value": 0.004065432691929031,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "IV then Boruta",
+        "K": "20"
+      },
+      "field": "psi_max",
+      "value": 0.05689286337335911,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "lr",
+        "selector": "IV then Boruta",
+        "K": "20"
+      },
+      "field": "psi_max_feature",
+      "value": "utilization_pressure_x_fico",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "LLM then mRMR",
+        "K": "40"
+      },
+      "field": "psi_mean",
+      "value": 0.005718268201487036,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 40,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "LLM then mRMR",
+        "K": "40"
+      },
+      "field": "psi_median",
+      "value": 0.002181811925396871,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 40,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "LLM then mRMR",
+        "K": "40"
+      },
+      "field": "psi_max",
+      "value": 0.03004175262534247,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 40,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "LLM then mRMR",
+        "K": "40"
+      },
+      "field": "psi_max_feature",
+      "value": "bc_open_to_buy_to_loan_amnt",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 40,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "IV then Boruta",
+        "K": "40"
+      },
+      "field": "psi_mean",
+      "value": 0.008158881008685285,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "IV then Boruta",
+        "K": "40"
+      },
+      "field": "psi_median",
+      "value": 0.004065432691929031,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "IV then Boruta",
+        "K": "40"
+      },
+      "field": "psi_max",
+      "value": 0.05689286337335911,
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "lendingclub_v2",
+        "backbone": "catboost",
+        "selector": "IV then Boruta",
+        "K": "40"
+      },
+      "field": "psi_max_feature",
+      "value": "utilization_pressure_x_fico",
+      "source": "recomputed:calculate_psi(10 DEV-quantile bins, eps 1e-6) on the dense model-matrix columns of the refitted full-DEV subset",
+      "n_features": 196,
+      "delivery_check_mean_le_half_median_plus_max": true
+    },
+    {
+      "step": "06",
+      "key": {
+        "feature": "POS_CNT_INSTALMENT_FUTURE_MIN"
+      },
+      "field": "leakage_status",
+      "value": "POTENTIAL_LEAKAGE_NAME_REVIEW_NEEDED",
+      "source": "recomputed:scripts/generate_homecredit_domain_rule_ranking.leakage_status over the 529 candidate universe"
+    },
+    {
+      "step": "06",
+      "key": {
+        "feature": "POS_CNT_INSTALMENT_FUTURE_MAX"
+      },
+      "field": "leakage_status",
+      "value": "POTENTIAL_LEAKAGE_NAME_REVIEW_NEEDED",
+      "source": "recomputed:scripts/generate_homecredit_domain_rule_ranking.leakage_status over the 529 candidate universe"
+    },
+    {
+      "step": "06",
+      "key": {
+        "feature": "POS_CNT_INSTALMENT_FUTURE_MEAN"
+      },
+      "field": "leakage_status",
+      "value": "POTENTIAL_LEAKAGE_NAME_REVIEW_NEEDED",
+      "source": "recomputed:scripts/generate_homecredit_domain_rule_ranking.leakage_status over the 529 candidate universe"
+    },
+    {
+      "step": "06",
+      "key": {
+        "feature": "POS_CNT_INSTALMENT_FUTURE_SUM"
+      },
+      "field": "leakage_status",
+      "value": "POTENTIAL_LEAKAGE_NAME_REVIEW_NEEDED",
+      "source": "recomputed:scripts/generate_homecredit_domain_rule_ranking.leakage_status over the 529 candidate universe"
+    },
+    {
+      "step": "06",
+      "key": {
+        "feature": "POS_CNT_INSTALMENT_FUTURE_VAR"
+      },
+      "field": "leakage_status",
+      "value": "POTENTIAL_LEAKAGE_NAME_REVIEW_NEEDED",
+      "source": "recomputed:scripts/generate_homecredit_domain_rule_ranking.leakage_status over the 529 candidate universe"
+    },
+    {
+      "step": "17",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "fold": "fold1",
+        "pool_size": "1959"
+      },
+      "field": "seconds",
+      "value": 522.1517860629974,
+      "source": "recomputed:MutualInformationMRMRSelector(n_bins=10, objective=mid, seed 42) on the fold-1 DEV training slice, k=40",
+      "k20_seconds": 253.40929844199854,
+      "pool_source": "all 1959 frozen predictors",
+      "frozen_machine_reference_seconds": {
+        "k20": 393.8718225999037,
+        "k40": 752.4270077999681
+      }
+    },
+    {
+      "step": "17",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "fold": "fold1",
+        "pool_size": "100"
+      },
+      "field": "seconds",
+      "value": 20.516749503996834,
+      "source": "recomputed:MutualInformationMRMRSelector(n_bins=10, objective=mid, seed 42) on the fold-1 DEV training slice, k=40",
+      "k20_seconds": 11.698542661997635,
+      "pool_source": "seeded random 100-feature pool (numpy default_rng(42)); no third-dataset LLM ranking is on this machine",
+      "frozen_machine_reference_seconds": null
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "ho_auc",
+      "value": 0.7145985289057053,
+      "source": "recomputed:B6 two-arm paired run, HO 120,053 rows"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold1_auc",
+      "value": 0.7064882477183816,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold2_auc",
+      "value": 0.7201342290699455,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold3_auc",
+      "value": 0.735184136838585,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold4_auc",
+      "value": 0.7303151084604991,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold5_auc",
+      "value": 0.7248783317869314,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "ho_auc",
+      "value": 0.7376886374350462,
+      "source": "recomputed:B6 two-arm paired run, HO 120,053 rows"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold1_auc",
+      "value": 0.7128848317776842,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold2_auc",
+      "value": 0.7321339420445199,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold3_auc",
+      "value": 0.744560339161092,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold4_auc",
+      "value": 0.7440088511126979,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "A_names_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold5_auc",
+      "value": 0.7406588378831782,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "ho_auc",
+      "value": 0.742430338712234,
+      "source": "recomputed:B6 two-arm paired run, HO 120,053 rows"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold1_auc",
+      "value": 0.721205052589077,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold2_auc",
+      "value": 0.7255614277780158,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold3_auc",
+      "value": 0.7409060649995859,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold4_auc",
+      "value": 0.7381378731600651,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "lr",
+        "K": "20"
+      },
+      "field": "fold5_auc",
+      "value": 0.7336848542758668,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "ho_auc",
+      "value": 0.7624557179359563,
+      "source": "recomputed:B6 two-arm paired run, HO 120,053 rows"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold1_auc",
+      "value": 0.7313786658234052,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold2_auc",
+      "value": 0.739514227866121,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold3_auc",
+      "value": 0.7527380192329667,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold4_auc",
+      "value": 0.7511548799463169,
+      "source": "recomputed:B6 two-arm paired run"
+    },
+    {
+      "step": "01",
+      "key": {
+        "arm": "B_descriptions_removed",
+        "backbone": "catboost",
+        "K": "40"
+      },
+      "field": "fold5_auc",
+      "value": 0.7486957541673165,
+      "source": "recomputed:B6 two-arm paired run"
+    }
+  ],
+  "skips": [
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "backbone": "lr",
+        "selector": "Pure LLM",
+        "K": "20"
+      },
+      "reason": "full-DEV selection unavailable on this machine"
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "backbone": "lr",
+        "selector": "RFE CatBoost",
+        "K": "20"
+      },
+      "reason": "full-DEV selection unavailable on this machine"
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "backbone": "catboost",
+        "selector": "Pure LLM",
+        "K": "40"
+      },
+      "reason": "full-DEV selection unavailable on this machine"
+    },
+    {
+      "step": "09",
+      "key": {
+        "dataset": "homecredit_model_stability_2024",
+        "backbone": "catboost",
+        "selector": "CatBoost SHAP",
+        "K": "40"
+      },
+      "reason": "full-DEV selection unavailable on this machine"
+    }
+  ],
+  "notes": [
+    {
+      "step": "copy",
+      "message": "15_cohort.csv copied verbatim from todo/ (2/6 value cells were already filled)"
+    },
+    {
+      "step": "copy",
+      "message": "16_l1.csv copied verbatim from todo/ (12/12 value cells were already filled)"
+    },
+    {
+      "step": "copy",
+      "message": "21_brier.csv copied verbatim from todo/ (0/84 value cells were already filled)"
+    },
+    {
+      "step": "plan",
+      "message": "12 selector fits are not covered by frozen evidence and will be recomputed where feasible"
+    },
+    {
+      "step": "plan",
+      "message": "4 third-dataset selector refits skipped (--third-refits skip, --third-matrix auto); their cells stay blank"
+    },
+    {
+      "step": "09",
+      "message": "{'dataset': 'homecredit', 'backbone': 'lr', 'selector': 'Stable core + LLM fill', 'K': '20'}: archive report psi_mean=0.0125 psi_median=0.0053 psi_max=0.0774 vs recomputed 0.0125/0.0053/0.0774"
+    },
+    {
+      "step": "09",
+      "message": "{'dataset': 'homecredit', 'backbone': 'lr', 'selector': 'mRMR', 'K': '20'}: archive report psi_mean=0.0133 psi_median=0.0057 psi_max=0.0774 vs recomputed 0.0133/0.0057/0.0774"
+    },
+    {
+      "step": "09",
+      "message": "{'dataset': 'homecredit', 'backbone': 'catboost', 'selector': 'RFE CatBoost', 'K': '40'}: frozen full_baseline_v1 PSI available for 37 shared columns; max abs difference 9.96e-17"
+    },
+    {
+      "step": "09",
+      "message": "{'dataset': 'lendingclub_v2', 'backbone': 'lr', 'selector': 'Pure LLM', 'K': '20'}: archive report psi_mean=0.0044 psi_median=None psi_max=None vs recomputed 0.0125/0.0087/0.0357"
+    },
+    {
+      "step": "06",
+      "message": "domain-rule name screen flagged 5 of 529 Home Credit candidates (markers TARGET/LABEL/BAD_RATE/OUTCOME/FUTURE); candidate-set membership uses the union of the cached fold-local LLM candidate lists (fold1: 374, fold2: 369, fold3: 365, fold4: 374, fold5: 372, full_dev: 391); the manuscript's 373 is not reproducible from any file on disk (TODO item 22a)"
+    },
+    {
+      "step": "01",
+      "message": "candidate sets per partition (cache): {fold1: 374, fold2: 369, fold3: 365, fold4: 374, fold5: 372, full_dev: 391}"
+    },
+    {
+      "step": "01",
+      "message": "wrote 01_obfuscation.csv, obfuscated_lists_armA.csv, obfuscated_lists_armB.csv, homecredit_named_rankings.csv, 01_obfuscation_named_control.csv, 01_obfuscation_pairwise.csv, 01_obfuscation_settings.txt"
+    }
+  ],
+  "timings": [
+    {
+      "label": "fit:homecredit/catboost/llm/full_dev",
+      "seconds": 0.0,
+      "wall_seconds": 0.00043582916259765625,
+      "n_selected": 40
+    },
+    {
+      "label": "fit:lendingclub_v2/lr/llm/full_dev",
+      "seconds": 0.0,
+      "wall_seconds": 0.000301361083984375,
+      "n_selected": 20
+    },
+    {
+      "label": "fit:homecredit/lr/stable_core_llm_fill/full_dev",
+      "seconds": 866.5087964430004,
+      "wall_seconds": 963.1510109901428,
+      "n_selected": 20
+    },
+    {
+      "label": "fit:homecredit/lr/mrmr_legacy/full_dev",
+      "seconds": 205.79791967100027,
+      "wall_seconds": 205.79851365089417,
+      "n_selected": 20
+    },
+    {
+      "label": "fit:homecredit/catboost/rfe_catboost/full_dev",
+      "seconds": 163.04265072700036,
+      "wall_seconds": 164.9547975063324,
+      "n_selected": 40
+    },
+    {
+      "label": "fit:lendingclub_v2/catboost/llm_then_mrmr/full_dev",
+      "seconds": 77.48831539099956,
+      "wall_seconds": 191.825257062912,
+      "n_selected": 40
+    },
+    {
+      "label": "fit:lendingclub_v2/catboost/iv_then_boruta/full_dev",
+      "seconds": 3260.1440047720007,
+      "wall_seconds": 3277.94673538208,
+      "n_selected": 219
+    }
+  ]
+}
