@@ -88,6 +88,10 @@ class FitContext:
     partition: str
     data: DataContext
     third_ranking: list[str] | None = None
+    #: Optional restriction of the candidate universe (e.g. depth-0 tables only).
+    columns: tuple[str, ...] | None = None
+    #: Optional replacement for the cached target-free LLM ranking (e.g. a mechanical-description arm).
+    ranking_override: list[str] | None = None
     _raw: tuple[pd.DataFrame, pd.Series] | None = None
     _encoded: pd.DataFrame | None = None
     _dense: pd.DataFrame | None = None
@@ -98,7 +102,13 @@ class FitContext:
 
     def raw(self) -> tuple[pd.DataFrame, pd.Series]:
         if self._raw is None:
-            self._raw = self.data.training_frame(self.dataset, self.partition)
+            if self.columns is not None and self.dataset == THIRD:
+                self._raw = self.data.third().training_frame(self.partition, predictors=list(self.columns))
+            else:
+                X, y = self.data.training_frame(self.dataset, self.partition)
+                if self.columns is not None:
+                    X = X.loc[:, list(self.columns)]
+                self._raw = (X, y)
         return self._raw
 
     def encoded(self) -> tuple[pd.DataFrame, pd.Series]:
@@ -258,6 +268,13 @@ def fit_iv_then_boruta(ctx: FitContext) -> SelectionOutput:
     result = getattr(selector, "result", None)
     if result is not None and getattr(result, "intermediate_features", None):
         output.details["intermediate_count"] = len(result.intermediate_features)
+    # The selector's own order over its confirmed support: Boruta publishes confirmed
+    # features in IV-pool order, so the ranking is the IV order restricted to the support.
+    stages = getattr(selector, "stage_results_", None)
+    if stages and len(stages) == 2 and getattr(stages[1], "ranking", None):
+        selected = set(output.features)
+        output.ranked = [str(name) for name in stages[1].ranking if str(name) in selected]
+        output.details["iv_pool_order"] = [str(name) for name in stages[0].ranking] if getattr(stages[0], "ranking", None) else None
     return output
 
 
@@ -271,6 +288,8 @@ def _legacy_ranking(ctx: FitContext, budget: int) -> llm_cache.CachedRanking | N
 
 
 def _ranking_features(ctx: FitContext, budget: int) -> tuple[list[str], dict[str, Any]]:
+    if ctx.ranking_override is not None:
+        return list(ctx.ranking_override), {"ranking_source": "ranking_override"}
     if ctx.dataset == THIRD:
         if not ctx.third_ranking:
             raise FillError("no target-free LLM ranking is available for the third dataset on this machine")

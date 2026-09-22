@@ -36,3 +36,4 @@ tests_runtime/
 /logs/debug.log
 
 results/
+*/*.json

@@ -177,7 +177,10 @@ class DataContext:
             from credit_risk_fs.pipelines.common import prepare_voting_research_oot_data
 
             bundle = self.dev(dataset)
-            ordered_missing = [feature for feature in bundle.candidate_features if feature in set(missing)]
+            # Every miss loads the complete candidate universe once, so the locked HO
+            # population is materialised a single time per dataset instead of per subset.
+            present = set(frame.columns) if frame is not None else set()
+            ordered_missing = [feature for feature in bundle.candidate_features if feature not in present]
             log(f"[data] loading HO rows for {dataset} projected to {len(ordered_missing)} columns")
             with heartbeat(f"loading {dataset} HO rows"):
                 oot = prepare_voting_research_oot_data(
@@ -190,8 +193,7 @@ class DataContext:
                 frame = fresh
             else:
                 fresh = fresh.set_index("__stable_row_id__").loc[frame["__stable_row_id__"].to_numpy()]
-                for column in ordered_missing:
-                    frame[column] = fresh[column].to_numpy()
+                frame = pd.concat([frame.reset_index(drop=True), fresh.loc[:, ordered_missing].reset_index(drop=True)], axis=1)
             cache.parent.mkdir(parents=True, exist_ok=True)
             try:
                 frame.to_parquet(cache, index=False)
@@ -303,6 +305,34 @@ class ThirdDataset:
     def _part_paths(self) -> list[Path]:
         self.ensure_matrix()
         return sorted((self.matrix_root / "matrix").glob("part-*.parquet"))
+
+    def validation_range(self, partition: str) -> tuple[str, str, int]:
+        """(date_min, date_max, expected_rows) of a fold's frozen validation slice."""
+
+        fold_id = int(partition.replace("fold", ""))
+        fold = next(item for item in self.boundaries["folds"] if int(item["fold_id"]) == fold_id)
+        validation = fold["validation"]
+        return str(validation["date_min"]), str(validation["date_max"]), int(validation["rows"])
+
+    def validation_frame(self, partition: str, predictors: Sequence[str]) -> tuple[pd.DataFrame, pd.Series]:
+        date_min, date_max, expected_rows = self.validation_range(partition)
+        frame = self.read_slice(date_min, date_max, list(predictors))
+        if len(frame) != expected_rows:
+            raise FillError(f"third dataset {partition} validation has {len(frame)} rows; protocol lock expects {expected_rows}")
+        return frame.loc[:, list(predictors)].reset_index(drop=True), frame["target"].astype("int8").reset_index(drop=True)
+
+    def holdout_frame_with_ids(self, features: Sequence[str]) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+        """Locked OOT rows projected to ``features`` plus the ``case_id`` identity column."""
+
+        date_min, date_max, expected_rows = self.date_range("holdout")
+        frame = self.read_slice(date_min, date_max, list(features))
+        if len(frame) != expected_rows:
+            raise FillError(f"third dataset holdout has {len(frame)} rows; protocol lock expects {expected_rows}")
+        return (
+            frame.loc[:, list(features)].reset_index(drop=True),
+            frame["target"].astype("int8").reset_index(drop=True),
+            frame["case_id"].astype(str).reset_index(drop=True),
+        )
 
     def date_range(self, partition: str) -> tuple[str, str, int]:
         """(date_min, date_max, expected_rows) for a training partition or ``holdout``."""
