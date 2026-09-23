@@ -35,5 +35,9 @@ tests_runtime/
 /logs/events.jsonl
 /logs/debug.log
 
+# Generated reports and cached artifacts
+artifacts/
+cleanup/audits/**/report.html
+
 results/
 */*.json

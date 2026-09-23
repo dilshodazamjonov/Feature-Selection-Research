@@ -61,7 +61,7 @@
     "real_fold_executed": false
   },
   "isolation": {
-    "scratch_directory": "C:\\Users\\DILSHOD\\AppData\\Local\\Temp\\claude\\d--python-projects-Research\\a14d9b15-197d-46c5-a1ec-7419ec35a532\\scratchpad\\p08_fixture",
+    "scratch_directory": "<temporary-directory>\\scratchpad\\p08_fixture",
     "inside_active_results_root": false,
     "inside_legacy_results_root": false,
     "catboost_info_written": false

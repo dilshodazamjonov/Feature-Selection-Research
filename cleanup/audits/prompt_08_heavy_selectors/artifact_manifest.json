@@ -25,8 +25,8 @@
     },
     {
       "path": "cleanup/audits/prompt_07_lightweight_selectors/tiny_fixture_results.json",
-      "size_bytes": 10403,
-      "sha256": "f879ce2861384b6297439b637f045503895ceff0c2a9c4c81fedb019f073c40d",
+      "size_bytes": 10308,
+      "sha256": "23ce75bf3a1242443e4678c3d777586b4bb2998610410ee15677a25bf2581bf3",
       "purpose": "audit / documentation evidence",
       "classification": "generated",
       "commit_inclusion": "included",
@@ -115,8 +115,8 @@
     },
     {
       "path": "cleanup/audits/prompt_08_heavy_selectors/synthetic_fixture_results.json",
-      "size_bytes": 11402,
-      "sha256": "078555b79c65e883df19a81b480ccb6da68148f05b79c57ef936489e35d1bda8",
+      "size_bytes": 11307,
+      "sha256": "468e42b8104b9af45a5087a6a0185b5d3a5e25bd944cf79076e269fd7bb23cd9",
       "purpose": "audit / documentation evidence",
       "classification": "generated",
       "commit_inclusion": "included",
