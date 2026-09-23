@@ -38,6 +38,14 @@ tests_runtime/
 # Generated reports and cached artifacts
 artifacts/
 cleanup/audits/**/report.html
+/reports/
+/results/
+/logs/
+/todo_done/
+/cleanup/audit/
+/cleanup/audits/
+/cleanup/repository_cleanup_report.md
+/METHODOLOGY_AUDIT_9_POINTS.md
 
 results/
 */*.json
