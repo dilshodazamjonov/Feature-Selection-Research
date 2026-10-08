@@ -1,0 +1,17 @@
+file,run_id
+01_cohort.csv,2756e5b4-8f4c-4208-bdcd-96021225da09
+02_candidate_set.csv,2756e5b4-8f4c-4208-bdcd-96021225da09
+03_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+04_dev_fold_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+05_leader_delta_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+06_leader_feature_psi.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+07_selection_stability.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+08_secondary_metrics.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+09_leader_subsets.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+10_boruta_attainment.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+11_monthly_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
+12_native_categorical.csv,dc5d0ed2-dd75-40d0-99c7-e7d238654d66
+13_lineage_only.csv,8a81761d-6571-49a3-8551-e2f44e485d0d
+14_l1_selector.csv,1dcee9a8-87f0-4b49-a8fe-e469e738fd2e
+15_diversity_controls.csv,815a65c1-d3dc-49c7-87af-93e920e2b1a0
+16_ten_responses.csv,93eaeb6e-ec14-4963-9112-99cfbfb8ad4d
