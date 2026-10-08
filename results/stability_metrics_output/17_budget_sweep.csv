@@ -1,0 +1,11 @@
+dataset,backbone,K,llm_leader_dev_auc,classical_leader_dev_auc,mean_dev_auc_all_selectors
+stability_2024,lr,10,0.8074,0.8093,0.7789
+stability_2024,lr,20,0.8302,0.8178,0.7867
+stability_2024,lr,30,0.8328,0.8319,0.7894
+stability_2024,lr,40,0.8411,0.8221,0.7909
+stability_2024,lr,50,0.8348,0.8239,0.7907
+stability_2024,catboost,10,0.8381,0.8393,0.8109
+stability_2024,catboost,20,0.8438,0.8569,0.8183
+stability_2024,catboost,30,0.8548,0.8695,0.8231
+stability_2024,catboost,40,0.8598,0.8635,0.8270
+stability_2024,catboost,50,0.8514,0.8594,0.8239

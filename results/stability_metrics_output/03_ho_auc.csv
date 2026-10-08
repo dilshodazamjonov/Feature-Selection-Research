@@ -1,0 +1,30 @@
+backbone,selector,family,K,ho_auc,status
+lr,Domain rules,classical,20,0.7371,run
+lr,Random K,classical,20,0.6818,run
+lr,PCA,classical,20,0.7019,run
+lr,IV/WOE,classical,20,0.7781,run
+lr,mRMR,classical,20,0.7769,run
+lr,Boruta RF,classical,20,0.7611,run
+lr,IV then Boruta,classical,20,0.7976,run
+lr,RFE CatBoost,classical,20,0.8181,run
+lr,CatBoost SHAP,classical,20,0.8092,run
+lr,Pure LLM,LLM-assisted,20,0.8322,run
+lr,LLM then mRMR,LLM-assisted,20,0.8112,run
+lr,LLM then Boruta,LLM-assisted,20,0.8098,run
+lr,Stable core + LLM fill,LLM-assisted,20,0.8171,run
+lr,Full feature reference,reference,1959,0.7659,run
+catboost,Domain rules,classical,40,0.7791,run
+catboost,Random K,classical,40,0.7502,run
+catboost,PCA,classical,40,0.7692,run
+catboost,IV/WOE,classical,40,0.8187,run
+catboost,mRMR,classical,40,0.8308,run
+catboost,Boruta RF,classical,40,0.8095,run
+catboost,IV then Boruta,classical,40,0.8387,run
+catboost,RFE CatBoost,classical,40,0.8425,run
+catboost,CatBoost SHAP,classical,40,0.8509,run
+catboost,Pure LLM,LLM-assisted,40,0.8716,run
+catboost,LLM then mRMR,LLM-assisted,40,0.8519,run
+catboost,LLM then Boruta,LLM-assisted,40,0.8385,run
+catboost,Stable core + LLM fill,LLM-assisted,40,0.8489,run
+catboost,Full feature reference,reference,1959,0.8198,run
+,,,,,

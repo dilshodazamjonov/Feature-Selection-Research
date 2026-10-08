@@ -1,0 +1,29 @@
+backbone,selector,family,K,dev_mean_auc,favourable_range
+lr,Domain rules,classical,20,0.7469,0.7457-0.7496
+lr,Random K,classical,20,0.6944,0.6913-0.6952
+lr,PCA,classical,20,0.7175,0.7158-0.7197
+lr,IV/WOE,classical,20,0.7799,0.7785-0.7824
+lr,mRMR,classical,20,0.7971,0.7951-0.7990
+lr,Boruta RF,classical,20,0.7685,0.7653-0.7692
+lr,IV then Boruta,classical,20,0.8081,0.8060-0.8099
+lr,RFE CatBoost,classical,20,0.8178,0.8172-0.8190
+lr,CatBoost SHAP,classical,20,0.8169,0.8157-0.8171
+lr,Pure LLM,LLM-assisted,20,0.8302,0.8198-0.8312
+lr,LLM then mRMR,LLM-assisted,20,0.8174,0.8155-0.8194
+lr,LLM then Boruta,LLM-assisted,20,0.8134,0.8101-0.8140
+lr,Stable core + LLM fill,LLM-assisted,20,0.8186,0.8182-0.8197
+lr,Full feature reference,reference,1959,0.7756,any
+catboost,Domain rules,classical,40,0.7987,0.7968-0.8007
+catboost,Random K,classical,40,0.7542,0.7524-0.7563
+catboost,PCA,classical,40,0.7662,0.7653-0.7692
+catboost,IV/WOE,classical,40,0.8373,0.8368-0.8407
+catboost,mRMR,classical,40,0.8274,0.8283-0.8322
+catboost,Boruta RF,classical,40,0.8129,0.8127-0.8166
+catboost,IV then Boruta,classical,40,0.8348,0.8343-0.8382
+catboost,RFE CatBoost,classical,40,0.8635,0.8632-0.8645
+catboost,CatBoost SHAP,classical,40,0.8461,0.8438-0.8477
+catboost,Pure LLM,LLM-assisted,40,0.8598,0.8592-0.8601
+catboost,LLM then mRMR,LLM-assisted,40,0.8529,0.8528-0.8567
+catboost,LLM then Boruta,LLM-assisted,40,0.8411,0.8397-0.8436
+catboost,Stable core + LLM fill,LLM-assisted,40,0.8565,0.8529-0.8568
+catboost,Full feature reference,reference,1959,0.8218,any

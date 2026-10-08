@@ -1,0 +1,7 @@
+backbone,selector,K,d,nogueira,jaccard_mean,jaccard_min,jaccard_max
+lr,IV/WOE,20,1068,0.7860,0.6666,0.481,0.905
+lr,Stable core + LLM fill,20,1068,0.7554,0.6259,0.429,0.905
+lr,LLM then Boruta,20,1068,0.5414,0.4081,0.212,0.905
+catboost,IV/WOE,40,1068,0.7793,0.6582,0.509,0.905
+catboost,Stable core + LLM fill,40,1068,0.7091,0.5727,0.356,0.778
+catboost,LLM then Boruta,40,1068,0.5528,0.4193,0.290,0.951

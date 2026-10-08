@@ -1,0 +1,37 @@
+backbone,selector,partition,n_confirmed,K,ranges
+lr,Boruta RF,fold1,104,20,20-1068
+lr,Boruta RF,fold2,89,20,20-1068
+lr,Boruta RF,fold3,94,20,20-1068
+lr,Boruta RF,fold4,103,20,20-1068
+lr,Boruta RF,fold5,89,20,20-1068
+lr,Boruta RF,full_dev,69,20,20-1068
+catboost,Boruta RF,fold1,104,40,40-1068
+catboost,Boruta RF,fold2,89,40,40-1068
+catboost,Boruta RF,fold3,94,40,40-1068
+catboost,Boruta RF,fold4,103,40,40-1068
+catboost,Boruta RF,fold5,89,40,40-1068
+catboost,Boruta RF,full_dev,69,40,40-1068
+lr,IV then Boruta,fold1,71,20,20-200
+lr,IV then Boruta,fold2,103,20,20-200
+lr,IV then Boruta,fold3,79,20,20-200
+lr,IV then Boruta,fold4,122,20,20-200
+lr,IV then Boruta,fold5,61,20,20-200
+lr,IV then Boruta,full_dev,55,20,20-200
+catboost,IV then Boruta,fold1,71,40,40-200
+catboost,IV then Boruta,fold2,103,40,40-200
+catboost,IV then Boruta,fold3,79,40,40-200
+catboost,IV then Boruta,fold4,122,40,40-200
+catboost,IV then Boruta,fold5,61,40,40-200
+catboost,IV then Boruta,full_dev,55,40,40-200
+lr,LLM then Boruta,fold1,45,20,20-60
+lr,LLM then Boruta,fold2,53,20,20-60
+lr,LLM then Boruta,fold3,49,20,20-60
+lr,LLM then Boruta,fold4,44,20,20-60
+lr,LLM then Boruta,fold5,54,20,20-60
+lr,LLM then Boruta,full_dev,59,20,20-60
+catboost,LLM then Boruta,fold1,45,40,40-100 or 35
+catboost,LLM then Boruta,fold2,53,40,40-100
+catboost,LLM then Boruta,fold3,49,40,40-100
+catboost,LLM then Boruta,fold4,44,40,40-100
+catboost,LLM then Boruta,fold5,54,40,40-100
+catboost,LLM then Boruta,full_dev,59,40,40-100

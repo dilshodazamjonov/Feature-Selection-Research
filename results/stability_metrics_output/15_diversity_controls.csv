@@ -1,0 +1,5 @@
+backbone,control,base_selector,K,control_ho_auc
+lr,family_cap,RFE CatBoost,20,0.7494
+catboost,family_cap,CatBoost SHAP,40,0.8289
+lr,depth0,RFE CatBoost,20,0.7804
+catboost,depth0,CatBoost SHAP,40,0.8231

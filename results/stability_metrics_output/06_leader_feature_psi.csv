@@ -1,0 +1,5 @@
+backbone,selector,mean_psi,median_psi,max_psi,max_psi_feature
+lr,Pure LLM,0.0174,0.0023,0.0843,d0__static__numinstlswithoutdpd_562L
+lr,RFE CatBoost,0.0092,0.0042,0.0713,d1__person__birth_259D__max
+catboost,Pure LLM,0.0109,0.0001,0.0861,d0__static__maxoutstandbalancel12m_4187113A
+catboost,CatBoost SHAP,0.0189,0.0059,0.0980,d1__tax_registry_a__row_count

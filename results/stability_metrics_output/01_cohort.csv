@@ -1,0 +1,4 @@
+cohort_cutoff,split,date_start,date_end,unique_dates,n_rows,n_events,event_rate,share_of_rows,source
+2020-02-26,DEV,2019-01-01,2020-02-25,421,1221743,39645,0.0324495414,0.8002723594,cleanup/audits/third_dataset_protocol_freeze/proposed_split_and_fold_boundaries.json; recomputed from train_base.parquet
+2020-02-26,HO,2020-02-26,2020-10-05,223,304916,8349,0.0273813116,0.1997276406,cleanup/audits/third_dataset_protocol_freeze/proposed_split_and_fold_boundaries.json; recomputed from train_base.parquet
+2020-02-26,total,2019-01-01,2020-10-05,644,1526659,47994,0.0314372758,1.0,cleanup/audits/third_dataset_protocol_freeze/proposed_split_and_fold_boundaries.json; recomputed from train_base.parquet

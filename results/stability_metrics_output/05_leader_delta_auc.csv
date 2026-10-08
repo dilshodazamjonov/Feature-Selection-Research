@@ -1,0 +1,5 @@
+rule,backbone,llm_leader,classical_leader,llm_ho_auc,classical_ho_auc,delta_auc,ci_low,ci_high
+HO,lr,Pure LLM,RFE CatBoost,0.8322,0.8181,0.0141,0.012823,0.015339
+HO,catboost,Pure LLM,CatBoost SHAP,0.8716,0.8509,0.0207,0.017219,0.023151
+DEV,lr,Pure LLM,RFE CatBoost,0.8322,0.8181,0.0141,0.012823,0.015339
+DEV,catboost,Pure LLM,RFE CatBoost,0.8716,0.8425,0.0291,0.027974,0.030174

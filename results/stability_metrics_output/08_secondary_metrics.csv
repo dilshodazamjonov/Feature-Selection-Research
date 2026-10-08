@@ -1,0 +1,5 @@
+metric,best_value,selector,backbone
+ks,0.5681,Pure LLM,catboost
+brier,0.1538,Pure LLM,catboost
+capture10,0.4417,Pure LLM,catboost
+lift10,4.417,Pure LLM,catboost
