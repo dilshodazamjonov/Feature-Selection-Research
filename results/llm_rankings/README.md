@@ -6,8 +6,24 @@ byte-for-byte from the local caches. **The cached response is the reproducible a
 same snapshot (`gpt-4.1-mini-2025-04-14`), prompt and temperature 0 can return a different ordering, as the
 manuscript states (Section 4.4) and as the re-called `namedrecall` files below show.
 
-Information contract of every call: `definitions_only` (feature names, definitions, lineage, aggregation operation
-and window; no data rows, no statistics, no outcomes). The prompt template is Appendix A of the manuscript.
+**Two different call paths produced these files.** Read this before using them:
+
+- **Home Credit and LendingClub v2 `named` calls** (the cached rankings behind the headline tables) were made by
+  the matrix runner through `LLMSelector.fit` (`src/credit_risk_fs/selectors/llm_screening.py`). That path does
+  **not** use the Appendix A template. It applies a 0.95 missingness screen and then an IV/WOE prefilter
+  (`min_iv` 0.01, `encode=True`, fitted with the training labels; `selectors/registry.py`, `experiments/runner.py`),
+  builds one record per surviving feature with `feature_metadata/builder.py` from the WOE-encoded frame (so each
+  record carries `missing_rate`, `non_null_count` and the mean, min, max, std, variance and 5th-95th percentiles of
+  the feature's WOE encoding), and sends the legacy prompt of `LLMSelector._build_prompt` asking for "up to" 100
+  names. Names outside the candidate records are dropped and a ranking shorter than 100 is padded with the
+  highest-IV unranked candidates. Every piece of this path is present in every commit from 2026-05-19 onward. The
+  `index.csv` note of each call states the returned count, the out-of-candidate names and the padding.
+- **Stability 2024, the obfuscation arms, the named re-calls, the lineage-only calls and the ten Stability
+  repeats** used the target-free path (`rank_target_free` / `build_target_free_prompt`): the Appendix A template
+  under the `definitions_only` contract (feature names, definitions, lineage, aggregation operation and window;
+  no statistics, no outcomes), strict validation, up to three attempts, no fallback.
+
+`docs/repository_freeze.md` (Section 10, finding 2) sets out what this means for the manuscript's statements.
 
 ## Files
 
@@ -37,9 +53,10 @@ validation_passed, attempts, n_candidate_records, top_k_sha256, source, note`.
   374 / 369 / 365 / 374 / 372 / 391 records (fold1..fold5, full_dev) and LendingClub v2 calls 155 / 154 / 155 / 157 / 160 / 161.
   See `docs/repository_freeze.md`, finding 2.
 - `validation_passed` is recomputed here from the stored response: TRUE when every returned name is a candidate
-  record, names are distinct and the count equals the requested budget. Several LendingClub v2 responses carry
-  fewer or more names than the budget and a few names outside the candidate records (all at ranks above 40);
-  the note column states each case.
+  record, names are distinct and the count equals the number requested (100 for every call in this folder; the
+  per-call budget of LendingClub v2 is a cache key, not the number of names asked for). Ten LendingClub v2
+  responses hold fewer than 100 names and seven responses (two Home Credit, five LendingClub v2) hold names
+  outside the candidate records, all at ranks above 40; the note column states each case.
 - `top_k_sha256` is the SHA-256 of the newline-joined first 40 names (the K=20 subset is its prefix).
 - `temperature` is recorded in the file where the file stores it; otherwise "not recorded in the file".
 - `source` is the local path the file was copied from (`REPO:` = this repository, git-ignored; `ARTICLE:` = the
