@@ -26,9 +26,11 @@ uv run pytest tests/test_manuscript_tables.py -q
 
 `scripts/manuscript_oracle.py` holds the manuscript's printed values (transcribed from the submission `.tex`);
 the checker rounds CSV values to the manuscript's precision before comparing. Values with no local source are
-left empty and reported as "no CSV source" (97 at the freeze; listed in `docs/repository_freeze.md`); seven values
-that the local artefacts reproduce only to within one unit in the fourth decimal are flagged, not failed
-(`KNOWN_DISCREPANCIES` in the oracle).
+left empty and reported as "no CSV source" (107 at the freeze; listed in `docs/repository_freeze.md`). Sixteen values
+are flagged, not failed (`KNOWN_DISCREPANCIES` in the oracle): seven that the local artefacts reproduce only to within
+one unit in the fourth decimal, and nine Appendix C pooled values that reflect the superseded 2020-02-01 Stability
+budget sweep. Besides the tables, `--check` recomputes the prose ranges and differences of Sections 6.1 to 6.6 and
+Appendices C and F from the same CSVs.
 
 ## Manuscript element -> file -> column
 
