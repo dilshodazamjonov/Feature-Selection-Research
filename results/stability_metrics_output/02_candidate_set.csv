@@ -1,2 +1,3 @@
-cohort_cutoff,screen,screen_rows,screen_date_start,screen_date_end,universe,dropped,retained,applies_to,source
-2020-02-26,missing rate <= 0.90 on fold-1 DEV training rows,200661,2019-01-01,2019-03-28,1959,891,1068,"all",outputs/todo_fill/gate4/third_candidates.json; results/final_three_dataset_synthesis_v1/tables/dataset_overview.csv
+screen,screen_partition,screen_rows,universe,dropped,retained,note
+missing rate <= 0.90 on fold-1 DEV training rows,fold1 training,200661,1959,891,1068,"tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; screen window 2019-01-01 to 2019-03-28; applies to all; original source note: outputs/todo_fill/gate4/third_candidates.json; results/final_three_dataset_synthesis_v1/tables/dataset_overview.csv (local, git-ignored paths)"
+prediction-time availability review of raw predictors,,,461,27,434,"REPO:cleanup/audits/third_dataset_protocol_freeze/feature_definition_coverage.json (review_row_count_before_actions 461, included_raw_predictor_count 434) and protocol_review.md"

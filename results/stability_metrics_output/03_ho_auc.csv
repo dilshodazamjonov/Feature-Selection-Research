@@ -1,30 +1,29 @@
-backbone,selector,family,K,ho_auc,status
-lr,Domain rules,classical,20,0.7371,run
-lr,Random K,classical,20,0.6818,run
-lr,PCA,classical,20,0.7019,run
-lr,IV/WOE,classical,20,0.7781,run
-lr,mRMR,classical,20,0.7769,run
-lr,Boruta RF,classical,20,0.7611,run
-lr,IV then Boruta,classical,20,0.7976,run
-lr,RFE CatBoost,classical,20,0.8181,run
-lr,CatBoost SHAP,classical,20,0.8092,run
-lr,Pure LLM,LLM-assisted,20,0.8322,run
-lr,LLM then mRMR,LLM-assisted,20,0.8112,run
-lr,LLM then Boruta,LLM-assisted,20,0.8098,run
-lr,Stable core + LLM fill,LLM-assisted,20,0.8171,run
-lr,Full feature reference,reference,1959,0.7659,run
-catboost,Domain rules,classical,40,0.7791,run
-catboost,Random K,classical,40,0.7502,run
-catboost,PCA,classical,40,0.7692,run
-catboost,IV/WOE,classical,40,0.8187,run
-catboost,mRMR,classical,40,0.8308,run
-catboost,Boruta RF,classical,40,0.8095,run
-catboost,IV then Boruta,classical,40,0.8387,run
-catboost,RFE CatBoost,classical,40,0.8425,run
-catboost,CatBoost SHAP,classical,40,0.8509,run
-catboost,Pure LLM,LLM-assisted,40,0.8716,run
-catboost,LLM then mRMR,LLM-assisted,40,0.8519,run
-catboost,LLM then Boruta,LLM-assisted,40,0.8385,run
-catboost,Stable core + LLM fill,LLM-assisted,40,0.8489,run
-catboost,Full feature reference,reference,1959,0.8198,run
-,,,,,
+backbone,selector,family,K,ho_auc,note
+lr,Domain rules,classical,20,0.7371,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,Random K,classical,20,0.6818,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,PCA,classical,20,0.7019,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,IV/WOE,classical,20,0.7781,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,mRMR,classical,20,0.7769,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,Boruta RF,classical,20,0.7611,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,IV then Boruta,classical,20,0.7976,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,RFE CatBoost,classical,20,0.8181,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,CatBoost SHAP,classical,20,0.8092,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,Pure LLM,LLM-assisted,20,0.8322,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,LLM then mRMR,LLM-assisted,20,0.8112,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,LLM then Boruta,LLM-assisted,20,0.8098,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,Stable core + LLM fill,LLM-assisted,20,0.8171,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+lr,Full features,reference,1959,0.7659,"tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; unscreened 1,959-feature reference"
+catboost,Domain rules,classical,40,0.7791,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,Random K,classical,40,0.7502,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,PCA,classical,40,0.7692,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,IV/WOE,classical,40,0.8187,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,mRMR,classical,40,0.8308,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,Boruta RF,classical,40,0.8095,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,IV then Boruta,classical,40,0.8387,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,RFE CatBoost,classical,40,0.8425,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,CatBoost SHAP,classical,40,0.8509,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,Pure LLM,LLM-assisted,40,0.8716,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,LLM then mRMR,LLM-assisted,40,0.8519,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,LLM then Boruta,LLM-assisted,40,0.8385,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,Stable core + LLM fill,LLM-assisted,40,0.8489,tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine
+catboost,Full features,reference,1959,0.8198,"tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; unscreened 1,959-feature reference"

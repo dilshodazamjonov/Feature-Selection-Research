@@ -1,2 +1,3 @@
-selector,K,ho_auc_native
-CatBoost SHAP,40,0.8532
+backbone,selector,K,ho_auc_onehot,ho_auc_native,note
+catboost,Pure LLM,40,0.8716,0.8716,no categorical feature in the subset; unchanged by construction (Appendix F); value = 03
+catboost,CatBoost SHAP,40,0.8509,0.8532,ho_auc_native: tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; ho_auc_onehot from 03

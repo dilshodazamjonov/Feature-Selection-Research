@@ -1,5 +1,2 @@
-metric,best_value,selector,backbone
-ks,0.5681,Pure LLM,catboost
-brier,0.1538,Pure LLM,catboost
-capture10,0.4417,Pure LLM,catboost
-lift10,4.417,Pure LLM,catboost
+backbone,selector,ks,brier,log_loss,capture_at_10,lift_at_10,note
+catboost,Pure LLM,0.5681,0.1538,,0.4417,4.417,"tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; only the best value of each metric was recorded (all attained by Pure LLM, CatBoost); the full matrix and log loss are not on this machine"

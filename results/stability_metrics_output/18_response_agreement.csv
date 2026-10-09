@@ -1,0 +1,3 @@
+backbone,K,draws,d,nogueira,jaccard_mean,names_in_all_draws,distinct_names,note
+lr,20,10,1068,0.805242,0.69076,11,30,"derived from the ten repeated full-DEV rankings (results/llm_rankings/stability_2024/ repeat lists, from ARTICLE:priority_2/repeated_calls_lists.csv; B=10, d=1068, 45 pairs); pairwise values also in ARTICLE:priority_2/repeated_calls_pairwise_jaccard.csv"
+catboost,40,10,1068,0.776634,0.65063,22,69,"derived from the ten repeated full-DEV rankings (results/llm_rankings/stability_2024/ repeat lists, from ARTICLE:priority_2/repeated_calls_lists.csv; B=10, d=1068, 45 pairs); pairwise values also in ARTICLE:priority_2/repeated_calls_pairwise_jaccard.csv"

@@ -1,17 +1,30 @@
-file,run_id
-01_cohort.csv,2756e5b4-8f4c-4208-bdcd-96021225da09
-02_candidate_set.csv,2756e5b4-8f4c-4208-bdcd-96021225da09
-03_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-04_dev_fold_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-05_leader_delta_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-06_leader_feature_psi.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-07_selection_stability.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-08_secondary_metrics.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-09_leader_subsets.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-10_boruta_attainment.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-11_monthly_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934
-12_native_categorical.csv,dc5d0ed2-dd75-40d0-99c7-e7d238654d66
-13_lineage_only.csv,8a81761d-6571-49a3-8551-e2f44e485d0d
-14_l1_selector.csv,1dcee9a8-87f0-4b49-a8fe-e469e738fd2e
-15_diversity_controls.csv,815a65c1-d3dc-49c7-87af-93e920e2b1a0
-16_ten_responses.csv,93eaeb6e-ec14-4963-9112-99cfbfb8ad4d
+file,run_id,source_path,source_sha256,note
+01_cohort.csv,2756e5b4-8f4c-4208-bdcd-96021225da09,REPO:results/stability_metrics_output/01_cohort.csv@ddbb067,73f00af20c0f493335634e7049d27b34e640b536115f9c950067eef175c8f920,all columns; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+02_candidate_set.csv,2756e5b4-8f4c-4208-bdcd-96021225da09,REPO:results/stability_metrics_output/02_candidate_set.csv@ddbb067,fd7d5b0bcb04011ff29b3f92eabf25d1815f3200ffa72f13378d6bc2cb1add92,screen row; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+02_candidate_set.csv,,REPO:cleanup/audits/third_dataset_protocol_freeze/feature_definition_coverage.json,1a5c9c41aec4ee9a232066c7dd0119920352df2862165be04c6f70e3c3f24d3e,461 reviewed / 434 approved
+03_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/03_ho_auc.csv@ddbb067,458cce211ec162c8178ac347401243f80e8258c61af96400e62aa587cba9af8d,ho_auc (trailing empty row removed; 'Full feature reference' renamed 'Full features'); run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+04_dev_fold_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/04_dev_fold_auc.csv@ddbb067,b243c285b43ac296d466adcb77dbaedee6b1766e43d285a70b9747dd8eba73cf,dev_mean_auc ('favourable_range' column dropped); run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+05_leader_delta_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/05_leader_delta_auc.csv@ddbb067,f649bd3f4d82eb280cd43b17ca8e128e64dedf2ca1009d5e2903926966211837,"leaders, HO AUCs, delta, CI; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)"
+06_leader_feature_psi.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/06_leader_feature_psi.csv@ddbb067,9760f5dbe08f705d0e029318c931488dfd83d9baeca3c45a874434ad27afe648,all columns; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+07_selection_stability.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/07_selection_stability.csv@ddbb067,073f0a2f98311212ad1d3ef0d5e3c340a1d71ab13413997a865dce6a097ad932,all columns; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+08_secondary_metrics.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/08_secondary_metrics.csv@ddbb067,8ad6d944f8116491ce4905c862383bdf17cbe5c91bdca34a398a94e1cd192d92,"best KS, Brier, Capture@10, Lift@10; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)"
+09_leader_subsets.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/09_leader_subsets.csv@ddbb067,0873c71a15e86f4cbb38ea51609382c0a9caa0ced919b3eb4064f807f14cce7a,all columns; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+10_boruta_attainment.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/10_boruta_attainment.csv@ddbb067,50cc78ee0ef698ef71baaf1526f7b560762affa94e7703e5d973454003a7ffef,n_confirmed ('ranges' column dropped); run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+10_boruta_attainment.csv,,ARTICLE:priority_2/boruta_subset_sizes.csv,026b5b13733c8630f5b1e02ae071d5dfc7a4596b1ab17f2e353d7727686c1081,n_selected
+11_subpopulation_ho_auc.csv,057b35a8-45e6-428a-aadc-34f099a6e934,REPO:results/stability_metrics_output/11_monthly_ho_auc.csv@ddbb067,bb58fa2a7a9569846162a14ddd9992da5455dfaa4dfdc17326db5fb022c7bcf2,monthly n and HO AUC of the four leaders (file folded into the long schema); run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+12_native_categorical.csv,dc5d0ed2-dd75-40d0-99c7-e7d238654d66,REPO:results/stability_metrics_output/12_native_categorical.csv@ddbb067,83e123aeaf864565a9ad52bdf959ce7a16a9f52b6cec1c1898ba688fa5fc42d5,ho_auc_native of CatBoost SHAP; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+13_lineage_only.csv,8a81761d-6571-49a3-8551-e2f44e485d0d,REPO:results/stability_metrics_output/13_lineage_only.csv@ddbb067,84a3395778dc7369dc4fb5e038e7c755e969b459440d40fef5efafafb3432b0e,"mechanical HO AUC, delta, CI; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)"
+13_lineage_only.csv,,ARTICLE:priority_2/44_mechanical.csv,76700671a047ffd80fd96fc6d6aa593573636fb6cfbe936eb0d1727110405f24,overlap_with_cached
+14_l1_selector.csv,1dcee9a8-87f0-4b49-a8fe-e469e738fd2e,REPO:results/stability_metrics_output/14_l1_selector.csv@ddbb067,f072cf818fdb39104817032679c38f7792f4bfea79fec81ea9533d6aa7f77b18,ho_auc; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+15_diversity_controls.csv,815a65c1-d3dc-49c7-87af-93e920e2b1a0,REPO:results/stability_metrics_output/15_diversity_controls.csv@ddbb067,36e490b51d62a52525bae22687937d4a44fea3851ec90cc72e9eedbf7a5bad6b,control_ho_auc; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+15_diversity_controls.csv,,REPO:outputs/todo_fill/hcms2024_matrix/lineage.json,5ca356912c9cd09abd9cd447b6d51b2d170f480c0cbcb070f03f72bb82c10919,12 source families
+16_response_spread.csv,93eaeb6e-ec14-4963-9112-99cfbfb8ad4d,REPO:results/stability_metrics_output/16_ten_responses.csv@ddbb067,cf6852c0a9633fd2f490f178363c898729756c8cbccfd0ff69a5a15cfc29c3e4,ten repeated-call HO AUCs per backbone (file folded into the long schema); run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+17_budget_sweep.csv,,REPO:results/stability_metrics_output/17_budget_sweep.csv@ddbb067,c97caa4ad173de5c8b8a4daaa089a206f596d1a88d74ad1ec156e3a9d5827356,leader and pooled DEV AUC per budget; run_id as recorded in the original 00_run_ids.csv (matches no file on this machine)
+18_response_agreement.csv,,ARTICLE:priority_2/repeated_calls_lists.csv,a6f133fc79d0272ac1b8b9641bb601fadac08051fd5504661ae11f7a38abef44,the ten repeated rankings
+19_obfuscation.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
+19b_obfuscation_ranks.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
+19c_obfuscation_fold_jaccard.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
+20_rank_voting.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
+21_llm_usage.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
+22_runtime_and_memory.csv,,ARTICLE:priority_2/mrmr_pool_timing.csv,e92a24a6d8051dd9a80bc55de8d460d5c507e1d8f47e3c6285395d4125ded818,522 s vs 21 s
+22_runtime_and_memory.csv,,REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json,b763ccac552ca75da6c96d6845e816fc48afec8d9d644102b8b1c18b1b885c72,machine line

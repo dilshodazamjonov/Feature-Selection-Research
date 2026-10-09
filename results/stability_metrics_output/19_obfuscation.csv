@@ -1,0 +1,2 @@
+arm,backbone,K,ho_auc_arm,ho_auc_named,delta_auc,fold1_auc,fold2_auc,fold3_auc,fold4_auc,fold5_auc,overlap_full_dev,overlap_folds_min,overlap_folds_max,overlap_folds_mean,note
+,,,,,,,,,,,,,,,Home Credit only (Table 7); the Stability 2024 obfuscation arms of the Gate-4 fill used a regenerated named control and are not reported in the manuscript

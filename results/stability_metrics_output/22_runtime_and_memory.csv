@@ -1,0 +1,6 @@
+backbone,pipeline,stage,wall_clock_minutes,seconds,peak_rss_gb,matched_conditions,note
+,"mRMR over 1,959 features",selection,8.7025,522.15,,TRUE,"ARTICLE:priority_2/mrmr_pool_timing.csv (Stability 2024 fold 1, same machine, matched conditions; Section 6.7)"
+,mRMR over 100-feature pool,selection,0.342,20.52,,TRUE,"ARTICLE:priority_2/mrmr_pool_timing.csv (Stability 2024 fold 1, same machine, matched conditions; Section 6.7)"
+,minimum,peak_rss_range,,,,,Section 6.7 peak process memory 27.0-29.0 GB: no local artefact (the Stability run directories are not on this machine)
+,maximum,peak_rss_range,,,,,see minimum row
+,"16 logical / 10 physical cores, 39.6 GiB RAM, 4 estimator threads, CPU execution (GPU present but unused)",machine,,,,,"REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json (logical_cpu_count 16, physical_cpu_count 10, total_ram_gb 39.633, estimator_threads 4, requested_accelerator cpu)"

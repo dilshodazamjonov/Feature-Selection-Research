@@ -1,5 +1,5 @@
-backbone,control,base_selector,K,control_ho_auc
-lr,family_cap,RFE CatBoost,20,0.7494
-catboost,family_cap,CatBoost SHAP,40,0.8289
-lr,depth0,RFE CatBoost,20,0.7804
-catboost,depth0,CatBoost SHAP,40,0.8231
+backbone,control,base_selector,K,cap_per_family,n_families,control_ho_auc,uncapped_ho_auc,llm_assisted_ho_auc,difference,note
+lr,family_cap,RFE CatBoost,20,2,12,0.7494,0.8181,0.8322,-0.0828,control_ho_auc: tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; uncapped and LLM-assisted from 03; difference derived; cap = ceil(K/F) with F = 12 source families (REPO:outputs/todo_fill/hcms2024_matrix/lineage.json source_family)
+catboost,family_cap,CatBoost SHAP,40,4,12,0.8289,0.8509,0.8716,-0.0427,control_ho_auc: tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; uncapped and LLM-assisted from 03; difference derived; cap = ceil(K/F) with F = 12 source families (REPO:outputs/todo_fill/hcms2024_matrix/lineage.json source_family)
+lr,depth0,RFE CatBoost,20,,2,0.7804,0.8181,0.8322,-0.0518,control_ho_auc: tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; uncapped and LLM-assisted from 03; difference derived; depth-0 = static_0 and static_cb_0 tables (REPO:scripts/todo_fill/gate4/config.py THIRD_DEPTH0_FAMILIES)
+catboost,depth0,CatBoost SHAP,40,,2,0.8231,0.8509,0.8716,-0.0485,control_ho_auc: tracked value at ddbb067 (main; committed in b778999 on 2026-10-08 from a Stability 2024 rerun on the 2020-02-26 cohort); the run outputs behind it are not on this machine; uncapped and LLM-assisted from 03; difference derived; depth-0 = static_0 and static_cb_0 tables (REPO:scripts/todo_fill/gate4/config.py THIRD_DEPTH0_FAMILIES)
