@@ -1,1 +1,5 @@
 backbone,selector,mean_psi,median_psi,max_psi,max_psi_feature,note
+lr,Pure LLM,0.012526,0.008728,0.035697,revol_util,"ARTICLE:priority_2/selected_feature_psi.csv (type-aware feature PSI, DEV vs HO, of the leader's frozen full-DEV subset)"
+lr,IV then Boruta,0.012888,0.012578,0.030042,bc_open_to_buy_to_loan_amnt,"ARTICLE:priority_2/selected_feature_psi.csv (type-aware feature PSI, DEV vs HO, of the leader's frozen full-DEV subset)"
+catboost,LLM then mRMR,0.010432,0.010923,0.033122,total_bc_limit_per_bc_trade,"ARTICLE:priority_2/selected_feature_psi.csv (type-aware feature PSI, DEV vs HO, of the leader's frozen full-DEV subset)"
+catboost,IV then Boruta,0.012542,0.012638,0.030042,bc_open_to_buy_to_loan_amnt,"ARTICLE:priority_2/selected_feature_psi.csv (type-aware feature PSI, DEV vs HO, of the leader's frozen full-DEV subset)"

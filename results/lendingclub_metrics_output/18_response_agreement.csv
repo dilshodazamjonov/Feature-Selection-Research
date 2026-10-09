@@ -1,1 +1,3 @@
 backbone,K,draws,d,nogueira,jaccard_mean,names_in_all_draws,distinct_names,note
+lr,20,5,675,0.551718,0.401116,4,39,"derived from the five per-fold cached rankings (results/llm_rankings/lendingclub_v2/, top-20 of each fold list, B=5, d=675)"
+catboost,40,5,675,0.627953,0.482788,14,71,"derived from the five per-fold cached rankings (results/llm_rankings/lendingclub_v2/, top-40 of each fold list, B=5, d=675)"

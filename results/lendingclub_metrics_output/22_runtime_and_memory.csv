@@ -1,1 +1,13 @@
 backbone,pipeline,stage,wall_clock_minutes,seconds,peak_rss_gb,matched_conditions,note
+catboost,Domain rules,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,mRMR,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,LLM then mRMR,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,Pure LLM,pipeline,73.7982,4427.89,,FALSE,REPO:reports/archive/cross_dataset_v2_analysis.md runtime_seconds (lendingclub_v2 catboost llm); minutes derived; unmatched conditions (Appendix F)
+catboost,PCA,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,LLM then Boruta,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,Boruta RF,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,Stable core + LLM fill,pipeline,,,,FALSE,Appendix F wall-clock minutes: no local artefact (REPO:reports/archive/lendingclub_report.md is the LendingClub v1 run and does not match)
+catboost,Stable core + LLM fill,selection,,,,FALSE,Appendix F 176.6 minutes of feature selection: no local artefact
+,minimum,peak_rss_range,,,,,Section 6.7 peak process memory 19.1-29.0 GB: no local artefact reproduces the range (two-dataset package: 19.98-30.44 GB)
+,maximum,peak_rss_range,,,,,see minimum row
+,"16 logical / 10 physical cores, 39.6 GiB RAM, 4 estimator threads, CPU execution (GPU present but unused)",machine,,,,,"REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json (logical_cpu_count 16, physical_cpu_count 10, total_ram_gb 39.633, estimator_threads 4, requested_accelerator cpu); the CPU model named in Section 5.7 (Intel Core i7-13620H) appears in no local artefact"

@@ -1,1 +1,29 @@
 backbone,selector,family,K,ho_auc,note
+lr,Domain rules,classical,20,0.55245745,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Random K,classical,20,0.60382178,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,PCA,classical,20,0.66243945,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,IV/WOE,classical,20,0.68210988,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,mRMR,classical,20,0.68592363,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Boruta RF,classical,20,0.65574767,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,IV then Boruta,classical,20,0.709803,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,RFE CatBoost,classical,20,0.69888059,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,CatBoost SHAP,classical,20,0.69654217,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Pure LLM,LLM-assisted,20,0.740234,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,LLM then mRMR,LLM-assisted,20,0.71785873,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,LLM then Boruta,LLM-assisted,20,0.67930546,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Stable core + LLM fill,LLM-assisted,20,0.70484206,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Full features,reference,675,0.7108872585675469,untuned full-feature reference; REPO:results/final_research_package_v2/final_results_tables.csv oot_auc (run fbv1-003-lendingclub_v2-lr-full-features-s42)
+catboost,Domain rules,classical,40,0.6128408,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Random K,classical,40,0.6718458,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,PCA,classical,40,0.67866884,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,IV/WOE,classical,40,0.7026728,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,mRMR,classical,40,0.70202373,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Boruta RF,classical,40,0.6857472,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,IV then Boruta,classical,40,0.720147,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,RFE CatBoost,classical,40,0.71896177,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,CatBoost SHAP,classical,40,0.7151491,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Pure LLM,LLM-assisted,40,0.7335434,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,LLM then mRMR,LLM-assisted,40,0.770664,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,LLM then Boruta,LLM-assisted,40,0.70024958,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Stable core + LLM fill,LLM-assisted,40,0.727697,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Full features,reference,675,0.7229733440369057,untuned full-feature reference; REPO:results/final_research_package_v2/final_results_tables.csv oot_auc (run fbv1-004-lendingclub_v2-catboost-full-features-s42)

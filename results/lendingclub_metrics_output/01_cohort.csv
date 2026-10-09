@@ -1,1 +1,8 @@
 cohort_cutoff,split,window_start,window_end,unique_index_units,n_rows,n_events,event_rate,share_of_rows,note
+issue month 2016-01,DEV,-1795,-1096,24,598649,116966,0.19538327133261726,0.6713163047,"REPO:configs/protocols/row_alignment_contract_v1.json datasets.lendingclub_v2.dev (interval [-1795,-1065) days to 2018-12-01 = issue months 2014-01..2015-12; equal_timestamp_group_count = 24 issue months)"
+issue month 2016-01,HO,-1065,-730,12,293105,68252,0.23285853192541922,0.3286836953,REPO:configs/protocols/row_alignment_contract_v1.json datasets.lendingclub_v2.oot (issue months 2016-01..2016-12)
+issue month 2016-01,total,-1795,-730,,891754,185218,0.2077007785,1,DEV + HO (derived); resolved 36- and 60-month loans of the 2019-05-01 snapshot
+issue month 2016-01,DEV_term36,-1795,-1096,,,,,,"Section 5.1 DEV term counts (445,596 36-month loans) and DEV term event rates (14.5% / 34.3%): no local artefact outside data/"
+issue month 2016-01,DEV_term60,-1795,-1096,,,,,,"Section 5.1 DEV term counts (445,596 36-month loans) and DEV term event rates (14.5% / 34.3%): no local artefact outside data/"
+issue month 2016-01,HO_term36,-1065,-730,,232361,46120,0.1984842551,0.7927568619,"ARTICLE:priority_2/lc_ho_maturity_filters.csv (n_ho, n_positive); event_rate = n_positive/n_ho (derived)"
+issue month 2016-01,HO_term60,-1065,-730,,60744,22132,0.3643487423,0.2072431381,"ARTICLE:priority_2/lc_ho_maturity_filters.csv (n_ho, n_positive); event_rate = n_positive/n_ho (derived)"

@@ -1,1 +1,3 @@
 backbone,selector,K,ho_auc_onehot,ho_auc_native,note
+catboost,LLM then mRMR,40,0.770664,0.77379,"ARTICLE:priority_2/catboost_native_cat_ho_auc.csv (same forty features, configuration and seed; native categorical handling instead of one-hot); REPO:todo_done/39b_native_catboost.csv (local 2026-09-21 refit) gives 0.750379 for this cell - see docs/repository_freeze.md"
+catboost,IV then Boruta,40,0.720147,0.720275,"ARTICLE:priority_2/catboost_native_cat_ho_auc.csv (same forty features, configuration and seed; native categorical handling instead of one-hot)"
