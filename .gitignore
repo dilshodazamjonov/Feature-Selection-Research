@@ -20,6 +20,9 @@ wheels/
 /final_artifacts/
 /reports/
 /logs/
+/logs/runs.log
+/logs/events.jsonl
+/logs/debug.log
 *.log
 *.parquet
 *.pkl
