@@ -666,10 +666,205 @@ def check_appendix_f(ck: Check) -> None:
            "match" if "not recorded" in note else "mismatch")
 
 
+def _r(x, nd):
+    return None if x is None else round(float(x) + 0.0, nd)
+
+
+def check_text_claims(ck: Check) -> None:
+    """Prose ranges and differences, recomputed from the CSVs (inputs rounded as the manuscript prints them)."""
+    T = O.TEXT_CLAIMS
+    ho = {}; dev = {}; lead = {}
+    for ds in O.DATASETS:
+        for _, r in load(ds, "03_ho_auc.csv").iterrows():
+            ho[(ds, r["backbone"], r["selector"])] = to_float(r["ho_auc"])
+        for _, r in load(ds, "04_dev_fold_auc.csv").iterrows():
+            dev[(ds, r["backbone"], r["selector"])] = to_float(r["dev_mean_auc"])
+        for _, r in load(ds, "05_leader_delta_auc.csv").iterrows():
+            lead[(ds, r["rule"], r["backbone"])] = r.to_dict()
+    p4 = lambda k: _r(ho.get(k), 4)
+    d4 = lambda k: _r(dev.get(k), 4)
+
+    def rng(table, where, values, lo, hi):
+        vals = [v for v in values if v is not None]
+        complete = len(vals) == len(values) and vals
+        ck.num(table, where, "range min", min(vals) if complete else None, lo)
+        ck.num(table, where, "range max", max(vals) if complete else None, hi)
+
+    # Section 6.1 rounded intervals
+    r = lead.get(("homecredit", "HO", "catboost"))
+    ck.num("Section 6.1", "homecredit catboost HO-rule CI", "ci_low (3 dp)", r and r.get("ci_low"), T["hc_cb_ho_ci_3dp"][0])
+    ck.num("Section 6.1", "homecredit catboost HO-rule CI", "ci_high (3 dp)", r and r.get("ci_high"), T["hc_cb_ho_ci_3dp"][1])
+    r = lead.get(("homecredit", "DEV", "lr"))
+    ck.num("Section 6.1", "homecredit lr DEV-rule CI", "ci_low (3 dp)", r and r.get("ci_low"), T["hc_lr_dev_ci_3dp"][0])
+    ck.num("Section 6.1", "homecredit lr DEV-rule CI", "ci_high (3 dp)", r and r.get("ci_high"), T["hc_lr_dev_ci_3dp"][1])
+
+    # Section 6.1 / 6.2: DEV-rule leaders against HO-best, and DEV-to-HO change
+    short_cl, short_llm, fall, move = [], {}, [], []
+    hold = None
+    for ds in O.DATASETS:
+        for bb in O.BACKBONES:
+            h, d = lead.get((ds, "HO", bb)), lead.get((ds, "DEV", bb))
+            if not h or not d:
+                short_cl.append(None); fall.append(None); move.append(None); continue
+            sc = _r(to_float(h["classical_ho_auc"]), 4) - _r(to_float(d["classical_ho_auc"]), 4)
+            if d["classical_leader"] != h["classical_leader"]:
+                short_cl.append(sc)
+            short_llm[(ds, bb)] = _r(to_float(h["llm_ho_auc"]), 4) - _r(to_float(d["llm_ho_auc"]), 4)
+            c_change = p4((ds, bb, d["classical_leader"])) - d4((ds, bb, d["classical_leader"])) if d4((ds, bb, d["classical_leader"])) is not None else None
+            if ds == "stability_2024" and bb == "lr":
+                hold = c_change
+            else:
+                fall.append(None if c_change is None else -c_change)
+            l_change = p4((ds, bb, d["llm_leader"])) - d4((ds, bb, d["llm_leader"])) if d4((ds, bb, d["llm_leader"])) is not None else None
+            move.append(l_change)
+    rng("Section 6.1", "DEV-chosen classical leader short of HO-best (5 cases)", short_cl, *O.DEV_TO_HO["dev_chosen_classical_short"])
+    ck.num("Section 6.1", "DEV-chosen LLM-assisted leader below HO-best", "homecredit lr", short_llm.get(("homecredit", "lr")), O.DEV_TO_HO["dev_chosen_llm_short_hc_lr"])
+    others = [v for k, v in short_llm.items() if k != ("homecredit", "lr")]
+    ck.add("Section 6.1", "DEV-chosen LLM-assisted leader is HO-best", "other five cases", others, "all 0",
+           "match" if others and all(abs(v) < 1e-12 for v in others) else ("blank" if not others else "mismatch"))
+    rng("Section 6.2", "classical DEV-rule leaders, DEV mean to HO (5 cases)", fall, *O.DEV_TO_HO["classical_fall"])
+    ck.add("Section 6.2", "classical DEV-rule leader, Stability LR", "holds level", hold, "|change| < 0.001",
+           "match" if hold is not None and abs(hold) < 0.001 else ("blank" if hold is None else "mismatch"))
+    rng("Section 6.2", "LLM-assisted DEV-rule leaders, DEV mean to HO", move, *O.DEV_TO_HO["llm_move"])
+    rises = [v for v in move if v is not None]
+    ck.num("Section 6.2", "LLM-assisted DEV-rule leaders", "cases that rise", sum(v > 0 for v in rises) if len(rises) == 6 else None, str(O.DEV_TO_HO["llm_rise_cases"]))
+
+    # Section 6.3 within-family comparison
+    six = ["IV/WOE", "mRMR", "Boruta RF", "IV then Boruta", "RFE CatBoost", "CatBoost SHAP"]
+    gaps, hc_lr = [], None
+    for ds in O.DATASETS:
+        for bb in O.BACKBONES:
+            c = [p4((ds, bb, s)) for s in six]; l = [p4((ds, bb, s)) for s in O.LLM_ASSISTED]
+            if None in c or None in l:
+                gaps.append(None); continue
+            g = sum(l) / 4 - sum(c) / 6
+            if (ds, bb) == ("homecredit", "lr"):
+                hc_lr = -g
+            else:
+                gaps.append(g)
+    rng("Section 6.3", "mean HO AUC, four LLM-assisted minus six classical (5 cases)", gaps, *O.WITHIN_FAMILY["six_classical_vs_four_llm_gap"])
+    ck.num("Section 6.3", "mean HO AUC, six classical minus four LLM-assisted", "homecredit lr", hc_lr, O.WITHIN_FAMILY["hc_lr_classical_above"])
+    v = None if None in (p4(("homecredit", "lr", "Stable core + LLM fill")), p4(("homecredit", "lr", "Pure LLM"))) else p4(("homecredit", "lr", "Stable core + LLM fill")) - p4(("homecredit", "lr", "Pure LLM"))
+    ck.add("Section 6.3", "Pure LLM within 0.006 of the LLM-assisted leader", "homecredit lr", v, "<= 0.006", "match" if v is not None and v <= 0.006 + 1e-12 else ("blank" if v is None else "mismatch"))
+    v = None if None in (p4(("lendingclub_v2", "catboost", "LLM then mRMR")), p4(("lendingclub_v2", "catboost", "Pure LLM"))) else p4(("lendingclub_v2", "catboost", "LLM then mRMR")) - p4(("lendingclub_v2", "catboost", "Pure LLM"))
+    ck.num("Section 6.3", "Pure LLM trails LLM then mRMR", "lendingclub_v2 catboost", v, O.WITHIN_FAMILY["pure_llm_trails_llm_then_mrmr_lc_cb"])
+    for bb, key in (("lr", "st_llm_spread_lr"), ("catboost", "st_llm_spread_catboost")):
+        vals = [p4(("stability_2024", bb, s)) for s in O.LLM_ASSISTED]
+        ck.num("Section 6.3", f"stability_2024 {bb} LLM-assisted spread", "max - min", (max(vals) - min(vals)) if None not in vals else None, O.WITHIN_FAMILY[key])
+
+    # Table 6 / Appendix F family cap
+    falls, gaps5 = [], []
+    for ds in O.DATASETS:
+        for _, r in load(ds, "15_diversity_controls.csv").iterrows():
+            if r["control"] != "family_cap" or blank(r.get("control_ho_auc")):
+                continue
+            ctrl, unc, llm = _r(to_float(r["control_ho_auc"]), 4), _r(to_float(r["uncapped_ho_auc"]), 4), _r(to_float(r["llm_assisted_ho_auc"]), 4)
+            falls.append(unc - ctrl)
+            if not (ds == "homecredit" and r["backbone"] == "lr"):
+                gaps5.append(llm - ctrl)
+    rng("Appendix F", "family cap: classical leader falls (6 cases)", falls if len(falls) == 6 else falls + [None], *T["family_cap_fall"])
+    rng("Appendix F", "family cap: capped leader below LLM-assisted leader (5 cases)", gaps5 if len(gaps5) == 5 else gaps5 + [None], *T["family_cap_gap_five"])
+
+    # Section 6.5.2 lineage-only descriptions
+    leads, bounds, hc_core = [], [], None
+    for ds in O.DATASETS:
+        for _, r in load(ds, "13_lineage_only.csv").iterrows():
+            if blank(r.get("ho_auc_mechanical")):
+                continue
+            for b in ("ci_low", "ci_high"):
+                if not blank(r.get(b)):
+                    bounds.append(abs(to_float(r[b])))
+            h = lead.get((ds, "HO", r["backbone"]))
+            if not h:
+                continue
+            if r["selector"] == h["llm_leader"]:
+                diff = _r(to_float(r["ho_auc_mechanical"]), 4) - _r(to_float(h["classical_ho_auc"]), 4)
+                if (ds, r["backbone"]) == ("homecredit", "lr"):
+                    hc_core = diff
+                else:
+                    leads.append(diff)
+    rng("Section 6.5.2", "winning LLM-assisted leaders with rebuilt descriptions, lead over classical (5 cases)", leads if len(leads) == 5 else leads + [None], *T["mechanical_lead"])
+    ck.num("Section 6.5.2", "homecredit lr stable core (mechanical) minus mRMR", "difference", hc_core, T["mechanical_hc_lr_vs_mrmr"])
+    ck.num("Section 6.5.2", "Table 8 intervals", "widest bound", max(bounds) if len(bounds) == 16 else None, T["mechanical_widest_bound"])
+
+    # Section 6.6.1 stability ranges
+    st = {}
+    for ds in O.DATASETS:
+        for _, r in load(ds, "07_selection_stability.csv").iterrows():
+            st[(ds, r["backbone"], r["selector"])] = r.to_dict()
+    def g(ds, bb, sel, col, nd):
+        r = st.get((ds, bb, sel)); return None if r is None or blank(r.get(col)) else _r(to_float(r[col]), nd)
+    best = {(row["dataset"], row["backbone"]): row["selector"] for row in O.TABLE9[:6]}
+    hclc = [(ds, bb) for ds in ("homecredit", "lendingclub_v2") for bb in O.BACKBONES]
+    allc = [(ds, bb) for ds in O.DATASETS for bb in O.BACKBONES]
+    rng("Section 6.6.1", "pure LLM Nogueira (HC, LC)", [g(ds, bb, "Pure LLM", "nogueira", 4) for ds, bb in hclc], *T["pure_llm_nogueira"])
+    rng("Section 6.6.1", "pure LLM mean Jaccard (HC, LC)", [g(ds, bb, "Pure LLM", "jaccard_mean", 4) for ds, bb in hclc], *T["pure_llm_jaccard"])
+    def spread(ds, bb, sel):
+        a, b = g(ds, bb, sel, "jaccard_max", 3), g(ds, bb, sel, "jaccard_min", 3)
+        return None if a is None or b is None else a - b
+    rng("Section 6.6.1", "pure LLM fold-pair spread (HC, LC)", [spread(ds, bb, "Pure LLM") for ds, bb in hclc], *T["pure_llm_pair_spread"])
+    rng("Section 6.6.1", "most reproducible classical fold-pair spread (6 cases)", [spread(ds, bb, best[(ds, bb)]) for ds, bb in allc], *T["classical_pair_spread"])
+    def diff(a, b):
+        return None if a is None or b is None else a - b
+    rng("Section 6.6.1", "most reproducible classical minus pure LLM, Nogueira (HC, LC)",
+        [diff(g(ds, bb, best[(ds, bb)], "nogueira", 4), g(ds, bb, "Pure LLM", "nogueira", 4)) for ds, bb in hclc], *T["classical_above_pure_llm"])
+    sc = "Stable core + LLM fill"; lb = "LLM then Boruta"
+    rng("Section 6.6.1", "stable core Nogueira (6 cases)", [g(ds, bb, sc, "nogueira", 4) for ds, bb in allc], *T["stable_core_nogueira"])
+    rng("Section 6.6.1", "stable core mean Jaccard (6 cases)", [g(ds, bb, sc, "jaccard_mean", 4) for ds, bb in allc], *T["stable_core_jaccard"])
+    rng("Section 6.6.1", "stable core below most reproducible classical, Nogueira (6 cases)",
+        [diff(g(ds, bb, best[(ds, bb)], "nogueira", 4), g(ds, bb, sc, "nogueira", 4)) for ds, bb in allc], *T["stable_core_below_classical"])
+    rng("Section 6.6.1", "stable core above pure LLM, Nogueira (HC, LC)", [diff(g(ds, bb, sc, "nogueira", 4), g(ds, bb, "Pure LLM", "nogueira", 4)) for ds, bb in hclc], *T["stable_core_above_pure_llm"])
+    rng("Section 6.6.1", "LLM then Boruta Nogueira (6 cases)", [g(ds, bb, lb, "nogueira", 4) for ds, bb in allc], *T["llm_then_boruta_nogueira"])
+    ck.num("Section 6.6.1", "LLM then Boruta below pure LLM, Nogueira", "homecredit lr", diff(g("homecredit", "lr", "Pure LLM", "nogueira", 4), g("homecredit", "lr", lb, "nogueira", 4)), T["hc_lr_llm_then_boruta_below_pure_llm"])
+    rng("Section 6.6.1", "Stability LLM then Boruta below stable core", [diff(g("stability_2024", bb, sc, "nogueira", 4), g("stability_2024", bb, lb, "nogueira", 4)) for bb in O.BACKBONES], *T["st_llm_then_boruta_below_stable_core"])
+    rng("Section 6.6.1", "Stability LLM then Boruta below most reproducible classical", [diff(g("stability_2024", bb, best[("stability_2024", bb)], "nogueira", 4), g("stability_2024", bb, lb, "nogueira", 4)) for bb in O.BACKBONES], *T["st_llm_then_boruta_below_classical"])
+
+    # Appendix F: LendingClub event rate DEV -> HO
+    c = load("lendingclub_v2", "01_cohort.csv")
+    for split, val in (("DEV", T["lc_event_rate_dev_ho_pct"][0]), ("HO", T["lc_event_rate_dev_ho_pct"][1])):
+        r = first(c, split=split)
+        rate = to_float(r and r.get("event_rate"))
+        ck.num("Appendix F", f"lendingclub_v2 {split} event rate", "percent (1 dp)", None if rate is None else rate * 100, val)
+
+    # Appendix C: pooled development curves
+    pooled = {}
+    for ds in O.DATASETS:
+        sw = load(ds, "17_budget_sweep.csv")
+        for bb in O.BACKBONES:
+            for k in (10, 20, 30, 40, 50):
+                rows = sw[(sw["backbone"] == bb) & (sw["K"] == str(k))]
+                sel = rows[rows["family"].isin(["classical", "LLM-assisted"])]
+                pool = rows[rows["family"] == "pooled"]
+                vals = [to_float(v) for v in sel["dev_mean_auc"]]
+                if len(vals) == 13 and None not in vals:
+                    pooled[(ds, bb, k)] = sum(vals) / 13
+                elif not pool.empty and to_float(pool["dev_mean_auc"].iloc[0]) is not None:
+                    pooled[(ds, bb, k)] = to_float(pool["dev_mean_auc"].iloc[0])
+    def rel(bb, k, ref):
+        v = [pooled.get((ds, bb, k)) for ds in O.DATASETS]; w = [pooled.get((ds, bb, ref)) for ds in O.DATASETS]
+        return None if None in v + w else sum(a - b for a, b in zip(v, w)) / 3
+    ck.num("Appendix C", "pooled LR DEV AUC", "K=30 minus K=20", rel("lr", 30, 20), O.APPENDIX_C_TEXT["lr_gain_k30"])
+    ck.num("Appendix C", "pooled LR DEV AUC", "K=40 minus K=20", rel("lr", 40, 20), O.APPENDIX_C_TEXT["lr_gain_k40"])
+    ck.num("Appendix C", "pooled CatBoost DEV AUC", "K=50 minus K=40", rel("catboost", 50, 40), O.APPENDIX_C_TEXT["cb_k50"])
+    for bb, ref, coords in (("lr", 20, O.FIGUREC1A["lr"]), ("catboost", 40, O.FIGUREC1A["catboost"])):
+        for k, val in coords.items():
+            if k != ref:
+                ck.num("Figure C.1a", f"pooled {bb}", f"K={k} relative to K={ref}", rel(bb, k, ref), val)
+    cb_lr_40 = [None if None in (pooled.get((ds, "catboost", 40)), pooled.get((ds, "lr", 40))) else pooled[(ds, "catboost", 40)] - pooled[(ds, "lr", 40)] for ds in O.DATASETS]
+    rng("Appendix C", "CatBoost over LR at K=40 (3 datasets)", cb_lr_40, *O.APPENDIX_C_TEXT["cb_over_lr_k40"])
+    allk = [None if None in (pooled.get((ds, "catboost", k)), pooled.get((ds, "lr", k))) else pooled[(ds, "catboost", k)] - pooled[(ds, "lr", k)] for ds in O.DATASETS for k in (10, 20, 30, 40, 50)]
+    rng("Appendix C", "CatBoost over LR at every budget (3 datasets x 5 budgets)", allk, *O.APPENDIX_C_TEXT["cb_over_lr_all"])
+    unmatched = [None if None in (pooled.get((ds, "catboost", 40)), pooled.get((ds, "lr", 20))) else pooled[(ds, "catboost", 40)] - pooled[(ds, "lr", 20)] for ds in O.DATASETS]
+    rng("Appendix C", "unmatched CatBoost K=40 minus LR K=20 (3 datasets)", unmatched, *O.APPENDIX_C_TEXT["unmatched_gap"])
+    share = [None if u is None or m is None else 100 * (u - m) / u for u, m in zip(unmatched, cb_lr_40)]
+    rng("Appendix C", "budget share of the unmatched difference, percent (3 datasets)", share, *O.APPENDIX_C_TEXT["budget_share_pct"])
+
+
 def run_checks() -> Check:
     ck = Check()
     for fn in (check_table2, check_table5, check_table3, check_table4, check_table7, check_table8, check_table9, check_table10,
-               check_table11, check_tableB1, check_tableC1, check_tableF1, check_tableF2, check_tableF3, check_tableF4, check_appendix_f):
+               check_table11, check_tableB1, check_tableC1, check_tableF1, check_tableF2, check_tableF3, check_tableF4, check_appendix_f,
+               check_text_claims):
         fn(ck)
     ck.apply_known()
     return ck

@@ -378,4 +378,39 @@ KNOWN_DISCREPANCIES = [
     ("Table 9", "homecredit catboost Pure LLM", "nogueira", "recomputed from the cached fold lists at d=373: 0.409137 (prints 0.4091; manuscript 0.4092)"),
     ("Table F.4", "homecredit lr", "nogueira", "same quantity as the Table 9 row"),
     ("Table F.4", "homecredit catboost", "nogueira", "same quantity as the Table 9 row"),
+    ("Appendix C", "pooled CatBoost DEV AUC", "K=50 minus K=40", "with the tracked 2020-02-26 Stability sweep the pooled CatBoost change from K=40 to K=50 is -0.0015 (HC -0.0002, LC -0.0011, Stability -0.0031); the printed -0.0006 is reproduced only with the superseded 2020-02-01 Stability sweep (ARTICLE:priority_1/dev_feature_budget_auc.csv: Stability -0.0005)"),
+    ("Figure C.1a", "pooled lr", "K=10 relative to K=20", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled lr", "K=30 relative to K=20", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled lr", "K=40 relative to K=20", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled lr", "K=50 relative to K=20", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled catboost", "K=10 relative to K=40", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled catboost", "K=20 relative to K=40", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled catboost", "K=30 relative to K=40", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
+    ("Figure C.1a", "pooled catboost", "K=50 relative to K=40", "the manuscript's LaTeX comment states that the Figure C.1(a) coordinates predate the Stability 2024 correction; recomputed with the tracked 2020-02-26 Stability sweep they differ by up to 0.0021"),
 ]
+
+# ---------------------------------------------------------------------------- prose claims derived from table values
+# Ranges and differences printed in the text; the manuscript derives them from the printed (rounded) table values.
+TEXT_CLAIMS = {
+    "hc_cb_ho_ci_3dp": ("+0.009", "+0.015"),                # Section 6.1: HC CatBoost interval reaching below the bar
+    "hc_lr_dev_ci_3dp": ("-0.013", "-0.008"),               # Section 6.1: HC LR DEV-rule interval
+    "lc_event_rate_dev_ho_pct": ("19.5", "23.3"),           # Appendix F: LendingClub HO event rate rises from 19.5% to 23.3%
+    "family_cap_fall": ("0.009", "0.069"),                  # Table 6 row / Appendix F: classical leader falls under the cap
+    "family_cap_gap_five": ("0.021", "0.083"),              # ... and stays this far below the LLM-assisted leader in 5 of 6
+    "mechanical_lead": ("+0.014", "+0.057"),                # Section 6.5.2: winning leaders with rebuilt descriptions
+    "mechanical_hc_lr_vs_mrmr": "-0.023",                   # Section 6.5.2: stable core (mechanical) minus mRMR on HC LR
+    "mechanical_widest_bound": "+0.009",                    # Section 6.5.2: widest interval bound of Table 8
+    "pure_llm_nogueira": ("0.41", "0.63"),                  # Section 6.6.1 (Home Credit and LendingClub pure LLM rows)
+    "pure_llm_jaccard": ("0.31", "0.48"),
+    "pure_llm_pair_spread": ("0.13", "0.42"),               # fold-pair spread (max - min) of the pure LLM lists
+    "classical_pair_spread": ("0.18", "0.42"),              # ... and of the most reproducible classical selectors
+    "classical_above_pure_llm": ("0.28", "0.43"),           # Nogueira, Home Credit and LendingClub
+    "stable_core_nogueira": ("0.69", "0.76"),               # Section 6.6.1, six cases
+    "stable_core_jaccard": ("0.57", "0.63"),
+    "stable_core_below_classical": ("0.03", "0.25"),
+    "stable_core_above_pure_llm": ("0.08", "0.28"),         # Home Credit and LendingClub
+    "llm_then_boruta_nogueira": ("0.42", "0.63"),
+    "st_llm_then_boruta_below_stable_core": ("0.16", "0.21"),
+    "st_llm_then_boruta_below_classical": ("0.23", "0.24"),
+    "hc_lr_llm_then_boruta_below_pure_llm": "0.11",
+}
