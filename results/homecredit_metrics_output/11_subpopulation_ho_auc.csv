@@ -1,1 +1,2 @@
 subpopulation,backbone,n,llm_leader,classical_leader,llm_ho_auc,classical_ho_auc,delta_auc,ci_low,ci_high,note
+,,,,,,,,,,no sub-population re-scoring on Home Credit in the manuscript (Table F.1 is LendingClub v2; the monthly breakdown is Stability 2024)

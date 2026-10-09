@@ -1,1 +1,3 @@
 backbone,selector,K,ho_auc_onehot,ho_auc_native,note
+catboost,Pure LLM,40,0.79345,0.7918263,"ARTICLE:priority_2/catboost_native_cat_ho_auc.csv (same forty features, configuration and seed; native categorical handling instead of one-hot)"
+catboost,RFE CatBoost,40,0.781426,0.781622,"ARTICLE:priority_2/catboost_native_cat_ho_auc.csv (same forty features, configuration and seed; native categorical handling instead of one-hot)"

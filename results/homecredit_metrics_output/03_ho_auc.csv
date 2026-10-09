@@ -1,1 +1,29 @@
 backbone,selector,family,K,ho_auc,note
+lr,Domain rules,classical,20,0.72297509,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Random K,classical,20,0.62782377,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,PCA,classical,20,0.68381407,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,IV/WOE,classical,20,0.73814682,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,mRMR,classical,20,0.76989,"HO AUC scored from the id_preserved_predictions 'statistical_mrmr' prediction file cited in ARTICLE:priority_1/pairwise.csv (Windows backup path, not on this machine); the DEV folds, KS and Brier of this row are those of the mutual-information run fbv1-013 (REPO:results/final_research_package_v2/final_results_tables.csv), whose HO AUC is 0.7351 - see docs/repository_freeze.md"
+lr,Boruta RF,classical,20,0.73973824,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,IV then Boruta,classical,20,0.75340844,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,RFE CatBoost,classical,20,0.74654609,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,CatBoost SHAP,classical,20,0.75012984,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Pure LLM,LLM-assisted,20,0.74363537,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,LLM then mRMR,LLM-assisted,20,0.74322934,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,LLM then Boruta,LLM-assisted,20,0.73374552,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Stable core + LLM fill,LLM-assisted,20,0.748857,ARTICLE:priority_1/full_matrix.csv ho_auc
+lr,Full features,reference,529,0.7714957527511155,untuned full-feature reference; REPO:results/final_research_package_v2/final_results_tables.csv oot_auc (run fbv1-001-homecredit-lr-full-features-s42)
+catboost,Domain rules,classical,40,0.72930562,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Random K,classical,40,0.68539326,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,PCA,classical,40,0.70914199,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,IV/WOE,classical,40,0.76857071,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,mRMR,classical,40,0.75989878,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Boruta RF,classical,40,0.7542025,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,IV then Boruta,classical,40,0.76875015,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,RFE CatBoost,classical,40,0.781426,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,CatBoost SHAP,classical,40,0.7795352,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Pure LLM,LLM-assisted,40,0.79345,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,LLM then mRMR,LLM-assisted,40,0.7758279,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,LLM then Boruta,LLM-assisted,40,0.76568317,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Stable core + LLM fill,LLM-assisted,40,0.7809106,ARTICLE:priority_1/full_matrix.csv ho_auc
+catboost,Full features,reference,529,0.7860320086407899,untuned full-feature reference; REPO:results/final_research_package_v2/final_results_tables.csv oot_auc (run fbv1-002-homecredit-catboost-full-features-s42)

@@ -1,1 +1,5 @@
 cohort_cutoff,split,window_start,window_end,unique_index_units,n_rows,n_events,event_rate,share_of_rows,note
+recency day -240,DEV,-600,-241,,99092,7859,0.07931013603519961,0.4521755002,"REPO:configs/protocols/row_alignment_contract_v1.json datasets.homecredit.dev (interval [-600,-240)); share = n/219,145 covered applications"
+recency day -240,HO,-240,-1,,120053,10688,0.08902734625540386,0.5478244998,"REPO:configs/protocols/row_alignment_contract_v1.json datasets.homecredit.oot (interval recorded as [-240,0]; the manuscript prints day -240 to -1)"
+recency day -240,total,-600,-1,,219145,18547,0.0846334619,0.7126411738,"applications covered by the two windows = source_row_count - missing_split_time_count - older_than_dev_count (307,511 - 16,454 - 71,912; derived from the contract); also REPO:cleanup/audits/cross_dataset_voting_execution_spec/preflight_request_specs.json retained_total 219145; share = covered / release"
+,release,,,,307511,,,1,"public Home Credit release (application_train) size: REPO:configs/protocols/row_alignment_contract_v1.json source_row_count; 28.7% unused = 1 - 219,145/307,511"

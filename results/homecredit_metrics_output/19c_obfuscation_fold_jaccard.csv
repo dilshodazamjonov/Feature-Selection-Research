@@ -1,1 +1,31 @@
 arm,K,fold_i,fold_j,jaccard,note
+named,20,fold1,fold2,0.37931,cached named fold rankings
+named,20,fold1,fold3,0.666667,cached named fold rankings
+named,20,fold1,fold4,0.37931,cached named fold rankings
+named,20,fold1,fold5,0.481481,cached named fold rankings
+named,20,fold2,fold3,0.290323,cached named fold rankings
+named,20,fold2,fold4,0.25,cached named fold rankings
+named,20,fold2,fold5,0.25,cached named fold rankings
+named,20,fold3,fold4,0.333333,cached named fold rankings
+named,20,fold3,fold5,0.37931,cached named fold rankings
+named,20,fold4,fold5,0.666667,cached named fold rankings
+A,20,fold1,fold2,0.538462,REPO:outputs/todo_fill/b6/rankings
+A,20,fold1,fold3,0.428571,REPO:outputs/todo_fill/b6/rankings
+A,20,fold1,fold4,0.428571,REPO:outputs/todo_fill/b6/rankings
+A,20,fold1,fold5,0.481481,REPO:outputs/todo_fill/b6/rankings
+A,20,fold2,fold3,0.538462,REPO:outputs/todo_fill/b6/rankings
+A,20,fold2,fold4,0.538462,REPO:outputs/todo_fill/b6/rankings
+A,20,fold2,fold5,0.6,REPO:outputs/todo_fill/b6/rankings
+A,20,fold3,fold4,1,REPO:outputs/todo_fill/b6/rankings
+A,20,fold3,fold5,0.73913,REPO:outputs/todo_fill/b6/rankings
+A,20,fold4,fold5,0.73913,REPO:outputs/todo_fill/b6/rankings
+B,20,fold1,fold2,0.818182,REPO:outputs/todo_fill/b6/rankings
+B,20,fold1,fold3,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold1,fold4,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold1,fold5,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold2,fold3,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold2,fold4,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold2,fold5,0.666667,REPO:outputs/todo_fill/b6/rankings
+B,20,fold3,fold4,1,REPO:outputs/todo_fill/b6/rankings
+B,20,fold3,fold5,1,REPO:outputs/todo_fill/b6/rankings
+B,20,fold4,fold5,1,REPO:outputs/todo_fill/b6/rankings
