@@ -6,24 +6,27 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments and enviornment varibles
+# Virtual environment and environment variables (never commit .env)
 .venv
 .env
 
-# files 
-*.csv
-!cleanup/audits/foundation_protocol_freeze/*.csv
-!cleanup/audits/cross_dataset_voting_execution_spec/*.csv
-!cleanup/audits/cross_dataset_voting_integration_pilot/*.csv
-!cleanup/audits/lendingclub_memory_refinement_capacity_gate/*.csv
-cleanup/audits/lendingclub_memory_refinement_capacity_gate/capacity_execution/
-*.parquet
+# ---- Local data, caches, working state, generated reports (never tracked)
 /data/
+/artifacts/
+/outputs/
+/experiments/
+/todo/
+/todo_done/
+/final_artifacts/
+/reports/
+/logs/
+*.log
+*.parquet
 *.pkl
-outputs/
-results/*
-!results/README.md
-!results/run_index.csv
+/cleanup/audit/
+/cleanup/audits/
+/cleanup/repository_cleanup_report.md
+/METHODOLOGY_AUDIT_9_POINTS.md
 .model
 .pytest_cache/
 .pytest_tmp/
@@ -31,24 +34,16 @@ pytest_tmp/
 tests_runtime/
 .tmp/
 .uv-cache/
-/logs/runs.log
-/logs/events.jsonl
-/logs/debug.log
 
-# Generated reports and cached artifacts
-artifacts/
-cleanup/audits/**/report.html
-/reports/
-/logs/
-/todo_done/
-/cleanup/audit/
-/cleanup/audits/
-/cleanup/repository_cleanup_report.md
-/METHODOLOGY_AUDIT_9_POINTS.md
-
-*/*.json
-todo*/
-
-# Published Stability 2024 metric outputs
+# ---- results/: only the published manuscript metric outputs are tracked
+results/*
+!results/README.md
+!results/headline_subsets.csv
+!results/homecredit_metrics_output/
+!results/homecredit_metrics_output/*.csv
+!results/lendingclub_metrics_output/
+!results/lendingclub_metrics_output/*.csv
 !results/stability_metrics_output/
 !results/stability_metrics_output/*.csv
+!results/llm_rankings/
+!results/llm_rankings/**
