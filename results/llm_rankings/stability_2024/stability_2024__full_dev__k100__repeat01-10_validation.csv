@@ -1,0 +1,11 @@
+dataset,repeat_id,valid,eligible_top20,eligible_top40,model,response_id
+stability2024,1,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQEoR3cDMd6vT2DYdZvp6BSJF1Ne
+stability2024,2,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQF7RdNecjAOlvkcHLtF4RwQr4MK
+stability2024,3,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQFMHaxFSn391ypWN9T651wP42QJ
+stability2024,4,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQFa7LTArLIIpbRb8C4G5a0qlQ0W
+stability2024,5,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQHXj8WF8hvZ6sl0bvOZTQFdfdWk
+stability2024,6,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQIH322jwvl3yVRLAW6KSnUucjjR
+stability2024,7,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQIzzQRjihvWltvhhqUdgEpkVMla
+stability2024,8,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQJj5fFFAeI30qrQQ6aK9ZO7EQ10
+stability2024,9,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQKSkZPcvNFsF0hH7AKJkZDrojEq
+stability2024,10,True,True,True,gpt-4.1-mini-2025-04-14,chatcmpl-EOQLCIFLQE8qFNSFgdsVBFcNxBBcZ
