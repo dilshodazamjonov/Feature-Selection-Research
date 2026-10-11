@@ -27,10 +27,12 @@ uv run pytest tests/test_manuscript_tables.py -q
 `scripts/manuscript_oracle.py` holds the manuscript's printed values (transcribed from the submission `.tex`);
 the checker rounds CSV values to the manuscript's precision before comparing. Values with no local source are
 left empty and reported as "no CSV source" (107 at the freeze; listed in `docs/repository_freeze.md`). Sixteen values
-are flagged, not failed (`KNOWN_DISCREPANCIES` in the oracle): seven that the local artefacts reproduce only to within
-one unit in the fourth decimal, and nine Appendix C pooled values that reflect the superseded 2020-02-01 Stability
-budget sweep. Besides the tables, `--check` recomputes the prose ranges and differences of Sections 6.1 to 6.6 and
-Appendices C and F from the same CSVs.
+are flagged, not failed (`KNOWN_DISCREPANCIES` in the oracle): five Nogueira values that the local artefacts give one
+unit away in the fourth decimal, the two EXT_SOURCE ranks of the Table 7 note, which the cached full-DEV ranking
+orders the other way round, and nine Appendix C values (the pooled CatBoost change at K = 50 and the eight pooled
+coordinates of Figure C.1a) that reproduce only with a Stability 2024 budget sweep that predates what the
+manuscript's source calls the Stability 2024 correction. Besides the tables, `--check` recomputes the prose ranges
+and differences of Sections 6.1 to 6.6 and Appendices C and F from the same CSVs.
 
 ## Manuscript element -> file -> column
 
@@ -43,7 +45,7 @@ Appendices C and F from the same CSVs.
 | Table 3 PSI columns, Section 6.6.2 | `06_leader_feature_psi.csv` | `mean_psi, median_psi, max_psi, max_psi_feature` |
 | Table 9, Figure 4 | `07_selection_stability.csv` | `d, nogueira, jaccard_mean, jaccard_min, jaccard_max` |
 | Table 11 | `08_secondary_metrics.csv` | `ks, brier, log_loss, capture_at_10, lift_at_10` |
-| Appendix D, Table F.3, Section 7.5 | `09_leader_subsets.csv` (and `headline_subsets.csv`) | `rank, feature, source_family, is_categorical, n_model_columns, is_protected` |
+| Appendix D, Table F.3, Section 7.6 | `09_leader_subsets.csv` (and `headline_subsets.csv`) | `rank, feature, source_family, is_categorical, n_model_columns, is_protected` |
 | Appendix F "Boruta budget attainment" | `10_boruta_attainment.csv` | `n_confirmed, n_selected, below_budget` |
 | Table F.1 and the twelve issue months (LendingClub); the nine months (Stability) | `11_subpopulation_ho_auc.csv` | `subpopulation, backbone, n, *_ho_auc, delta_auc, ci_*` |
 | Appendix F "Native categorical handling" | `12_native_categorical.csv` | `ho_auc_onehot, ho_auc_native` |

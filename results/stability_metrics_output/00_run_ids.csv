@@ -28,3 +28,4 @@ file,run_id,source_path,source_sha256,note
 21_llm_usage.csv,,,,header and note rows only; no Stability 2024 value in the manuscript for this file
 22_runtime_and_memory.csv,,ARTICLE:priority_2/mrmr_pool_timing.csv,e92a24a6d8051dd9a80bc55de8d460d5c507e1d8f47e3c6285395d4125ded818,522 s vs 21 s
 22_runtime_and_memory.csv,,REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json,b763ccac552ca75da6c96d6845e816fc48afec8d9d644102b8b1c18b1b885c72,machine line
+22_runtime_and_memory.csv,,ARTICLE:submission/manuscript.tex,ce5555dcde3ba48c9c69880eb4955550d9483eb5de40837b0e11e9db5a6ebafb,"values printed in the manuscript with no source file in this repository, transcribed on 2026-10-10 at the authors' request (the note column names each transcribed column); ARTICLE: = the manuscript repository folder, REPO: = this repository (git-ignored paths are not in the clone)"

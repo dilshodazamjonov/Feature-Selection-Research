@@ -3,7 +3,7 @@ lr,Domain rules,classical,20,0.72297509,ARTICLE:priority_1/full_matrix.csv ho_au
 lr,Random K,classical,20,0.62782377,ARTICLE:priority_1/full_matrix.csv ho_auc
 lr,PCA,classical,20,0.68381407,ARTICLE:priority_1/full_matrix.csv ho_auc
 lr,IV/WOE,classical,20,0.73814682,ARTICLE:priority_1/full_matrix.csv ho_auc
-lr,mRMR,classical,20,0.76989,"HO AUC scored from the id_preserved_predictions 'statistical_mrmr' prediction file cited in ARTICLE:priority_1/pairwise.csv (Windows backup path, not on this machine); the DEV folds, KS and Brier of this row are those of the mutual-information run fbv1-013 (REPO:results/final_research_package_v2/final_results_tables.csv), whose HO AUC is 0.7351 - see docs/repository_freeze.md"
+lr,mRMR,classical,20,0.76989,"HO AUC scored from the id_preserved_predictions 'statistical_mrmr' prediction file cited in ARTICLE:priority_1/pairwise.csv (Windows backup path, not on this machine); the DEV folds, KS and Brier of this row are those of the mutual-information run fbv1-013 (REPO:results/final_research_package_v2/final_results_tables.csv), whose HO AUC is 0.7351"
 lr,Boruta RF,classical,20,0.73973824,ARTICLE:priority_1/full_matrix.csv ho_auc
 lr,IV then Boruta,classical,20,0.75340844,ARTICLE:priority_1/full_matrix.csv ho_auc
 lr,RFE CatBoost,classical,20,0.74654609,ARTICLE:priority_1/full_matrix.csv ho_auc

@@ -4,12 +4,12 @@ missingness < 40%,fold1 training,,675,,566,ARTICLE:priority_2/lc_missingness_dis
 missingness 40-60%,fold1 training,,675,,2,ARTICLE:priority_2/lc_missingness_distribution.csv (highest missingness 82%)
 missingness 60-82%,fold1 training,,675,,107,ARTICLE:priority_2/lc_missingness_distribution.csv (highest missingness 82%)
 IV above 0.50 on fold-1 DEV training rows,fold1 training,83283,675,0,675,ARTICLE:priority_2/iv_above_cap_status.csv
-source columns,,,,,,Section 5.1 '93 source columns': no local artefact outside data/
-composition: raw,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: flags,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: ratios,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: missing_indicators,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: engineered,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: binned,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: interactions,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
-composition: categoricals,,,675,,,Section 5.1 feature composition (116/180/158/88/78/27/19/9): no local artefact outside data/ (REPO:reports/archive/lendingclub_v2_metadata_quality_audit.md gives a group-level tally only)
+source columns,,,,,93,"retained: as printed in the manuscript (Section 5.1, 'roughly 93 distinct columns of the loan book'); no source file in this repository"
+composition: raw,,,675,,116,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: flags,,,675,,180,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: ratios,,,675,,158,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: missing_indicators,,,675,,88,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: engineered,,,675,,78,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: binned,,,675,,27,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: interactions,,,675,,19,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
+composition: categoricals,,,675,,9,retained: as printed in the manuscript (Section 5.1 feature composition); no source file in this repository
