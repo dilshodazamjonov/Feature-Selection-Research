@@ -97,49 +97,52 @@ def get_selector(selector_name: str):
         return PCASelector, {"n_components": 0.95, "save_dir": None, "random_state": 42}
 
     if name == "llm":
-        from credit_risk_fs.selectors.llm_screening import LLMSelector
+        from credit_risk_fs.selectors.llm_screening import DEFAULT_MODEL_SNAPSHOT, LLMSelector
 
+        # Definition-only contract: the selector receives the fixed candidate set
+        # and reads feature definitions only (no IV prefilter, no missingness screen).
         return LLMSelector, {
             "description_csv_path": None,
             "cache_dir": "artifacts/llm_cache",
-            "model": "gpt-4.1-mini",
+            "model": DEFAULT_MODEL_SNAPSHOT,
             "temperature": 0.0,
             "max_features": 100,
-            "max_missing_rate": 0.95,
-            "iv_filter_kwargs": {
-                "min_iv": 0.01,
-                "max_iv_for_leakage": 0.5,
-                "encode": True,
-                "n_jobs": 1,
-                "verbose": False,
-            },
         }
 
     if name in {"llm_then_stat", "llm_then_mrmr"}:
+        from credit_risk_fs.selectors.lightweight.mi_mrmr import MutualInformationMRMRSelector
+        from credit_risk_fs.selectors.llm_screening import DEFAULT_MODEL_SNAPSHOT
         from credit_risk_fs.selectors.llm_then_stat import LLMThenStatSelector
-        from credit_risk_fs.selectors.mrmr import RandomForestRelevanceMRMRSelector
 
         return LLMThenStatSelector, {
             "description_csv_path": None,
-            "stat_selector_cls": RandomForestRelevanceMRMRSelector,
-            "stat_selector_kwargs": {"k": 40, "method": "mrmr", "random_state": 42, "n_jobs": 1},
+            "stat_selector_cls": MutualInformationMRMRSelector,
+            "stat_selector_kwargs": {
+                "k": 40,
+                "estimator": "nearest_neighbour",
+                "sample_rows": 20_000,
+                "random_state": 42,
+            },
             "cache_dir": "artifacts/llm_cache",
+            "llm_model": DEFAULT_MODEL_SNAPSHOT,
         }
 
     if name == "llm_then_boruta":
-        from credit_risk_fs.selectors.boruta import BorutaSelector
+        from credit_risk_fs.selectors.heavy.boruta_rf import BorutaRandomForestSelector
+        from credit_risk_fs.selectors.llm_screening import DEFAULT_MODEL_SNAPSHOT
         from credit_risk_fs.selectors.llm_then_stat import LLMThenStatSelector
 
         return LLMThenStatSelector, {
             "description_csv_path": None,
-            "stat_selector_cls": BorutaSelector,
+            "stat_selector_cls": BorutaRandomForestSelector,
             "stat_selector_kwargs": {
-                "max_iter": 15,
+                "k": 40,
+                "selection_mode": "confirmed_top_k",
+                "boruta_params": {"n_estimators": 500},
                 "random_state": 42,
-                "n_features": 40,
-                "n_jobs": 1,
             },
             "cache_dir": "artifacts/llm_cache",
+            "llm_model": DEFAULT_MODEL_SNAPSHOT,
         }
 
     if name == "domain_rule_baseline":

@@ -4,39 +4,30 @@ from pathlib import Path
 
 import pandas as pd
 
-from credit_risk_fs.feature_metadata.builder import build_feature_metadata
 from credit_risk_fs.selectors.base import (
     SelectedFeaturesMixin,
     resolve_feature_budget,
     select_feature_frame,
     validate_feature_frame,
 )
+from credit_risk_fs.selectors.domain_rules import rank_features
 
 
 class DomainRuleBaselineSelector(SelectedFeaturesMixin):
-    """Rank training-slice metadata with fixed, deterministic domain rules."""
+    """Rank candidate names with the deterministic credit-domain scorer.
 
-    GROUP_PRIORITY = {
-        "external_score": 100,
-        "bureau_debt": 95,
-        "bureau_credit_history": 90,
-        "installment_repayment_behavior": 85,
-        "delinquency_behavior": 80,
-        "credit_card_utilization": 78,
-        "income_capacity": 74,
-        "previous_application_behavior": 70,
-        "application_amounts": 64,
-        "demographic_time_variables": 58,
-        "missingness_or_unknown": 10,
-        "other": 40,
-    }
+    The scorer reads feature names only (see :mod:`credit_risk_fs.selectors.domain_rules`):
+    no data row, statistic or outcome is used, so the ranking is identical in every fold.
+    """
 
-    def __init__(self, description_csv_path: str, feature_budget: int = 40) -> None:
+    def __init__(self, description_csv_path: str | None = None, feature_budget: int = 40) -> None:
         self.description_csv_path = description_csv_path
         self.feature_budget = int(feature_budget)
         if self.feature_budget < 0:
             raise ValueError("feature_budget must be non-negative.")
         self.selected_features_ = None
+        self.ranking_: list[str] | None = None
+        self.ranking_table_: pd.DataFrame | None = None
         self.artifact_dir: Path | None = None
         self.select_before_preprocessing = True
 
@@ -48,26 +39,16 @@ class DomainRuleBaselineSelector(SelectedFeaturesMixin):
         X: pd.DataFrame,
         y: pd.Series | None = None,
     ) -> DomainRuleBaselineSelector:
-        validate_feature_frame(X)
-        metadata = build_feature_metadata(X, self.description_csv_path)
-        ranked = sorted(
-            metadata,
-            key=lambda item: (
-                -self.GROUP_PRIORITY.get(str(item.get("semantic_group", "other")), 0),
-                float(item.get("missing_rate", 1.0)),
-                -float(item.get("non_null_count", 0)),
-                str(item.get("name", "")),
-            ),
-        )
-        budget = resolve_feature_budget(self.feature_budget, len(ranked))
-        self.selected_features_ = [str(item["name"]) for item in ranked[:budget]]
+        names = validate_feature_frame(X)
+        ranked = rank_features(names)
+        self.ranking_table_ = pd.DataFrame(ranked)
+        self.ranking_ = [str(item["feature_name"]) for item in ranked]
+        budget = resolve_feature_budget(self.feature_budget, len(self.ranking_))
+        self.selected_features_ = self.ranking_[:budget]
 
         if self.artifact_dir is not None:
             self.artifact_dir.mkdir(parents=True, exist_ok=True)
-            pd.DataFrame(ranked).to_csv(
-                self.artifact_dir / "domain_rule_ranking.csv",
-                index=False,
-            )
+            self.ranking_table_.to_csv(self.artifact_dir / "domain_rule_ranking.csv", index=False)
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

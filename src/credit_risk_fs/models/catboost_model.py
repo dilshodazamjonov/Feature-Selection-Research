@@ -4,9 +4,16 @@ import os
 import pandas as pd
 from catboost import CatBoostClassifier
 
+
 class CatBoostModel:
     """
     CatBoost binary classifier with pipeline-friendly interface.
+
+    The defaults are the fixed backbone configuration: depth 10, learning rate 0.01,
+    L2 leaf regularisation 95, at least 290 observations per leaf, feature-sampling
+    rate (``rsm``) 0.90, random strength 0.125, depthwise growth, Bernoulli bootstrap
+    with subsample 0.55, Logloss with AUC evaluation, balanced class weights, seed 42,
+    four threads and a fixed 1,500 iterations without early stopping.
     """
 
     def __init__(
@@ -15,7 +22,7 @@ class CatBoostModel:
         learning_rate=0.01,
         l2_leaf_reg=95,
         min_data_in_leaf=290,
-        colsample_bylevel=0.9,
+        rsm=0.9,
         random_strength=0.125,
         grow_policy='Depthwise',
         one_hot_max_size=21,
@@ -25,22 +32,29 @@ class CatBoostModel:
         loss_function='Logloss',
         eval_metric='AUC',
         auto_class_weights='Balanced',
-        iterations=2200,
-        early_stopping_rounds=150,
-        verbose=100,
+        iterations=1500,
+        verbose=0,
         random_state=42,
         allow_writing_files=False,
-        thread_count=1,
+        thread_count=4,
+        colsample_bylevel=None,
+        early_stopping_rounds=None,
     ):
         """
         Initialize CatBoost model with hyperparameters.
+
+        ``colsample_bylevel`` is CatBoost's alias of ``rsm`` and is accepted for older
+        configuration files. ``early_stopping_rounds`` is accepted for the same reason but
+        never forwarded: the model always runs the full number of iterations.
         """
+        if colsample_bylevel is not None:
+            rsm = colsample_bylevel
         self.model = CatBoostClassifier(
             depth=depth,
             learning_rate=learning_rate,
             l2_leaf_reg=l2_leaf_reg,
             min_data_in_leaf=min_data_in_leaf,
-            colsample_bylevel=colsample_bylevel,
+            rsm=rsm,
             random_strength=random_strength,
             grow_policy=grow_policy,
             one_hot_max_size=one_hot_max_size,
@@ -51,7 +65,6 @@ class CatBoostModel:
             eval_metric=eval_metric,
             auto_class_weights=auto_class_weights,
             iterations=iterations,
-            early_stopping_rounds=early_stopping_rounds,
             verbose=verbose,
             random_state=random_state,
             allow_writing_files=allow_writing_files,
@@ -71,7 +84,7 @@ class CatBoostModel:
         y : pd.Series
             Training target
         eval_set : tuple, optional
-            Validation set (X_val, y_val)
+            Ignored. No validation information enters the fitted model.
         """
         names = getattr(X, "columns", None)
         if names is None:
@@ -79,7 +92,7 @@ class CatBoostModel:
         self.feature_names = (
             list(names) if names is not None else list(range(int(X.shape[1])))
         )
-        self.model.fit(X, y, eval_set=eval_set)
+        self.model.fit(X, y)
         self.fitted = True
         return self
 

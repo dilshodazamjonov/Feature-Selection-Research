@@ -39,13 +39,13 @@ class LLMThenStatSelector(SelectedFeaturesMixin):
         stat_selector_cls: type,
         stat_selector_kwargs: dict[str, Any] | None = None,
         cache_dir: str = "results/_llm_rankings_cache",
-        llm_model: str = "gpt-4.1-mini",
+        llm_model: str = "gpt-4.1-mini-2025-04-14",
         llm_temperature: float = 0.0,
         llm_max_features: int = 100,
         llm_candidate_pool_budget: int | None = None,
         llm_shared_ranking_enabled: bool = True,
         llm_config_hash: str | None = None,
-        llm_prompt_version: str = "stability_expert_v3",
+        llm_prompt_version: str = "unified_definitions_only_v1",
         llm_ranking_budget_config: dict[str, int] | None = None,
         llm_shared_pool_size: int | None = None,
         final_feature_budget: int | None = None,
@@ -114,7 +114,6 @@ class LLMThenStatSelector(SelectedFeaturesMixin):
             "prompt_version": self.llm_prompt_version,
             "ranking_budget_config": self.llm_ranking_budget_config,
             "shared_pool_size": self.llm_shared_pool_size,
-            "iv_filter_kwargs": dict(self.iv_filter_kwargs),
         }
         kwargs.update(self.llm_selector_kwargs)
         return llm_selector_cls(**kwargs)
@@ -130,14 +129,13 @@ class LLMThenStatSelector(SelectedFeaturesMixin):
         return ordered
 
     def _finalize_features(self, X: pd.DataFrame, selected: list[str]) -> list[str]:
+        """Truncate the statistical stage's subset to the budget; never pad it.
+
+        A Boruta stage that confirms fewer features than the budget leaves the
+        subset below budget.
+        """
         finalized = list(dict.fromkeys(feature for feature in selected if feature in X.columns))
-        finalized = finalized[: self.final_feature_budget]
-        for feature in self._candidate_order(X):
-            if len(finalized) >= self.final_feature_budget:
-                break
-            if feature not in finalized:
-                finalized.append(feature)
-        return finalized
+        return finalized[: self.final_feature_budget]
 
     def fit(
         self,

@@ -4,7 +4,7 @@ model_params:
     learning_rate: 0.01
     l2_leaf_reg: 95
     min_data_in_leaf: 290
-    colsample_bylevel: 0.9
+    rsm: 0.9
     random_strength: 0.125
     grow_policy: Depthwise
     one_hot_max_size: 21
@@ -15,7 +15,7 @@ model_params:
     eval_metric: AUC
     auto_class_weights: Balanced
     iterations: 1500
-    early_stopping_rounds: 150
-    verbose: 100
+    verbose: 0
     random_state: 42
     allow_writing_files: false
+    thread_count: 4

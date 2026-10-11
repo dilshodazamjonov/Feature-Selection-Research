@@ -1,0 +1,45 @@
+# Home Credit Default Risk: recency-based holdout on DAYS_DECISION of the most recent
+# previous application (DEV: day -600 to -241; HO: day -240 to -1).
+extends: common.yaml
+
+dataset: homecredit
+label: Home Credit
+loader: homecredit
+results_folder: homecredit_metrics_output
+universe_size: 529
+cohort_cutoff: "-240"
+description_csv: data/homecredit/metadata/columns_description.csv
+release_table:
+  data_dir: data/homecredit/raw
+  table: application_train
+  id_column: SK_ID_CURR
+csv_chunk_rows: 25000
+cat_min_frequency: 10
+
+# Functions of the ordering index (previous-application decision days and their
+# aggregates) are outside every candidate set.
+index_derived_patterns: ["DAYS_DECISION", "recent_decision"]
+
+full_reference: candidates
+
+protected:
+  names: [CODE_GENDER, NAME_FAMILY_STATUS]
+
+llm:
+  partitions: [fold1, fold2, fold3, fold4, fold5, full_dev]
+  budgets: [100]              # one ranking of 100 names per partition; prefixes give every budget
+  repeats: 0
+  obfuscation: true           # arms A and B, one call per partition
+  obfuscation_budget: 100
+  lineage: true
+  lineage_partitions: [full_dev]
+  lineage_budgets: [100]
+
+llm_then_mrmr_expanded: false
+
+voting:
+  enabled: true
+  pools: [100, 200, 300]
+  primary_pool: 200
+
+subpopulations: {}

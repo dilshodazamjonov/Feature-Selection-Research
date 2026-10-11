@@ -1,0 +1,46 @@
+# Home Credit - Credit Risk Model Stability 2024: calendar holdout on date_decision
+# (DEV: 2019-01-01 to 2020-02-25; HO: 2020-02-26 to 2020-10-05).
+extends: common.yaml
+
+dataset: stability_2024
+label: Stability 2024
+loader: stability_2024
+results_folder: stability_metrics_output
+universe_size: 1959
+cohort_cutoff: "2020-02-26"
+matrix_root: data/homecredit_model_stability_2024_matrix
+protocol_lock: configs/protocols/homecredit_model_stability_2024_v1/third_dataset_protocol_lock.json
+dev_start: "2019-01-01"
+ho_start: "2020-02-26"
+ho_end: "2020-10-05"
+cat_min_frequency: 10
+
+# The full-feature reference is fitted on the unscreened universe.
+full_reference: universe
+
+protected:
+  patterns: ["sex_738L"]
+
+llm:
+  partitions: [full_dev]      # one ranking of 100 names serves every fold
+  budgets: [100]
+  repeats: 10                 # ten repetitions of the full-DEV call with the same prompt
+  obfuscation: false
+  lineage: true
+  lineage_partitions: [full_dev]
+  lineage_budgets: [100]
+
+llm_then_mrmr_expanded: false
+
+voting:
+  enabled: false
+
+depth0_control: true
+
+matched_mrmr_timing:
+  partition: fold1
+  k: 40
+  pool: 100
+
+subpopulations:
+  kind: monthly

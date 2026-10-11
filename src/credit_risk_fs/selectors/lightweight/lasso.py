@@ -94,7 +94,7 @@ class L1LogisticSelector(LightweightSelector):
         solver: str = "liblinear",
         max_iter: int = 2_000,
         tol: float = 1e-4,
-        class_weight: str | None = None,
+        class_weight: str | None = "balanced",
         coefficient_tolerance: float = 1e-10,
         imputation_strategy: str = "median",
         allow_zero_coefficient_fill: bool = False,

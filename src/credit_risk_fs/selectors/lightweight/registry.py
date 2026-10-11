@@ -100,7 +100,7 @@ LIGHTWEIGHT_METHODS: tuple[MethodDescriptor, ...] = (
     MethodDescriptor(
         method_id="mrmr_mutual_information",
         display_label="mRMR (mutual information)",
-        implementation_id="mrmr_mutual_information_discrete_plugin_v1",
+        implementation_id="mrmr_mutual_information_nearest_neighbour_v1",
         algorithm="sequential_max_relevance_min_redundancy_mutual_information",
         supervised=True,
         selection_modes=("matched_budget",),
@@ -113,7 +113,9 @@ LIGHTWEIGHT_METHODS: tuple[MethodDescriptor, ...] = (
         ),
         default_kwargs={
             "k": 40,
-            "n_bins": 10,
+            "estimator": "nearest_neighbour",
+            "sample_rows": 20_000,
+            "n_neighbors": 3,
             "objective": "mid",
             "random_state": 42,
         },

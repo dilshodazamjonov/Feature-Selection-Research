@@ -1,83 +1,68 @@
 # results/
 
-Only what the manuscript reports is tracked here. The three `*_metrics_output/` folders hold identical file sets
-and column headers (one folder per dataset), `headline_subsets.csv` is the file Appendix D promises, and
-`llm_rankings/` holds the cached LLM responses the Data availability statement promises. Everything else that
-once lived under `results/` (run trees, packages, synthesis folders) is git-ignored local working state.
+The result files of the study, one folder per dataset with the same 25 files and headers, the twelve headline
+subsets, and the accepted LLM rankings. Every file is written by `scripts/run_study.py --stage results` from the run
+outputs under `outputs/study/<dataset>/`; nothing in these folders is entered by hand.
 
 ```
 results/
 ├── README.md
-├── headline_subsets.csv               # Appendix D / supplementary Tables S1-S6: the twelve headline subsets (360 rows)
+├── headline_subsets.csv               # full-DEV subsets of the two HO-rule family leaders of each case
 ├── homecredit_metrics_output/         # Home Credit
 ├── lendingclub_metrics_output/        # LendingClub v2
-├── stability_metrics_output/          # Stability 2024 (cohort 2020-02-26)
-└── llm_rankings/                      # cached LLM responses + index.csv + README.md
+├── stability_metrics_output/          # Stability 2024
+└── llm_rankings/                      # accepted LLM responses + index.csv + README.md
 ```
 
-Render the manuscript tables from these CSVs and check every value against the manuscript:
+Regenerate a dataset's files after its stages have run, then check structure and values:
 
 ```bash
-uv run python scripts/verify_manuscript_tables.py --render
-uv run python scripts/verify_manuscript_tables.py --check     # exit 1 on any mismatch
-uv run python scripts/verify_manuscript_tables.py --schema    # structural checks
-uv run pytest tests/test_manuscript_tables.py -q
+uv run python scripts/run_study.py --config configs/study/homecredit.yaml --stage results
+uv run python scripts/verify_manuscript_tables.py --schema    # file set, headers, LF endings, 00_run_ids coverage
+uv run python scripts/verify_manuscript_tables.py --check     # compares the files with scripts/manuscript_oracle.py
+uv run python scripts/verify_manuscript_tables.py --render    # prints the tables from the files
 ```
 
-`scripts/manuscript_oracle.py` holds the manuscript's printed values (transcribed from the submission `.tex`);
-the checker rounds CSV values to the manuscript's precision before comparing. Values with no local source are
-left empty and reported as "no CSV source" (107 at the freeze; listed in `docs/repository_freeze.md`). Sixteen values
-are flagged, not failed (`KNOWN_DISCREPANCIES` in the oracle): five Nogueira values that the local artefacts give one
-unit away in the fourth decimal, the two EXT_SOURCE ranks of the Table 7 note, which the cached full-DEV ranking
-orders the other way round, and nine Appendix C values (the pooled CatBoost change at K = 50 and the eight pooled
-coordinates of Figure C.1a) that reproduce only with a Stability 2024 budget sweep that predates what the
-manuscript's source calls the Stability 2024 correction. Besides the tables, `--check` recomputes the prose ranges
-and differences of Sections 6.1 to 6.6 and Appendices C and F from the same CSVs.
+`--check` rounds each value to the precision of its reference value and reports `match`, `mismatch` or `blank`, and it
+recomputes the derived ranges and differences from the same files; it exits non-zero on any mismatch.
 
-## Manuscript element -> file -> column
+## Files (in each dataset folder)
 
-| Manuscript element | File (in each dataset folder) | Columns |
+| File | Contents | Columns |
 |---|---|---|
-| Table 2 (datasets), Section 5.1-5.2 counts | `01_cohort.csv`, `02_candidate_set.csv` | `n_rows, n_events, event_rate, window_*`; `universe, dropped, retained` |
-| Table 5 (HO AUC of every selector), "Full" column of Table 3 | `03_ho_auc.csv` | `ho_auc` |
-| Table 4 DEV means, DEV-rule leaders, Table C.1 at the documented budget | `04_dev_fold_auc.csv` | `fold1_auc..fold5_auc, dev_mean_auc` |
-| Tables 3 and 4 (leaders, delta AUC, 95% CI), mixed rule | `05_leader_delta_auc.csv` | `rule, llm_*, classical_*, delta_auc, ci_low, ci_high, n_ho` |
-| Table 3 PSI columns, Section 6.6.2 | `06_leader_feature_psi.csv` | `mean_psi, median_psi, max_psi, max_psi_feature` |
-| Table 9, Figure 4 | `07_selection_stability.csv` | `d, nogueira, jaccard_mean, jaccard_min, jaccard_max` |
-| Table 11 | `08_secondary_metrics.csv` | `ks, brier, log_loss, capture_at_10, lift_at_10` |
-| Appendix D, Table F.3, Section 7.6 | `09_leader_subsets.csv` (and `headline_subsets.csv`) | `rank, feature, source_family, is_categorical, n_model_columns, is_protected` |
-| Appendix F "Boruta budget attainment" | `10_boruta_attainment.csv` | `n_confirmed, n_selected, below_budget` |
-| Table F.1 and the twelve issue months (LendingClub); the nine months (Stability) | `11_subpopulation_ho_auc.csv` | `subpopulation, backbone, n, *_ho_auc, delta_auc, ci_*` |
-| Appendix F "Native categorical handling" | `12_native_categorical.csv` | `ho_auc_onehot, ho_auc_native` |
-| Table 8 | `13_lineage_only.csv` | `ho_auc_mechanical, ho_auc_cached, delta_auc, ci_*, overlap_with_cached` |
-| Appendix F "L1-penalised selector" | `14_l1_selector.csv` | `ho_auc, classical_leader_ho_auc, shortfall` |
-| Table F.2, Table 1 family caps | `15_diversity_controls.csv` | `control_ho_auc, uncapped_ho_auc, llm_assisted_ho_auc, difference, cap_per_family, n_families` |
-| Table 10 | `16_response_spread.csv` | `draw_source, draw_id, ho_auc, is_headline_response` |
-| Table C.1, Figure C.1 | `17_budget_sweep.csv` | `K, selector, family, dev_mean_auc, is_*_leader` |
-| Table F.4 | `18_response_agreement.csv` | `draws, d, nogueira, jaccard_mean, names_in_all_draws, distinct_names` |
-| Table 7 and its note (Home Credit only) | `19_obfuscation.csv`, `19b_obfuscation_ranks.csv`, `19c_obfuscation_fold_jaccard.csv` | arm AUCs, fold AUCs, overlaps; EXT_SOURCE ranks; fold-pair Jaccard |
-| Table B.1, Section 7.2 (Home Credit, LendingClub) | `20_rank_voting.csv` | `pool_P, reference_auc, voting_auc, delta_auc, ci_*, holm_p, delta_ks, *_fold_jaccard_mean` |
-| Section 6.7 token usage | `21_llm_usage.csv` | `call_id, input_tokens, output_tokens, model_snapshot` |
-| Section 6.7 and Appendix F runtime, memory, machine | `22_runtime_and_memory.csv` | `pipeline, stage, wall_clock_minutes, seconds, peak_rss_gb, matched_conditions` |
+| `00_run_ids.csv` | for every file: the run id, the stage manifest it was built from and that manifest's SHA-256 | `file, run_id, source_path, source_sha256` |
+| `01_cohort.csv` | DEV and HO windows, rows, events, event rates; DEV and HO together; the release size; the five fold partitions; LendingClub term rows | `split, window_*, unique_index_units, n_rows, n_events, event_rate, share_of_rows` |
+| `02_candidate_set.csv` | the missingness screen on the fold-1 training rows; features above the IV upper bound; LendingClub missingness bands, source columns and feature composition; the Stability 2024 availability review | `screen, screen_rows, universe, dropped, retained` |
+| `03_ho_auc.csv` | HO ROC-AUC of the thirteen strategies and the full-feature reference | `backbone, selector, family, K, ho_auc` |
+| `04_dev_fold_auc.csv` | validation AUC of the five folds and their mean | `fold1_auc..fold5_auc, dev_mean_auc` |
+| `05_leader_delta_auc.csv` | family leaders under the HO, DEV and mixed rules; paired HO AUC difference with its 95 % target-stratified paired bootstrap interval (2,000 resamples, seed 20260721) | `rule, llm_*, classical_*, delta_auc, ci_low, ci_high, n_ho` |
+| `06_leader_feature_psi.csv` | mean, median and maximum type-aware feature PSI of each HO-rule leader's full-DEV subset | `mean_psi, median_psi, max_psi, max_psi_feature` |
+| `07_selection_stability.csv` | Nogueira stability over the candidate set and pairwise Jaccard over the ten fold pairs | `K, d, nogueira, jaccard_mean, jaccard_min, jaccard_max` |
+| `08_secondary_metrics.csv` | HO KS, Brier score, log loss, Capture@10 and Lift@10 | `ks, brier, log_loss, capture_at_10, lift_at_10` |
+| `09_leader_subsets.csv` | the HO-rule leaders' full-DEV subsets in selection order, with source family, categorical flag, model input width, protected-attribute flag and feature PSI | `rank, feature, source_family, is_categorical, n_model_columns, is_protected, feature_psi` |
+| `10_boruta_attainment.csv` | confirmed features and attained budget of the three Boruta-based selectors in every fold and the full-DEV refit | `partition, n_confirmed, K, n_selected, below_budget` |
+| `11_subpopulation_ho_auc.csv` | HO-rule leader comparison on row filters of the HO scores: LendingClub matured cohort, terms and issue months; Stability 2024 decision months | `subpopulation, n, *_ho_auc, delta_auc, ci_*` |
+| `12_native_categorical.csv` | CatBoost leaders refitted with native categorical handling | `ho_auc_onehot, ho_auc_native` |
+| `13_lineage_only.csv` | Pure LLM and the LLM-assisted leader with descriptions rebuilt from lineage | `ho_auc_mechanical, ho_auc_cached, delta_auc, ci_*, overlap_with_cached` |
+| `14_l1_selector.csv` | L1-penalised logistic-regression selector | `ho_auc, classical_leader_ho_auc, shortfall` |
+| `15_diversity_controls.csv` | family-capped classical leader (all datasets) and depth-0 classical leader (Stability 2024) | `control_ho_auc, uncapped_ho_auc, llm_assisted_ho_auc, difference, cap_per_family, n_families` |
+| `16_response_spread.csv` | HO AUC of Pure LLM with each other cached response (per-fold rankings; Stability 2024 repetitions) and with the full-DEV ranking | `draw_source, draw_id, ho_auc, is_headline_response` |
+| `17_budget_sweep.csv` | mean DEV AUC of every strategy at K = 10, 20, 30, 40, 50, family leaders, pooled mean | `K, selector, family, dev_mean_auc, is_*_leader` |
+| `18_response_agreement.csv` | agreement among those responses' top-K lists | `draws, d, nogueira, jaccard_mean, names_in_all_draws, distinct_names` |
+| `19_obfuscation.csv`, `19b_obfuscation_ranks.csv`, `19c_obfuscation_fold_jaccard.csv` | name-obfuscation arms (Home Credit): HO and fold AUC, overlaps with the named subsets, every ranking, fold-pair Jaccard | arm AUCs, overlaps; `arm, call, feature, rank`; `arm, K, fold_i, fold_j, jaccard` |
+| `20_rank_voting.csv` | classical rank-voting family (Home Credit, LendingClub): pools P = 100, 200, 300 against the RF/correlation reference; paired bootstrap interval; two-sided paired DeLong p-value with Holm adjustment within the three pools | `pool_P, reference_auc, voting_auc, delta_auc, ci_*, holm_p, delta_ks, *_fold_jaccard_mean` |
+| `21_llm_usage.csv` | every named ranking call: budget, uses, tokens, snapshot | `call_id, partition, budget, logical_requests_served, input_tokens, output_tokens, model_snapshot` |
+| `22_runtime_and_memory.csv` | wall-clock time and peak resident memory of every pipeline; the matched mRMR timing (Stability 2024 fold 1); peak-memory range | `pipeline, stage, wall_clock_minutes, seconds, peak_rss_gb, matched_conditions` |
 
-## Uniform-schema rules
+A file that does not apply to a dataset holds its header only.
 
-- CSV only: UTF-8, LF line endings, header row, no trailing empty rows (enforced by `.gitattributes` and `--schema`).
-- The same 25 files with the same headers in every dataset folder. A file that does not apply to a dataset holds
-  the header and a `note` row saying why.
-- Selector names are the manuscript's Table 1 names (`Full features` is the reference); `family` is `classical`,
-  `LLM-assisted` or `reference`; `backbone` is `lr` or `catboost`; dataset folders are `homecredit`,
-  `lendingclub_v2`, `stability_2024`.
-- Values are stored at the precision of the source artefact; the manuscript rounds. Deltas and intervals carry the
-  source precision.
-- Every file has a `note` column naming the source of each row and stating when a value is derived (means,
-  differences, rescaled Nogueira) or absent ("no local artefact").
+## Schema rules
 
-## Provenance convention
-
-`00_run_ids.csv` in each folder lists, for every file, the source artefact(s) it was copied from with SHA-256.
-Paths are written `REPO:<path>` (this repository, usually git-ignored working state) or `ARTICLE:<path>` (the
-manuscript repository's result files). **Those paths are local and are not in a fresh clone**; the tracked CSVs
-are the published record. For Stability 2024 the sources are the CSVs committed by the author on 2026-10-08
-(commit b778999) from a rerun on the 2020-02-26 cohort whose run outputs are not on the freeze machine; the run
-ids recorded there match no local file. `docs/repository_freeze.md` records every gap and discrepancy.
+- CSV, UTF-8, LF line endings, one header row; the same 25 files with the same headers in every dataset folder.
+- Selector names: `Domain rules`, `Random K`, `PCA`, `IV/WOE`, `mRMR`, `Boruta RF`, `IV then Boruta`, `RFE CatBoost`,
+  `CatBoost SHAP` (family `classical`); `Pure LLM`, `LLM then mRMR`, `LLM then Boruta`, `Stable core + LLM fill`
+  (family `LLM-assisted`); `Full features` (family `reference`). `backbone` is `lr` or `catboost`.
+- Values are written at full precision; booleans are `TRUE` / `FALSE`; an empty cell means the quantity was not
+  produced (the `note` column says why).
+- `00_run_ids.csv` points to `outputs/study/<dataset>/manifests/<stage>.json`, which lists every run output of the stage
+  with its SHA-256. The manifests and run outputs are local to the machine that ran the study.

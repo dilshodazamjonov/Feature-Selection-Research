@@ -1,13 +1,13 @@
 backbone,pipeline,stage,wall_clock_minutes,seconds,peak_rss_gb,matched_conditions,note
-catboost,Domain rules,pipeline,49.7,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,mRMR,pipeline,65.3,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,LLM then mRMR,pipeline,72.8,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,Pure LLM,pipeline,73.7982,4427.89,,FALSE,REPO:reports/archive/cross_dataset_v2_analysis.md runtime_seconds (lendingclub_v2 catboost llm); minutes derived; unmatched conditions (Appendix F)
-catboost,PCA,pipeline,88.0,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,LLM then Boruta,pipeline,110.5,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,Boruta RF,pipeline,172.6,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,Stable core + LLM fill,pipeline,256.0,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-catboost,Stable core + LLM fill,selection,176.6,,,FALSE,wall_clock_minutes: as printed in the manuscript (Appendix F); no source file in this repository
-,minimum,peak_rss_range,,,19.1,,peak_rss_gb: as printed in the manuscript (Section 6.7); no source file in this repository
-,maximum,peak_rss_range,,,29.0,,peak_rss_gb: as printed in the manuscript (Section 6.7); no source file in this repository
-,"16 logical / 10 physical cores, 39.6 GiB RAM, 4 estimator threads, CPU execution (GPU present but unused)",machine,,,,,"REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json (logical_cpu_count 16, physical_cpu_count 10, total_ram_gb 39.633, estimator_threads 4, requested_accelerator cpu); the CPU model named in Section 5.7 (Intel Core i7-13620H) appears in no local artefact"
+catboost,Domain rules,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,mRMR,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,LLM then mRMR,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,Pure LLM,pipeline,73.7982,4427.89,,FALSE,REPO:reports/archive/cross_dataset_v2_analysis.md runtime_seconds (lendingclub_v2 catboost llm); minutes derived; unmatched conditions
+catboost,PCA,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,LLM then Boruta,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,Boruta RF,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,Stable core + LLM fill,pipeline,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+catboost,Stable core + LLM fill,selection,,,,FALSE,wall_clock_minutes: no local artefact (scripts/run_study.py --stage results fills it)
+,minimum,peak_rss_range,,,,,peak_rss_gb: no local artefact (scripts/run_study.py --stage results fills it)
+,maximum,peak_rss_range,,,,,peak_rss_gb: no local artefact (scripts/run_study.py --stage results fills it)
+,"16 logical / 10 physical cores, 39.6 GiB RAM, 4 estimator threads, CPU execution (GPU present but unused)",machine,,,,,"REPO:cleanup/audits/resource_safe_execution/hardware_preflight.json (logical_cpu_count 16, physical_cpu_count 10, total_ram_gb 39.633, estimator_threads 4, requested_accelerator cpu)"

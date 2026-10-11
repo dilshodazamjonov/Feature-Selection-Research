@@ -79,6 +79,65 @@ def _categorical_bins(values: pd.Series) -> pd.Series:
     return labels.map(lambda value: MISSING_BIN if value is MISSING_BIN else str(value))
 
 
+def _numeric_bin_codes(values: pd.Series, edges: np.ndarray) -> np.ndarray:
+    """Integer form of :func:`_assign_bins`: 0 = missing, ``i`` = ``bin_{i:02d}``."""
+
+    numeric = pd.to_numeric(values, errors="coerce").to_numpy(dtype="float64")
+    codes = np.zeros(numeric.shape[0], dtype="int64")
+    present = np.isfinite(numeric)
+    if present.any():
+        codes[present] = np.searchsorted(edges, numeric[present], side="right") + 1
+    return codes
+
+
+def compute_feature_iv_from_codes(
+    codes: np.ndarray,
+    target: np.ndarray,
+    *,
+    n_edges: int,
+    smoothing: float,
+) -> tuple[float, pd.DataFrame]:
+    """Same quantity as :func:`compute_feature_iv` for numeric bin codes.
+
+    Empty bins are dropped before smoothing, exactly as the label-based group-by
+    never creates them, and the bins are summed in the same order (missing first,
+    then ``bin_01``, ``bin_02``, ...), so the two functions agree exactly.
+    """
+
+    size = int(n_edges) + 2
+    counts = np.bincount(codes, minlength=size)
+    bads = np.bincount(codes, weights=target, minlength=size)
+    keep = np.flatnonzero(counts > 0)
+    width = max(len(str(int(n_edges) + 1)), 2)
+    labels = [MISSING_BIN if code == 0 else f"bin_{int(code):0{width}d}" for code in keep]
+    count = counts[keep].astype("int64")
+    bad = np.rint(bads[keep]).astype("int64")
+    table = pd.DataFrame({"bin": labels, "count": count, "bad": bad})
+    table["good"] = table["count"] - table["bad"]
+    smoothed_bad = table["bad"].to_numpy(dtype="float64") + smoothing
+    smoothed_good = table["good"].to_numpy(dtype="float64") + smoothing
+    total_bad = smoothed_bad.sum()
+    total_good = smoothed_good.sum()
+    if total_bad <= 0.0 or total_good <= 0.0:
+        table["dist_bad"] = 0.0
+        table["dist_good"] = 0.0
+        table["woe"] = 0.0
+        table["iv_contribution"] = 0.0
+        return 0.0, table
+    dist_bad = smoothed_bad / total_bad
+    dist_good = smoothed_good / total_good
+    with np.errstate(divide="ignore", invalid="ignore"):
+        woe = np.log(dist_good / dist_bad)
+    contribution = (dist_good - dist_bad) * woe
+    contribution = np.where(np.isfinite(contribution), contribution, 0.0)
+    woe = np.where(np.isfinite(woe), woe, 0.0)
+    table["dist_bad"] = dist_bad
+    table["dist_good"] = dist_good
+    table["woe"] = woe
+    table["iv_contribution"] = contribution
+    return float(contribution.sum()), table
+
+
 def compute_feature_iv(
     bin_labels: pd.Series,
     target: pd.Series,
@@ -132,13 +191,21 @@ def compute_feature_iv(
     return float(contribution.sum()), table.reset_index()
 
 
-class InformationValueSelector(LightweightSelector):
-    """Rank candidate features by total Information Value and take the top k.
+#: Eligibility interval for information value: features with 0.01 <= IV <= 0.50 on
+#: the training partition are eligible. The lower bound removes uninformative
+#: features; the upper bound is the leakage warning of scorecard practice.
+DEFAULT_ELIGIBILITY_INTERVAL = (0.01, 0.50)
 
-    Binning, WOE, and IV are all fitted on the rows handed to :meth:`fit`, which
-    the fold runner restricts to the training portion of a DEV fold. Nothing in
-    this selector reads a validation row, and it never transforms values -- it
-    selects columns only, so downstream preprocessing stays unchanged.
+
+class InformationValueSelector(LightweightSelector):
+    """Rank eligible candidate features by total Information Value and take the top k.
+
+    A feature is eligible when its IV lies in ``eligibility_interval`` (inclusive
+    bounds); only eligible features are ranked. Binning, WOE, and IV are all fitted
+    on the rows handed to :meth:`fit`, which the fold runner restricts to the
+    training portion of a DEV fold. Nothing in this selector reads a validation
+    row, and it never transforms values -- it selects columns only, so downstream
+    preprocessing stays unchanged.
     """
 
     method_id: ClassVar[str] = "iv_woe"
@@ -158,7 +225,8 @@ class InformationValueSelector(LightweightSelector):
         n_bins: int = 10,
         binning_strategy: str = "quantile",
         zero_count_smoothing: float = 0.5,
-        max_categorical_levels: int = 50,
+        max_categorical_levels: int = 100_000,
+        eligibility_interval: tuple[float, float] | None = DEFAULT_ELIGIBILITY_INTERVAL,
         random_state: int = 42,
         excluded_columns: Sequence[str] | None = None,
         fit_scope: str = "dev_fold_training_only",
@@ -177,10 +245,17 @@ class InformationValueSelector(LightweightSelector):
             )
         if float(zero_count_smoothing) < 0.0:
             raise ValueError("zero_count_smoothing must be non-negative")
+        if eligibility_interval is not None:
+            low, high = (float(value) for value in eligibility_interval)
+            if low > high:
+                raise ValueError("eligibility_interval lower bound exceeds the upper bound")
+            eligibility_interval = (low, high)
         self.n_bins = int(n_bins)
         self.binning_strategy = str(binning_strategy)
         self.zero_count_smoothing = float(zero_count_smoothing)
         self.max_categorical_levels = int(max_categorical_levels)
+        self.eligibility_interval = eligibility_interval
+        self.eligible_features_: list[str] | None = None
         self.iv_scores_: dict[str, float] | None = None
         self.bin_table_: pd.DataFrame | None = None
         self.feature_diagnostics_: pd.DataFrame | None = None
@@ -193,6 +268,9 @@ class InformationValueSelector(LightweightSelector):
                 "binning_strategy": self.binning_strategy,
                 "zero_count_smoothing": self.zero_count_smoothing,
                 "max_categorical_levels": self.max_categorical_levels,
+                "eligibility_interval": (
+                    None if self.eligibility_interval is None else list(self.eligibility_interval)
+                ),
                 "target_orientation": TARGET_ORIENTATION,
                 "missing_handling": "explicit_missing_bin",
                 "woe_definition": "log(dist_good / dist_bad)",
@@ -236,16 +314,29 @@ class InformationValueSelector(LightweightSelector):
                 configuration=self.describe_configuration(),
             )
         target = target.reset_index(drop=True)
+        target_array = target.to_numpy(dtype="float64")
 
         scores: dict[str, float] = {}
         bin_frames: list[pd.DataFrame] = []
         diagnostics: list[dict[str, Any]] = []
         for name in candidate_order:
             values = X[name].reset_index(drop=True)
-            labels, feature_type, edges = self._bin_one(values)
-            iv, table = compute_feature_iv(
-                labels, target, smoothing=self.zero_count_smoothing
-            )
+            if pd.api.types.is_numeric_dtype(values.dtype) and not pd.api.types.is_bool_dtype(
+                values.dtype
+            ):
+                feature_type = "numeric"
+                edges = _numeric_bin_edges(values, self.n_bins, self.binning_strategy)
+                iv, table = compute_feature_iv_from_codes(
+                    _numeric_bin_codes(values, edges),
+                    target_array,
+                    n_edges=len(edges),
+                    smoothing=self.zero_count_smoothing,
+                )
+            else:
+                labels, feature_type, edges = self._bin_one(values)
+                iv, table = compute_feature_iv(
+                    labels, target, smoothing=self.zero_count_smoothing
+                )
             scores[name] = iv
 
             table.insert(0, "feature", name)
@@ -288,8 +379,16 @@ class InformationValueSelector(LightweightSelector):
             pd.concat(bin_frames, ignore_index=True) if bin_frames else pd.DataFrame()
         )
         self.feature_diagnostics_ = pd.DataFrame(diagnostics)
-        ranking = rank_by_score(scores, candidate_order=candidate_order)
-        return ranking, scores, None
+        if self.eligibility_interval is None:
+            eligible_scores = dict(scores)
+        else:
+            low, high = self.eligibility_interval
+            eligible_scores = {
+                name: value for name, value in scores.items() if low <= value <= high
+            }
+        ranking = rank_by_score(eligible_scores, candidate_order=candidate_order)
+        self.eligible_features_ = list(ranking)
+        return ranking, eligible_scores, None
 
 
 __all__ = [
@@ -298,4 +397,5 @@ __all__ = [
     "TARGET_ORIENTATION",
     "InformationValueSelector",
     "compute_feature_iv",
+    "compute_feature_iv_from_codes",
 ]

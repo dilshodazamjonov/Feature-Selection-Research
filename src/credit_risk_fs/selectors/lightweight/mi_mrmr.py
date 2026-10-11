@@ -2,32 +2,36 @@
 
 This is a genuinely different algorithm from
 :class:`credit_risk_fs.selectors.mrmr.RandomForestRelevanceMRMRSelector`, which
-uses random-forest impurity relevance and absolute-correlation redundancy. That
-legacy method keeps its own identity and its historical artifacts; nothing here
-rewrites or reinterprets them.
+uses random-forest impurity relevance and absolute-correlation redundancy.
 
-Implementation decision (recorded because it is a real choice, not a default):
+Estimators (recorded in the configuration of every result):
 
-*Estimator*  Both relevance and redundancy use the discrete plug-in estimator
-``sklearn.metrics.mutual_info_score`` over variables discretized inside the
-training partition. No new dependency is installed and no randomness enters, so
-the result is bit-reproducible for a given input, configuration, and
-discretization.
+*nearest_neighbour* (default)  Mutual information is estimated on the training
+partition by the nearest-neighbour estimators: Ross (2014) for a continuous
+feature against a discrete variable (``sklearn.feature_selection.mutual_info_classif``)
+and Kraskov et al. (2004) for two continuous features
+(``sklearn.feature_selection.mutual_info_regression``); two discrete variables use
+the plug-in estimator ``sklearn.metrics.mutual_info_score``. A feature is discrete
+when it is categorical, boolean, or takes at most two distinct observed values.
+Continuous features are mean-imputed with training statistics. To keep the
+estimator tractable on large partitions, it is computed on a target-stratified
+sample of ``sample_rows`` training rows drawn with ``random_state``. The pairwise
+redundancy terms of each newly selected feature are estimated against all remaining
+candidates in one batched call (``n_jobs`` threads); the values do not depend on
+``n_jobs``.
 
-*Rejected alternative*  The k-nearest-neighbour (Kraskov) estimator behind
-``sklearn.feature_selection.mutual_info_classif`` adds tie-breaking noise driven
-by ``random_state`` and estimates continuous-continuous MI by a different
-construction. It is defensible, but it changes both the algorithm and its
-reproducibility characteristics, so adopting it must be a separate, explicitly
-versioned ``implementation_id`` rather than a silent redefinition of this one.
+*discrete_plugin*  Both relevance and redundancy use ``mutual_info_score`` over
+variables discretized inside the training partition into ``n_bins`` quantile bins
+with an explicit missing code. Kept for comparison runs.
 
-*Consequence*  The discretization rule is part of the algorithm's identity and is
-therefore recorded in the configuration of every result. Changing ``n_bins``
-changes the estimator, not merely a tuning knob.
+An optional source-family cap (``group_of`` and ``group_cap``) restricts the greedy
+search so that no family contributes more than ``group_cap`` features; it is used
+by the family-capped diversity control.
 """
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, ClassVar
@@ -52,6 +56,34 @@ MISSING_CODE = -1
 #: difference form is the default because the quotient form is unstable when the
 #: mean redundancy approaches zero.
 OBJECTIVES = frozenset({"mid", "miq"})
+
+ESTIMATORS = frozenset({"nearest_neighbour", "discrete_plugin"})
+
+
+def _prepare_nearest_neighbour_column(values: pd.Series) -> tuple[bool, np.ndarray]:
+    """Return ``(is_discrete, prepared_values)`` for the nearest-neighbour estimator."""
+
+    if pd.api.types.is_numeric_dtype(values.dtype) and not pd.api.types.is_bool_dtype(
+        values.dtype
+    ):
+        numeric = pd.to_numeric(values, errors="coerce").replace([np.inf, -np.inf], np.nan)
+        observed = numeric.dropna()
+        levels = np.unique(observed.to_numpy(dtype="float64"))
+        if levels.size <= 2:
+            codes = np.full(len(numeric), MISSING_CODE, dtype="int64")
+            present = numeric.notna().to_numpy()
+            if levels.size:
+                codes[present] = np.searchsorted(levels, numeric[present].to_numpy(dtype="float64"))
+            return True, codes
+        fill = float(observed.mean())
+        return False, numeric.fillna(fill).to_numpy(dtype="float64")
+    as_object = values.astype("object")
+    levels = sorted({str(value) for value in as_object.dropna().to_numpy()})
+    lookup = {level: index for index, level in enumerate(levels)}
+    return True, np.array(
+        [MISSING_CODE if pd.isna(value) else lookup[str(value)] for value in as_object.to_numpy()],
+        dtype="int64",
+    )
 
 
 def _discretize_column(values: pd.Series, n_bins: int) -> np.ndarray:
@@ -100,13 +132,13 @@ class MutualInformationMRMRSelector(LightweightSelector):
 
     At each step the feature maximizing the configured objective is appended.
     Relevance is ``I(feature; target)``; redundancy is the mean
-    ``I(feature; already_selected)``. Both are discrete plug-in mutual
-    information in nats.
+    ``I(feature; already_selected)``. Both are mutual information in nats, estimated
+    as configured by ``estimator``.
     """
 
     method_id: ClassVar[str] = "mrmr_mutual_information"
     display_label: ClassVar[str] = "mRMR (mutual information)"
-    implementation_id: ClassVar[str] = "mrmr_mutual_information_discrete_plugin_v1"
+    implementation_id: ClassVar[str] = "mrmr_mutual_information_nearest_neighbour_v1"
     supervised: ClassVar[bool] = True
     supports_ranking: ClassVar[bool] = True
     supports_natural_support: ClassVar[bool] = False
@@ -120,11 +152,17 @@ class MutualInformationMRMRSelector(LightweightSelector):
         self,
         *,
         k: int | None = None,
+        estimator: str = "nearest_neighbour",
+        sample_rows: int | None = 20_000,
+        n_neighbors: int = 3,
         n_bins: int = 10,
         objective: str = "mid",
         redundancy_epsilon: float = 1e-12,
         relevance_floor: float = 0.0,
+        group_of: Mapping[str, str] | None = None,
+        group_cap: int | None = None,
         random_state: int = 42,
+        n_jobs: int = 1,
         excluded_columns: Sequence[str] | None = None,
         fit_scope: str = "dev_fold_training_only",
     ) -> None:
@@ -134,14 +172,34 @@ class MutualInformationMRMRSelector(LightweightSelector):
             excluded_columns=excluded_columns,
             fit_scope=fit_scope,
         )
+        if int(n_jobs) <= 0:
+            raise ValueError("n_jobs must be positive")
+        self.n_jobs = int(n_jobs)
+        if str(estimator) not in ESTIMATORS:
+            raise ValueError(f"estimator must be one of {sorted(ESTIMATORS)}")
+        if sample_rows is not None and int(sample_rows) < 2:
+            raise ValueError("sample_rows must be at least 2 or None")
+        if int(n_neighbors) < 1:
+            raise ValueError("n_neighbors must be positive")
         if int(n_bins) < 2:
             raise ValueError("n_bins must be at least 2")
         if str(objective) not in OBJECTIVES:
             raise ValueError(f"objective must be one of {sorted(OBJECTIVES)}")
+        if (group_of is None) != (group_cap is None):
+            raise ValueError("group_of and group_cap must be supplied together")
+        if group_cap is not None and int(group_cap) < 1:
+            raise ValueError("group_cap must be positive")
+        self.estimator = str(estimator)
+        self.implementation_id = f"mrmr_mutual_information_{self.estimator}_v1"
+        self.sample_rows = None if sample_rows is None else int(sample_rows)
+        self.n_neighbors = int(n_neighbors)
         self.n_bins = int(n_bins)
         self.objective = str(objective)
         self.redundancy_epsilon = float(redundancy_epsilon)
         self.relevance_floor = float(relevance_floor)
+        self.group_of = None if group_of is None else {str(key): str(value) for key, value in group_of.items()}
+        self.group_cap = None if group_cap is None else int(group_cap)
+        self.sample_size_: int | None = None
         self.relevance_: dict[str, float] | None = None
         self.selection_trace_: pd.DataFrame | None = None
         self._mi_cache: dict[tuple[str, str], float] = {}
@@ -181,22 +239,176 @@ class MutualInformationMRMRSelector(LightweightSelector):
 
     def describe_configuration(self) -> dict[str, Any]:
         configuration = super().describe_configuration()
+        if self.estimator == "nearest_neighbour":
+            estimator_details = {
+                "mi_estimator": {
+                    "continuous_vs_discrete": "Ross (2014), sklearn.feature_selection.mutual_info_classif",
+                    "continuous_vs_continuous": "Kraskov et al. (2004), sklearn.feature_selection.mutual_info_regression",
+                    "discrete_vs_discrete": "sklearn.metrics.mutual_info_score",
+                },
+                "n_neighbors": self.n_neighbors,
+                "sample_rows": self.sample_rows,
+                "sampling": "target-stratified sample of training rows without replacement",
+                "discrete_definition": "categorical, boolean, or at most two distinct observed values",
+                "continuous_missing_values": "training-sample mean imputation",
+            }
+        else:
+            estimator_details = {
+                "mi_estimator": "sklearn.metrics.mutual_info_score",
+                "n_bins": self.n_bins,
+                "discretization": "training_partition_quantile_with_explicit_missing_code",
+            }
         configuration.update(
             {
-                "n_bins": self.n_bins,
+                "estimator": self.estimator,
+                **estimator_details,
                 "objective": self.objective,
                 "redundancy_epsilon": self.redundancy_epsilon,
-                "mi_estimator": "sklearn.metrics.mutual_info_score",
                 "mi_units": "nats",
-                "discretization": "training_partition_quantile_with_explicit_missing_code",
                 "relevance": "I(feature; target)",
                 "redundancy": "mean I(feature; already_selected)",
                 "relevance_floor": self.relevance_floor,
                 "zero_relevance_policy": "ranked_last_by_ascending_feature_name",
-                "deterministic_without_rng": True,
+                "group_cap": self.group_cap,
             }
         )
         return configuration
+
+    def _sample_positions(self, target_codes: np.ndarray) -> np.ndarray:
+        """Target-stratified training-row sample for the nearest-neighbour estimator."""
+
+        n_rows = len(target_codes)
+        if self.sample_rows is None or n_rows <= self.sample_rows:
+            return np.arange(n_rows)
+        generator = np.random.RandomState(self.random_state)
+        positives = np.flatnonzero(target_codes == 1)
+        negatives = np.flatnonzero(target_codes != 1)
+        n_positive = int(round(self.sample_rows * len(positives) / n_rows))
+        n_positive = min(max(n_positive, 1), len(positives))
+        n_negative = min(self.sample_rows - n_positive, len(negatives))
+        chosen = np.concatenate(
+            [
+                generator.choice(positives, size=n_positive, replace=False),
+                generator.choice(negatives, size=n_negative, replace=False),
+            ]
+        )
+        return np.sort(chosen)
+
+    def _compute_nearest_neighbour(
+        self,
+        X: pd.DataFrame,
+        target_codes: np.ndarray,
+        candidate_order: Sequence[str],
+    ) -> tuple[list[str], dict[str, float] | None, list[str] | None]:
+        from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
+
+        positions = self._sample_positions(target_codes)
+        self.sample_size_ = int(len(positions))
+        sampled_target = target_codes[positions]
+        names = [str(name) for name in candidate_order]
+        # Rows first: the sample is small, the full training frame may not be.
+        sample = X.iloc[positions]
+        discrete: dict[str, bool] = {}
+        values: dict[str, np.ndarray] = {}
+        for name in names:
+            discrete[name], values[name] = _prepare_nearest_neighbour_column(
+                sample[name].reset_index(drop=True)
+            )
+        del sample
+        continuous_names = [name for name in names if not discrete[name]]
+        discrete_names = [name for name in names if discrete[name]]
+        options: dict[str, Any] = {
+            "n_neighbors": self.n_neighbors,
+            "random_state": self.random_state,
+        }
+        if "n_jobs" in inspect.signature(mutual_info_classif).parameters:
+            options["n_jobs"] = self.n_jobs
+
+        def matrix(group: Sequence[str]) -> np.ndarray:
+            return np.column_stack([values[name] for name in group]).astype("float64")
+
+        relevance: dict[str, float] = {}
+        if continuous_names:
+            scores = mutual_info_classif(
+                matrix(continuous_names), sampled_target, discrete_features=False, **options
+            )
+            relevance.update(zip(continuous_names, (float(value) for value in scores)))
+        for name in discrete_names:
+            relevance[name] = float(mutual_info_score(values[name], sampled_target))
+
+        def store(anchor: str, others: Sequence[str], scores: Sequence[float]) -> None:
+            for other, value in zip(others, scores):
+                key = (other, anchor) if other <= anchor else (anchor, other)
+                self._mi_cache[key] = max(0.0, float(value))
+
+        def fill(anchor: str) -> None:
+            """Estimate I(anchor; feature) for every candidate not yet paired with anchor."""
+
+            def pending(group: Sequence[str]) -> list[str]:
+                return [
+                    name
+                    for name in group
+                    if name != anchor
+                    and ((name, anchor) if name <= anchor else (anchor, name)) not in self._mi_cache
+                ]
+
+            others_continuous = pending(continuous_names)
+            others_discrete = pending(discrete_names)
+            anchor_values = values[anchor]
+            if discrete[anchor]:
+                if np.unique(anchor_values).size < 2:
+                    store(anchor, others_continuous + others_discrete, [0.0] * (len(others_continuous) + len(others_discrete)))
+                    return
+                if others_continuous:
+                    # Ross: continuous features against the discrete anchor.
+                    store(
+                        anchor,
+                        others_continuous,
+                        mutual_info_classif(
+                            matrix(others_continuous), anchor_values, discrete_features=False, **options
+                        ),
+                    )
+                store(
+                    anchor,
+                    others_discrete,
+                    [mutual_info_score(values[name], anchor_values) for name in others_discrete],
+                )
+                return
+            if others_continuous:
+                # Kraskov et al.: continuous features against the continuous anchor.
+                store(
+                    anchor,
+                    others_continuous,
+                    mutual_info_regression(
+                        matrix(others_continuous), anchor_values, discrete_features=False, **options
+                    ),
+                )
+            if others_discrete:
+                # Ross: discrete features against the continuous anchor.
+                store(
+                    anchor,
+                    others_discrete,
+                    mutual_info_regression(
+                        matrix(others_discrete), anchor_values, discrete_features=True, **options
+                    ),
+                )
+
+        def pair_mi(left: str, right: str) -> float:
+            key = (left, right) if left <= right else (right, left)
+            cached = self._mi_cache.get(key)
+            if cached is None:
+                fill(right)
+                cached = self._mi_cache.get(key)
+            if cached is None:
+                fill(left)
+                cached = self._mi_cache[key]
+            return cached
+
+        return self._rank_from_relevance(
+            candidate_order=names,
+            relevance=relevance,
+            pair_mi=pair_mi,
+        )
 
     def _pair_mi(self, left: str, right: str) -> float:
         key = (left, right) if left <= right else (right, left)
@@ -224,6 +436,8 @@ class MutualInformationMRMRSelector(LightweightSelector):
 
         self._mi_cache = {}
         self.execution_checkpoint_summary_ = None
+        if self.estimator == "nearest_neighbour":
+            return self._compute_nearest_neighbour(X, target_codes, candidate_order)
         if self._execution_cache_root is None:
             self._codes = {
                 name: _discretize_column(X[name].reset_index(drop=True), self.n_bins)
@@ -320,9 +534,26 @@ class MutualInformationMRMRSelector(LightweightSelector):
         uninformative = [
             name for name in candidate_order if relevance[name] <= self.relevance_floor
         ]
+        group_counts: dict[str, int] = {}
+
+        def allowed(name: str) -> bool:
+            if self.group_cap is None or self.group_of is None:
+                return True
+            return group_counts.get(self.group_of.get(name, name), 0) < self.group_cap
+
+        def count(name: str) -> None:
+            if self.group_of is not None:
+                group = self.group_of.get(name, name)
+                group_counts[group] = group_counts.get(group, 0) + 1
 
         if not informative:
-            ordered = sorted(uninformative)[:steps]
+            ordered = []
+            for name in sorted(uninformative):
+                if len(ordered) >= steps:
+                    break
+                if allowed(name):
+                    ordered.append(name)
+                    count(name)
             self.selection_trace_ = pd.DataFrame(
                 {
                     "selection_rank": range(1, len(ordered) + 1),
@@ -340,6 +571,7 @@ class MutualInformationMRMRSelector(LightweightSelector):
         first = min(remaining, key=lambda name: (-relevance[name], name))
         selected = [first]
         remaining.remove(first)
+        count(first)
         scores = {first: relevance[first]}
         trace: list[dict[str, Any]] = [
             {
@@ -352,10 +584,13 @@ class MutualInformationMRMRSelector(LightweightSelector):
         ]
 
         while len(selected) < steps and remaining:
+            candidates = [name for name in remaining if allowed(name)]
+            if not candidates:
+                break
             best_name: str | None = None
             best_key: tuple[float, str] | None = None
             best_parts: tuple[float, float] = (0.0, 0.0)
-            for name in remaining:
+            for name in candidates:
                 redundancy = sum(pair_mi(name, chosen) for chosen in selected) / len(
                     selected
                 )
@@ -368,9 +603,10 @@ class MutualInformationMRMRSelector(LightweightSelector):
                     best_key = key
                     best_name = name
                     best_parts = (redundancy, score)
-            assert best_name is not None  # loop runs only while remaining is non-empty
+            assert best_name is not None  # loop runs only while candidates is non-empty
             selected.append(best_name)
             remaining.remove(best_name)
+            count(best_name)
             scores[best_name] = best_parts[1]
             trace.append(
                 {
@@ -385,7 +621,10 @@ class MutualInformationMRMRSelector(LightweightSelector):
         for name in sorted(uninformative):
             if len(selected) >= steps:
                 break
+            if not allowed(name):
+                continue
             selected.append(name)
+            count(name)
             scores[name] = relevance[name]
             trace.append(
                 {
@@ -401,4 +640,4 @@ class MutualInformationMRMRSelector(LightweightSelector):
         return selected, scores, None
 
 
-__all__ = ["MISSING_CODE", "OBJECTIVES", "MutualInformationMRMRSelector"]
+__all__ = ["ESTIMATORS", "MISSING_CODE", "OBJECTIVES", "MutualInformationMRMRSelector"]

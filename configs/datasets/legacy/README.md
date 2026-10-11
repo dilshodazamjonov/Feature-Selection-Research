@@ -9,4 +9,5 @@ The Home Credit and LendingClub v2 dataset configurations are:
 - `configs/datasets/lendingclub_v2.yaml`
 
 Stability 2024 is configured by `src/credit_risk_fs/data/homecredit_model_stability_2024/` and its protocol lock
-under `configs/protocols/homecredit_model_stability_2024_v1/`.
+under `configs/protocols/homecredit_model_stability_2024_v1/`. The study configurations of all three datasets are in
+`configs/study/`.

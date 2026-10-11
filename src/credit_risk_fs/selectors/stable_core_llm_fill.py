@@ -22,12 +22,12 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         self,
         description_csv_path: str,
         cache_dir: str = "results/_llm_rankings_cache",
-        llm_model: str = "gpt-4.1-mini",
+        llm_model: str = "gpt-4.1-mini-2025-04-14",
         llm_temperature: float = 0.0,
         llm_max_features: int = 100,
         llm_shared_ranking_enabled: bool = True,
         llm_config_hash: str | None = None,
-        llm_prompt_version: str = "stability_expert_v3",
+        llm_prompt_version: str = "unified_definitions_only_v1",
         llm_ranking_budget_config: dict[str, int] | None = None,
         llm_shared_pool_size: int | None = None,
         final_feature_budget: int = 40,
@@ -39,7 +39,7 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
         llm_selector_cls: type | None = None,
         llm_selector_kwargs: dict[str, Any] | None = None,
         iv_filter_kwargs: dict[str, Any] | None = None,
-        allow_unranked_padding: bool = True,
+        allow_unranked_padding: bool = False,
     ) -> None:
         self.description_csv_path = description_csv_path
         self.cache_dir = cache_dir
@@ -110,7 +110,6 @@ class StableCoreLLMFillSelector(SelectedFeaturesMixin):
             "prompt_version": self.llm_prompt_version,
             "ranking_budget_config": self.llm_ranking_budget_config,
             "shared_pool_size": self.llm_shared_pool_size,
-            "iv_filter_kwargs": dict(self.iv_filter_kwargs),
         }
         kwargs.update(self.llm_selector_kwargs)
         return llm_selector_cls(**kwargs)

@@ -259,7 +259,8 @@ class CatBoostShapSelector(LightweightSelector):
                 configuration=self.describe_configuration(),
             )
 
-        frame = X.loc[:, list(candidate_order)]
+        order = [str(name) for name in candidate_order]
+        frame = X if [str(name) for name in X.columns] == order else X.loc[:, order]
         target = y.reset_index(drop=True)
         model = self._fit_model(frame, target)
         positions = self._draw_explanation_sample(target)

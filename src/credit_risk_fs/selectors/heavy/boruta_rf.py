@@ -120,6 +120,7 @@ class BorutaRandomForestSelector(LightweightSelector):
         self.tentative_: list[str] = []
         self.rejected_: list[str] = []
         self.engine_ranking_: dict[str, int] | None = None
+        self.mean_importance_: dict[str, float] = {}
         self.stop_reason_: str | None = None
         self.engine_iteration_count_: int | None = None
         self.final_forest_n_estimators_: int | str | None = None
@@ -264,7 +265,8 @@ class BorutaRandomForestSelector(LightweightSelector):
         # sklearn ValueError into an attributable selector failure that names the
         # offending columns. The selector deliberately does NOT impute: doing so
         # would silently change the method's preprocessing.
-        frame = X.loc[:, list(candidate_order)]
+        order = [str(name) for name in candidate_order]
+        frame = X if [str(name) for name in X.columns] == order else X.loc[:, order]
         non_finite = [
             str(name)
             for name in candidate_order
@@ -339,12 +341,28 @@ class BorutaRandomForestSelector(LightweightSelector):
             or f"engine_completed_max_iter_{self._effective_boruta_params().get('max_iter')}"
         )
         importance_history = getattr(engine, "importance_history_", None)
+        mean_importance: dict[str, float] = {}
         if importance_history is not None:
-            history_array = np.asarray(importance_history)
+            history_array = np.asarray(importance_history, dtype="float64")
             # BorutaPy prefixes the per-iteration history with one all-zero row.
             self.engine_iteration_count_ = max(0, int(history_array.shape[0]) - 1)
+            if (
+                history_array.ndim == 2
+                and history_array.shape[0] > 1
+                and history_array.shape[1] == len(candidate_order)
+            ):
+                import warnings
+
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)
+                    means = np.nanmean(history_array[1:], axis=0)
+                mean_importance = {
+                    str(name): (float(value) if np.isfinite(value) else 0.0)
+                    for name, value in zip(candidate_order, means, strict=True)
+                }
         else:
             self.engine_iteration_count_ = None
+        self.mean_importance_ = mean_importance
         engine_estimator = getattr(engine, "estimator", None)
         self.final_forest_n_estimators_ = getattr(
             engine_estimator, "n_estimators", None
@@ -365,8 +383,10 @@ class BorutaRandomForestSelector(LightweightSelector):
 
         order_index = {str(name): position for position, name in enumerate(candidate_order)}
 
-        def engine_order(name: str) -> tuple[int, int]:
-            return (self.engine_ranking_[name], order_index[name])
+        def engine_order(name: str) -> tuple[int, float, int]:
+            # Boruta gives every confirmed feature rank 1; within a rank, features
+            # are ordered by their mean importance over the Boruta iterations.
+            return (self.engine_ranking_[name], -mean_importance.get(name, 0.0), order_index[name])
 
         self.confirmed_ = sorted(
             (name for name, state in states.items() if state == CONFIRMED), key=engine_order

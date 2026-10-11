@@ -1,0 +1,133 @@
+# Protocol settings shared by the three datasets (scripts/run_study.py).
+# A dataset file names this file in `extends` and overrides keys where needed.
+
+seed: 42
+output_root: outputs/study
+results_root: results
+
+budgets:            # K, original variables
+  lr: 20
+  catboost: 40
+llm_pool:           # semantic pool handed to the hybrids' statistical stage
+  lr: 60
+  catboost: 100
+
+folds:
+  n_splits: 5       # expanding-window folds along the ordering index
+  gap: 1            # one index unit assigned to neither partition
+
+screen:
+  max_missing_rate: 0.90   # on the training partition of the earliest fold
+
+preprocessing:
+  num_strategy: mean
+  num_scaler: standard
+  cat_missing: Missing
+
+models:
+  lr:
+    solver: liblinear
+    C: 1.0
+    max_iter: 1000
+    class_weight: balanced
+    random_state: 42
+  catboost:
+    iterations: 1500
+    depth: 10
+    learning_rate: 0.01
+    l2_leaf_reg: 95
+    min_data_in_leaf: 290
+    rsm: 0.9
+    random_strength: 0.125
+    grow_policy: Depthwise
+    one_hot_max_size: 21
+    leaf_estimation_method: Newton
+    bootstrap_type: Bernoulli
+    subsample: 0.55
+    loss_function: Logloss
+    eval_metric: AUC
+    auto_class_weights: Balanced
+    random_seed: 42
+    thread_count: 4
+    verbose: 0
+    allow_writing_files: false
+
+selectors:
+  iv:
+    n_bins: 10
+    binning_strategy: quantile
+    zero_count_smoothing: 0.5
+    eligibility_interval: [0.01, 0.50]
+  mrmr:
+    estimator: nearest_neighbour   # Ross (continuous vs discrete), Kraskov et al. (continuous vs continuous)
+    sample_rows: 20000             # target-stratified training sample, seed 42
+    n_neighbors: 3
+    objective: mid
+    k_max: 50                      # greedy order to 50; every budget is a prefix
+    n_jobs: 4
+  boruta:
+    forest:
+      n_estimators: 500
+      max_depth: 6
+    engine:
+      n_estimators: 500
+      max_iter: 10
+      alpha: 0.05
+      two_step: true
+      perc: 100
+    n_jobs: 4
+  rfe:
+    step_fraction: 0.20
+    catboost:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+    thread_count: 4
+  shap:
+    explanation_sample_size: 10000
+    catboost:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+    thread_count: 4
+  stable_core:
+    bootstrap_iterations: 5        # seeds 42 to 46
+    bootstrap_fraction: 0.8        # with replacement
+    stability_threshold: 0.8       # selected in at least four of the five resamples
+    n_jobs: 4
+  l1:
+    C: 0.05
+    solver: liblinear
+    max_iter: 2000
+    class_weight: balanced
+    imputation_strategy: median
+
+llm:
+  model: gpt-4.1-mini-2025-04-14
+  temperature: 0.0
+  evidence_mode: definitions_only
+  max_rerequests: 3                # a failing response is re-requested up to three times
+
+obfuscation:
+  seed: 20260914
+
+inference:
+  bootstrap_resamples: 2000
+  bootstrap_seed: 20260721
+
+psi:
+  quantile_bins: 10
+  discrete_max_levels: 20
+  epsilon: 1.0e-6
+
+sweep:
+  budgets: [10, 20, 30, 40, 50]
+
+all_results_folders:
+  homecredit: homecredit_metrics_output
+  lendingclub_v2: lendingclub_metrics_output
+  stability_2024: stability_metrics_output
+all_dataset_labels:
+  homecredit: Home Credit
+  lendingclub_v2: LendingClub v2
+  stability_2024: Stability 2024

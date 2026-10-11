@@ -1,0 +1,56 @@
+# LendingClub v2: 36- and 60-month loans resolved by the 2019-05-01 snapshot; ordering
+# index = days from the issue month to 2018-12-01 (DEV: issued 2014-01 to 2015-12;
+# HO: issued 2016-01 to 2016-12).
+extends: common.yaml
+
+dataset: lendingclub_v2
+label: LendingClub v2
+loader: lendingclub_v2
+results_folder: lendingclub_metrics_output
+universe_size: 675
+cohort_cutoff: "-1065"
+inventory: data/lendingclub_v2/metadata/feature_inventory.csv
+csv_chunk_rows: 25000
+cat_min_frequency: 50
+
+full_reference: candidates
+
+protected:
+  names: []
+
+llm:
+  partitions: [fold1, fold2, fold3, fold4, fold5, full_dev]
+  budgets: [20, 40, 60, 100]  # one call per partition and budget
+  repeats: 0
+  obfuscation: false
+  lineage: true
+  lineage_partitions: [full_dev]
+  lineage_budgets: [20, 40, 60, 100]
+
+# The statistical stage of LLM then mRMR selects one-hot columns of the semantic pool.
+llm_then_mrmr_expanded: true
+
+voting:
+  enabled: true
+  pools: [100, 200, 300]
+  primary_pool: 200
+
+subpopulations:
+  kind: lendingclub
+  term_column: term_months
+  terms: [36, 60]
+  issue_reference_date: "2018-12-01"
+  matured:
+    label: matured_36m_2016-01_to_2016-05
+    term: 36
+    months: ["2016-01", "2016-02", "2016-03", "2016-04", "2016-05"]
+
+composition_labels:
+  raw: raw
+  flag: flags
+  ratio: ratios
+  missing_indicator: missing_indicators
+  engineered: engineered
+  binned: binned
+  interaction: interactions
+  categorical: categoricals

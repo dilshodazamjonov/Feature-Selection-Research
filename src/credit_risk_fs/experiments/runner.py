@@ -202,12 +202,12 @@ def _args_for_config(config: dict[str, Any], model: str) -> SimpleNamespace:
         oot_end_day=int(config["oot_end_day"]),
         cv_gap_groups=int(config["cv_gap_groups"]),
         random_seed=int(config["random_seed"]),
-        llm_model=llm_config.get("model", "gpt-4.1-mini"),
+        llm_model=llm_config.get("model", "gpt-4.1-mini-2025-04-14"),
         llm_max_features=resolve_llm_shared_pool_size(llm_config),
         llm_shared_pool_size=resolve_llm_shared_pool_size(llm_config),
         llm_ranking_budget=resolve_llm_shared_pool_size(llm_config),
         llm_ranking_budget_config=llm_ranking_budget,
-        llm_prompt_version=llm_config.get("prompt_version", "stability_expert_v3"),
+        llm_prompt_version=llm_config.get("prompt_version", "unified_definitions_only_v1"),
         llm_shared_ranking_enabled=bool(llm_config.get("shared_ranking_enabled", True)),
         llm_cache_dir=llm_config.get("cache_dir", "results/_llm_rankings_cache"),
     )
@@ -262,7 +262,6 @@ def _hybrid_selector_kwargs(
         "llm_shared_pool_size": args.llm_shared_pool_size,
         "final_feature_budget": feature_budget,
         "llm_selector_kwargs": {
-            "max_missing_rate": 0.95,
             "lr_feature_budget": int(args.project_config.get("feature_budgets", {}).get("lr", 20)),
             "catboost_feature_budget": int(args.project_config.get("feature_budgets", {}).get("catboost", 40)),
             "lr_candidate_pool_budget": int(llm_config.get("ranking_budget", {}).get("lr_candidate_pool", 60))
@@ -271,13 +270,6 @@ def _hybrid_selector_kwargs(
             "catboost_candidate_pool_budget": int(llm_config.get("ranking_budget", {}).get("catboost_candidate_pool", 100))
             if isinstance(llm_config.get("ranking_budget"), dict)
             else int(args.llm_shared_pool_size),
-        },
-        "iv_filter_kwargs": {
-            "min_iv": 0.01,
-            "max_iv_for_leakage": 0.5,
-            "encode": True,
-            "n_jobs": 1,
-            "verbose": False,
         },
     }
 
@@ -331,7 +323,6 @@ def _experiment_config_for_spec(
                 "final_feature_budget": resolve_feature_budget(run_config, spec.model),
                 "random_state": int(run_config.get("random_seed", 42)),
                 "llm_selector_kwargs": {
-                    "max_missing_rate": 0.95,
                     "lr_feature_budget": int(run_config.get("feature_budgets", {}).get("lr", 20)),
                     "catboost_feature_budget": int(run_config.get("feature_budgets", {}).get("catboost", 40)),
                     "lr_candidate_pool_budget": int(
@@ -340,13 +331,6 @@ def _experiment_config_for_spec(
                     "catboost_candidate_pool_budget": int(
                         resolve_llm_candidate_pool_budget(run_config.get("llm", {}), "catboost")
                     ),
-                },
-                "iv_filter_kwargs": {
-                    "min_iv": 0.01,
-                    "max_iv_for_leakage": 0.5,
-                    "encode": True,
-                    "n_jobs": 1,
-                    "verbose": False,
                 },
             }
         else:

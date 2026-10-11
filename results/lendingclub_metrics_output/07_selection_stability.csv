@@ -10,8 +10,8 @@ lr,RFE CatBoost,20,675,0.598092,0.4417554348588831,0.3333333333333333,0.53846153
 lr,CatBoost SHAP,20,675,0.737214,0.5975126966431314,0.48148148148148145,0.7391304347826086,"REPO:cleanup/audits/prompt_11_selector_combinations/baseline_selection_stability.csv (run fbv1-027-lendingclub_v2-lr-catboost-shap-s42, d=675 as filed)"
 lr,Pure LLM,20,675,0.551718,0.401116,0.25,0.6,"derived from the five per-fold cached rankings in results/llm_rankings/lendingclub_v2/ (top-20 of each fold list, B=5, d=675); min/max also in ARTICLE:priority_2/stability_fold_pair_jaccard.csv"
 lr,LLM then mRMR,20,675,,,,,nogueira and jaccard_mean: no local artefact (Table 9 LendingClub hybrid rows unsupported locally); min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
-lr,LLM then Boruta,20,675,0.5414,0.4103,0.14285714285714285,0.7391304347826086,nogueira and jaccard_mean: as printed in the manuscript (Table 9); no source file in this repository; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
-lr,Stable core + LLM fill,20,675,0.7115,0.5783,0.3793103448275862,0.8181818181818182,nogueira and jaccard_mean: as printed in the manuscript (Table 9); no source file in this repository; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
+lr,LLM then Boruta,20,675,,,0.14285714285714285,0.7391304347826086,nogueira and jaccard_mean: no local artefact; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
+lr,Stable core + LLM fill,20,675,,,0.3793103448275862,0.8181818181818182,nogueira and jaccard_mean: no local artefact; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
 catboost,Domain rules,40,675,,,,,no local artefact holds fold-to-fold stability for this selector; not in Table 9
 catboost,Random K,40,675,1,1.0,1.0,1.0,"REPO:cleanup/audits/prompt_11_selector_combinations/baseline_selection_stability.csv (run fbv1-008-lendingclub_v2-catboost-random-k-s42, d=675 as filed)"
 catboost,PCA,40,675,,,,,no local artefact holds fold-to-fold stability for this selector; not in Table 9
@@ -23,5 +23,5 @@ catboost,RFE CatBoost,40,675,0.606693,0.46160271741205205,0.40350877192982454,0.
 catboost,CatBoost SHAP,40,675,0.734252,0.6054958817762053,0.45454545454545453,0.7777777777777778,"REPO:cleanup/audits/prompt_11_selector_combinations/baseline_selection_stability.csv (run fbv1-028-lendingclub_v2-catboost-catboost-shap-s42, d=675 as filed)"
 catboost,Pure LLM,40,675,0.627953,0.482788,0.403509,0.538462,"derived from the five per-fold cached rankings in results/llm_rankings/lendingclub_v2/ (top-40 of each fold list, B=5, d=675); min/max also in ARTICLE:priority_2/stability_fold_pair_jaccard.csv"
 catboost,LLM then mRMR,40,675,,,,,nogueira and jaccard_mean: no local artefact (Table 9 LendingClub hybrid rows unsupported locally); min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
-catboost,LLM then Boruta,40,675,0.6333,0.4920,0.3793103448275862,0.7021276595744681,nogueira and jaccard_mean: as printed in the manuscript (Table 9); no source file in this repository; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
-catboost,Stable core + LLM fill,40,675,0.7130,0.5842,0.40350877192982454,0.7777777777777778,nogueira and jaccard_mean: as printed in the manuscript (Table 9); no source file in this repository; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
+catboost,LLM then Boruta,40,675,,,0.3793103448275862,0.7021276595744681,nogueira and jaccard_mean: no local artefact; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv
+catboost,Stable core + LLM fill,40,675,,,0.40350877192982454,0.7777777777777778,nogueira and jaccard_mean: no local artefact; min/max from ARTICLE:priority_2/stability_fold_pair_jaccard.csv

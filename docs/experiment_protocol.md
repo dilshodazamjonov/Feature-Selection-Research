@@ -1,63 +1,36 @@
-# Experiment Protocol
+# Experiment protocol
 
-## Main Hypothesis
+The study compares classical feature selection with LLM-assisted pre-screening on three credit portfolios, Home
+Credit, LendingClub v2 and Stability 2024, under one protocol run by `scripts/run_study.py` (configuration:
+`configs/study/`). The top-level `README.md` gives the full description; this file lists the fixed elements.
 
-LLM-based metadata screening can be useful as a first-stage helper before downstream statistical feature selection in credit scoring.
+## Research questions
 
-## Datasets
+- **RQ1.** Does an LLM pre-screened subset discriminate at least as well as a classically selected one on a held-out
+  population scored once by a frozen pipeline, under a fixed budget?
+- **RQ2.** Are the selected subsets reproducible across development folds?
 
-- Home Credit: main development dataset
-- LendingClub: external validation dataset
+## Fixed elements
 
-## Selectors
+- **Split.** DEV and HO along each dataset's ordering index; five expanding-window folds within DEV with one index unit
+  between training and validation partitions.
+- **Candidate set.** Features with at most 90 % missing values on the training partition of the first fold; the same
+  set for every selector.
+- **Strategies.** Classical: Domain rules, Random K, PCA, IV/WOE, mRMR (mutual information), Boruta RF, IV then Boruta,
+  RFE CatBoost, CatBoost SHAP. LLM-assisted: Pure LLM, LLM then mRMR, LLM then Boruta, Stable core + LLM fill. Reference:
+  Full features. Supplementary: the classical rank-voting family (Home Credit, LendingClub v2).
+- **Backbones and budgets.** Logistic regression with K = 20 original features, CatBoost with K = 40; one fixed
+  configuration each.
+- **LLM stage.** GPT-4.1 mini (`gpt-4.1-mini-2025-04-14`), temperature 0, one prompt template, definition-only records;
+  rankings cached and reused (`docs/llm_prompt_protocol.md`).
+- **Outcomes.** HO ROC-AUC (headline); KS, Brier, log loss, Capture@10, Lift@10; type-aware feature PSI; Nogueira
+  stability and pairwise Jaccard over the five fold subsets; runtime and peak memory; LLM token usage.
+- **Comparisons.** Family leaders under the HO, DEV and mixed rules; paired HO AUC differences with 95 % paired
+  bootstrap intervals (2,000 resamples, seed 20260721); materiality bar 0.010 AUC; DeLong with Holm only for the voting
+  family.
+- **Robustness.** Native categorical handling, L1 selector, family cap and depth-0 controls, response sampling, name
+  obfuscation, descriptions rebuilt from lineage, sub-populations, feature-budget sweep, matched mRMR timing.
 
-Compared selectors include:
-- `mrmr`
-- `boruta`
-- `pca`
-- `domain_rule_baseline`
-- `llm`
-- `llm_then_mrmr`
-- `llm_then_boruta`
-- `stable_core_llm_fill`
+## Non-goals
 
-The registered `mrmr` method is the preserved historical label for
-`RandomForestRelevanceMRMRSelector`: random-forest impurity importance supplies
-relevance, mean absolute correlation supplies redundancy, and selection is
-greedy by their ratio. It is mRMR-like rather than canonical mutual-information
-mRMR. `boruta` is Boruta-only. The separate `boruta_rfe` registry entry runs
-Boruta → RFE with RFE enabled, but it is not part of the finalized matrix above.
-
-## Models
-
-Models are evaluation vehicles only:
-- Logistic Regression
-- CatBoost
-
-## Preserved Metrics
-
-The framework preserves or supports:
-- OOT AUC
-- OOT Gini
-- OOT KS
-- Lift@10
-- selected feature PSI
-- model score PSI
-- Nogueira stability
-- pairwise Jaccard stability
-- semantic coverage by group
-- redundancy analysis
-- runtime
-- feature-selection, training, prediction, evaluation, and total run time
-- peak RAM and peak GPU memory where available
-- LLM call and cache summaries
-
-Active outputs follow the contract in `results/README.md`. Runs are registered
-in `results/run_index.csv` and never overwrite an existing run directory.
-
-## Explicit Non-Goals
-
-- no calibration study
-- no stacking study
-- no deployment claims
-- no production PD governance claim
+No calibration study, no profit or fairness evaluation, no deployment or production governance claim.

@@ -13,18 +13,26 @@ class LogisticRegressionModel:
     def __init__(
         self,
         solver="liblinear",
+        penalty="l2",
+        C=1.0,
         max_iter=1000,
         class_weight="balanced",
         random_state=42
     ):
         """
         Initialize Logistic Regression model with hyperparameters.
+
+        The defaults are the fixed backbone configuration: ``liblinear`` solver, L2
+        penalty, C = 1, at most 1,000 iterations, balanced class weights and seed 42.
         """
+        penalty_kwargs = {"penalty": penalty} if penalty != "l2" else {}
         self.model = LogisticRegression(
             solver=solver,
+            C=C,
             max_iter=max_iter,
             class_weight=class_weight,
-            random_state=random_state
+            random_state=random_state,
+            **penalty_kwargs,
         )
         self.feature_names = None
         self.fitted = False
